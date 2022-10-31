@@ -1,0 +1,120 @@
+---
+title: "Search"
+description: "This searches your files for the text provided."
+api: "GET /search"
+---
+
+### Query Parameters
+
+<ParamField query="q" required type="string">
+  Your search query
+</ParamField>
+
+<ParamField query="user_id" type="string">
+  Filter, used to run isolated queries against individual user's files.
+</ParamField>
+
+### Request Body
+
+<ParamField body="clauses" type="object[]">
+  Array of objects for clauses to the search engine. Each object must contain
+  keys: operator (OR, AND, AND NOT) and query.
+</ParamField>
+
+<RequestExample>
+
+```python Python
+import requests
+
+url = "https://api.mixpeek.com/search?q=SEARCH_QUERY"
+
+payload={}
+headers = {
+  'Authorization': 'API_KEY'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```shell Shell
+curl --location --request GET 'https://api.mixpeek.com/search?q=SEARCH_QUERY' \
+--header 'Authorization: API_KEY'
+```
+
+```javascript JavaScript
+var myHeaders = new Headers();
+myHeaders.append("Authorization", "API_KEY");
+
+var requestOptions = {
+  method: "GET",
+  headers: myHeaders,
+  redirect: "follow",
+};
+
+fetch("https://api.mixpeek.com/search?q=", requestOptions)
+  .then((response) => response.text())
+  .then((result) => console.log(result))
+  .catch((error) => console.log("error", error));
+```
+
+```ruby Ruby
+require "uri"
+require "net/http"
+
+url = URI("https://api.mixpeek.com/search?q=SEARCH_QUERY")
+
+https = Net::HTTP.new(url.host, url.port)
+https.use_ssl = true
+
+request = Net::HTTP::Get.new(url)
+request["Authorization"] = "API_KEY"
+
+response = https.request(request)
+puts response.read_body
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json
+[
+  {
+    "_id": "REDACTED",
+    "api_key": "API_KEY",
+    "file_url": null,
+    "highlights": [
+      {
+        "score": 0.8759502172470093,
+        "texts": [
+          {
+            "type": "text",
+            "value": "Australian Shepherd\n\nDate of Service: 2 Years 8 Months\n\nPrescription\nExpiration Date:\n\nWeight: 41.75\n\nSex: Female\n\n℞  Heartgard Plus Green 26-50 lbs ("
+          },
+          {
+            "type": "hit",
+            "value": "SEARCH_QUERY"
+          },
+          {
+            "type": "text",
+            "value": " 135 mcg/Pyrantel 114 mg)\n\nInstructions: Give one chewable tablet by mouth once monthly for protection against heartworms, and the treatment and\ncontrol of roundworms, and hookworms."
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "date_inserted": "2021-12-28 19:45:38.469000",
+      "file": {
+        "Content-Type": "application/pdf",
+        "Creation-Date": "2021-09-14T20:06:35Z"
+      },
+      "filename": "prescription.pdf"
+    },
+    "score": 1.4865798950195312
+  }
+]
+```
+
+</ResponseExample>

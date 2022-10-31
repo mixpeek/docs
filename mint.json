@@ -1,0 +1,64 @@
+{
+  "name": "Mixpeek",
+  "favicon": "/favicon.png",
+  "logo": {
+    "dark": "/logo/dark.png",
+    "light": "/logo/light.png"
+  },
+  "api": {
+    "baseUrl": "https://api.mixpeek.com",
+    "auth": {
+      "method": "key",
+      "name": "Authorization"
+    }
+  },
+  "colors": {
+    "primary": "#FC5185",
+    "light": "#FFA0BD",
+    "dark": "#364F6B",
+    "ultraLight": "#ECD3DF",
+    "ultraDark": "#18283A"
+  },
+  "topbarLinks": [
+    {
+      "name": "Talk to Sales",
+      "url": "mailto:info@mixpeek.com"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Get Started",
+    "url": "https://m0ya3ewpknw.typeform.com/to/RGu9rcJk"
+  },
+  "anchors": [
+    {
+      "name": "GitHub",
+      "icon": "github",
+      "url": "https://docs.mixpeek.com/wearables"
+    },
+    {
+      "name": "Community",
+      "icon": "discord",
+      "url": "https://discord.gg/TKS4BfMyxV"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Welcome",
+      "pages": ["intro"]
+    },
+    {
+      "group": "API Reference",
+      "pages": ["upload", "search"]
+    },
+    {
+      "group": "Errors",
+      "pages": ["errors"]
+    }
+  ],
+  "footerSocials": {
+    "website": "https://mixpeek.com/",
+    "discord": "https://discord.gg/TKS4BfMyxV",
+    "github": "https://docs.mixpeek.com/wearables"
+  },
+  "backgroundImage": "/images/background.png"
+}

@@ -1,0 +1,107 @@
+---
+title: "Upload"
+description: "This securely sends your file to our server so its' text can be extracted and placed in a search engine."
+api: "POST /upload"
+---
+
+<Note>Note: your files are promptly deleted after its' text is extracted.</Note>
+
+### Query Parameters
+
+<ParamField query="user_id" type="string">
+  Used to run isolated queries against individual user's files.
+</ParamField>
+
+<ParamField query="file_id" type="string">
+  So that you can reference the file's path in your software (NOTE: we do not
+  store the file, you need to reference it's location in your code).
+</ParamField>
+
+### File
+
+<ParamField body="file" type="string" required>
+  Path of your local file to be sent to the server.
+</ParamField>
+
+<RequestExample>
+
+```python Python
+import requests
+
+url = "https://api.mixpeek.com/upload"
+
+payload={}
+files=[
+  ('file',('prescription.pdf',open('YOUR_FILE_PATH.pdf','rb'),'application/pdf'))
+]
+headers = {
+  'Authorization': 'API_KEY'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload, files=files)
+
+print(response.text)
+```
+
+```javascript JavaScript
+var myHeaders = new Headers();
+myHeaders.append("Authorization", "API_KEY");
+
+var formdata = new FormData();
+formdata.append("file", fileInput.files[0], "prescription.pdf");
+
+var requestOptions = {
+  method: "POST",
+  headers: myHeaders,
+  body: formdata,
+  redirect: "follow",
+};
+
+fetch("https://api.mixpeek.com/upload", requestOptions)
+  .then((response) => response.text())
+  .then((result) => console.log(result))
+  .catch((error) => console.log("error", error));
+```
+
+```ruby Ruby
+require "uri"
+require "net/http"
+
+url = URI("https://api.mixpeek.com/upload")
+
+https = Net::HTTP.new(url.host, url.port)
+https.use_ssl = true
+
+request = Net::HTTP::Post.new(url)
+request["Authorization"] = "API_KEY"
+form_data = [['file', File.open('YOUR_FILE_PATH.pdf')]]
+request.set_form form_data, 'multipart/form-data'
+response = https.request(request)
+puts response.read_body
+
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Response
+{
+  "code": 200,
+  "endpoint": "/upload",
+  "ok": true,
+  "response": {
+    "_id": "REDACTED",
+    "api_key": "API_KEY",
+    "document_str": "If you have a demo, what's the url? Demo can be anything that show...",
+    "file_url": null,
+    "metadata": {
+      "date_inserted": "2021-12-29 00:46:44.507141",
+      "filename": "FILE_NAME.png"
+    }
+  },
+  "timestamp": 1640738804.5198598
+}
+```
+
+</ResponseExample>
