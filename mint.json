@@ -1,64 +1,109 @@
 {
-  "name": "Mixpeek",
-  "favicon": "/favicon.png",
-  "logo": {
-    "dark": "/logo/dark.png",
-    "light": "/logo/light.png"
-  },
-  "api": {
-    "baseUrl": "https://api.mixpeek.com",
-    "auth": {
-      "method": "key",
-      "name": "Authorization"
-    }
-  },
-  "colors": {
-    "primary": "#FC5185",
-    "light": "#FFA0BD",
-    "dark": "#364F6B",
-    "ultraLight": "#ECD3DF",
-    "ultraDark": "#18283A"
-  },
-  "topbarLinks": [
-    {
-      "name": "Talk to Sales",
-      "url": "mailto:info@mixpeek.com"
-    }
-  ],
-  "topbarCtaButton": {
-    "name": "Get Started",
-    "url": "https://m0ya3ewpknw.typeform.com/to/RGu9rcJk"
-  },
-  "anchors": [
-    {
-      "name": "GitHub",
-      "icon": "github",
-      "url": "https://github.com/mixpeek"
+    "name": "Mixpeek",
+    "favicon": "/favicon.png",
+    "logo": {
+        "dark": "/logo/dark.png",
+        "light": "/logo/light.png"
     },
-    {
-      "name": "Community",
-      "icon": "discord",
-      "url": "https://discord.gg/TKS4BfMyxV"
-    }
-  ],
-  "navigation": [
-    {
-      "group": "Welcome",
-      "pages": ["intro"]
+    "api": {
+        "baseUrl": "https://api.mixpeek.com",
+        "auth": {
+            "method": "key",
+            "name": "Authorization"
+        }
     },
-    {
-      "group": "API Reference",
-      "pages": ["upload", "search"]
+    "colors": {
+        "primary": "#FC5185",
+        "light": "#FFA0BD",
+        "dark": "#364F6B",
+        "ultraLight": "#ECD3DF",
+        "ultraDark": "#18283A"
     },
-    {
-      "group": "Errors",
-      "pages": ["errors"]
-    }
-  ],
-  "footerSocials": {
-    "website": "https://mixpeek.com/",
-    "discord": "https://discord.gg/TKS4BfMyxV",
-    "github": "https://github.com/mixpeek"
-  },
-  "backgroundImage": "/images/background.png"
+    "topbarLinks": [{
+        "name": "Contact Us",
+        "url": "mailto:info@mixpeek.com"
+    }],
+    "topbarCtaButton": {
+        "name": "Use Mixpeek",
+        "url": "https://m0ya3ewpknw.typeform.com/to/RGu9rcJk"
+    },
+    "anchors": [{
+            "name": "Guides",
+            "icon": "book-bookmark",
+            "url": "https://medium.com/@mixpeek"
+        },
+        {
+            "name": "Demo",
+            "icon": "circle-play",
+            "url": "https://www.youtube.com/watch?v=o3XP3J5mHHI"
+        },
+        {
+            "name": "Community",
+            "icon": "discord",
+            "url": "https://discord.gg/TKS4BfMyxV"
+        },
+        {
+            "name": "Security",
+            "icon": "shield-halved",
+            "url": "https://mixpeek.com/privacy"
+        }
+    ],
+    "navigation": [
+        {
+            "group": "Getting Started",
+            "pages": [
+                "intro/quickstart",
+                "intro/architecture",
+                "intro/libraries",
+                "intro/faq"
+            ]
+        },
+        {
+            "group": "File API",
+            "pages": [
+                "file/upload",
+                "file/list",
+                "file/get",
+                "file/delete"
+            ]
+        },
+        {
+            "group": "Search API",
+            "pages": [
+                "search/intro"
+            ]
+        },
+        {
+            "group": "User API",
+            "pages": [
+                "user/get",
+                "user/list",
+                "user/delete"
+            ]
+        },
+        {
+            "group": "Integrations",
+            "pages": [
+                "integrations/aws-object",
+                "integrations/azure-object",
+                "integrations/gcp-object",
+                "integrations/local-directory"
+            ]
+        },
+        {
+            "group": "Use Cases",
+            "pages": [
+                "use-cases/field-technicians",
+                "use-cases/document-management",
+                "use-cases/call-analysis",
+                "use-cases/web-scraping"
+            ]
+        }
+    ],
+    "footerSocials": {
+        "website": "https://mixpeek.com/",
+        "discord": "https://discord.gg/TKS4BfMyxV",
+        "github": "https://github.com/mixpeek"
+    },
+    "backgroundImage": "/images/background.png"
 }

@@ -1,7 +1,7 @@
 ---
-title: "Upload"
+title: "Upload File"
 description: "This securely sends your file to our server so its' text can be extracted and placed in a search engine."
-api: "POST /upload"
+api: "POST /file"
 ---
 
 <Note>Note: your files are promptly deleted after its' text is extracted.</Note>
@@ -12,14 +12,9 @@ api: "POST /upload"
   Used to run isolated queries against individual user's files.
 </ParamField>
 
-<ParamField query="file_id" type="string">
-  So that you can reference the file's path in your software (NOTE: we do not
-  store the file, you need to reference it's location in your code).
-</ParamField>
-
 ### File
 
-<ParamField body="file" type="string" required>
+<ParamField body="file" type="file" required>
   Path of your local file to be sent to the server.
 </ParamField>
 
