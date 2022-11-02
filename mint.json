@@ -50,12 +50,12 @@
     ],
     "navigation": [
         {
-            "group": "Getting Started",
+            "group": "Introduction",
             "pages": [
-                "intro/quickstart",
-                "intro/architecture",
-                "intro/libraries",
-                "intro/faq"
+                "introduction/quickstart",
+                "introduction/best-practices",
+                "introduction/libraries",
+                "introduction/faq"
             ]
         },
         {
