@@ -93,10 +93,10 @@
         {
             "group": "Use Cases",
             "pages": [
-                "use-cases/field-technicians",
-                "use-cases/document-management",
-                "use-cases/call-analysis",
-                "use-cases/web-scraping"
+                "use-cases/education",
+                "use-cases/finance",
+                "use-cases/legal",
+                "use-cases/healthcare"
             ]
         }
     ],
