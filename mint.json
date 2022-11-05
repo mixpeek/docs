@@ -86,12 +86,12 @@
             ]
         },
         {
-            "group": "Use Cases",
+            "group": "File Types",
             "pages": [
-                "use-cases/education",
-                "use-cases/finance",
-                "use-cases/legal",
-                "use-cases/healthcare"
+                "file-types/documents",
+                "file-types/images",
+                "file-types/videos",
+                "file-types/audio"
             ]
         }
     ],
