@@ -6,7 +6,7 @@ description: "Instantly make your mixed media files searchable with the mixpeek 
 <Note>Note: The Mixpeek API is currently in Alpha. Please reach out to us at [info@mixpeek.com](mailto:info@mixpeek.com) if you plan on using it.</Note>
 
 
-## Authenticate
+## 1. Create Authentication Token
 
 mixpeek uses API keys to allow access to the API. You can register a mixpeek API key using [this page](https://m0ya3ewpknw.typeform.com/to/RGu9rcJk).
 
@@ -16,66 +16,20 @@ mixpeek expects for the API key to be included in all API requests to the server
 Authorization: API_KEY
 ```
 
-Notice the `credits_remaining` key. Every account starts with credits, and each time you run a search you reduce that credit count by 1. To issue more credits, sign into your [account](https://m0ya3ewpknw.typeform.com/to/RGu9rcJk).
-
-### Confirm Authorization
+### 2. Confirm Authorization
 
 To confirm authorization, use this code:
 
 <CodeGroup>
-
-```python Python
-import requests
-
-headers = {
-  'Authorization': 'API_KEY'
-}
-
-response = requests.request("GET", 'https://api.mixpeek.com/', headers=headers)
-```
-
 ```shell shell
 curl --location --request GET 'https://api.mixpeek.com/' \
 --header 'Authorization: API_KEY'
 ```
-
-```javascript JavaScript
-var myHeaders = new Headers();
-myHeaders.append("Authorization", "API_KEY");
-
-var requestOptions = {
-  method: "GET",
-  headers: myHeaders,
-  redirect: "follow",
-};
-
-fetch("https://api.mixpeek.com/", requestOptions)
-  .then((response) => response.text())
-  .then((result) => console.log(result))
-  .catch((error) => console.log("error", error));
-```
-
-```ruby Ruby
-require "uri"
-require "net/http"
-
-url = URI("https://api.mixpeek.com/")
-
-https = Net::HTTP.new(url.host, url.port)
-https.use_ssl = true
-
-request = Net::HTTP::Get.new(url)
-request["Authorization"] = "API_KEY"
-
-response = https.request(request)
-puts response.read_body
-```
-
 </CodeGroup>
 
-### Response
+#### Response
 
-If authorization successful, you will receive this response:
+If authorization is successful, you will receive this response:
 
 ```json
 {
@@ -89,7 +43,35 @@ If authorization successful, you will receive this response:
 }
 ```
 
-## Demonstration
+Notice the `credits_remaining` key. Every account starts with credits, and each time you run a search you reduce that credit count by 1. To issue more credits, sign into your [account](https://m0ya3ewpknw.typeform.com/to/RGu9rcJk).
+
+### 3. Upload File
+
+In order to make your files searchable, you must upload your files to the mixpeek API. The engine will extract its' contents, save the output then promptly delete the file. We recommend providing a reference url for the static hosted file so you can render the file in your software.
+
+<CodeGroup>
+```shell shell
+curl --location --request POST 'https://api.mixpeek.com/upload' \
+--header 'Authorization: API_KEY' \
+--form 'file=@"LOCAL_FILE_PATH"' \
+--data-raw '{"file_path":"HOSTED_FILE_PATH"}'
+```
+</CodeGroup>
+
+
+### 4. Search for Files
+
+Once your files' contents are extracted they will become searchable via the `GET /search` API.
+
+<CodeGroup>
+```shell shell
+curl --location --request GET 'https://api.mixpeek.com/search?q=SEARCH_QUERY' \
+--header 'Authorization: API_KEY'
+```
+</CodeGroup>
+
+
+## Demonstration Video
 <Frame>
   <div style={{ paddingBottom: "64.98194945848375%" }}>
     <iframe
