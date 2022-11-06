@@ -56,24 +56,24 @@
         {
             "group": "File API",
             "pages": [
-                "file/upload",
-                "file/list",
-                "file/get",
-                "file/delete"
+                "api-file/upload",
+                "api-file/list",
+                "api-file/get",
+                "api-file/delete"
             ]
         },
         {
             "group": "Search API",
             "pages": [
-                "search/intro"
+                "api-search/intro"
             ]
         },
         {
             "group": "User API",
             "pages": [
-                "user/get",
-                "user/list",
-                "user/delete"
+                "api-user/get",
+                "api-user/list",
+                "api-user/delete"
             ]
         },
         {
