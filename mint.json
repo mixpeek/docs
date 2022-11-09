@@ -34,7 +34,7 @@
         },
         {
             "name": "Community",
-            "icon": "discord",
+            "icon": "slack",
             "url": "https://mixpeek.com/community"
         },
         {
@@ -79,11 +79,11 @@
         {
             "group": "File Types",
             "pages": [
-                "file-types/documents",
                 "file-types/images",
                 "file-types/videos",
                 "file-types/audio",
-                "file-types/text"
+                "file-types/text",
+                "file-types/other"
             ]
         },
         {
@@ -98,7 +98,7 @@
     ],
     "footerSocials": {
         "website": "https://mixpeek.com/",
-        "discord": "https://mixpeek.com/community",
+        "community": "https://mixpeek.com/community",
         "github": "https://github.com/mixpeek"
     },
     "backgroundImage": "/images/background.png"
