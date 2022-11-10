@@ -38,6 +38,11 @@
             "url": "https://mixpeek.com/community"
         },
         {
+            "name": "Github",
+            "icon": "github",
+            "url": "https://github.com/mixpeek"
+        },
+        {
             "name": "Security",
             "icon": "shield-halved",
             "url": "https://mixpeek.com/security"
@@ -48,7 +53,6 @@
             "group": "Introduction",
             "pages": [
                 "introduction/quickstart",
-                "introduction/best-practices",
                 "introduction/libraries",
                 "introduction/faq"
             ]
@@ -56,24 +60,13 @@
         {
             "group": "File API",
             "pages": [
-                "api-file/upload",
-                "api-file/list",
-                "api-file/get",
-                "api-file/delete"
+                "api-file/upload"
             ]
         },
         {
             "group": "Search API",
             "pages": [
                 "api-search/intro"
-            ]
-        },
-        {
-            "group": "User API",
-            "pages": [
-                "api-user/get",
-                "api-user/list",
-                "api-user/delete"
             ]
         },
         {
@@ -90,8 +83,6 @@
             "group": "Integrations",
             "pages": [
                 "integrations/aws-object",
-                "integrations/azure-object",
-                "integrations/gcp-object",
                 "integrations/local-directory"
             ]
         }
