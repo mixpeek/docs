@@ -60,7 +60,8 @@
         {
             "group": "File API",
             "pages": [
-                "api-file/upload"
+                "api-file/upload",
+                "api-file/delete"                
             ]
         },
         {
