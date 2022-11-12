@@ -54,14 +54,13 @@
             "pages": [
                 "introduction/quickstart",
                 "introduction/libraries",
-                "introduction/faq",
-                "introduction/file-types"
+                "introduction/faq"
             ]
         },
         {
             "group": "File API",
             "pages": [
-                "api-file/upload-one",
+                "api-file/upload",
                 "api-file/delete"
             ]
         },
@@ -69,6 +68,16 @@
             "group": "Search API",
             "pages": [
                 "api-search/intro"
+            ]
+        },
+        {
+            "group": "File Types",
+            "pages": [
+                "file-types/images",
+                "file-types/videos",
+                "file-types/audio",
+                "file-types/text",
+                "file-types/other"
             ]
         },
         {
