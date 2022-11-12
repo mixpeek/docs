@@ -1,14 +1,16 @@
 ---
 title: "Upload One"
 description: "Securely send your file to our server where its' content is extracted, indexed and searchable via /search."
-api: "POST /file/upload-one"
+api: "POST /v1/file/upload-one"
 ---
+
+## Request Body
 
 <ParamField body="file" type="file" required>
     Provide your file in the `file` form-data part.
 </ParamField>
 
-<ParamField body="semantics" type="boolean">
+<ParamField body="semantics" type="boolean" default="false">
     Required if you want to perform semantic search, learn more <a href="#">here</a>.
 </ParamField>
 
@@ -24,10 +26,11 @@ api: "POST /file/upload-one"
     List of *tags* which can be used to influence search results.
 </ParamField>
 
+## Response Body
 
-## Note:
-- Your files are promptly deleted after its' text is extracted. See the <a href="https://mixpeek.com/security">Security Page</a> to learn more.
-- Navigate to the <a href="#">file types</a> page to see which file types we currently support.
+<ParamField body="file_id" type="string">
+    Your uploaded files' unique identifier.
+</ParamField>
 
 <RequestExample>
 

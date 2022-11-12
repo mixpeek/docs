@@ -1,7 +1,7 @@
 ---
 title: "Search"
 description: "This searches your files for the text provided."
-api: "GET /search"
+api: "GET /v1/search?q={query}"
 ---
 
 ### Query Parameters
@@ -10,15 +10,23 @@ api: "GET /search"
   Your search query
 </ParamField>
 
-<ParamField query="user_id" type="string">
+### Request Body
+
+<ParamField body="user_id" type="string">
   Filter, used to run isolated queries against individual user's files.
 </ParamField>
 
-### Request Body
+<ParamField body="include_context" type="boolean" default="false">
+  Indicate where the keyword exists within the body of text from the file.
+</ParamField>
 
-<ParamField body="clauses" type="object[]">
+<ParamField body="semantics" type="boolean" default="false">
+    Include the semantically similar terms in your results.
+</ParamField>
+
+<ParamField body="clauses" type="array">
   Array of objects for clauses to the search engine. Each object must contain
-  keys: operator (OR, AND, AND NOT) and query.
+  keys:            operator (OR, AND, AND NOT) and query.
 </ParamField>
 
 <RequestExample>
@@ -28,12 +36,11 @@ import requests
 
 url = "https://api.mixpeek.com/search?q=SEARCH_QUERY"
 
-payload={}
 headers = {
   'Authorization': 'API_KEY'
 }
 
-response = requests.request("GET", url, headers=headers, data=payload)
+response = requests.request("GET", url, headers=headers)
 
 print(response.text)
 ```
@@ -48,9 +55,9 @@ var myHeaders = new Headers();
 myHeaders.append("Authorization", "API_KEY");
 
 var requestOptions = {
-  method: "GET",
-  headers: myHeaders,
-  redirect: "follow",
+  method:          "GET",
+  headers:         myHeaders,
+  redirect:        "follow",
 };
 
 fetch("https://api.mixpeek.com/search?q=", requestOptions)
@@ -81,39 +88,12 @@ puts response.read_body
 
 ```json
 [
-  {
-    "_id": "REDACTED",
-    "api_key": "API_KEY",
-    "file_url": null,
-    "highlights": [
-      {
-        "score": 0.8759502172470093,
-        "texts": [
-          {
-            "type": "text",
-            "value": "Australian Shepherd\n\nDate of Service: 2 Years 8 Months\n\nPrescription\nExpiration Date:\n\nWeight: 41.75\n\nSex: Female\n\n℞  Heartgard Plus Green 26-50 lbs ("
-          },
-          {
-            "type": "hit",
-            "value": "SEARCH_QUERY"
-          },
-          {
-            "type": "text",
-            "value": " 135 mcg/Pyrantel 114 mg)\n\nInstructions: Give one chewable tablet by mouth once monthly for protection against heartworms, and the treatment and\ncontrol of roundworms, and hookworms."
-          }
-        ]
-      }
-    ],
-    "metadata": {
-      "date_inserted": "2021-12-28 19:45:38.469000",
-      "file": {
-        "Content-Type": "application/pdf",
-        "Creation-Date": "2021-09-14T20:06:35Z"
-      },
-      "filename": "prescription.pdf"
-    },
-    "score": 1.4865798950195312
-  }
+    {
+        "file_id": "123",
+        "file_url": null,
+        "filename": "",
+        "importance": "100%"
+    }
 ]
 ```
 
