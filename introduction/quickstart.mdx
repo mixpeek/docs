@@ -15,10 +15,9 @@ Mixpeek uses API keys to allow access to the API. You can register a Mixpeek API
 | `sandbox`    | Testing, upload up to 10 files        | https://api.sandbox.mixpeek.com |
 | `production` | Live environment to use with real users | https://api.mixpeek.com         |
 
-Mixpeek expects for the API key to be included in all API requests to the server within the header that looks like the following:
+Mixpeek expects for the API key to be included in all API requests to the server within the `header` that looks like the following:
 
-
-```bash
+```
 Authorization: API_KEY
 ```
 
@@ -30,16 +29,6 @@ To confirm authorization, use this code:
 ```shell Shell
 curl --location --request GET 'https://api.mixpeek.com/' \
 --header 'Authorization: API_KEY'
-```
-
-```python Python
-import requests
-
-url = "https://api.mixpeek.com/"
-headers = {
-  'Authorization': 'API_KEY'
-}
-response = requests.request("GET", url, headers=headers)
 ```
 </CodeGroup>
 
