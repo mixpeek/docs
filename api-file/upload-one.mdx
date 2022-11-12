@@ -34,8 +34,20 @@ api: "POST /v1/file/upload-one"
 
 <RequestExample>
 
-``` shell Shell
-{"foo":"bar"}
+```python Python
+import requests
+
+url = "https://api.mixpeek.com/v1/file/upload-one"
+payload = {
+    "user_id": "john_smith_123",
+    "include_context": False,
+    "semantics": False
+}
+headers = {'Authorization': 'API_KEY'}
+files = [('file', ('document.pdf', open(
+    '/local/path/document.pdf', 'rb'), 'application/pdf'))]
+
+requests.request("POST", url, data=payload, headers=headers, files=files)
 ```
 
 </RequestExample>
@@ -43,7 +55,7 @@ api: "POST /v1/file/upload-one"
 <ResponseExample>
 
 ```json Response
-{"foo": "bar"}
+{"file_id":"123"}
 ```
 
 </ResponseExample>

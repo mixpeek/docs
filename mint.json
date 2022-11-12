@@ -67,7 +67,7 @@
         {
             "group": "Search API",
             "pages": [
-                "api-search/intro"
+                "api-search/search"
             ]
         },
         {

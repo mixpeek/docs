@@ -1,0 +1,58 @@
+---
+title: "Search"
+description: "This searches your files for the text provided."
+api: "GET /v1/search?q={query}"
+---
+
+### Query Parameters
+
+<ParamField query="q" required type="string">
+  Your search query
+</ParamField>
+
+### Request Body
+
+<ParamField body="user_id" type="string">
+  Filter, used to run isolated queries against individual user's files.
+</ParamField>
+
+<ParamField body="include_context" type="boolean" default="false">
+  Indicate where the keyword exists within the body of text from the file.
+</ParamField>
+
+<ParamField body="semantics" type="boolean" default="false">
+    Include the semantically similar terms in your results.
+</ParamField>
+
+<RequestExample>
+
+```python Python
+import requests
+
+url = "https://api.mixpeek.com/v1/search?q=prescription"
+payload = {
+    "user_id": "john_smith_123",
+    "include_context": False,
+    "semantics": False
+}
+headers = {'Authorization': 'API_KEY'}
+
+requests.request("GET", url, data=payload, headers=headers)
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json
+[
+    {
+        "file_id": "123",
+        "file_url": "s3://file",
+        "filename": "document.pdf",
+        "importance": "100%"
+    }
+]
+```
+
+</ResponseExample>
