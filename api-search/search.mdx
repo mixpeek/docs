@@ -1,28 +1,32 @@
 ---
 title: "Search"
 description: "This searches your files for the text provided."
-api: "GET /v1/search?q={query}"
+api: "GET /v1/search"
 ---
 
-### Query Parameters
+### Request
 
 <ParamField query="q" type="string" required>
-  Your search query
+    Your search query.
 </ParamField>
-
-### Request Body
 
 <ParamField body="user_id" type="string">
-  Filter, used to run isolated queries against individual user's files.
+    **Optional** Filter used to run isolated queries against individual user's files.
 </ParamField>
 
-<ParamField body="include_context" type="boolean" default="false">
-  Indicate where the keyword exists within the body of text from the file.
+<ParamField body="include_context" type="boolean" default="False">
+    **Optional** Indicate where the keyword exists within the body of text from the file.
 </ParamField>
 
-<ParamField body="semantics" type="boolean" default="false">
-    Include the semantically similar terms in your results.
+<ParamField body="semantics" type="boolean" default="False">
+    **Optional** Include the semantically similar terms in your results.
 </ParamField>
+
+## Response
+
+<ResponseField name="file_id" type="string" required>
+    Your uploaded files' unique identifier.
+</ResponseField>
 
 <RequestExample>
 
@@ -40,6 +44,41 @@ headers = {'Authorization': 'API_KEY'}
 requests.request("GET", url, data=payload, headers=headers)
 ```
 
+```shell Shell
+curl --location --request GET 'https://api.mixpeek.com/v1/search?q=prescription' \
+--header 'Authorization: API_KEY' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "user_id": "john_smith_123",
+    "include_context": false,
+    "semantics": false
+}'
+```
+
+```javascript Javascript
+var myHeaders = new Headers();
+myHeaders.append("Authorization", "API_KEY");
+myHeaders.append("Content-Type", "application/json");
+
+var raw = JSON.stringify({
+  "user_id": "john_smith_123",
+  "include_context": false,
+  "semantics": false
+});
+
+var requestOptions = {
+  method: 'GET',
+  headers: myHeaders,
+  body: raw,
+  redirect: 'follow'
+};
+
+fetch("https://api.mixpeek.com/v1/search?q=prescription", requestOptions)
+  .then(response => response.text())
+  .then(result => console.log(result))
+  .catch(error => console.log('error', error));
+```
+
 </RequestExample>
 
 <ResponseExample>
@@ -49,7 +88,7 @@ requests.request("GET", url, data=payload, headers=headers)
     {
         "file_id": "123",
         "file_url": "s3://file",
-        "filename": "document.pdf",
+        "filename": "prescription.pdf",
         "importance": "100%"
     }
 ]

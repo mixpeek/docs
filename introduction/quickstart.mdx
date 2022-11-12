@@ -1,29 +1,45 @@
 ---
 title: "Quickstart"
-description: "Instantly make your mixed media files searchable with the mixpeek API."
+description: "A quick introduction to building with Mixpeek."
 ---
 
-<Note>Note: The Mixpeek API is currently in Alpha. Please reach out to us at [info@mixpeek.com](mailto:info@mixpeek.com) if you plan on using it.</Note>
+<Note>Note: The Mixpeek API is currently in Alpha. Please reach out to us at [info@mixpeek.com](mailto:info@mixpeek.com) if you plan on using it. Also you can join our <a href="https://mixpeek.com/community">Slack Channel</a> if you get stuck</Note>
 
 
 ## 1. Create Authentication Token
 
-Mixpeek uses API keys to allow access to the API. You can register a mixpeek API key using [this page](https://m0ya3ewpknw.typeform.com/to/RGu9rcJk). Your API key acts as a **tenancy** to ensure you can only search the contents of your files. 
+Mixpeek uses API keys to allow access to the API. You can register a Mixpeek API key using [this page](https://m0ya3ewpknw.typeform.com/to/RGu9rcJk). Your API key acts as a **tenancy** to ensure you can only search the contents of your uploaded files.
 
-mixpeek expects for the API key to be included in all API requests to the server within the header that looks like the following:
+| Environments  |                                             |                                 |
+| ------------ | ------------------------------------------- | ------------------------------- |
+| `sandbox`    | Testing, upload up to 10 files        | https://api.sandbox.mixpeek.com |
+| `production` | Live environment to use with real users | https://api.mixpeek.com         |
+
+Mixpeek expects for the API key to be included in all API requests to the server within the header that looks like the following:
+
 
 ```bash
 Authorization: API_KEY
 ```
 
-### 2. Confirm Authorization
+### Confirm Authorization
 
 To confirm authorization, use this code:
 
 <CodeGroup>
-```shell shell
+```shell Shell
 curl --location --request GET 'https://api.mixpeek.com/' \
 --header 'Authorization: API_KEY'
+```
+
+```python Python
+import requests
+
+url = "https://api.mixpeek.com/"
+headers = {
+  'Authorization': 'API_KEY'
+}
+response = requests.request("GET", url, headers=headers)
 ```
 </CodeGroup>
 
@@ -33,45 +49,87 @@ If authorization is successful, you will receive this response:
 
 ```json
 {
-  "code": 200,
-  "endpoint": "/",
-  "ok": true,
-  "response": {
-    "credits_remaining": 999832
-  },
-  "timestamp": 1659218867.561593
+    "files_remaining": 1000
 }
 ```
 
-Notice the `credits_remaining` key. Every account starts with credits, and each time you run a search you reduce that credit count by 1. To issue more credits, sign into your [account](https://m0ya3ewpknw.typeform.com/to/RGu9rcJk).
+The `files_remaining` number indicates how many files you're able to upload.
+Every account starts with `1000` regardless of your subscription plan.
+Each time you upload a new file you reduce that credit count by `1`.
+To issue more credits, sign into your [account](https://dash.mixpeek.com).
 
-### 3. Upload File
+## 2. Upload File
 
-In order to make your files searchable, you must upload your files to the mixpeek API. The engine will extract its' contents, save the output then promptly delete the file. We recommend providing a reference url for the static hosted file so you can render the file in your software.
+In order to make your files searchable, you must upload your files to the Mixpeek API.
+The engine will extract its' contents, save the output then promptly delete the file.
+You can upload multiple files by appending file urls to the `file_url` array.
 
+### Request
 <CodeGroup>
-```shell shell
-curl --location --request POST 'https://api.mixpeek.com/upload' \
---header 'Authorization: API_KEY' \
---form 'file=@"LOCAL_FILE_PATH"' \
---data-raw '{"file_path":"HOSTED_FILE_PATH"}'
+```python Python
+import requests
+
+url = "https://api.mixpeek.com/v1/file/upload"
+payload = {
+    "file_url": ["https://mixpeek-demo.s3.us-east-2.amazonaws.com/prescription.pdf"]
+}
+headers = {'Authorization': 'API_KEY'}
+
+requests.request("POST", url, data=payload, headers=headers)
+```
+</CodeGroup>
+
+### Response
+<CodeGroup>
+```json JSON
+{"file_id":"123"}
 ```
 </CodeGroup>
 
 
-### 4. Search for Files
+## 3. Search for Files
 
-Once your files' contents are extracted they will become searchable via the `GET /search` API.
+Once your files' contents are extracted they will become searchable via the `/search` endpoint.
 
 <CodeGroup>
-```shell shell
-curl --location --request GET 'https://api.mixpeek.com/search?q=SEARCH_QUERY' \
---header 'Authorization: API_KEY'
+```python Python
+import requests
+
+url = "https://api.mixpeek.com/v1/search?q=prescription"
+headers = {'Authorization': 'API_KEY'}
+
+requests.request("GET", url, headers=headers)
+```
+
+```shell Shell
+curl --location --request GET 'https://api.mixpeek.com/v1/search?q=prescription' \
+--header 'Authorization: API_KEY' \
+--header 'Content-Type: application/json' \
+```
+
+```javascript Javascript
+var myHeaders = new Headers();
+myHeaders.append("Authorization", "API_KEY");
+myHeaders.append("Content-Type", "application/json");
+
+var requestOptions = {
+  method: 'GET',
+  headers: myHeaders,
+  redirect: 'follow'
+};
+
+fetch("https://api.mixpeek.com/v1/search?q=prescription", requestOptions)
+  .then(response => response.text())
+  .then(result => console.log(result))
+  .catch(error => console.log('error', error));
 ```
 </CodeGroup>
 
 
 ## Demonstration Video
+
+We made this helpful video before to walk you through several file type examples using Postman.
+
 <Frame>
   <div style={{ paddingBottom: "64.98194945848375%" }}>
     <iframe

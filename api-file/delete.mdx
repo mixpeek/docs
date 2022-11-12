@@ -1,5 +1,38 @@
 ---
 title: "Delete"
-api: "DELETE /v1/file/{file_id}"
+api: "DELETE /v1/file"
 ---
-<Warning>Note: This endpoint is still in progress.</Warning>
+
+## Request
+<ParamField body="file_id" type="array" required>
+    File IDs of the files you'd like removed. You can provide one or multiple.
+</ParamField>
+
+## Response
+
+<ResponseField name="ok" type="boolean" required>
+    To indicate if it was successful or not.
+</ResponseField>
+
+<RequestExample>
+
+```python Python
+import requests
+
+url = "https://api.mixpeek.com/v1/file"
+payload = {
+    "file_id": ["123", "321"]
+}
+headers = {'Authorization': 'API_KEY'}
+
+requests.request("DELETE", url, data=payload, headers=headers)
+```
+</RequestExample>
+
+<ResponseExample>
+
+```json Response
+{"ok":true}
+```
+
+</ResponseExample>

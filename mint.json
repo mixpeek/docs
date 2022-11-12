@@ -6,7 +6,10 @@
         "light": "/logo/light.png"
     },
     "api": {
-        "baseUrl": "https://api.mixpeek.com",
+        "baseUrl": [
+            "https://api.mixpeek.com",
+            "https://api.sandbox.mixpeek.com"                
+        ],
         "auth": {
             "method": "key",
             "name": "Authorization"

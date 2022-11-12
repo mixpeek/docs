@@ -1,53 +1,85 @@
 ---
-title: "Upload One"
-description: "Securely send your file to our server where its' content is extracted, indexed and searchable via /search."
-api: "POST /v1/file/upload-one"
+title: "Upload"
+description: "Securely send your file(s) to our server where its' content is extracted, indexed and searchable via /search. Files are never stored on our servers."
+api: "POST /v1/file/upload"
 ---
 
-## Request Body
+## Request
 
-<ParamField body="file" type="file" required>
-    Provide your file in the `file` form-data part.
+<ParamField body="file_url" type="array" required>
+    Static hosted url of the file(s). Can provide multiple file urls and they will be uploaded in a background process.
 </ParamField>
 
-<ParamField body="semantics" type="boolean">
-    Required if you want to perform semantic search, learn more <a href="#">here</a>.
+<ParamField body="semantics" type="boolean" default="False">
+    **Optional** Set to `True` if you wish to perform semantic search, learn more about semantic search <a href="#">here</a>.
 </ParamField>
 
 <ParamField body="user_id" type="string">
-    Filter, used to run isolated queries against individual user's files.
-</ParamField>
-
-<ParamField body="static_file_path" type="string">
-    Static hosted url of the file, for reference in the response.
+    **Optional** Filter used to run isolated searches on individual user's files.
 </ParamField>
 
 <ParamField body="tags" type="array">
-    List of *tags* which can be used to influence search results.
+    **Optional** List of *tags* which can be used to influence search results.
 </ParamField>
 
-## Response Body
+## Response
 
-<ParamField body="file_id" type="string">
+<ResponseField name="file_id" type="string" required>
     Your uploaded files' unique identifier.
-</ParamField>
+</ResponseField>
 
 <RequestExample>
 
 ```python Python
 import requests
 
-url = "https://api.mixpeek.com/v1/file/upload-one"
+url = "https://api.mixpeek.com/v1/file/upload"
 payload = {
+    "file_url": ["https://mixpeek-demo.s3.us-east-2.amazonaws.com/prescription.pdf"],
+    "semantics": True,
     "user_id": "john_smith_123",
-    "include_context": False,
-    "semantics": False
+    "tags": ["veterinarian", "medical", "dog"]
 }
 headers = {'Authorization': 'API_KEY'}
-files = [('file', ('document.pdf', open(
-    '/local/path/document.pdf', 'rb'), 'application/pdf'))]
 
-requests.request("POST", url, data=payload, headers=headers, files=files)
+requests.request("POST", url, data=payload, headers=headers)
+```
+
+```shell Shell
+curl --location --request POST 'https://api.mixpeek.com/v1/file/upload' \
+--header 'Authorization: API_KEY' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "file_url": "https://mixpeek-demo.s3.us-east-2.amazonaws.com/prescription.pdf",
+    "semantics": True,
+    "user_id": "john_smith_123",
+    "tags": ["veterinarian", "medical", "dog"]
+}'
+```
+
+``` javascript Javascript
+var myHeaders = new Headers();
+myHeaders.append("Authorization", "API_KEY");
+myHeaders.append("Content-Type", "application/json");
+
+var raw = {
+    "file_url": "https://mixpeek-demo.s3.us-east-2.amazonaws.com/prescription.pdf",
+    "semantics": True,
+    "user_id": "john_smith_123",
+    "tags": ["veterinarian", "medical", "dog"]
+};
+
+var requestOptions = {
+  method: 'POST',
+  headers: myHeaders,
+  body: raw,
+  redirect: 'follow'
+};
+
+fetch("https://api.mixpeek.com/v1/file/upload", requestOptions)
+  .then(response => response.text())
+  .then(result => console.log(result))
+  .catch(error => console.log('error', error));
 ```
 
 </RequestExample>
