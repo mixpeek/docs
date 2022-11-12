@@ -10,12 +10,12 @@ api: "POST /v1/file/upload-one"
     Provide your file in the `file` form-data part.
 </ParamField>
 
-<ParamField body="semantics" type="boolean" default="false">
+<ParamField body="semantics" type="boolean">
     Required if you want to perform semantic search, learn more <a href="#">here</a>.
 </ParamField>
 
 <ParamField body="user_id" type="string">
-    Used for you to create user access controls within your application.
+    Filter, used to run isolated queries against individual user's files.
 </ParamField>
 
 <ParamField body="static_file_path" type="array">
