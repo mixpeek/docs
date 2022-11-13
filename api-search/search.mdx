@@ -34,25 +34,15 @@ api: "GET /v1/search"
 import requests
 
 url = "https://api.mixpeek.com/v1/search?q=prescription"
-payload = {
-    "user_id": "john_smith_123",
-    "include_context": False,
-    "semantics": False
-}
 headers = {'Authorization': 'API_KEY'}
 
-requests.request("GET", url, data=payload, headers=headers)
+requests.request("GET", url, headers=headers)
 ```
 
 ```shell Shell
 curl --location --request GET 'https://api.mixpeek.com/v1/search?q=prescription' \
 --header 'Authorization: API_KEY' \
 --header 'Content-Type: application/json' \
---data-raw '{
-    "user_id": "john_smith_123",
-    "include_context": false,
-    "semantics": false
-}'
 ```
 
 ```javascript Javascript
@@ -60,16 +50,9 @@ var myHeaders = new Headers();
 myHeaders.append("Authorization", "API_KEY");
 myHeaders.append("Content-Type", "application/json");
 
-var raw = JSON.stringify({
-  "user_id": "john_smith_123",
-  "include_context": false,
-  "semantics": false
-});
-
 var requestOptions = {
   method: 'GET',
   headers: myHeaders,
-  body: raw,
   redirect: 'follow'
 };
 
