@@ -1,100 +1,95 @@
 {
-    "name": "Mixpeek",
-    "favicon": "/favicon.png",
-    "logo": {
-        "dark": "/logo/dark.png",
-        "light": "/logo/light.png"
+  "name": "Mixpeek",
+  "favicon": "/favicon.png",
+  "logo": {
+    "dark": "/logo/dark.png",
+    "light": "/logo/light.png"
+  },
+  "api": {
+    "baseUrl": ["https://api.mixpeek.com", "https://api.sandbox.mixpeek.com"],
+    "auth": {
+      "method": "key",
+      "name": "Authorization"
+    }
+  },
+  "colors": {
+    "primary": "#FC5185",
+    "light": "#FFA0BD",
+    "dark": "#364F6B",
+    "ultraLight": "#ECD3DF",
+    "ultraDark": "#18283A",
+    "background": {
+      "dark": "#121212"
+    }
+  },
+  "topbarLinks": [
+    {
+      "name": "Contact Us",
+      "url": "mailto:info@mixpeek.com"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Use Mixpeek",
+    "url": "https://m0ya3ewpknw.typeform.com/to/RGu9rcJk"
+  },
+  "anchors": [
+    {
+      "name": "Guides",
+      "icon": "book-bookmark",
+      "url": "https://medium.com/@mixpeek"
     },
-    "api": {
-        "baseUrl": [
-            "https://api.mixpeek.com",
-            "https://api.sandbox.mixpeek.com"                
-        ],
-        "auth": {
-            "method": "key",
-            "name": "Authorization"
-        }
+    {
+      "name": "Community",
+      "icon": "slack",
+      "url": "https://mixpeek.com/community"
     },
-    "colors": {
-        "primary": "#FC5185",
-        "light": "#FFA0BD",
-        "dark": "#364F6B",
-        "ultraLight": "#ECD3DF",
-        "ultraDark": "#18283A"
+    {
+      "name": "Github",
+      "icon": "github",
+      "url": "https://github.com/mixpeek"
     },
-    "topbarLinks": [{
-        "name": "Contact Us",
-        "url": "mailto:info@mixpeek.com"
-    }],
-    "topbarCtaButton": {
-        "name": "Use Mixpeek",
-        "url": "https://m0ya3ewpknw.typeform.com/to/RGu9rcJk"
+    {
+      "name": "Security",
+      "icon": "shield-halved",
+      "url": "https://mixpeek.com/security"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Introduction",
+      "pages": [
+        "introduction/quickstart",
+        "introduction/libraries",
+        "introduction/faq"
+      ]
     },
-    "anchors": [{
-            "name": "Guides",
-            "icon": "book-bookmark",
-            "url": "https://medium.com/@mixpeek"
-        },
-        {
-            "name": "Community",
-            "icon": "slack",
-            "url": "https://mixpeek.com/community"
-        },
-        {
-            "name": "Github",
-            "icon": "github",
-            "url": "https://github.com/mixpeek"
-        },
-        {
-            "name": "Security",
-            "icon": "shield-halved",
-            "url": "https://mixpeek.com/security"
-        }
-    ],
-    "navigation": [
-        {
-            "group": "Introduction",
-            "pages": [
-                "introduction/quickstart",
-                "introduction/libraries",
-                "introduction/faq"
-            ]
-        },
-        {
-            "group": "File API",
-            "pages": [
-                "api-file/upload-one",
-                "api-file/delete"
-            ]
-        },
-        {
-            "group": "Search API",
-            "pages": [
-                "api-search/search"
-            ]
-        },
-        {
-            "group": "File Types",
-            "pages": [
-                "file-types/images",
-                "file-types/videos",
-                "file-types/audio",
-                "file-types/text",
-                "file-types/other"
-            ]
-        },
-        {
-            "group": "Integrations",
-            "pages": [
-                "integrations/aws-object",
-                "integrations/local-directory"
-            ]
-        }
-    ],
-    "footerSocials": {
-        "website": "https://mixpeek.com/",
-        "community": "https://mixpeek.com/community",
-        "github": "https://github.com/mixpeek"
+    {
+      "group": "File API",
+      "pages": ["api-file/upload-one", "api-file/delete"]
     },
-    "backgroundImage": "/images/background.png"
+    {
+      "group": "Search API",
+      "pages": ["api-search/search"]
+    },
+    {
+      "group": "File Types",
+      "pages": [
+        "file-types/images",
+        "file-types/videos",
+        "file-types/audio",
+        "file-types/text",
+        "file-types/other"
+      ]
+    },
+    {
+      "group": "Integrations",
+      "pages": ["integrations/aws-object", "integrations/local-directory"]
+    }
+  ],
+  "footerSocials": {
+    "website": "https://mixpeek.com/",
+    "community": "https://mixpeek.com/community",
+    "github": "https://github.com/mixpeek"
+  },
+  "backgroundImage": "/images/background.png"
 }
