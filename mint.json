@@ -36,17 +36,7 @@
     {
       "name": "Guides",
       "icon": "book-bookmark",
-      "url": "https://medium.com/@mixpeek"
-    },
-    {
-      "name": "Community",
-      "icon": "slack",
-      "url": "https://mixpeek.com/community"
-    },
-    {
-      "name": "Github",
-      "icon": "github",
-      "url": "https://github.com/mixpeek"
+      "url": "https://mixpeek.com/learn"
     },
     {
       "name": "Security",
@@ -70,16 +60,6 @@
     {
       "group": "Search API",
       "pages": ["api-search/search"]
-    },
-    {
-      "group": "File Types",
-      "pages": [
-        "file-types/images",
-        "file-types/videos",
-        "file-types/audio",
-        "file-types/text",
-        "file-types/other"
-      ]
     },
     {
       "group": "Integrations",
