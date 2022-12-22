@@ -6,7 +6,7 @@
     "light": "/logo/light.png"
   },
   "api": {
-    "baseUrl": ["https://api.mixpeek.com", "https://api.sandbox.mixpeek.com"],
+    "baseUrl": ["https://api.mixpeek.com"],
     "auth": {
       "method": "key",
       "name": "Authorization"
@@ -24,13 +24,13 @@
   },
   "topbarLinks": [
     {
-      "name": "Contact Us",
-      "url": "mailto:info@mixpeek.com"
+      "name": "Talk to Engineers",
+      "url": "https://mixpeek.com/contact"
     }
   ],
   "topbarCtaButton": {
     "name": "Use Mixpeek",
-    "url": "https://m0ya3ewpknw.typeform.com/to/RGu9rcJk"
+    "url": "https://mixpeek.com/start"
   },
   "anchors": [
     {
@@ -42,6 +42,11 @@
       "name": "Security",
       "icon": "shield-halved",
       "url": "https://mixpeek.com/security"
+    },
+    {
+      "name": "Demo App",
+      "icon": "eye",
+      "url": "https://demo.mixpeek.com"
     }
   ],
   "navigation": [
@@ -55,15 +60,16 @@
     },
     {
       "group": "File API",
-      "pages": ["api-file/upload-one", "api-file/delete"]
+      "pages": [
+        "api-file/index-one",
+        "api-file/index-many",
+        "api-file/get-one",
+        "api-file/delete-one"
+      ]
     },
     {
       "group": "Search API",
       "pages": ["api-search/search"]
-    },
-    {
-      "group": "Integrations",
-      "pages": ["integrations/aws-object", "integrations/local-directory"]
     }
   ],
   "footerSocials": {

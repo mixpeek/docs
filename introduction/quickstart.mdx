@@ -42,16 +42,16 @@ If authorization is successful, you will receive this response:
 
 ```json
 {
-    "files_remaining": 1000
+    "credits_remaining": 1000
 }
 ```
 
-The `files_remaining` number indicates how many files you're able to upload.
+The `credits_remaining` number indicates how many files you're able to upload.
 Every account starts with `1000` regardless of your subscription plan.
 Each time you upload a new file you reduce that credit count by `1`.
-To issue more credits, sign into your [account](https://dash.mixpeek.com).
+To issue more credits, sign into your [account](https://mixpeek.com/start).
 
-## 2. Upload File
+## 2. Index File
 
 In order to make your files searchable, you must upload your files to the Mixpeek API.
 The engine will extract its' contents, save the output then promptly delete the file.
@@ -62,20 +62,21 @@ You can upload multiple files by appending file urls to the `file_url` array.
 ```python Python
 import requests
 
-url = "https://api.mixpeek.com/v1/file/upload"
-payload = {
-    "file_url": ["https://mixpeek-demo.s3.us-east-2.amazonaws.com/prescription.pdf"]
-}
+url = "https://api.mixpeek.com/v1/file/index-one"
+
 headers = {'Authorization': 'API_KEY'}
 
-requests.request("POST", url, data=payload, headers=headers)
+files = [
+    ('file', ('document.pdf', open('path/to/file/document.pdf', 'rb'), 'application/octet-stream'))
+]
+response = requests.request("POST", url, headers=self.header, data=payload, files=files)
 ```
 </CodeGroup>
 
 ### Response
 <CodeGroup>
 ```json JSON
-{"file_id":"123"}
+  {"file_id":"63a47050660c021b5027166e"}
 ```
 </CodeGroup>
 
@@ -92,29 +93,6 @@ url = "https://api.mixpeek.com/v1/search?q=prescription"
 headers = {'Authorization': 'API_KEY'}
 
 requests.request("GET", url, headers=headers)
-```
-
-```shell Shell
-curl --location --request GET 'https://api.mixpeek.com/v1/search?q=prescription' \
---header 'Authorization: API_KEY' \
---header 'Content-Type: application/json' \
-```
-
-```javascript Javascript
-var myHeaders = new Headers();
-myHeaders.append("Authorization", "API_KEY");
-myHeaders.append("Content-Type", "application/json");
-
-var requestOptions = {
-  method: 'GET',
-  headers: myHeaders,
-  redirect: 'follow'
-};
-
-fetch("https://api.mixpeek.com/v1/search?q=prescription", requestOptions)
-  .then(response => response.text())
-  .then(result => console.log(result))
-  .catch(error => console.log('error', error));
 ```
 </CodeGroup>
 

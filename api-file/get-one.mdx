@@ -1,0 +1,47 @@
+---
+title: "Get One"
+description: "Retrieve a file from the index by its' unique file id."
+api: "GET /v1/file/{file_id}"
+---
+
+## Request
+
+<ParamField path="file_id" type="string" required>
+  File ID of the file you'd like retrieved.
+</ParamField>
+
+<RequestExample>
+
+```python Python
+import requests
+
+url = "https://api.mixpeek.com/v1/file?file_id=63a47050660c021b5027166e"
+
+headers = {'Authorization': 'API_KEY'}
+
+requests.request("GET", url, headers=headers)
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Response
+{
+    "_id": "63a47050660c021b5027166e",
+    "api_key": "API_KEY",
+    "corpus":"lorem ipsum...",
+    "metadata": {
+        "date_inserted": "2022-12-22 09:57:20.013000",
+        "filename": "prescription.pdf",
+        "static_file_url": "s3://prescription.pdf",
+        "tags": [
+            "document",
+            "file",
+            "today"
+        ],
+        "user_id": "john_smith_123"
+    }
+}
+```
+</ResponseExample>

@@ -1,0 +1,39 @@
+---
+title: "Delete One"
+description: "Remove a file from the index by its' unique file id."
+api: "DELETE /v1/file/{file_id}"
+---
+
+## Request
+
+<ParamField path="file_id" type="string" required>
+  File ID of the file you'd like removed.
+</ParamField>
+
+## Response
+
+<ResponseField name="ok" type="boolean" required>
+  To indicate if it was successful or not.
+</ResponseField>
+
+<RequestExample>
+
+```python Python
+import requests
+
+url = "https://api.mixpeek.com/v1/file?file_id=123"
+
+headers = {'Authorization': 'API_KEY'}
+
+requests.request("DELETE", url, headers=headers)
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Response
+  { "ok": true }
+```
+
+</ResponseExample>
