@@ -4,25 +4,33 @@ description: "Securely send multiple files to mixpeek for indexing."
 api: "POST /v1/file/index-many"
 ---
 
-<Warning>S3 is currently the only repository supported. In order to use this API, you need to provision an IAM role in your AWS control plane. Follow [this tutorial](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html) to do so.</Warning>
+<Note>
+    S3 is currently the only supported directory. In order to use this API, you need to provision an IAM role in your AWS control plane. Follow [this tutorial](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html) to do so.
+</Note>
 
+## Request
 
 <ParamField body="s3_bucket" type="string">
     S3 bucket name.
 </ParamField>
 
 <ParamField body="aws_access_key" type="string">
-    If you want to store the context as well in order to perform semantic search.
+    Access key. This is **never** stored on our servers, removing IAM read permissions will cause this API to fail.
 </ParamField>
 
 <ParamField body="aws_secret_key" type="string">
-    Local file upload.
+    Secret key. This is **never** stored on our servers, removing IAM read permissions will cause this API to fail.
 </ParamField>
 
-<ParamField body="region" type="array">
-    Static hosted url of the file.
+<ParamField body="region" type="string">
+    Region of bucket.
 </ParamField>
 
+## Response
+
+<ResponseField name="file_ids" type="array" required>
+    Your uploaded files' unique identifiers.
+</ResponseField>
 
 <RequestExample>
 

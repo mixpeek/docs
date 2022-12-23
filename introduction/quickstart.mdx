@@ -16,7 +16,6 @@ Mixpeek uses API keys to allow access to the API. You can register a Mixpeek API
 
 | Environments  |                                             |                                 |
 | ------------ | ------------------------------------------- | ------------------------------- |
-| `sandbox`    | Testing, upload up to 10 files        | https://api.sandbox.mixpeek.com |
 | `production` | Live environment to use with real users | https://api.mixpeek.com         |
 
 Mixpeek expects for the API key to be included in all API requests to the server within the `header` that looks like the following:
@@ -53,25 +52,37 @@ To issue more credits, sign into your [account](https://mixpeek.com/start).
 
 ## 2. Index File
 
+We strongly recommend you use the Mixpeek [Python library](/introduction/libraries) available via:
+
+```shell Install
+  pip install git+https://github.com/mixpeek/mixpeek-python.git@master
+```
+
 In order to make your files searchable, you must upload your files to the Mixpeek API.
 The engine will extract its' contents, save the output then promptly delete the file.
-You can upload multiple files by appending file urls to the `file_url` array.
+
+Optionally, you can index your entire S3 bucket via [/index-many](/api-file/index-many)
 
 ### Request
 <CodeGroup>
 ```python Python
-import requests
+from mixpeek import Mixpeek
 
-url = "https://api.mixpeek.com/v1/file/index-one"
+mix = Mixpeek(api_key="API_KEY")
 
-headers = {'Authorization': 'API_KEY'}
+# index one local pdf document without any additional metadata
+mix.index("/path/to/file/document.pdf")
 
-files = [
-    ('file', ('document.pdf', open('path/to/file/document.pdf', 'rb'), 'application/octet-stream'))
-]
-response = requests.request("POST", url, headers=self.header, data=payload, files=files)
+# with extra metadata
+mix.index("/path/to/file/document.pdf", user_id="john_smith_123", tags="document, legal", static_file_url="cdn.host.com/document.pdf")
+```
+```shell cURL
+curl --location --request POST 'https://api.mixpeek.com/v1/file/index-one' \
+--header 'Authorization: API_KEY' \
+--form 'file=@"path/to/file/document.pdf"'
 ```
 </CodeGroup>
+
 
 ### Response
 <CodeGroup>
@@ -87,12 +98,15 @@ Once your files' contents are extracted they will become searchable via the `/se
 
 <CodeGroup>
 ```python Python
-import requests
+# simple search
+mix.search(query="system")
 
-url = "https://api.mixpeek.com/v1/search?q=prescription"
-headers = {'Authorization': 'API_KEY'}
-
-requests.request("GET", url, headers=headers)
+# search with additional parameters
+mix.search("system", user_id="john_smith_123", context="true", tags="legal, document")
+```
+```shell cURL
+curl --location --request GET 'https://api.mixpeek.com/v1/search?q=system' \
+--header 'Authorization: API_KEY' \
 ```
 </CodeGroup>
 

@@ -1,5 +1,5 @@
 ---
-title: "Index"
+title: "Index One"
 description: "Securely send your file to the Mixpeek server, where the content is extracted, indexed and then searchable. Files are never stored on our servers."
 api: "POST /v1/file/index"
 ---
@@ -31,24 +31,15 @@ api: "POST /v1/file/index"
 <RequestExample>
 
 ```python Python
-import requests
+from mixpeek import Mixpeek
 
-url = "https://api.mixpeek.com/v1/file/index"
+mix = Mixpeek(api_key="API_KEY")
 
-payload={
-  'user_id': 'john_smith_123',
-  'tags': 'audio, file, today',
-  'static_file_url': 's3://file.pdf'
-}
+# index one local pdf document without any extra metadata
+mix.index("/user/desktop/file.pdf")
 
-files=[
-  ('file',('prescription.pdf',open('path/to/file.pdf','rb'),'application/pdf'))
-]
-headers = {
-  'Authorization': 'API_KEY'
-}
-
-requests.request("POST", url, headers=headers, data=payload, files=files)
+# with extra metadata
+mix.index("/user/desktop/file.pdf", user_id="123", tags="document, legal", static_file_url="cdn.host.com/file.pdf")
 ```
 
 ```shell Shell
