@@ -46,7 +46,7 @@
     {
       "name": "Demo App",
       "icon": "eye",
-      "url": "https://demo.mixpeek.com"
+      "url": "https://demo.mixpeek.com/files?defaultSearch=system"
     }
   ],
   "navigation": [
@@ -61,15 +61,17 @@
     {
       "group": "File API",
       "pages": [
-        "api-file/index-one",
-        "api-file/index-many",
-        "api-file/get-one",
-        "api-file/delete-one"
+        "api-reference/api-file",
+        "api-reference/api-file/index-one",
+        "api-reference/api-file/index-many",
+        "api-reference/api-file/get-one",
+        "api-reference/api-file/list-files",
+        "api-reference/api-file/delete-one"
       ]
     },
     {
       "group": "Search API",
-      "pages": ["api-search/search"]
+      "pages": ["api-reference/api-search", "api-reference/api-search/search"]
     }
   ],
   "footerSocials": {

@@ -4,21 +4,22 @@ description: "A quick introduction to building with Mixpeek."
 ---
 
 <Note>
-  Mixpeek is currently in **private beta**. To use the API, you need to [register an API key](https://mixpeek.com/start) and an engineer will contact you.
+  Mixpeek is currently in **private beta**. To use the API, you need to
+  [register an API key](https://mixpeek.com/start) and an engineer will contact
+  you.
 </Note>
-
 
 ## What is Mixpeek?
 
-Mixpeek is an intelligence layer on top of your object store like S3. By using NLP, it grants you an "understanding" of your non-text files with just a GET <a href="/api-search/search">/search</a> API call. 
+Mixpeek is an intelligence layer on top of your object store like S3. By using NLP, it grants you an "understanding" of your non-text files with just a GET `/search` API call.
 
 ## 1. Create Authentication Token
 
-Mixpeek uses API keys to allow access to the API. You can register a Mixpeek API key using [this page](https://m0ya3ewpknw.typeform.com/to/RGu9rcJk). Your API key acts as a **tenancy** to ensure you can only search the contents of your uploaded files.
+Mixpeek uses API keys to allow access to the API. You can register a Mixpeek API key using [this page](https://mixpeek.com/start). Your API key acts as a **tenancy** to ensure you can only search the contents of your uploaded files.
 
-| Environments  |                                             |                                 |
-| ------------ | ------------------------------------------- | ------------------------------- |
-| `production` | Live environment to use with real users | https://api.mixpeek.com         |
+| Environments |                                         |                         |
+| ------------ | --------------------------------------- | ----------------------- |
+| `production` | Live environment to use with real users | https://api.mixpeek.com |
 
 Mixpeek expects for the API key to be included in all API requests to the server within the `header` that looks like the following:
 
@@ -30,12 +31,10 @@ Authorization: API_KEY
 
 To confirm authorization, use this code:
 
-<CodeGroup>
-```shell Shell
+```shell
 curl --location --request GET 'https://api.mixpeek.com/' \
 --header 'Authorization: API_KEY'
 ```
-</CodeGroup>
 
 #### Response
 
@@ -43,7 +42,7 @@ If authorization is successful, you will receive this response:
 
 ```json
 {
-    "credits_remaining": 1000
+  "credits_remaining": 1000
 }
 ```
 
@@ -63,9 +62,10 @@ We strongly recommend you use the Mixpeek [Python library](/introduction/librari
 In order to make your files searchable, you must upload your files to the Mixpeek API.
 The engine will extract its' contents, save the output then promptly delete the file.
 
-Optionally, you can index your entire S3 bucket via [/index-many](/api-file/index-many)
+Optionally, you can index your entire S3 bucket via `/index-many`
 
 ### Request
+
 <CodeGroup>
 ```python Python
 from mixpeek import Mixpeek
@@ -73,26 +73,29 @@ from mixpeek import Mixpeek
 mix = Mixpeek(api_key="API_KEY")
 
 # index one local pdf document without any additional metadata
+
 mix.index("/path/to/file/document.pdf")
 
 # with extra metadata
+
 mix.index("/path/to/file/document.pdf", user_id="john_smith_123", tags="document, legal", static_file_url="cdn.host.com/document.pdf")
-```
+
+````
 ```shell cURL
 curl --location --request POST 'https://api.mixpeek.com/v1/file/index-one' \
 --header 'Authorization: API_KEY' \
 --form 'file=@"path/to/file/document.pdf"'
-```
+````
+
 </CodeGroup>
 
-
 ### Response
+
 <CodeGroup>
 ```json JSON
   {"file_id":"63a47050660c021b5027166e"}
 ```
 </CodeGroup>
-
 
 ## 3. Search for Files
 
@@ -104,14 +107,16 @@ Once your files' contents are extracted they will become searchable via the `/se
 mix.search(query="system")
 
 # search with additional parameters
+
 mix.search("system", user_id="john_smith_123", context="true", tags="legal, document")
-```
+
+````
 ```shell cURL
 curl --location --request GET 'https://api.mixpeek.com/v1/search?q=system' \
 --header 'Authorization: API_KEY' \
-```
-</CodeGroup>
+````
 
+</CodeGroup>
 
 ## Demonstration Video
 
@@ -130,7 +135,7 @@ We made this helpful video before to walk you through several file type examples
         top: 0,
         left: 0,
         width: "100%",
-        height: "100%"
+        height: "100%",
       }}
     ></iframe>
   </div>

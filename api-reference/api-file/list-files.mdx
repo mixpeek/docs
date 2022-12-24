@@ -1,0 +1,34 @@
+---
+title: "List Files"
+description: "Retrieve all files associated with an account."
+api: "GET /v1/file"
+---
+
+<RequestExample>
+
+```python Python
+import requests
+
+url = "https://api.mixpeek.com/v1/file"
+
+headers = {'Authorization': 'API_KEY'}
+
+requests.request("GET", url, headers=headers)
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Response
+{
+  "file_ids": [
+    "63a47891614b9c2f4988a0e6",
+    "63a47891614b9c2f4988a0e7",
+    "63a47891614b9c2f4988a0e8",
+    "63a47893614b9c2f4988a0e9"
+  ]
+}
+```
+
+</ResponseExample>
