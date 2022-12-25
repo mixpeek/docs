@@ -4,6 +4,20 @@ description: "Retrieve all files associated with an account."
 api: "GET /v1/file"
 ---
 
+## Request
+
+<ParamField query="user_id" type="string" optional>
+  For user filtering.
+</ParamField>
+
+<ParamField query="limit" type="integer" optional>
+  Limit results.
+</ParamField>
+
+<ParamField query="metadata" type="boolean" optional>
+  Include metadata
+</ParamField>
+
 <RequestExample>
 
 ```python Python
