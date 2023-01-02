@@ -7,39 +7,40 @@ api: "GET /v1/search"
 ### Request
 
 <ParamField query="q" type="string" required>
-    Your search query.
+  Your search query.
 </ParamField>
 
 <ParamField query="metadata" type="string" optional>
-    Include metadata.
+  Include metadata.
 </ParamField>
 
 <ParamField query="user_id" type="string" optional>
-    Filter used to run isolated queries against individual user's files.
+  Filter used to run isolated queries against individual user's files.
 </ParamField>
 
 <ParamField query="context" type="boolean" default="False" optional>
-    Indicate where the keyword exists within the body of text from the file.
+  Indicate where the keyword exists within the body of text from the file.
 </ParamField>
 
 <ParamField query="semantics" type="boolean" default="False" optional>
-    Include the semantically similar terms in your results.
+  Include the semantically similar terms in your results.
 </ParamField>
 
 ## Response
 
 <ResponseField name="file_id" type="string" required>
-    Your uploaded files' unique identifier.
+  Your uploaded files' unique identifier.
 </ResponseField>
 
 <ResponseField name="filename" type="string" required>
-    Name of the file.
+  Name of the file.
 </ResponseField>
 
 <ResponseField name="filename" type="string" required>
-    The calculated importance or relevance of the file. Internally, the algorithms are a combination of `TF-IDF`, `BM25`, and `Cosine Similarity` (if Semantics is enabled).
+  The calculated importance or relevance of the file. Internally, the algorithms
+  are a combination of `TF-IDF`, `BM25`, and `Cosine Similarity` (if Semantics
+  is enabled).
 </ResponseField>
-
 
 <RequestExample>
 
@@ -52,7 +53,13 @@ mix = Mixpeek(api_key="API_KEY")
 mix.search(query="system")
 
 # search with additional parameters
-mix.search("system", user_id="john_smith_123", context="true", tags="legal, document")
+mix.search(
+    "system",
+    # everything below is optional
+    user_id="john_smith_123",
+    context="true",
+    tags="legal, document"
+)
 ```
 
 ```shell Shell
@@ -67,15 +74,15 @@ myHeaders.append("Authorization", "API_KEY");
 myHeaders.append("Content-Type", "application/json");
 
 var requestOptions = {
-  method: 'GET',
+  method: "GET",
   headers: myHeaders,
-  redirect: 'follow'
+  redirect: "follow",
 };
 
 fetch("https://api.mixpeek.com/v1/search?q=prescription", requestOptions)
-  .then(response => response.text())
-  .then(result => console.log(result))
-  .catch(error => console.log('error', error));
+  .then((response) => response.text())
+  .then((result) => console.log(result))
+  .catch((error) => console.log("error", error));
 ```
 
 </RequestExample>
@@ -84,11 +91,11 @@ fetch("https://api.mixpeek.com/v1/search?q=prescription", requestOptions)
 
 ```json
 [
-    {
-        "file_id": "123",
-        "filename": "prescription.pdf",
-        "importance": "100%"
-    }
+  {
+    "file_id": "123",
+    "filename": "prescription.pdf",
+    "importance": "100%"
+  }
 ]
 ```
 

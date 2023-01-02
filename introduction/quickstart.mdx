@@ -78,7 +78,14 @@ mix.index("/path/to/file/document.pdf")
 
 # with extra metadata
 
-mix.index("/path/to/file/document.pdf", user_id="john_smith_123", tags="document, legal", static_file_url="cdn.host.com/document.pdf")
+mix.index(
+"/path/to/file/document.pdf",
+user_id="john_smith_123",
+tags="document, legal",
+static_file_url="cdn.host.com/document.pdf",
+save=True,
+description="lorem ipsum"
+)
 
 ````
 ```shell cURL
@@ -108,9 +115,15 @@ mix.search(query="system")
 
 # search with additional parameters
 
-mix.search("system", user_id="john_smith_123", context="true", tags="legal, document")
+mix.search(
+"system",
+user_id="john_smith_123",
+context="true",
+tags="legal, document"
+)
 
 ````
+
 ```shell cURL
 curl --location --request GET 'https://api.mixpeek.com/v1/search?q=system' \
 --header 'Authorization: API_KEY' \

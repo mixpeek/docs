@@ -10,6 +10,16 @@ api: "POST /v1/file/index"
   Provide your file.
 </ParamField>
 
+<ParamField query="save" type="boolean" optional>
+  If `true`, it will save it in Mixpeek's dedicated S3 bucket. Your file will be
+  stored within a unique folder to your api-key tenant. This will override any
+  `static_file_url` provided and will include it in the response.
+</ParamField>
+
+<ParamField body="description" type="string" optional>
+  Description of the file.
+</ParamField>
+
 <ParamField body="user_id" type="string" optional>
   Filter used to run isolated searches on individual user's files.
 </ParamField>
@@ -39,7 +49,15 @@ mix = Mixpeek(api_key="API_KEY")
 mix.index("/user/desktop/file.pdf")
 
 # with extra metadata
-mix.index("/user/desktop/file.pdf", user_id="123", tags="document, legal", static_file_url="cdn.host.com/file.pdf")
+mix.index(
+  "/user/desktop/file.pdf",
+  # everything below is optional
+  description="This file contains a cat.",
+  user_id="123",
+  tags="document, legal",
+  static_file_url="cdn.host.com/file.pdf",
+  save=True
+)
 ```
 
 ```shell Shell
