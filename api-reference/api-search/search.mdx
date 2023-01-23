@@ -89,12 +89,44 @@ fetch("https://api.mixpeek.com/v1/search?q=prescription", requestOptions)
 
 <ResponseExample>
 
-```json
+```json Basic
 [
   {
     "file_id": "123",
     "filename": "prescription.pdf",
     "importance": "100%"
+  }
+]
+```
+
+```json Metadata & Context
+[
+  {
+    "file_id": "63a5deebb6f9bdd6bb55ff5d",
+    "filename": "system-design-primer.md",
+    "importance": "100%",
+    "metadata": {
+      "date_inserted": "2022-12-23 12:01:31.499000",
+      "static_file_url": "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/system-design-primer.md"
+    },
+    "context": [
+      {
+        "texts": [
+          {
+            "type": "text",
+            "value": "_[English](README.md) ∙ [日本語](README-ja.md) ∙ [简体中文](README-zh-Hans.md) ∙ [繁體中文](README-zh-TW.md) | [العَرَبِيَّة‎](https://github.com/donnemartin/"
+          },
+          {
+            "type": "hit",
+            "value": "system"
+          },
+          {
+            "type": "text",
+            "value": "-design-primer/issues/170) ∙ [বাংলা](https://github.com/donnemartin/"
+          }
+        ]
+      }
+    ]
   }
 ]
 ```
