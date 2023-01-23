@@ -29,14 +29,14 @@ api: "GET /v1/search"
 ## Response
 
 <ResponseField name="file_id" type="string" required>
-  Your uploaded files' unique identifier.
+  Your uploaded files' unique identifier. *BETA*
 </ResponseField>
 
 <ResponseField name="filename" type="string" required>
   Name of the file.
 </ResponseField>
 
-<ResponseField name="filename" type="string" required>
+<ResponseField name="importance" type="string" required>
   The calculated importance or relevance of the file. Internally, the algorithms
   are a combination of `TF-IDF`, `BM25`, and `Cosine Similarity` (if Semantics
   is enabled).
