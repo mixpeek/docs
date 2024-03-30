@@ -59,19 +59,10 @@
       ]
     },
     {
-      "group": "File API",
+      "group": "Integrations",
       "pages": [
-        "api-reference/api-file",
-        "api-reference/api-file/index-one",
-        "api-reference/api-file/index-many",
-        "api-reference/api-file/get-one",
-        "api-reference/api-file/list-files",
-        "api-reference/api-file/delete-one"
+        "integrations/mongodb"
       ]
-    },
-    {
-      "group": "Search API",
-      "pages": ["api-reference/api-search", "api-reference/api-search/search"]
     }
   ],
   "footerSocials": {
