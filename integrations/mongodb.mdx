@@ -1,0 +1,119 @@
+# Integrating MongoDB with Mixpeek
+- the why behind the integration
+- how to build and how to troubleshoot
+
+## 1. Pick an Embedding Model
+- add table of top 5 embedding models (ethan will send)
+- how do I determine which embedding model fits my use case?
+- 
+1. Pick an embedding model from the table below
+2. Select an embedding model that suits your application's needs.
+
+table goes here
+
+## 2. Create MongoDB Cluster via MongoDB Atlas
+
+1. Navigate to [MongoDB Atlas](https://cloud.mongodb.com/).
+2. If you don't already have an account, create one. Otherwise, sign in.
+3. Follow the prompts to create a new cluster.
+
+## 3. Create Vector Search Index
+
+1. In MongoDB Atlas, navigate to `Atlas Search`
+![atlas search](/images/atlas-search.png)
+2. Choose `Create Search Index` and then `JSON Editor`.
+![atlas search](/images/create-index.png)
+3. Select the collection you wish to index.
+4. Enter the JSON configuration for your index. Replace `"test_embedding_768"` with the name of the field where your embeddings will be stored, and adjust `"dimensions"` to match the dimensions of your chosen embedding model from the MTEB leaderboard.
+![atlas search](/images/configure-index.png)
+
+Sample Index Configuration:
+```JSON
+{
+  "mappings": {
+    "dynamic": true,
+    "fields": {
+      "test_embedding_768": {
+        "dimensions": 768,
+        "similarity": "euclidean",
+        "type": "knnVector"
+      }
+    }
+  }
+}
+
+```
+
+## 4. Create Mixpeek Pipeline
+```shell
+curl --location --request POST 'http://api.mixpeek.com/pipelines' \
+--header 'Authorization: Bearer <MIXPEEK_API_KEY>' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+  "connection": {}
+  "source": {
+    "filters": {}
+    },
+    "on_operation": [],
+    "field": {
+      "name": "",
+      "type": "",
+      "embedding_model": "",
+      "settings": {}
+    }
+  },
+  "destination": {
+    "collection": "",
+    "new_field_name": "",
+    "new_embeddings": ""
+  },
+  "metadata": {
+    "project": "",
+    "version": ""
+  },
+  "enabled": true,
+  "last_run": null
+}'
+
+```
+
+## 5. Create Mongodb trigger
+- why are we creating a trigger?
+- add screenshots for trigger in atlas
+```Javascript
+exports = async function(changeEvent) {
+  // Documentation on ChangeEvents: https://docs.mongodb.com/manual/reference/change-events/
+  const webhookUrl = "";
+
+  // Assuming changeEvent.fullDocument contains the document you want to send
+  
+  try {
+    // Headers must be an object with string keys and string values
+    const headers = {
+        Authorization: [ "Bearer <MIXPEEK_API_KEY>" ],
+       "Content-Type": [ "application/json" ],
+      };
+
+    // The body of your request, turned into a JSON string
+    const body = JSON.stringify(changeEvent.fullDocument);
+
+    // Making the HTTP POST request
+    const response = await context.http.post({
+      url: webhookUrl, // The URL you are sending the request to
+      headers: headers, // The headers object
+      body: body, // The body of the request, which must be a string
+      encodeBodyAsJSON: true // This ensures the body is treated as JSON
+    });
+
+    // Logging the response status to verify successful delivery
+    console.log("Payload sent, received response status: ", response.status);
+  } catch(err) {
+    console.error("Error sending document payload: ", err.message);
+  }
+};
+```
+
+## 6. Test Integration
+- show how to test each piece
+- show how to test end to end
+  - animation could be helpful here of expected e2e flow
