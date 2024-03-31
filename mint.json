@@ -6,7 +6,9 @@
     "light": "/logo/light.png"
   },
   "api": {
-    "baseUrl": ["https://api.mixpeek.com"],
+    "baseUrl": [
+      "https://api.mixpeek.com"
+    ],
     "auth": {
       "method": "key",
       "name": "Authorization"
@@ -56,12 +58,6 @@
         "introduction/quickstart",
         "introduction/libraries",
         "introduction/faq"
-      ]
-    },
-    {
-      "group": "Integrations",
-      "pages": [
-        "integrations/mongodb"
       ]
     }
   ],
