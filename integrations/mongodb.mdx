@@ -1,15 +1,47 @@
+---
+title: 'MongoDB'
+description: 'Add MongoDB sync capabability to mixpeek'
+icon: 'leaf'
+iconType: 'solid'
+---
+
 # Integrating MongoDB with Mixpeek
-- the why behind the integration
-- how to build and how to troubleshoot
+
+<Steps>
+  <Step title="Pick an Embedding Model">
+    This step involves selecting the most suitable embedding model for your
+    project from a range of available options, each with its own characteristics
+    and performance metrics.
+  </Step>
+  <Step title="Prepare MongoDB Cluster">
+    Setting up a MongoDB Cluster on MongoDB Atlas provides a scalable and secure
+    database environment for storing your application's data.
+  </Step>
+  <Step title="Create Mixpeek Pipeline">
+    In this phase, you'll configure the Mixpeek pipeline, which is crucial for
+    processing and integrating your data with the chosen embedding model.
+  </Step>
+  <Step title="Build your Apps">
+    With the backend ready, you can now focus on developing your application's
+    frontend, ensuring users can interact smoothly with your service.
+  </Step>
+</Steps>
 
 ## 1. Pick an Embedding Model
-- add table of top 5 embedding models (ethan will send)
-- how do I determine which embedding model fits my use case?
-- 
+
 1. Pick an embedding model from the table below
+
+| Model Name                             | Dimensions | Max Tokens | MTEB Ranking |
+| -------------------------------------- | ---------- | ---------- | ------------ |
+| jinaai/jina-embeddings-v2-base-en      | 768        | 8192       | 74.731       |
+| sentence-transformers/all-MiniLM-L6-v2 | 384        | TBA        | TBA          |
+| nomic-ai/nomic-embed-text-v1.5         | 512        | 8192       | TBA          |
+| mixedbread-ai/mxbai-embed-large-v1     | 1024       | 512        | 64.68        |
+| Cohere/Cohere-embed-multilingual-v3.0  | 1024       | 512        | 64.47        |
+
 2. Select an embedding model that suits your application's needs.
 
-table goes here
+Consult the [Embedding Benchmarks](https://github.com/embeddings-benchmark/mteb#leaderboard) scripts.
 
 ## 2. Create MongoDB Cluster via MongoDB Atlas
 
@@ -20,14 +52,15 @@ table goes here
 ## 3. Create Vector Search Index
 
 1. In MongoDB Atlas, navigate to `Atlas Search`
-![atlas search](/images/atlas-search.png)
+   ![atlas search](/images/atlas-search.png)
 2. Choose `Create Search Index` and then `JSON Editor`.
-![atlas search](/images/create-index.png)
+   ![atlas search](/images/create-index.png)
 3. Select the collection you wish to index.
 4. Enter the JSON configuration for your index. Replace `"test_embedding_768"` with the name of the field where your embeddings will be stored, and adjust `"dimensions"` to match the dimensions of your chosen embedding model from the MTEB leaderboard.
-![atlas search](/images/configure-index.png)
+   ![atlas search](/images/configure-index.png)
 
 Sample Index Configuration:
+
 ```JSON
 {
   "mappings": {
@@ -45,52 +78,50 @@ Sample Index Configuration:
 ```
 
 ## 4. Create Mixpeek Pipeline
-```shell
-curl --location --request POST 'http://api.mixpeek.com/pipelines' \
---header 'Authorization: Bearer <MIXPEEK_API_KEY>' \
---header 'Content-Type: application/json' \
---data-raw '{
-  "connection": {}
-  "source": {
-    "filters": {}
-    },
-    "on_operation": [],
-    "field": {
-      "name": "",
-      "type": "",
-      "embedding_model": "",
-      "settings": {}
-    }
-  },
-  "destination": {
-    "collection": "",
-    "new_field_name": "",
-    "new_embeddings": ""
-  },
-  "metadata": {
-    "project": "",
-    "version": ""
-  },
-  "enabled": true,
-  "last_run": null
-}'
 
+This is where all the processing logic lives. Much of this is default, opionated logic. If you need something custom, we reccommend using the `Workflows` service, which can be called inside the pipeline.
+
+```shell
+curl --location 'https://api.mixpeek.com/pipelines' \
+--header 'Authorization: Bearer API_KEY' \
+--header 'Content-Type: application/json' \
+--data '{
+    "source_destination_mappings": [
+        {
+            "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+            "source": {
+                "field": "resume_url",
+                "type": "file_url",
+                "settings": {}
+            },
+            "destination": {
+                "collection": "resume_embeddings",
+                "field": "text",
+                "embedding": "embedding"
+            }
+        }
+    ]
+}'
 ```
 
+It automatically pulls from the connections you defined in the Update Connections method.
+You can have multiple pipelines as objects in the `source_destination_mappings` array.
+
 ## 5. Create Mongodb trigger
-- why are we creating a trigger?
-- add screenshots for trigger in atlas
+
+The trigger allows us to process changes in real-time using the pipeline we defined above
+
 ```Javascript
 exports = async function(changeEvent) {
   // Documentation on ChangeEvents: https://docs.mongodb.com/manual/reference/change-events/
-  const webhookUrl = "";
+  const webhookUrl = `https://api.mixpeek.com/pipelines/${pipeline_id}`;
 
   // Assuming changeEvent.fullDocument contains the document you want to send
-  
+
   try {
     // Headers must be an object with string keys and string values
     const headers = {
-        Authorization: [ "Bearer <MIXPEEK_API_KEY>" ],
+        Authorization: [ "Bearer API_KEY" ],
        "Content-Type": [ "application/json" ],
       };
 
@@ -111,9 +142,9 @@ exports = async function(changeEvent) {
     console.error("Error sending document payload: ", err.message);
   }
 };
+
 ```
 
 ## 6. Test Integration
-- show how to test each piece
-- show how to test end to end
-  - animation could be helpful here of expected e2e flow
+
+<Note>Work in progress</Note>

@@ -44,20 +44,51 @@
       "name": "Security",
       "icon": "shield-halved",
       "url": "https://mixpeek.com/security"
-    },
-    {
-      "name": "Demo App",
-      "icon": "eye",
-      "url": "https://demo.mixpeek.com/files?defaultSearch=system"
     }
   ],
   "navigation": [
     {
-      "group": "Introduction",
+      "group": "Getting Started",
       "pages": [
         "introduction/quickstart",
         "introduction/libraries",
         "introduction/faq"
+      ]
+    },
+    {
+      "group": "Integrations",
+      "pages": [
+        "integrations/mongodb"
+      ]
+    },
+    {
+      "group": "Pipelines",
+      "pages": [
+        "pipelines/create",
+        "pipelines/invoke",
+        "pipelines/status"
+      ]
+    },
+    {
+      "group": "Methods",
+      "pages": [
+        "methods/extract",
+        "methods/embed",
+        "methods/generate"
+      ]
+    },
+    {
+      "group": "Workflows",
+      "pages": [
+        "workflows/code",
+        "workflows/create",
+        "workflows/invoke"
+      ]
+    },
+    {
+      "group": "Management",
+      "pages": [
+        "users/connection"
       ]
     }
   ],

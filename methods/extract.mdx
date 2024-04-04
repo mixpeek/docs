@@ -1,0 +1,46 @@
+---
+title: "Extract"
+description: "Extract and index content from documents provided through a URL or direct content input on the Mixpeek platform. This endpoint is designed to process documents in various formats, making their content searchable and accessible. It's perfect for extracting valuable insights and information with precision."
+api: "POST /extract"
+---
+
+## Request
+
+<ParamField body="file_url" type="string" optional>
+  The URL of the document from which content is to be extracted. Provide a direct link to the document you wish to process, allowing Mixpeek to access and analyze its contents. Either `file_url` or `contents` must be provided, but not both.
+</ParamField>
+
+<ParamField body="contents" type="string" optional>
+  The direct textual or base64-encoded content of the document for extraction. Use this field if you prefer to upload document content directly rather than via a URL. Either `file_url` or `contents` must be provided, but not both.
+</ParamField>
+
+<ParamField body="should_chunk" type="boolean" optional>
+  Indicates whether the text should be divided into manageable chunks. This can be useful for processing large documents or for applications requiring segmented analysis.
+</ParamField>
+
+<ParamField body="other_parameters" type="string" optional>
+  Includes additional processing parameters such as `clean_text`, `max_characters_per_chunk`, `extract_tags`, `summarize`, and format-specific settings (`pdf_settings`, `html_settings`, etc.), tailored to enhance the extraction based on the document's modality and content.
+</ParamField>
+
+## Response
+
+<ResponseField name="output" type="array" required>
+  An array of elements extracted from the document. Each element may represent a piece of text, an image description, or other relevant content blocks, along with their metadata like page numbers, languages, and file type.
+</ResponseField>
+
+<ResponseField name="metadata" type="object" required>
+  Metadata related to the extraction process, detailing the document type, processing time, and any other pertinent information about the extracted content.
+</ResponseField>
+
+<RequestExample>
+
+```shell Shell
+curl --location 'https://api.mixpeek.com/extract' \
+--header 'Authorization: Bearer API_KEY' \
+--header 'Content-Type: application/json' \
+--data '{
+    "file_url": "https://example.com/document.pdf",
+    "should_chunk": true
+}'
+```
+</RequestExample>

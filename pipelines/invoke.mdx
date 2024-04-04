@@ -1,0 +1,47 @@
+---
+title: "Invoke Pipeline"
+description: "Manually trigger the execution of a specific data processing pipeline on the Mixpeek platform. This endpoint is designed for users who need to process data on-demand, allowing for immediate data transformation, embedding, or any other pipeline-specific operations. Ideal for scenarios where timely data processing is crucial."
+api: "POST /pipelines/{pipeline_id}"
+---
+
+## Request
+
+<ParamField path="pipeline_id" type="string" required>
+  The unique identifier of the pipeline you wish to invoke. This ID specifies which pipeline to trigger and is essential for routing the request correctly within the Mixpeek platform.
+</ParamField>
+
+<ParamField body="data" type="object" optional>
+  The data to be processed by the pipeline. This object can include any relevant information that the pipeline is configured to handle, such as URLs to documents for extraction or text content for embedding.
+</ParamField>
+
+<ParamField body="settings" type="object" optional>
+  Additional settings or parameters that affect how the pipeline processes the provided data. These settings can include configurations like processing modes, output formats, or any custom options supported by the pipeline.
+</ParamField>
+
+## Response
+
+<ResponseField name="task_id" type="string" required>
+  A unique identifier for the task created by invoking the pipeline. This ID can be used to track the status of the task, retrieve results, and manage subsequent processing steps.
+</ResponseField>
+
+<ResponseField name="status" type="string" required>
+  Provides immediate feedback on the invocation status, indicating whether the pipeline execution has started successfully or if there were any issues triggering the process.
+</ResponseField>
+
+<RequestExample>
+
+```shell Shell
+curl --location 'https://api.mixpeek.com/pipelines/c7e006' \
+--header 'Authorization: Bearer API_KEY' \
+--header 'Content-Type: application/json' \
+--data '{
+    "data": {
+        "file_url": "https://example.com/document.pdf"
+    },
+    "settings": {
+        "extraction_mode": "full_text"
+    }
+}'
+```
+
+</RequestExample>

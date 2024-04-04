@@ -1,0 +1,36 @@
+---
+title: "Update Connections"
+description: "Modify an existing user's information on the Mixpeek platform. This endpoint enables the updating of user details, including API keys, metadata, and database connections, ensuring that user configurations remain aligned with evolving requirements or preferences."
+api: "PUT /users"
+---
+
+## Request
+
+<ParamField body="connections" type="array" optional>
+  Database connections associated with the user. This array specifies the databases the user can access, including connection details like the database engine, host, and credentials, enabling data operations within Mixpeek.
+</ParamField>
+
+## Response
+
+<ResponseField name="connections" type="array" optional>
+  Confirms the updated database connections for the user, detailing the new or modified access configurations.
+</ResponseField>
+
+<RequestExample>
+
+```shell Shell
+curl --location --request PUT 'https://api.mixpeek.com/users' \
+--header 'Authorization: Bearer YOUR_API_KEY' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "connections": [
+        {
+            "engine": "mongodb",
+            "host": "db.example.com",
+            "port": 27017,
+            "database": "example_db",
+            "username": "user",
+            "password": "pass"
+        }
+    ]
+}'

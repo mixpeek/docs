@@ -1,0 +1,78 @@
+---
+title: "Generate"
+description: "Generate structured text responses using the Mixpeek platform and a specific language model configuration. This endpoint allows for the creation of text that adheres to a predefined JSON schema, enabling the generation of structured data from natural language input."
+api: "POST /generate/text"
+---
+
+## Request
+
+<ParamField body="model" type="object" required>
+  Specifies the language model provider and the specific model to be used for generation. This field allows customization of the text generation process based on the model's capabilities and characteristics.
+</ParamField>
+
+<ParamField body="response_format" type="object" required>
+  Defines the JSON schema for the response. This schema specifies the structure and types of the data that the generated text should conform to, ensuring that the output meets specific data format requirements.
+</ParamField>
+
+<ParamField body="context" type="string" required>
+  The context or prompt based on which the model will generate the text. This should be a clear and concise statement or question that guides the model's output within the constraints of the specified response format.
+</ParamField>
+
+<ParamField body="messages" type="array" optional>
+  An optional array of messages or additional context that can be provided to the model to further influence or guide the generation process.
+</ParamField>
+
+<ParamField body="settings" type="object" optional>
+  Additional settings for the generation process, allowing for customization of model behavior, such as adjusting creativity levels, specifying output length, or other model-specific parameters.
+</ParamField>
+
+## Response
+
+<ResponseField name="response" type="object" required>
+  The generated text output structured according to the specified JSON schema. This object contains the data fields and values as defined in the response format.
+</ResponseField>
+
+<ResponseField name="metadata" type="object" required>
+  Metadata about the generation process, including the total number of tokens generated, the unique identifier for the generation task, and details about the model used.
+</ResponseField>
+
+<ResponseField name="elapsed_time" type="number" required>
+  The time taken to generate the response, measured in milliseconds.
+</ResponseField>
+
+<RequestExample>
+
+```shell Shell
+curl --location 'https://api.mixpeek.com/generate/text' \
+--header 'Authorization: Bearer API_KEY' \
+--header 'Content-Type: application/json' \
+--data '{
+    "model": {
+        "provider": "GPT",
+        "model": "gpt-4-turbo-preview"
+    },
+    "response_format": {
+        "type": "object",
+        "properties": {
+            "city": {
+                "title": "City",
+                "type": "string"
+            },
+            "neighborhood": {
+                "title": "Neighborhood",
+                "type": "string"
+            },
+            "weather": {
+                "title": "Weather",
+                "type": "number"
+            }
+        },
+        "required": ["city", "neighborhood", "weather"]
+    },
+    "context": "Please tell me the weather and make sure to respond in the provided JSON schema",
+    "messages": [],
+    "settings": {}
+}'
+```
+</RequestExample>
+

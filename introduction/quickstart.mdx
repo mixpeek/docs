@@ -1,15 +1,116 @@
 ---
 title: "Quickstart"
-description: "A quick introduction to building with Mixpeek."
+description: "Building your first multimodal replication pipeline"
+icon: "truck-fast"
+iconType: "solid"
 ---
 
 ## What is Mixpeek?
 
-Mixpeek connects to your existing database like MongoDB, PostgreSQL or object stores like S3. 
+You likely have combinations of unstructured and structured data that spans various modalities: documents, images, video and audio not the least of which is text. 
 
-Every change in your storage, an embedding is generated and sent to your vector DB of choice. It supports text, image, video and audio so you can do multimodal search with ease. 
+Mixpeek is a multimodal replication pipeline that connects to your database, automatically extracts, embeds and generates outputs before sending it right back into your database. 
 
-Best of all, it's open source! Alternatively, we can manage everything for you.
+## What does it enable?
+
+Since you'll have fresh vectors, metadata and extracted contents you can design queries that span all your use cases:
+
+- RAG (Retrieval Augmented Generation)
+- Recommendation
+- Search
+
+
+### First create a DB connection
+
+```shell Shell
+curl --location --request PUT 'https://api.mixpeek.com/users' \
+--header 'Authorization: Bearer API_KEY' \
+--header 'Content-Type: application/json' \
+--data '{
+    "connections": [
+        {
+            "engine": "mongodb",
+            "host": "sandbox.mhsby.mongodb.net",
+            "port": 5432,
+            "database": "",
+            "username": "",
+            "password": ""
+        }
+    ]
+}'
+```
+
+<Note>
+Connection passwords are encrypted at rest using [symmetric encryption](https://github.com/mixpeek/server/blob/master/src/api/utilities/encryption.py) and all transmissions are via TLS.
+</Note>
+
+
+### Create your Pipeline
+
+```shell Shell
+curl --location 'https://api.mixpeek.com/pipelines' \
+--header 'Authorization: Bearer API_KEY' \
+--header 'Content-Type: application/json' \
+--data '{
+    "source_destination_mappings": [
+        {
+            "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+            "source": {
+                "field": "resume_url",
+                "type": "file_url",
+                "settings": {}
+            },
+            "destination": {
+                "collection": "resume_embeddings",
+                "field": "text",
+                "embedding": "embedding"
+            }
+        }
+    ]
+}'
+```
+
+This defines how you want the replication to work. It's saying: whenever there is a new document with a field: `resume_url` process it as if it's a `file_url`, create embeddings using `sentence-transformers/all-MiniLM-L6-v2` and send the outputs to the new collection: `resume_embeddings`
+
+### Sit back and enjoy
+
+Now we have fresh vectors, metadata and text to design rich queries on top of!!! 
+
+```json JSON
+{
+  "text": "3. Analyses by segment 3.1 Operating segments Revenue and results",
+  "embedding": [
+    0.013505205512046814,
+    -0.047882888466119766,
+    0.07246698439121246,
+    ...
+  ],
+  "metadata": {
+    "filetype": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "languages": [
+      "eng"
+    ],
+    "page_name": "OS-Rev.and results 30 06 2023",
+    "page_number": 1
+  },
+  "parent_id": "660c54a3cf034216d03bf1db"
+}
+```
+
+You can use the `parent_id` to merge the embedding chunks on querytime.
+
+## Extra credit:
+
+Leverage the `extract`, `embed` and `generate` methods to design a custom pipeline via the `workflow` service:
+
+```python
+mixpeek.extract()
+
+mixpeek.generate()
+
+mixpeek.embed()
+```
+
 
 <Note>
   Mixpeek cloud is currently in **private beta**. To use the API, you need to

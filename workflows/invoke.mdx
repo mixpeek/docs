@@ -1,0 +1,45 @@
+---
+title: "Invoke Workflow"
+description: "Trigger a pre-configured workflow on the Mixpeek platform, executing its custom logic and operations. This endpoint enables on-demand processing of data using specific workflows, making it ideal for applications requiring real-time data manipulation, analysis, or any custom task automation within the Mixpeek ecosystem."
+api: "POST /workflows/{workflow_id}/invoke"
+---
+
+## Request
+
+<ParamField path="workflow_id" type="string" required>
+  The unique identifier of the workflow to be invoked. This ID specifies the particular workflow to execute, ensuring the correct logic and operations are applied to the data.
+</ParamField>
+
+<ParamField query="websocket_id" type="string" optional>
+  An optional Websocket ID for real-time updates on the workflow's execution status. If provided, it enables the streaming of logs, results, and other notifications directly to a specified websocket connection.
+</ParamField>
+
+<ParamField body="parameters" type="object" optional>
+  Custom parameters to be passed to the workflow at runtime. These parameters can include any data the workflow needs to execute its logic, such as input file URLs, configuration settings, or contextual information.
+</ParamField>
+
+## Response
+
+<ResponseField name="execution_id" type="string" required>
+  A unique identifier for the instance of the workflow invocation. This ID can be used to track the execution status, retrieve results, and manage the workflow's output.
+</ResponseField>
+
+<ResponseField name="status" type="string" required>
+  Provides immediate feedback on the workflow invocation, indicating whether the execution has started successfully or if any issues were encountered during the initiation process.
+</ResponseField>
+
+<RequestExample>
+
+```shell Shell
+curl --location 'https://api.mixpeek.com/workflows/unique_workflow_id/invoke' \
+--header 'Authorization: Bearer API_KEY' \
+--header 'Content-Type: application/json' \
+--data '{
+    "parameters": {
+        "file_url": "https://example.com/data.csv",
+        "analysis_type": "comprehensive"
+    },
+    "websocket_id": "ws_connection_id"
+}'
+```
+</RequestExample>
