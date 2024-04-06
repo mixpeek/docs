@@ -63,16 +63,14 @@ Sample Index Configuration:
 
 ```JSON
 {
-  "mappings": {
-    "dynamic": true,
-    "fields": {
-      "test_embedding_768": {
-        "dimensions": 768,
-        "similarity": "euclidean",
-        "type": "knnVector"
-      }
+  "fields":[
+    {
+      "type": "vector",
+      "path": "embedding_768",
+      "numDimensions": 768,
+      "similarity": "euclidean"
     }
-  }
+  ]
 }
 
 ```
