@@ -1,0 +1,34 @@
+---
+title: 'Insert Object'
+api: 'POST /storage/insert'
+---
+
+```python
+import base64
+import mixpeek
+
+byte_data = b'binary data here'
+encoded_data = base64.b64encode(byte_data)
+
+# insert file (this should also kick off multimodal pipeline)
+response = await mixpeek.db.insert_one(
+    base64_data=encoded_data,
+    filename="blah.jpg",
+    data={
+        "foo": "bar"
+    }
+)
+
+{
+    "url": "s3://bucket/path/to/file",
+    "foo": "bar",
+    "_id": "5f3e4b3b7b3b4b3b4b3b4b3b"
+}
+
+```
+
+### How does it work?
+
+You encode your file into base64, then use `mixpeek.db` to insert the file and metadata into your storage of choice.
+
+This also will chunk up the file on the client side into 5 mb chunks, iterate through each

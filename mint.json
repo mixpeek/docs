@@ -56,9 +56,11 @@
       ]
     },
     {
-      "group": "Integrations",
+      "group": "Methods",
       "pages": [
-        "integrations/mongodb"
+        "methods/extract",
+        "methods/generate",
+        "methods/embed"
       ]
     },
     {
@@ -70,19 +72,23 @@
       ]
     },
     {
-      "group": "Methods",
-      "pages": [
-        "methods/extract",
-        "methods/embed",
-        "methods/generate"
-      ]
-    },
-    {
       "group": "Workflows",
       "pages": [
         "workflows/code",
         "workflows/create",
         "workflows/invoke"
+      ]
+    },
+    {
+      "group": "Storage",
+      "pages": [
+        "storage/insert",
+        {
+          "group": "Integrations",
+          "pages": [
+            "integrations/mongodb"
+          ]
+        }
       ]
     },
     {
