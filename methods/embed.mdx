@@ -1,43 +1,32 @@
 ---
 title: "Embed"
-description: "Create a dense vector representation of the provided input text."
-api: "POST /embed"
+description: "Generates embeddings for text, image, audio, or video data to create machine-readable representations."
+api: "POST /embed/{modality}"
 ---
 
 ## Request
 
-<ParamField body="input" type="string" required>
-  The text input for which embeddings are to be generated. This can be any string of text whose semantic meaning you wish to capture in a dense vector format, enabling advanced search and analysis capabilities.
+<ParamField body="model" type="string" required>
+  The model to use for embedding
 </ParamField>
 
-<ParamField body="modality" type="string" optional>
-  The modality of the input data. Specifies the type of data to be processed, with "text" as the default modality.
+<ParamField body="url" type="string" optional>
+Remote url of the file to be embedded
 </ParamField>
 
-<ParamField body="model" type="string" optional>
-  The model used for generating embeddings. Specifies the AI model, with "sentence-transformers/all-MiniLM-L6-v2" as the default.
+<ParamField body="content" type="boolean" optional>
+  The direct textual or base64-encoded content of the item for embedding.
 </ParamField>
-
-## Response
-
-<ResponseField name="embedding" type="array" required>
-  The generated embedding for the input text. This is a dense vector representation that captures the semantic meaning of the input, allowing for similarity comparisons and enhanced search functionality.
-</ResponseField>
-
-<ResponseField name="elapsed_time" type="number" optional>
-  The time taken to generate the embedding, measured in milliseconds. Provides insight into the processing time for the embedding generation.
-</ResponseField>
 
 <RequestExample>
 
 ```shell Shell
-curl --location 'https://api.mixpeek.com/embed' \
+curl --location 'https://api.mixpeek.com/embed/{modality}' \
 --header 'Authorization: Bearer API_KEY' \
 --header 'Content-Type: application/json' \
 --data '{
-    "input": "Sample text for embedding",
-    "modality": "text",
-    "model": "sentence-transformers/all-MiniLM-L6-v2"
+    "model": "openai/clip",
+    "url": "https://example.com/image.jpg",
 }'
 ```
 </RequestExample>

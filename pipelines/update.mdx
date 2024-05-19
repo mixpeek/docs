@@ -1,0 +1,43 @@
+---
+title: "Update Pipeline"
+description: "Updates specific settings of an existing data processing pipeline on the Mixpeek platform. This endpoint supports modifying the pipeline's name or its active status, allowing for flexible management of data workflows."
+api: "PUT /pipelines/{pipeline_id}"
+---
+
+## Request
+
+<ParamField path="pipeline_id" type="string" required>
+  The unique identifier of the pipeline to be updated.
+</ParamField>
+
+<ParamField body="pipeline_name" type="string" optional>
+  The new name to assign to the pipeline. This is optional and used only when renaming the pipeline.
+</ParamField>
+
+<ParamField body="enabled" type="boolean" optional>
+  Specifies whether the pipeline should be active or inactive. This is optional and can be used to enable or disable the pipeline.
+</ParamField>
+
+## Response
+
+<ResponseField name="status" type="string" required>
+  Indicates the result of the update operation, such as "updated", "not found", or "error".
+</ResponseField>
+
+<ResponseField name="message" type="string" optional>
+  A descriptive message about the outcome of the update, providing additional details or error information.
+</ResponseField>
+
+<RequestExample>
+
+```shell Shell
+curl --location 'https://api.mixpeek.com/pipelines/{pipeline_id}' \
+--header 'Authorization: Bearer API_KEY' \
+--header 'Content-Type: application/json' \
+--request 'PUT' \
+--data '{
+    "pipeline_name": "Enhanced Data Processing",
+    "enabled": true
+}'
+```
+</RequestExample>

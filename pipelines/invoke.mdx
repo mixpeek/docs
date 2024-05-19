@@ -1,47 +1,53 @@
 ---
 title: "Invoke Pipeline"
-description: "Manually trigger the execution of a specific data processing pipeline on the Mixpeek platform. This endpoint is designed for users who need to process data on-demand, allowing for immediate data transformation, embedding, or any other pipeline-specific operations. Ideal for scenarios where timely data processing is crucial."
-api: "POST /pipelines/{pipeline_id}"
+description: "Executes a specific data processing pipeline on the Mixpeek platform using a provided payload. This endpoint allows users to actively run their data through configured pipelines, applying transformations and storing results as specified in the pipeline setup."
+api: "POST /invoke/{pipeline_id}"
 ---
 
 ## Request
 
 <ParamField path="pipeline_id" type="string" required>
-  The unique identifier of the pipeline you wish to invoke. This ID specifies which pipeline to trigger and is essential for routing the request correctly within the Mixpeek platform.
+  The unique identifier of the pipeline to be invoked.
 </ParamField>
 
-<ParamField body="data" type="object" optional>
-  The data to be processed by the pipeline. This object can include any relevant information that the pipeline is configured to handle, such as URLs to documents for extraction or text content for embedding.
+<ParamField body="payload" type="json" required>
+  The data payload that the pipeline will process. This must be structured in a way that the transformation code can effectively operate on it.
 </ParamField>
 
-<ParamField body="settings" type="object" optional>
-  Additional settings or parameters that affect how the pipeline processes the provided data. These settings can include configurations like processing modes, output formats, or any custom options supported by the pipeline.
+<ParamField body="options" type="object" optional>
+  Any runtime options that affect how the pipeline processes the payload, such as parameters for rate limiting, concurrency, or other execution specifics.
 </ParamField>
 
 ## Response
 
-<ResponseField name="task_id" type="string" required>
-  A unique identifier for the task created by invoking the pipeline. This ID can be used to track the status of the task, retrieve results, and manage subsequent processing steps.
+<ResponseField name="status" type="string" required>
+  Indicates the result of the pipeline execution, such as "success", "error", or "processing".
 </ResponseField>
 
-<ResponseField name="status" type="string" required>
-  Provides immediate feedback on the invocation status, indicating whether the pipeline execution has started successfully or if there were any issues triggering the process.
+<ResponseField name="processed_data" type="json" optional>
+  The transformed data resulting from the pipeline execution, depending on the pipeline configuration and transformation applied.
+</ResponseField>
+
+<ResponseField name="error_details" type="object" optional>
+  Provides detailed information in case the pipeline encounters an error during execution. This may include error messages or codes.
 </ResponseField>
 
 <RequestExample>
 
 ```shell Shell
-curl --location 'https://api.mixpeek.com/pipelines/c7e006' \
+curl --location 'https://api.mixpeek.com/invoke/{pipeline_id}' \
 --header 'Authorization: Bearer API_KEY' \
 --header 'Content-Type: application/json' \
 --data '{
-    "data": {
-        "file_url": "https://example.com/document.pdf"
+    "payload": {
+        "items": [
+            {"name": "item1", "quantity": 10},
+            {"name": "item2", "quantity": 20}
+        ]
     },
-    "settings": {
-        "extraction_mode": "full_text"
+    "options": {
+        "concurrency": 5
     }
 }'
 ```
-
 </RequestExample>

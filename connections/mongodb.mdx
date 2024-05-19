@@ -73,74 +73,12 @@ Sample Index Configuration:
 
 ```
 
-## 4. Create Mixpeek Pipeline
+## 4. Create your MongoDB Connection
 
-This is where all the processing logic lives. Much of this is default, opionated logic. If you need something custom, we reccommend using the `Workflows` service, which can be called inside the pipeline.
+## 5a. Set MongoDB as your Source
 
-```shell
-curl --location 'https://api.mixpeek.com/pipelines' \
---header 'Authorization: Bearer API_KEY' \
---header 'Content-Type: application/json' \
---data '{
-    "source_destination_mappings": [
-        {
-            "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
-            "source": {
-                "field": "resume_url",
-                "type": "file_url",
-                "settings": {}
-            },
-            "destination": {
-                "collection": "resume_embeddings",
-                "field": "text",
-                "embedding": "embedding"
-            }
-        }
-    ]
-}'
-```
+optional
 
-It automatically pulls from the connections you defined in the Update Connections method.
-You can have multiple pipelines as objects in the `source_destination_mappings` array.
+## 5b. Set MongoDB as your Destination
 
-## 5. Create Mongodb trigger
-
-The trigger allows us to process changes in real-time using the pipeline we defined above
-
-```Javascript
-exports = async function(changeEvent) {
-  // Documentation on ChangeEvents: https://docs.mongodb.com/manual/reference/change-events/
-  const webhookUrl = `https://api.mixpeek.com/pipelines/${pipeline_id}`;
-
-  // Assuming changeEvent.fullDocument contains the document you want to send
-
-  try {
-    // Headers must be an object with string keys and string values
-    const headers = {
-        Authorization: [ "Bearer API_KEY" ],
-       "Content-Type": [ "application/json" ],
-      };
-
-    // The body of your request, turned into a JSON string
-    const body = JSON.stringify(changeEvent.fullDocument);
-
-    // Making the HTTP POST request
-    const response = await context.http.post({
-      url: webhookUrl, // The URL you are sending the request to
-      headers: headers, // The headers object
-      body: body, // The body of the request, which must be a string
-      encodeBodyAsJSON: true // This ensures the body is treated as JSON
-    });
-
-    // Logging the response status to verify successful delivery
-    console.log("Payload sent, received response status: ", response.status);
-  } catch(err) {
-    console.error("Error sending document payload: ", err.message);
-  }
-};
-
-```
-
-## 6. Test Integration
-
-<Note>Work in progress</Note>
+optional

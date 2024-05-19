@@ -6,26 +6,36 @@ api: "POST /pipelines"
 
 ## Request
 
-<ParamField body="source_destination_mappings" type="array" required>
-  Defines the mappings between data sources and their destinations, including the transformation models used. Each mapping specifies a source (with its type and any necessary settings), the model used for embedding or transformation, and the destination (including the collection and field where the data should be stored, and the embedding field name if applicable).
+<ParamField body="connections" type="object" required>
+  Defines the source and destination connection identifiers for the data flow.
+  <Field name="source" type="string" required>
+    The unique identifier for the data source connection.
+  </Field>
+  <Field name="destination" type="string" required>
+    The unique identifier for the data destination connection.
+  </Field>
+</ParamField>
+
+<ParamField body="transformation_code" type="string" required>
+  The code, provided as a string, which dictates how the data will be transformed during the pipeline process.
 </ParamField>
 
 <ParamField body="metadata" type="object" optional>
-  Optional metadata to provide context or additional information about the pipeline being created. This could include details such as the pipeline's purpose, intended use case, or any other relevant information.
+  Optional metadata to provide context or additional information about the pipeline being created.
 </ParamField>
 
 ## Response
 
 <ResponseField name="pipeline_id" type="string" required>
-  The unique identifier for the newly created pipeline. This ID can be used to reference the pipeline in future operations, such as invoking the pipeline or querying its status.
+  The unique identifier for the newly created pipeline. This ID can be used to reference the pipeline in future operations.
 </ResponseField>
 
 <ResponseField name="enabled" type="boolean" optional>
-  Indicates whether the pipeline is enabled upon creation. This field can be used to immediately start processing data through the pipeline if set to true.
+  Indicates whether the pipeline is enabled upon creation. This can be set to true to start processing immediately.
 </ResponseField>
 
-<ResponseField name="source_destination_mappings" type="array" required>
-  Echoes back the source-destination mappings provided in the request, confirming the configurations that have been set for the pipeline.
+<ResponseField name="connections" type="object" required>
+  Echoes back the source and destination connection IDs provided in the request, confirming the data flow paths that have been set up.
 </ResponseField>
 
 <ResponseField name="metadata" type="object" optional>
@@ -39,24 +49,14 @@ curl --location 'https://api.mixpeek.com/pipelines' \
 --header 'Authorization: Bearer API_KEY' \
 --header 'Content-Type: application/json' \
 --data '{
-    "source_destination_mappings": [
-        {
-            "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
-            "source": {
-                "field": "resume_url",
-                "type": "file_url",
-                "settings": {}
-            },
-            "destination": {
-                "collection": "resume_embeddings",
-                "field": "text",
-                "embedding": "embedding"
-            }
-        }
-    ],
+    "connections": {
+        "source": "source_conn_id",
+        "destination": "destination_conn_id"
+    },
+    "transformation_code": "data.map(item => ({...item, newField: item.oldField * 10}))",
     "metadata": {
-        "pipeline_name": "Resume Processing",
-        "description": "Extracts resume information and generates embeddings."
+        "pipeline_name": "Data Enrichment",
+        "description": "Enhances data by applying a transformation."
     }
 }'
 ```

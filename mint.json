@@ -51,16 +51,15 @@
       "group": "Getting Started",
       "pages": [
         "introduction/quickstart",
-        "introduction/libraries",
-        "introduction/faq"
+        "introduction/libraries"
       ]
     },
     {
       "group": "Methods",
       "pages": [
         "methods/extract",
-        "methods/generate",
-        "methods/embed"
+        "methods/embed",
+        "methods/generate"
       ]
     },
     {
@@ -68,33 +67,13 @@
       "pages": [
         "pipelines/create",
         "pipelines/invoke",
-        "pipelines/status"
+        "pipelines/update"
       ]
     },
     {
-      "group": "Workflows",
+      "group": "Connections",
       "pages": [
-        "workflows/code",
-        "workflows/create",
-        "workflows/invoke"
-      ]
-    },
-    {
-      "group": "Storage",
-      "pages": [
-        "storage/insert",
-        {
-          "group": "Integrations",
-          "pages": [
-            "integrations/mongodb"
-          ]
-        }
-      ]
-    },
-    {
-      "group": "Management",
-      "pages": [
-        "users/connection"
+        "connections/mongodb"
       ]
     }
   ],
