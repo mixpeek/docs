@@ -1,0 +1,37 @@
+---
+title: "Models"
+description: "ML models for each method"
+icon: "brain"
+iconType: "solid"
+---
+
+When using the mixpeek sdk methods, you provide the model_name in each payload like: 
+```
+mixpeek.embed.text(model="openai/clip")
+```
+
+The list below are all the embedding models currently supported in the SDK. For embed, use the dimensions to create your DB index.
+
+## Embed
+
+| Name                                         | Modality    | Dimensions | URL                                                    |
+| -------------------------------------------- | ----------- | ---------- | ------------------------------------------------------ |
+| `sentence-transformers/all-MiniLM-L6-v2`     | Text        | Variable   | [Sentence Transformers](https://www.sbert.net/)        |
+| `nomic-ai/nomic-embed-text-v1`               | Text        | Variable   | [Nomic AI](https://nomic.ai/)                          |
+| `jinaai/jina-embeddings-v2-base-en`          | Text        | Variable   | [Jina AI](https://jina.ai/)                            |
+| `google-bert/bert-base-multilingual-uncased` | Text        | Variable   | [Google BERT](https://github.com/google-research/bert) |
+| `mixedbread-ai/mxbai-embed-large-v1`         | Text        | Variable   | [MixedBread AI](https://mixedbread.ai/)                |
+| `openai/clip-vit-base-patch32`               | Text, Image | 512        | [OpenAI Clip](https://github.com/openai/CLIP)          |
+| `mixpeek/vuse-generic-v1`                    | Text, Video | 768        | [Mixpeek](https://mixpeek.com/models/vuse)                    |
+
+## Generate
+
+| Name                | Modality | URL                                               |
+| ------------------- | -------- | ------------------------------------------------- |
+| `openai/gpt4-turbo` | Text     | [OpenAI GPT-4](https://openai.com/research/gpt-4) |
+
+## Extract
+
+| Name           | Modality    | URL                                                                              |
+| -------------- | ----------- | -------------------------------------------------------------------------------- |
+| `unstructured` | Text, Image | [Unstructured](https://docs.unstructured.io/api-reference/api-services/overview) |

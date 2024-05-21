@@ -51,6 +51,7 @@
       "group": "Getting Started",
       "pages": [
         "introduction/quickstart",
+        "introduction/models",
         "introduction/libraries"
       ]
     },
@@ -73,7 +74,8 @@
     {
       "group": "Connections",
       "pages": [
-        "connections/mongodb"
+        "connections/mongodb",
+        "connections/s3"
       ]
     }
   ],

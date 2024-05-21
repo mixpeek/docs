@@ -7,21 +7,25 @@ iconType: 'solid'
 
 ## What is Mixpeek?
 
-You store unstructured and structured data across various datatypes: documents, images, video and audio not the least of which is text.
+Your software likely stores unstructured and structured data across various datatypes: documents, images, video and audio not the least of which is text.
 
-They probably live in your object store like Amazon S3, Azure Blob or Google Cloud Storage.
+Unstructured data tends to live in an object store like Amazon S3, Azure Blob or Google Cloud Storage. Structured in your database like Postgres or MongoDB.
 
-<Note>For a full list of filetypes and storage supported: check the <a href="/introduction/faq">FAQs</a></Note>
+Mixpeek lets you treat both your object store and transactional database as a single entity.
 
-Mixpeek let's you build custom data processing pipelines that keep your object store in sync with your Gen AI database like MongoDB, Pinecone and more.
+### How does it work?
+
+Multimodal pipelines are chains of ML models applied to your objects as they're uploaded, then sent into your transactional database.
+
+<Note>Check the <a href="/introduction/faq">FAQs</a> for a full list of filetypes and storage supported.</Note>
 
 ### A Simple Example
 
-Say you upload an image: `dog.png` and you want to extract the tags, generate a text, and create an embedding of the image itself.
+Say you upload an image: `dog.png` to your S3 bucket and you want to extract the tags and create an embedding of the image itself.
 
-Pipelines are serverless functions that get invoked whenever there's a change in your object store. 
+Pipelines are serverless functions that combine these methods and get invoked whenever there's a new object in your bucket. 
 
-Here's an example pipeline that creates a description, embedding and tags before inserting into a MongoDB collection:
+Here's an example pipeline that creates a description, embedding and tags.
 
 ```python
 def function(payload):
@@ -42,9 +46,11 @@ def function(payload):
 }
 ```
 
-Then we upload this pipeline, connect our S3 bucket and MongoDB collection then enable.
+First we create this pipeline then connect our S3 bucket and finally MongoDB collection then enable it.
 
-Here's an example output from the S3 object that gets sent to your database:
+That's it! Never think about processing your S3 bucket again.
+
+Here's an example output from the S3 object that gets sent into your MongoDB collection:
 
 ```json
 {
