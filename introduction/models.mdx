@@ -1,24 +1,28 @@
 ---
 title: "Models"
-description: "ML models for each method"
+description: "ML model options for each method"
 icon: "brain"
 iconType: "solid"
 ---
 
-When using the mixpeek sdk methods, you provide the model_name in each payload like:
+Only Mixpeek's embedding models are exposed to you as a developer because you need it to do KNN. Whichever models you select via `embed` are optionally open source via HuggingFace or can be embedded for KNN via `mixpeek.embed()`.
+
+`extract` and `generate` are abstracted so that we can swap in and out the best in class approaches.
+
+When using the mixpeek SDK methods, you provide the `model` in each payload like:
 
 ```python
-mixpeek.embed.text(model="jinaai/jina-embeddings-v2-base-en")
+mixpeek.embed(model="jinaai/jina-embeddings-v2-base-en", modality="text")
 ```
 
 The list below are all the embedding models currently supported in the SDK. For embed, use the dimensions to create your DB index.
 
 <Note>
-  We add models regularly, so if we're missing any{" "}
+  We add models regularly, so if we're missing any
   <a href="https://mixpeek.com/contact">reach out</a>.
 </Note>
 
-## Embed
+## Embedding Models
 
 | Name                                         | Modality    | Dimensions | URL                                                    |
 | -------------------------------------------- | ----------- | ---------- | ------------------------------------------------------ |
@@ -30,14 +34,4 @@ The list below are all the embedding models currently supported in the SDK. For 
 | `openai/clip-vit-base-patch32`               | Text, Image | 512        | [OpenAI Clip](https://github.com/openai/CLIP)          |
 | `mixpeek/vuse-generic-v1`                    | Text, Video | 768        | [Mixpeek](https://mixpeek.com/models/vuse)             |
 
-## Generate
-
-| Name                | Modality | URL                                               |
-| ------------------- | -------- | ------------------------------------------------- |
-| `openai/gpt4-turbo` | Text     | [OpenAI GPT-4](https://openai.com/research/gpt-4) |
-
-## Extract
-
-| Name                                                | Modality    | URL                                                                              |
-| --------------------------------------------------- | ----------- | -------------------------------------------------------------------------------- |
-| `unstructuredio/detectron2_faster_rcnn_R_50_FPN_3x` | Text, Image | [Unstructured](https://docs.unstructured.io/api-reference/api-services/overview) |
+If you'd like to understand which models we're using for `generate` and `extract` we'd be happy to share.

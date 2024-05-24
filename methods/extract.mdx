@@ -1,7 +1,7 @@
 ---
 title: "Extract"
 description: "Pulls information out of the text, image, audio or video."
-api: "POST /extract/{modality}"
+api: "POST /extract"
 ---
 
 The extract method allows you to pull data out of various modalities. Depending on the modality, different techniques can be applied:
@@ -21,10 +21,6 @@ The extract method allows you to pull data out of various modalities. Depending 
   The type of data to be extracted (e.g., image, audio, video, text).
 </ParamField>
 
-<ParamField body="model" type="string" required>
-  The model to use for extraction.
-</ParamField>
-
 <ParamField body="input_type" type="string" required>
   Specify whether the input is a url, base64, or text.
 </ParamField>
@@ -38,7 +34,6 @@ curl --location 'https://api.mixpeek.com/extract' \
 --data '{
     "input": "s3://document.pdf",
     "modality": "text",
-    "model": "unstructuredio/detectron2_faster_rcnn_R_50_FPN_3x",
     "input_type": "url"
 }'
 ```

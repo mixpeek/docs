@@ -4,7 +4,9 @@ description: "This is where your transformations live"
 api: "POST /pipelines"
 ---
 
-Pipelines are the backbone of Mixpeek's multimodal pipelines. It's where you describe how you want the engine to process your objects as they pass through in real-time.
+Pipelines are the backbone of Mixpeek. It's where you describe how you want the engine to process your objects as they pass through in real-time.
+
+To build a pipeline, you'll need to first have created a `source` and `destination` connection, then add their `connection_id` in the `connections` object.
 
 ## Request
 

@@ -7,41 +7,11 @@ iconType: "solid"
 
 MongoDB can act as a source or destination
 
-# Integrating MongoDB with Mixpeek
-
-<Steps>
-  <Step title="Pick an Embedding Model">
-    This step involves selecting the most suitable embedding model for your
-    project from a range of available options, each with its own characteristics
-    and performance metrics.
-  </Step>
-  <Step title="Prepare MongoDB Cluster">
-    Setting up a MongoDB Cluster on MongoDB Atlas provides a scalable and secure
-    database environment for storing your application's data.
-  </Step>
-  <Step title="Create Mixpeek Pipeline">
-    In this phase, you'll configure the Mixpeek pipeline, which is crucial for
-    processing and integrating your data with the chosen embedding model.
-  </Step>
-  <Step title="Build your Apps">
-    With the backend ready, you can now focus on developing your application's
-    frontend, ensuring users can interact smoothly with your service.
-  </Step>
-</Steps>
-
 ## 1. Pick an Embedding Model
 
-1. Pick an embedding model from the table below
+Pick an embedding model from the options on the [models page](/introduction/models)
 
-| Model Name                             | Dimensions | Max Tokens | MTEB Ranking |
-| -------------------------------------- | ---------- | ---------- | ------------ |
-| jinaai/jina-embeddings-v2-base-en      | 768        | 8192       | 74.731       |
-| sentence-transformers/all-MiniLM-L6-v2 | 384        | TBA        | TBA          |
-| nomic-ai/nomic-embed-text-v1           | 512        | 8192       | TBA          |
-
-2. Select an embedding model that suits your application's needs.
-
-Consult the [Embedding Benchmarks](https://github.com/embeddings-benchmark/mteb#leaderboard) scripts.
+Consult the [Embedding Benchmarks](https://github.com/embeddings-benchmark/mteb#leaderboard) scripts for a more empirical approach. Otherwise, there are KNN evaluation tools that we can help use.
 
 ## 2. Create MongoDB Cluster via MongoDB Atlas
 
@@ -56,7 +26,7 @@ Consult the [Embedding Benchmarks](https://github.com/embeddings-benchmark/mteb#
 2. Choose `Create Search Index` and then `JSON Editor`.
    ![atlas search](/images/create-index.png)
 3. Select the collection you wish to index.
-4. Enter the JSON configuration for your index. Replace `"test_embedding_768"` with the name of the field where your embeddings will be stored, and adjust `"dimensions"` to match the dimensions of your chosen embedding model from the MTEB leaderboard.
+4. Enter the JSON configuration for your index. Replace `"test_embedding_768"` with the name of the field where your embeddings will be stored, and adjust `"dimensions"` to match the dimensions of your chosen embedding model from the [models page](/introduction/models).
    ![atlas search](/images/configure-index.png)
 
 Sample Index Configuration:

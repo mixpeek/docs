@@ -1,8 +1,14 @@
 ---
 title: "Invoke Pipeline"
-description: "Executes a specific data processing pipeline on the Mixpeek platform using a provided payload. This endpoint allows users to actively run their data through configured pipelines, applying transformations and storing results as specified in the pipeline setup."
+description: "Executes a specific data processing pipeline on the Mixpeek platform using a provided payload."
 api: "POST /invoke/{pipeline_id}"
 ---
+
+This endpoint allows users to actively run their data through configured pipelines, applying transformations and storing results as specified in the pipeline setup.
+
+What is returned is then inserted (or updated) in your destination collection atomically.
+
+Typically these get invoked automatically as objects are added from the source (like S3), but you can call `/invoke` for testing purposes.
 
 ## Request
 
@@ -11,25 +17,30 @@ api: "POST /invoke/{pipeline_id}"
 </ParamField>
 
 <ParamField body="payload" type="json" required>
-  The data payload that the pipeline will process. This must be structured in a way that the transformation code can effectively operate on it.
+  The data payload that the pipeline will process. This must be structured in a
+  way that the transformation code can effectively operate on it.
 </ParamField>
 
 <ParamField body="options" type="object" optional>
-  Any runtime options that affect how the pipeline processes the payload, such as parameters for rate limiting, concurrency, or other execution specifics.
+  Any runtime options that affect how the pipeline processes the payload, such
+  as parameters for rate limiting, concurrency, or other execution specifics.
 </ParamField>
 
 ## Response
 
 <ResponseField name="status" type="string" required>
-  Indicates the result of the pipeline execution, such as "success", "error", or "processing".
+  Indicates the result of the pipeline execution, such as "success", "error", or
+  "processing".
 </ResponseField>
 
 <ResponseField name="processed_data" type="json" optional>
-  The transformed data resulting from the pipeline execution, depending on the pipeline configuration and transformation applied.
+  The transformed data resulting from the pipeline execution, depending on the
+  pipeline configuration and transformation applied.
 </ResponseField>
 
 <ResponseField name="error_details" type="object" optional>
-  Provides detailed information in case the pipeline encounters an error during execution. This may include error messages or codes.
+  Provides detailed information in case the pipeline encounters an error during
+  execution. This may include error messages or codes.
 </ResponseField>
 
 <RequestExample>
@@ -44,10 +55,8 @@ curl --location 'https://api.mixpeek.com/invoke/{pipeline_id}' \
             {"name": "item1", "quantity": 10},
             {"name": "item2", "quantity": 20}
         ]
-    },
-    "options": {
-        "concurrency": 5
     }
 }'
 ```
+
 </RequestExample>

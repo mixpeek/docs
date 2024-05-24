@@ -19,10 +19,6 @@ The generate method allows you to produce content across various modalities. Dep
 
 ## Request
 
-<ParamField body="model" type="string" required>
-  The model configuration to use for content generation
-</ParamField>
-
 <ParamField body="response_format" type="json" required>
   The JSON schema for the response format
 </ParamField>
@@ -46,7 +42,6 @@ curl --location --request POST 'https://api.mixpeek.com/generate' \
 --header 'Authorization: Bearer API_KEY' \
 --header 'Content-Type: application/json' \
 --data-raw '{
-  "model": "gpt-4-turbo",
   "response_format": {
     "type": "object",
     "properties": {
