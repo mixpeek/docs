@@ -1,35 +1,72 @@
 ---
 title: "Generate"
 description: "Generates content based on provided input for text, image, audio, or video."
-api: "POST /generate/{modality}"
+api: "POST /generate"
 ---
+
+<Warning>
+  Due to the expensive nature of generation, it is available to Enterprise
+  customers only. To schedule a demo{" "}
+  <a href="https://mixpeek.com/contact">reach out</a>
+</Warning>
+
+The generate method allows you to produce content across various modalities. Depending on the modality, different techniques can be applied:
+
+- **image**: generative adversarial networks, style transfer, etc.
+- **audio**: speech synthesis, music generation, etc.
+- **video**: video synthesis, animation, etc.
+- **text**: language modeling, text completion, etc.
 
 ## Request
 
 <ParamField body="model" type="string" required>
-  The model to use for content generation
+  The model configuration to use for content generation
 </ParamField>
 
-<ParamField body="content" type="string" required>
+<ParamField body="response_format" type="json" required>
+  The JSON schema for the response format
+</ParamField>
+
+<ParamField body="context" type="string" required>
   The prompt or input to generate content from
 </ParamField>
 
-<ParamField body="parameters" type="json" optional>
-  Additional parameters specific to the model and modality
+<ParamField body="messages" type="json" optional>
+  Additional context messages
+</ParamField>
+
+<ParamField body="settings" type="json" optional>
+  Additional settings for the generation process
 </ParamField>
 
 <RequestExample>
 
 ```shell Shell
-curl --location 'https://api.mixpeek.com/generate/{modality}' \
+curl --location --request POST 'https://api.mixpeek.com/generate' \
 --header 'Authorization: Bearer API_KEY' \
 --header 'Content-Type: application/json' \
---data '{
-    "model": "openai/dall-e",
-    "content": "A futuristic cityscape",
-    "parameters": {
-        "size": "1024x1024"
-    }
+--data-raw '{
+  "model": "gpt-4-turbo",
+  "response_format": {
+    "type": "object",
+    "properties": {
+      "city": {
+        "title": "City",
+        "type": "string"
+      },
+      "neighborhood": {
+        "title": "Neighborhood",
+        "type": "string"
+      },
+      "weather": {
+        "title": "Weather",
+        "type": "number"
+      }
+    },
+    "required": ["city", "neighborhood", "weather"]
+  },
+  "context": "Please tell me the weather and make sure to respond in the provided JSON schema",
 }'
 ```
+
 </RequestExample>

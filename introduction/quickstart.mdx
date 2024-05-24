@@ -1,13 +1,13 @@
 ---
-title: 'Quickstart'
-description: 'Building your first multimodal data pipeline'
-icon: 'truck-fast'
-iconType: 'solid'
+title: "Quickstart"
+description: "Building your first multimodal data pipeline"
+icon: "truck-fast"
+iconType: "solid"
 ---
 
 ## What is Mixpeek?
 
-Your software likely stores unstructured and structured data across various datatypes: documents, images, video and audio not the least of which is text.
+Your app probably stores unstructured and structured data across various datatypes: documents, images, video and audio not the least of which is text.
 
 Unstructured data tends to live in an object store like Amazon S3, Azure Blob or Google Cloud Storage. Structured in your database like Postgres or MongoDB.
 
@@ -15,22 +15,26 @@ Mixpeek lets you treat both your object store and transactional database as a si
 
 ### How does it work?
 
-Multimodal pipelines are chains of ML models applied to your objects as they're uploaded, then sent into your transactional database.
+Mixpeek is a multimodal pipeline development kit, which is simply a chain of ML models applied to your objects as they're uploaded, then sent into your transactional database.
 
-<Note>Check the <a href="/introduction/faq">FAQs</a> for a full list of filetypes and storage supported.</Note>
+This allows you to structure your unstructured data using custom, AI-powered logic in real-time.
+
+![mixpeek diagram](https://web.archive.org/web/20240409142451im_/https://learn.mixpeek.com/content/images/2024/04/image-2.png)
+
+You can think of it like if Fivetran and Sagemaker had a baby, with "guaranteed execution" in between.
 
 ### A Simple Example
 
 Say you upload an image: `dog.png` to your S3 bucket and you want to extract the tags and create an embedding of the image itself.
 
-Pipelines are serverless functions that combine these methods and get invoked whenever there's a new object in your bucket. 
+You'd create a Mixpeek pipeline, which is a serverless function that combines ML models and gets invoked whenever there's a new object in your bucket.
 
 Here's an example pipeline that creates a description, embedding and tags.
 
 ```python
-def function(payload):
-  mixpeek = Mixpeek(api_key="API_KEY", payload.object_url)
-  
+def function(event, context):
+  mixpeek = Mixpeek(api_key="API_KEY", event.object_url)
+
   # create a description
   description = mixpeek.extract.text(model="openai/gpt-4o")
   # create an embedding
@@ -46,111 +50,64 @@ def function(payload):
 }
 ```
 
-First we create this pipeline then connect our S3 bucket and finally MongoDB collection then enable it.
+Once we create this pipeline then connect our S3 bucket and finally MongoDB collection then enable it.
 
-That's it! Never think about processing your S3 bucket again.
-
-Here's an example output from the S3 object that gets sent into your MongoDB collection:
+Your pipeline object would look like this:
 
 ```json
 {
-  "object_url": "s3://image.png",
-  "text": "lorem ipsum",
-  "tags": ["lorem", "ipsum"],
-  "embedding": [0, 1, 2, 3]
+  "alias": "dog-pipeline",
+  "enabled": true,
+  "source": {
+    "connection_id": "123",
+    "bucket": "dogs"
+  },
+  "destination": {
+    "connection_id": "321",
+    "collection": "dog_objects"
+  }
 }
 ```
 
+Previously, we would have created an AWS IAM role, which opens up a listener on your S3 bucket `dogs`, every new object gets sent through the pipeline-as-code we defined above and then sent into our MongoDB collection: `dog_objects` (which was also instantiated previously).
+
+That's really it! Mixpeek is designed to be "set and forget", never think about processing your S3 bucket again.
+
+Here's an example output from the S3 object: `dog.png` that gets sent into your MongoDB collection:
+
+```json
+{
+  "object_url": "s3://dog.png",
+  "text": "australian shepherd",
+  "tags": ["dog", "shepherd"],
+  "embedding": [0, 1, 2, 3],
+  "metadata": {
+    "pipeline_version": "v1"
+  }
+}
+```
 
 ## What does it enable?
 
-Since you'll have fresh vectors, metadata and extracted contents you can design queries that span all your use cases:
+Since you'll have fresh vectors, metadata and extracted contents you can design hyper-targeted queries that span all your use cases:
 
 - RAG (Retrieval Augmented Generation)
-- Recommendation
-- Hybrid Search
+- Recommendation Systems
+- Hybrid Search Engines
 
-All without having to think about data prep again. You can even modify your pipeline, and the new version will be appended to the `metadata.pipeline_version` key
+All without having to think about data prep again. You can even modify your pipeline, and the new version will be appended to the `metadata.pipeline_version` key, so you can filter your pipeline code changes against the output data.
 
 ### Use the Methods directly
 
 You can also use the `extract`, `embed` and `generate` methods outside of a pipeline.
-
-1. First you need to install the python SDK (unless you prefer to use the HTTP endpoints directly): `pip install mixpeek`
-2. Then register an api key by going to mixpeek.com/start
-3. Initialize your client
 
 ```python
 from mixpeek.client import Mixpeek
 
 mixpeek = Mixpeek(api_key="API_KEY")
 
-output = mixpeek.embed.text(model="mixedbread-ai/mxbai-embed-large-v1")
+output = mixpeek.embed.text("lorem ipsum", model="mixedbread-ai/mxbai-embed-large-v1", )
 ```
-
-Again you can use the methods directly, or create a pipeline. If creating a pipeline you need to create a source and destination connection:
-
-#### Create your Source Connection
-
-This is how we define our source storage. You can only have one storage connection per pipeline, but within each pipeline, multiple collections or tables to listen on.
-
-```python Python
-connection_id = mixpeek.connection(
-  engine="s3",
-  access_key="123",
-  secret_key="123",
-  region="us-east-2"
-)
-```
-
-The `connection_id` is what we add to our pipeline
-
-<Note>
-  Connection passwords are encrypted at rest using [symmetric
-  encryption](https://github.com/mixpeek/server/blob/master/src/api/utilities/encryption.py)
-  and all transmissions are via TLS.
-</Note>
-
-### Create your Pipeline
-
-Pipelines are where the multimodal logic lives. It automatically pulls from the active connection you've instantiated
-
-```python
-pipeline = mixpeek.pipeline.create(
-  source_connection_id="",
-  destination_connection_id="",
-  pipeline_code="lorem ipsum" # this is the code we made above
-)
-```
-
-This should return a `pipeline_id` like: `djkh12`
-
-### Sit back and enjoy
-
-Now whenever there's a new object in your source, it will run it through your pipeline and dump the output into your destination table/collection based on the output schema.
-
-```json JSON
-{
-  "text": "3. Analyses by segment 3.1 Operating segments Revenue and results",
-  "embedding": [
-    0.013505205512046814,
-    -0.047882888466119766,
-    0.07246698439121246,
-    ...
-  ],
-  "metadata": {
-    "filetype": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "languages": [
-      "eng"
-    ],
-    "page_name": "OS-Rev.and results 30 06 2023",
-    "page_number": 1
-  },
-  "parent_id": "660c54a3cf034216d03bf1db"
-}
-```
-
-You can use the `parent_id` to merge the embedding chunks on querytime.
 
 <Note>
   Mixpeek cloud is currently in **private beta**. To use the API, you need to

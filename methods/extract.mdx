@@ -4,31 +4,43 @@ description: "Pulls information out of the text, image, audio or video."
 api: "POST /extract/{modality}"
 ---
 
+The extract method allows you to pull data out of various modalities. Depending on the modality, different techniques can be applied:
+
+- **image**: optical character recognition, object detection, etc.
+- **audio**: transcription, diarization, etc.
+- **video**: object detection, scene detection, etc.
+- **text**: named entity recognition, tokenization, etc.
+
 ## Request
 
+<ParamField body="input" type="string" required>
+  The input URL, text, or base64 encoding of the object to extract.
+</ParamField>
+
+<ParamField body="modality" type="string" required>
+  The type of data to be extracted (e.g., image, audio, video, text).
+</ParamField>
+
 <ParamField body="model" type="string" required>
-  The model to use for extraction
+  The model to use for extraction.
 </ParamField>
 
-<ParamField body="url" type="string" optional>
-Remote url of the file to extract
+<ParamField body="input_type" type="string" required>
+  Specify whether the input is a url, base64, or text.
 </ParamField>
-
-<ParamField body="content" type="boolean" optional>
-  The direct textual or base64-encoded content of the document for extraction.
-</ParamField>
-
-
 
 <RequestExample>
 
 ```shell Shell
-curl --location 'https://api.mixpeek.com/extract/{modality}' \
+curl --location 'https://api.mixpeek.com/extract' \
 --header 'Authorization: Bearer API_KEY' \
 --header 'Content-Type: application/json' \
 --data '{
-    "model": "dslim/bert-base-NER",
-    "url": "https://example.com/document.pdf",
+    "input": "s3://document.pdf",
+    "modality": "text",
+    "model": "unstructuredio/detectron2_faster_rcnn_R_50_FPN_3x",
+    "input_type": "url"
 }'
 ```
+
 </RequestExample>

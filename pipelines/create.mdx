@@ -1,8 +1,10 @@
 ---
 title: "Create Pipeline"
-description: "Initiate a new data processing pipeline on the Mixpeek platform. This endpoint is designed for configuring pipelines that automatically process, transform, and index data from various sources into actionable insights. Perfect for users looking to automate their data workflows and enhance data accessibility."
+description: "This is where your transformations live"
 api: "POST /pipelines"
 ---
+
+Pipelines are the backbone of Mixpeek's multimodal pipelines. It's where you describe how you want the engine to process your objects as they pass through in real-time.
 
 ## Request
 
@@ -17,29 +19,35 @@ api: "POST /pipelines"
 </ParamField>
 
 <ParamField body="transformation_code" type="string" required>
-  The code, provided as a string, which dictates how the data will be transformed during the pipeline process.
+  The code, provided as a string, which dictates how the data will be
+  transformed during the pipeline process.
 </ParamField>
 
 <ParamField body="metadata" type="object" optional>
-  Optional metadata to provide context or additional information about the pipeline being created.
+  Optional metadata to provide context or additional information about the
+  pipeline being created.
 </ParamField>
 
 ## Response
 
 <ResponseField name="pipeline_id" type="string" required>
-  The unique identifier for the newly created pipeline. This ID can be used to reference the pipeline in future operations.
+  The unique identifier for the newly created pipeline. This ID can be used to
+  reference the pipeline in future operations.
 </ResponseField>
 
 <ResponseField name="enabled" type="boolean" optional>
-  Indicates whether the pipeline is enabled upon creation. This can be set to true to start processing immediately.
+  Indicates whether the pipeline is enabled upon creation. This can be set to
+  true to start processing immediately.
 </ResponseField>
 
 <ResponseField name="connections" type="object" required>
-  Echoes back the source and destination connection IDs provided in the request, confirming the data flow paths that have been set up.
+  Echoes back the source and destination connection IDs provided in the request,
+  confirming the data flow paths that have been set up.
 </ResponseField>
 
 <ResponseField name="metadata" type="object" optional>
-  Echoes back any metadata provided in the request, confirming the additional contextual information associated with the pipeline.
+  Echoes back any metadata provided in the request, confirming the additional
+  contextual information associated with the pipeline.
 </ResponseField>
 
 <RequestExample>
@@ -60,4 +68,5 @@ curl --location 'https://api.mixpeek.com/pipelines' \
     }
 }'
 ```
+
 </RequestExample>

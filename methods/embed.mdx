@@ -4,6 +4,13 @@ description: "Generates embeddings for text, image, audio, or video data to crea
 api: "POST /embed/{modality}"
 ---
 
+The embed method allows you to generate embeddings from various modalities. Depending on the modality, different techniques can be applied:
+
+- **image**: feature extraction, dimensionality reduction, etc.
+- **audio**: spectral analysis, feature extraction, etc.
+- **video**: frame analysis, feature extraction, etc.
+- **text**: vectorization, semantic analysis, etc.
+
 ## Request
 
 <ParamField body="model" type="string" required>
@@ -11,7 +18,7 @@ api: "POST /embed/{modality}"
 </ParamField>
 
 <ParamField body="url" type="string" optional>
-Remote url of the file to be embedded
+  Remote url of the file to be embedded
 </ParamField>
 
 <ParamField body="content" type="boolean" optional>
@@ -29,4 +36,5 @@ curl --location 'https://api.mixpeek.com/embed/{modality}' \
     "url": "https://example.com/image.jpg",
 }'
 ```
+
 </RequestExample>
