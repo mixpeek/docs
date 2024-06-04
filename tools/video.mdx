@@ -1,7 +1,77 @@
 ---
 title: "Video Tools"
-icon: "hammer"
-iconType: "solid"
+api: "POST /tools/video/process"
 ---
 
-WIP
+Split a video given it's URL by specific characteristics.
+
+## Request
+
+<ParamField body="url" type="string" required>
+  Remote url of the file to be processed
+</ParamField>
+
+<ParamField body="frame_interval" type="integer" optional>
+  Interval between frames to process in seconds
+</ParamField>
+
+<ParamField body="resolution" type="array" optional>
+  Resolution of the output frames as [height, width]
+</ParamField>
+
+<ParamField body="use_base64" type="boolean" optional>
+  Whether to return the frames in base64-encoded format. If `false` it will
+  return a pre-signed S3 object url as `file_url`. If `true` it will return a
+  `base64_string`.
+</ParamField>
+
+<RequestExample>
+
+```python Python
+from mixpeek import Mixpeek
+
+# Initialize the Mixpeek client with your API key
+mixpeek = Mixpeek("YOUR_API_KEY")
+
+# Call the video processing tool
+response = mixpeek.video.process(
+    url="https://s3/video.mp4",
+    frame_interval=5,
+    resolution=[720, 1280],
+    return_base64=True
+)
+```
+
+```shell Shell
+curl --location 'https://api.mixpeek.com/tools/video/process' \
+--header 'Authorization: Bearer API_KEY' \
+--header 'Content-Type: application/json' \
+--data '{
+    "url":"https://s3/video.mp4",
+    "frame_interval": 5,
+    "resolution": [720, 1280],
+    "use_base64": true
+}'
+```
+
+</RequestExample>
+
+<ResponseExample>
+  ```json
+[
+    {
+        "base64_string": "...",                
+        "start_time": 0.0,
+        "end_time": 1.0,
+        "fps": 5.0,
+        "duration": 41.8,
+        "resolution": [
+            768,
+            432
+        ],
+        "size_kb": 69.93
+    },
+    ...
+]
+  ```
+</ResponseExample>

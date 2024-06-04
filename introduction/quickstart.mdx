@@ -5,6 +5,12 @@ icon: "truck-fast"
 iconType: "solid"
 ---
 
+<Warning>
+  The Mixpeek platform is still in early access, as such the documentation and
+  SDK is subject to change. Please coordinate with a Mixpeek engineer to ensure
+  no service interruptions.
+</Warning>
+
 ## What is Mixpeek?
 
 Your software likely stores unstructured and structured data across various datatypes: documents, images, video and audio not the least of which is text.
@@ -29,7 +35,7 @@ Say you upload an image: `dog.png` to your S3 bucket and you want to extract the
 
 You'd create a Mixpeek pipeline that combines ML models and gets invoked whenever there's a new object in your bucket.
 
-[Setting up your first Mixpeek pipeline](#)
+#### Your first pipeline
 
 Here's an example pipeline that creates a description, embedding and tags.
 
@@ -54,7 +60,7 @@ def function(event, context):
 
 Once we create this pipeline then connect our S3 bucket and finally MongoDB collection then enable it.
 
-Your pipeline object would look like this:
+Your pipeline `config` would look like this:
 
 ```json
 {
@@ -74,6 +80,8 @@ Your pipeline object would look like this:
 Previously, we would have created an AWS IAM role, which opens up a listener on your S3 bucket `dogs`, every new object gets sent through the pipeline-as-code we defined above and then sent into our MongoDB collection: `dog_objects` (which was also instantiated previously).
 
 That's really it! Mixpeek is designed to be "set and forget", never think about processing your S3 bucket again.
+
+#### Sample output
 
 Here's an example output from the S3 object: `dog.png` that gets sent into your MongoDB collection:
 

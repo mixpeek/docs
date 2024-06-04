@@ -37,6 +37,22 @@ The generate method allows you to produce content across various modalities. Dep
 
 <RequestExample>
 
+```python Python
+from pydantic import BaseModel
+from mixpeek import Mixpeek
+
+class ResponseFormat(BaseModel):
+    city: str
+    neighborhood: str
+    weather: int
+
+mixpeek = Mixpeek("API_KEY")
+generated_content = mixpeek.generate(
+    response_format=ResponseFormat,
+    context="Please tell me the weather and make sure to respond in the provided JSON schema"
+)
+```
+
 ```shell Shell
 curl --location --request POST 'https://api.mixpeek.com/generate' \
 --header 'Authorization: Bearer API_KEY' \

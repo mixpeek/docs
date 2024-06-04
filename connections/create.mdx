@@ -4,4 +4,63 @@ icon: "database"
 iconType: "solid"
 ---
 
-WIP
+The `Create Connection` endpoint allows you to establish connections to various data sources like MongoDB, S3, etc. This is crucial for applications that need to interact with external databases or storage services.
+
+<Check>
+  All connection information is encrypted using AES in CBC mode with a 128-bit
+  key using SHA256 for HMAC. [Learn more](https://mixpeek.com/security)
+</Check>
+
+## Request
+
+<ParamField body="alias" type="string" required>
+  A friendly name for the connection
+</ParamField>
+
+<ParamField body="engine" type="string" required>
+  The type of service (e.g., mongodb, s3)
+</ParamField>
+
+<ParamField body="details" type="object" required>
+  The connection details specific to the engine type
+</ParamField>
+
+<Note>See further examples in the Connection integrations</Note>
+
+<RequestExample>
+
+```python Python
+from mixpeek import Mixpeek
+
+mixpeek = Mixpeek('API_KEY')
+
+mixpeek.create_connection(
+    alias="my-mongo-test",
+    engine="mongodb",
+    details={
+        "host": "your_host_address",
+        "database": "your_database_name",
+        "username": "your_username",
+        "password": "your_password"
+    }
+)
+```
+
+```shell Shell
+# MongoDB
+curl --location 'http://localhost:8000/connections' \
+--header 'Authorization: Bearer API_KEY' \
+--header 'Content-Type: application/json' \
+--data '{
+    "alias": "my-mongo-test",
+    "engine": "mongodb",
+    "details": {
+        "host": "",
+        "database": "",
+        "username": "",
+        "password": ""
+    }
+}'
+```
+
+</RequestExample>

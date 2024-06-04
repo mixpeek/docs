@@ -1,5 +1,5 @@
 ---
-title: "Setup Pipelines"
+title: "Setup Pipelines via Github"
 description: "Setup your Mixpeek pipelines for CI/CD"
 icon: "github"
 iconType: "solid"
@@ -135,3 +135,24 @@ This contains how you want the configuration rules for your pipleline:
 
   - `connection_id`: This is the identifier for the downstream data destination connection. You set this up in the [Create Connections](/connections/create) section. It tells the pipeline where to send or store the processed data.
   - `collection`: This is the specific location or container within the destination where data will be stored. For example, `data_bucket` could be a specific database or storage bucket.
+
+  ## Alternative to Github
+
+  If you don't want to integrate via GitHub workflows, you can do this:
+
+  ```bash cURL
+  curl --location 'https://api.mixpeek.com/pipelines/build' \
+  --header 'Authorization: Bearer API_KEY' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "alias": "MyPipeline",
+    "code": "function execute() { return true; }",
+    "destination": {
+        "connection_id": "conn_123",
+        "collection": "mongodb_collection"
+    },
+    "source": {
+        "connection_id": "conn_321"
+    }
+  }'
+  ```

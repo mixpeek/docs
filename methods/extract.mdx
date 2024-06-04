@@ -27,6 +27,17 @@ The extract method allows you to pull data out of various modalities. Depending 
 
 <RequestExample>
 
+```python Python
+from mixpeek import Mixpeek
+
+mixpeek = Mixpeek("API_KEY")
+extraction = mixpeek.extract(
+  modality="text",
+  input="s3://document.pdf",
+  input_type="url"
+)
+```
+
 ```shell Shell
 curl --location 'https://api.mixpeek.com/extract' \
 --header 'Authorization: Bearer API_KEY' \

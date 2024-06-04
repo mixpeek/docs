@@ -47,10 +47,24 @@ Sample Index Configuration:
 
 ## 4. Create your MongoDB Connection
 
-## 5a. Set MongoDB as your Source
+### Set MongoDB as your Source
 
-optional
+<Warning>Not currently supported</Warning>
 
-## 5b. Set MongoDB as your Destination
+### Set MongoDB as your Destination
 
-optional
+```shell Shell
+curl --location 'https://api.mixpeek.com/connections' \
+--header 'Authorization: Bearer API_KEY' \
+--header 'Content-Type: application/json' \
+--data '{
+    "alias": "my-mongo-test",
+    "engine": "mongodb",
+    "details": {
+        "host": "my_hostname",
+        "database": "my_database",
+        "username": "my_username",
+        "password": "my_password"
+    }
+}'
+```

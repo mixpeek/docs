@@ -64,7 +64,7 @@
     },
     {
       "group": "Pipelines",
-      "pages": ["pipelines/setup", "pipelines/invoke"]
+      "pages": ["pipelines/setup", "pipelines/create", "pipelines/invoke"]
     },
     {
       "group": "Connections",

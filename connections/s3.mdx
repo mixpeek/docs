@@ -4,6 +4,51 @@ icon: "bucket"
 iconType: "solid"
 ---
 
-Currently AWS S3 can only act as a source.
+## Setting Up an AWS S3 Connection in Mixpeek
 
-<Note>Guide for setting up S3 in progress.</Note>
+When you establish an S3 connection in Mixpeek and attach a pipeline, Mixpeek automates several backend processes to efficiently handle and process your data. Here’s how it works:
+
+<CodeGroup>
+
+```shell Shell
+curl --location 'http://localhost:8000/connections' \
+--header 'Authorization: Bearer API_KEY' \
+--header 'Content-Type: application/json' \
+--data '{
+    "alias": "my-mongo-test",
+    "engine": "mongodb",
+    "details": {
+        "access_key": "your_access_key",
+        "secret_key": "your_secret_key",
+        "region": "us-east-2"
+    }
+}'
+```
+
+</CodeGroup>
+
+### Automated Infrastructure Setup
+
+Upon creating an S3 connection and attaching a pipeline, Mixpeek automatically sets up the following components:
+
+1. **Amazon SNS (Simple Notification Service) Topic**: This acts as a pub/sub system. Every new object added to your S3 bucket that matches the pre-filter logic defined in your pipeline configuration triggers a notification to this SNS topic.
+
+2. **Amazon SQS (Simple Queue Service) Queue**: Notifications from the SNS are forwarded to this SQS queue. This decouples the process of receiving data from the processing, thereby enhancing efficiency and scalability.
+
+3. **Serverless Functions (Create and Delete)**: These functions are triggered based on the activity in your S3 bucket:
+   - **Create Function**: Activated when a new object is added to the S3 bucket. It processes the object according to the pipeline logic you define and inserts the relevant data into the designated database.
+   - **Delete Function**: Handles the deletion of objects, ensuring that your database and the S3 bucket remain synchronized.
+
+### Workflow Diagram
+
+Below is a Mermaid diagram that visualizes the workflow:
+
+<iframe
+  src="https://mermaid.live/view#pako:eNplkcFqwzAMhl9F-NyecstgsMYEdli34N6SHlxbbbw0dnBkxtb03ee4yzqYwfDL1vcLSRemnEaWs5OXQws7_tBYiEdktchgE1SHtIf1-nF6PbyjIlAeJaGeQGxF_dTLL2dnCTs3GLVf6PgwM1tH5miUJONsJKo7UQmoAgb8Jaob8WZUB2EAl6pNUJR1kSpCGayafRaiKBPwbEf0BMaSA76Z4q25JHmQ4907-9uAxjOmBnhZ86T_WfObtfi0Cj4MtT_G8ZetWI--l0bHkV3m7IZRiz02LI9SS981rLHXmCcDudmB5eQDrph34dSy_CjPY4zCoGNT3Mg4935JQW3I-ZfbQtJert8b-od6"
+  className="w-full"
+  height="500"
+></iframe>
+
+### Benefits
+
+This setup allows Mixpeek to handle a large volume of object uploads from S3 efficiently. By processing these uploads through a scalable pipeline, it prevents overloading the inference servers and indexing pipeline, ensuring smooth and efficient data handling.

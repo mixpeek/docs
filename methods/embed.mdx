@@ -27,6 +27,18 @@ The embed method allows you to generate embeddings from various modalities. Depe
 
 <RequestExample>
 
+```python Python
+from mixpeek import Mixpeek
+
+mixpeek = Mixpeek("API_KEY")
+embedding = mixpeek.embed(
+  modality="video",
+  model="mixpeek/vuse-generic-v1",
+  input="s3://waving_boy.mp4",
+  input_type="url"
+)
+```
+
 ```shell Shell
 curl --location 'https://api.mixpeek.com/embed/{modality}' \
 --header 'Authorization: Bearer API_KEY' \
