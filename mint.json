@@ -55,7 +55,8 @@
       "pages": [
         "introduction/quickstart",
         "introduction/models",
-        "introduction/libraries"
+        "introduction/libraries",
+        "introduction/faq"
       ]
     },
     {
