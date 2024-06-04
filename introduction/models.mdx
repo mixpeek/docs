@@ -12,7 +12,26 @@ Only Mixpeek's embedding models are exposed to you as a developer because you ne
 When using the mixpeek SDK methods, you provide the `model` in each payload like:
 
 ```python
-mixpeek.embed(model="jinaai/jina-embeddings-v2-base-en", modality="text")
+from mixpeek import Mixpeek
+
+mixpeek = Mixpeek("API_KEY")
+
+embedding = mixpeek.embed(
+  model="jinaai/jina-embeddings-v2-base-en",
+  modality="text"
+)
+```
+
+Which will return:
+
+```json
+{
+    "embedding": [
+        -0.0021566820796579123,
+        ...
+    ],
+    "elapsed_time": 218.9970703125
+}
 ```
 
 The list below are all the embedding models currently supported in the SDK. For embed, use the dimensions to create your DB index.
@@ -26,12 +45,15 @@ The list below are all the embedding models currently supported in the SDK. For 
 
 | Name                                         | Modality    | Dimensions | URL                                                           |
 | -------------------------------------------- | ----------- | ---------- | ------------------------------------------------------------- |
-| `sentence-transformers/all-MiniLM-L6-v2`     | Text        | Variable   | [Sentence Transformers](https://www.sbert.net/)               |
-| `nomic-ai/nomic-embed-text-v1`               | Text        | Variable   | [Nomic AI](https://nomic.ai/)                                 |
-| `jinaai/jina-embeddings-v2-base-en`          | Text        | Variable   | [Jina AI](https://jina.ai/)                                   |
-| `google-bert/bert-base-multilingual-uncased` | Text        | Variable   | [Google BERT](https://github.com/google-research/bert)        |
-| `mixedbread-ai/mxbai-embed-large-v1`         | Text        | Variable   | [MixedBread AI](https://mixedbread.ai/)                       |
+| `sentence-transformers/all-MiniLM-L6-v2`     | Text        | 384        | [Sentence Transformers](https://www.sbert.net/)               |
+| `nomic-ai/nomic-embed-text-v1`               | Text        | 768        | [Nomic AI](https://nomic.ai/)                                 |
+| `jinaai/jina-embeddings-v2-base-en`          | Text        | 768        | [Jina AI](https://jina.ai/)                                   |
+| `google-bert/bert-base-multilingual-uncased` | Text        | 768        | [Google BERT](https://github.com/google-research/bert)        |
+| `mixedbread-ai/mxbai-embed-large-v1`         | Text        | 1024       | [MixedBread AI](https://mixedbread.ai/)                       |
 | `openai/clip-vit-base-patch32`               | Text, Image | 512        | [OpenAI Clip](https://github.com/openai/CLIP)                 |
 | `mixpeek/vuse-generic-v1`                    | Text, Video | 768        | [Mixpeek](https://mixpeek.com/models/mixpeek/vuse-generic-v1) |
 
-If you'd like to understand which models we're using for `generate` and `extract` we'd be happy to share.
+<Note>
+  For `extract` and `generate` models, we do not expose the model name, it's
+  configured automatically.
+</Note>

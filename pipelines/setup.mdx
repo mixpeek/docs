@@ -40,7 +40,7 @@ my-repo/
 
 `build-and-push-docker.yml` contains logic which that is triggered via Github actions. It bundles all the changes and loads it into a pipeline.
 
-```
+```yaml
 name: Build and Push Docker Containers
 
 on:
@@ -60,17 +60,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Send files to Mixpeek API
+      - name: Prepare and Send Pipeline Data
         run: |
-          for file in $(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E 'handler.py|config.json'); do
-            curl --location --request POST 'https://api.mixpeek.com/pipelines/build' \
-              --header 'Authorization: Bearer ${{ secrets.MIXPEEK_API_KEY }}' \
-              --form 'file=@${{ github.workspace }}/${file}' \
-              --form 'filename=${file}'
+          files_changed=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E 'handler.py|config.json')
+          for file in $files_changed; do
+            if [[ $file == *handler.py ]]; then
+              pipeline_dir=$(dirname $file)
+              handler_content=$(cat ${{ github.workspace }}/$file)
+              config_content=$(cat ${{ github.workspace }}/$pipeline_dir/config.json)
+              alias=$(echo $config_content | jq -r '.alias')
+              curl --location 'https://api.mixpeek.com/pipelines' \
+                --header 'Authorization: Bearer ${{ secrets.MIXPEEK_API_KEY }}' \
+                --header 'Content-Type: application/json' \
+                --data "{
+                  \"alias\": \"$alias\",
+                  \"code\": \"$handler_content\",
+                  \"destination\": $(echo $config_content | jq '.destination'),
+                  \"source\": $(echo $config_content | jq '.source')
+                }"
+            fi
           done
 ```
 
 Each folder contains a pipeline `handler.py` file as well as a `config.json` file.
+
+## Example
 
 ### handler.py
 
@@ -141,12 +155,12 @@ This contains how you want the configuration rules for your pipleline:
   If you don't want to integrate via GitHub workflows, you can do this:
 
   ```bash cURL
-  curl --location 'https://api.mixpeek.com/pipelines/build' \
+  curl --location 'https://api.mixpeek.com/pipelines' \
   --header 'Authorization: Bearer API_KEY' \
   --header 'Content-Type: application/json' \
   --data '{
     "alias": "MyPipeline",
-    "code": "function execute() { return true; }",
+    "code": "...",
     "destination": {
         "connection_id": "conn_123",
         "collection": "mongodb_collection"

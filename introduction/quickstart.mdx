@@ -65,6 +65,7 @@ Your pipeline `config` would look like this:
 ```json
 {
   "alias": "dog-pipeline",
+  "code_as_string": "..",
   "enabled": true,
   "source": {
     "connection_id": "123",
@@ -76,6 +77,25 @@ Your pipeline `config` would look like this:
   }
 }
 ```
+
+#### Two options for pipeline creation
+
+<CardGroup cols={2}>
+
+<Card title="Github for CI/CD" icon="github" iconType="duotone" color="#ca8b04">
+  Integrate a private Github repository directly. We'll update the pipeline everytime you commit.
+
+[Read More](/pipelines/setup)
+
+</Card>
+
+<Card title="API Post Directly" icon="code" iconType="duotone" color="#ca8b04">
+  Create and configure your pipeline by sending the pipeline as a string.
+
+[Read More](/pipelines/create)
+
+</Card>
+</CardGroup>
 
 Previously, we would have created an AWS IAM role, which opens up a listener on your S3 bucket `dogs`, every new object gets sent through the pipeline-as-code we defined above and then sent into our MongoDB collection: `dog_objects` (which was also instantiated previously).
 
