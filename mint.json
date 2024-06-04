@@ -6,9 +6,7 @@
     "light": "/logo/light.png"
   },
   "api": {
-    "baseUrl": [
-      "https://api.mixpeek.com"
-    ],
+    "baseUrl": ["https://api.mixpeek.com"],
     "auth": {
       "method": "key",
       "name": "Authorization"
@@ -36,7 +34,12 @@
   },
   "anchors": [
     {
-      "name": "Guides",
+      "name": "Templates",
+      "icon": "notes",
+      "url": "https://mixpeek.com/templates"
+    },
+    {
+      "name": "Learning Center",
       "icon": "book-bookmark",
       "url": "https://mixpeek.com/learn"
     },
@@ -57,26 +60,25 @@
     },
     {
       "group": "Methods",
-      "pages": [
-        "methods/extract",
-        "methods/embed",
-        "methods/generate"
-      ]
+      "pages": ["methods/extract", "methods/embed", "methods/generate"]
     },
     {
       "group": "Pipelines",
-      "pages": [
-        "pipelines/create",
-        "pipelines/invoke",
-        "pipelines/update"
-      ]
+      "pages": ["pipelines/setup", "pipelines/invoke"]
     },
     {
       "group": "Connections",
       "pages": [
-        "connections/mongodb",
-        "connections/s3"
+        "connections/create",
+        {
+          "group": "Integrations",
+          "pages": ["connections/mongodb", "connections/s3"]
+        }
       ]
+    },
+    {
+      "group": "Tools",
+      "pages": ["tools/video"]
     }
   ],
   "footerSocials": {

@@ -7,27 +7,29 @@ iconType: "solid"
 
 ## What is Mixpeek?
 
-Your app probably stores unstructured and structured data across various datatypes: documents, images, video and audio not the least of which is text.
+Your software likely stores unstructured and structured data across various datatypes: documents, images, video and audio not the least of which is text.
 
 Unstructured data tends to live in an object store like Amazon S3, Azure Blob or Google Cloud Storage. Structured in your database like Postgres or MongoDB.
 
-Mixpeek lets you treat both your object store and transactional database as a single entity.
+Mixpeek allows you treat both your object store and transactional database as a single entity.
 
 ### How does it work?
 
-Mixpeek is a multimodal pipeline development kit, which is simply a chain of ML models applied to your objects as they're uploaded, then sent into your transactional database.
+Mixpeek is a multimodal pipeline development kit, which put simply is a chain of user-defined processes like ML models that are applied to your objects as they're uploaded, then sent into your transactional database.
 
-This allows you to structure your unstructured data using custom, AI-powered logic in real-time.
+This allows you to structure your unstructured data using custom, powerful logic in real-time.
 
 ![mixpeek diagram](https://learn.mixpeek.com/content/images/2024/05/img.png)
 
-You can think of it like if Fivetran and Sagemaker had a baby, with "guaranteed execution" in between.
+A common analogy is like if Fivetran and Sagemaker had a baby, with "guaranteed execution" in between.
 
 ### A Simple Example
 
 Say you upload an image: `dog.png` to your S3 bucket and you want to extract the tags and create an embedding of the image itself.
 
-You'd create a Mixpeek pipeline, which is a serverless function that combines ML models and gets invoked whenever there's a new object in your bucket.
+You'd create a Mixpeek pipeline that combines ML models and gets invoked whenever there's a new object in your bucket.
+
+[Setting up your first Mixpeek pipeline](#)
 
 Here's an example pipeline that creates a description, embedding and tags.
 
