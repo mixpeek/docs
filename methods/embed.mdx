@@ -17,12 +17,17 @@ The embed method allows you to generate embeddings from various modalities. Depe
   The model to use for embedding
 </ParamField>
 
-<ParamField body="url" type="string" optional>
-  Remote url of the file to be embedded
+<ParamField body="input" type="string" required>
+  The input source for the file to be embedded, e.g., a URL or direct content.
 </ParamField>
 
-<ParamField body="content" type="boolean" optional>
-  The direct textual or base64-encoded content of the item for embedding.
+<ParamField body="modality" type="string" required>
+  The type of data to be embedded (e.g., text, image, audio, video).
+</ParamField>
+
+<ParamField body="input_type" type="string" required>
+  The type of input provided (e.g., "url" for remote URLs, "content" for direct
+  base64-encoded content).
 </ParamField>
 
 <RequestExample>
