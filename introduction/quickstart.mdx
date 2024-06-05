@@ -13,21 +13,24 @@ iconType: "solid"
 
 ## What is Mixpeek?
 
-Your software likely stores unstructured and structured data across various datatypes: documents, images, video and audio not the least of which is text.
+Your software likely stores unstructured and structured data across various datatypes: `documents`, `images`, `video` and `audio` not the least of which is `text`.
 
-Unstructured data tends to live in an object store like Amazon S3, Azure Blob or Google Cloud Storage. Structured in your database like Postgres or MongoDB.
+Unstructured data tends to live in an object store like Amazon S3, Azure Blob Store or Google Cloud Storage. Then structured in your database like Postgres or MongoDB.
 
 Mixpeek allows you treat both your object store and transactional database as a single entity.
 
-### How does it work?
+## How does it work?
 
-Mixpeek is a multimodal pipeline development kit, which put simply is a chain of user-defined processes like ML models that are applied to your objects as they're uploaded, then sent into your transactional database.
+Mixpeek is a multimodal pipeline development kit, which put simply is a chain of user-defined tasks that are applied to your objects as they're added to your own storage, processed then sent to your transactional database.
 
 This allows you to structure your unstructured data using custom, powerful logic in real-time.
 
 ![mixpeek diagram](https://learn.mixpeek.com/content/images/2024/05/img.png)
 
-A common analogy is like if Fivetran and Sagemaker had a baby, with "guaranteed execution" in between.
+<Note>
+  Mixpeek is often compared to a cross between Fivetran and Sagemaker, with
+  "guaranteed execution" in the middle.
+</Note>
 
 ### A Simple Example
 

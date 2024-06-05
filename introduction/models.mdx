@@ -12,11 +12,7 @@ Only Mixpeek's embedding models are exposed to you as a developer because you ne
 When using the mixpeek SDK methods, you provide the `model` in each payload like:
 
 ```python
-from mixpeek import Mixpeek
-
-mixpeek = Mixpeek("API_KEY")
-
-embedding = mixpeek.embed(
+mixpeek.embed(
   model="jinaai/jina-embeddings-v2-base-en",
   modality="text"
 )
