@@ -34,7 +34,7 @@ from mixpeek import Mixpeek
 
 mixpeek = Mixpeek('API_KEY')
 
-mixpeek.create_connection(
+mixpeek.connections.create(
     alias="my-mongo-test",
     engine="mongodb",
     details={
