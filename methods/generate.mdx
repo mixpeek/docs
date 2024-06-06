@@ -47,9 +47,11 @@ class ResponseFormat(BaseModel):
     weather: int
 
 mixpeek = Mixpeek("API_KEY")
-generated_content = mixpeek.generate(
+
+# for text generation
+generated_content = mixpeek.generate.text(
     response_format=ResponseFormat,
-    context="Please tell me the weather and make sure to respond in the provided JSON schema"
+    context="Please tell me the weather"
 )
 ```
 

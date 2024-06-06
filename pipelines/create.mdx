@@ -20,7 +20,7 @@ To build a pipeline, you'll need to first have created a `source` and `destinati
   </Field>
 </ParamField>
 
-<ParamField body="transformation_code" type="string" required>
+<ParamField body="code" type="string" required>
   The code, provided as a string, which dictates how the data will be
   transformed during the pipeline process.
 </ParamField>
@@ -54,19 +54,50 @@ To build a pipeline, you'll need to first have created a `source` and `destinati
 
 <RequestExample>
 
+```python Python
+from mixpeek import Mixpeek
+
+mixpeek = Mixpeek("API_KEY")
+
+
+pipeline_id = mixpeek.pipelines.create(
+  alias="MyPipeline",
+  code="function execute() { return true; }",
+  source={
+    "connection_id": "conn_456",
+    "filters": {
+      "foo": "bar"
+    }
+  },
+  destination={
+    "connection_id": "conn_431",
+    "collection": "data_bucket",
+    "metadata": {
+      "type": "storage"
+    }
+  }
+)
+```
+
 ```shell Shell
 curl --location 'https://api.mixpeek.com/pipelines' \
 --header 'Authorization: Bearer API_KEY' \
 --header 'Content-Type: application/json' \
 --data '{
-    "connections": {
-        "source": "source_conn_id",
-        "destination": "destination_conn_id"
+    "alias": "MyPipeline",
+    "code": "function execute() { return true; }",
+    "destination": {
+        "connection_id": "123",
+        "collection": "data_bucket",
+        "metadata": {
+            "type": "storage"
+        }
     },
-    "transformation_code": "data.map(item => ({...item, newField: item.oldField * 10}))",
-    "metadata": {
-        "pipeline_name": "Data Enrichment",
-        "description": "Enhances data by applying a transformation."
+    "source": {
+        "connection_id": "src-456",
+        "filters": {
+            "foo": "bar"
+        }
     }
 }'
 ```

@@ -45,6 +45,21 @@ Typically these get invoked automatically as objects are added from the source (
 
 <RequestExample>
 
+```python Python
+from mixpeek import Mixpeek
+
+# Initialize the Mixpeek client with your API key
+mixpeek = Mixpeek('API_KEY')
+
+# Example of invoking a pipeline using the Mixpeek Python SDK
+response = client.invoke_pipeline(
+    pipeline_id='mixed-bread',
+    payload={
+        'corpus': 'hello my name is bob'
+    }
+)
+```
+
 ```shell Shell
 curl --location 'https://api.mixpeek.com/invoke/{pipeline_id}' \
 --header 'Authorization: Bearer API_KEY' \

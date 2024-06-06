@@ -31,9 +31,28 @@ The extract method allows you to pull data out of various modalities. Depending 
 from mixpeek import Mixpeek
 
 mixpeek = Mixpeek("API_KEY")
-extraction = mixpeek.extract(
-  modality="text",
+
+# for text extraction
+extraction = mixpeek.extract.text(
   input="s3://document.pdf",
+  input_type="url"
+)
+
+# For image extraction
+extraction = mixpeek.extract.image(
+  input="https://example.com/photo.jpg",
+  input_type="url"
+)
+
+# For audio extraction
+extraction = mixpeek.extract.audio(
+  input="https://example.com/audio.mp3",
+  input_type="url"
+)
+
+# For video extraction
+extraction = mixpeek.extract.video(
+  input="https://example.com/video.mp4",
   input_type="url"
 )
 ```
