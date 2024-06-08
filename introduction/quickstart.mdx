@@ -21,11 +21,6 @@ This allows you to structure your unstructured data using custom, powerful logic
 
 ![mixpeek diagram](https://learn.mixpeek.com/content/images/2024/05/img.png)
 
-<Note>
-  Mixpeek is often compared to a cross between Fivetran and Sagemaker, with
-  "guaranteed execution" in the middle.
-</Note>
-
 ### A Simple Example
 
 Say you upload an image: `dog.png` to your S3 bucket and you want to extract the tags and create an embedding of the image itself.
@@ -34,28 +29,34 @@ You'd create a Mixpeek pipeline that combines ML models and gets invoked wheneve
 
 #### Your first pipeline
 
-Here's an example pipeline that creates a description, embedding and tags.
+Here's an example pipeline that creates an embedding and tags.
 
 ```python
 def function(event, context):
-  mixpeek = Mixpeek(api_key="API_KEY", event.object_url)
+  mixpeek = Mixpeek("API_KEY")
 
-  # create a description
-  description = mixpeek.extract.text(model="openai/gpt-4o")
   # create an embedding
-  embedding = mixpeek.embed.image(model="openai/clip-vit-base-patch32")
+  embedding = mixpeek.embed.image(model_id="openai/clip-vit-base-patch32")
   # create tags
-  tags = mixpeek.extract.text(model="microsoft/conditional-detr-resnet-50")
+  tags = mixpeek.extract.text(model_id="microsoft/conditional-detr-resnet-50")
 
   return {
-    "object_url": payload.object_url,
-    "text": description,
+    "file_url": event.object_url,
     "tags": tags,
     "embedding": embedding
 }
 ```
 
 Once we create this pipeline then connect our S3 bucket and finally MongoDB collection then enable it.
+
+#### Setup connections
+
+<Tip>
+  Every new account comes with a preconfigured S3 and MongoDB connection so you
+  can get started right away. Alternatively, you bring your own.
+</Tip>
+
+![default connections](/images/default-connections.png)
 
 Your pipeline `config` would look like this:
 
@@ -65,11 +66,11 @@ Your pipeline `config` would look like this:
   "code_as_string": "..",
   "enabled": true,
   "source": {
-    "connection_id": "123",
+    "connection_id": "conn_123",
     "bucket": "dogs"
   },
   "destination": {
-    "connection_id": "321",
+    "connection_id": "conn_321",
     "collection": "dog_objects"
   }
 }
@@ -84,7 +85,7 @@ title="Github for CI/CD"
 icon="github" 
 iconType="duotone" 
 color="#ca8b04"
-href="/pipelines/setup"
+href="/pipelines/github"
 >
   Integrate a private Github repository directly. We'll update the pipeline everytime you commit.
 
@@ -131,15 +132,17 @@ All without having to think about data prep again. You can even modify your pipe
 You can also use the `extract`, `embed` and `generate` methods outside of a pipeline.
 
 ```python
-from mixpeek.client import Mixpeek
+from mixpeek import Mixpeek
 
-mixpeek = Mixpeek(api_key="API_KEY")
+mixpeek = Mixpeek("API_KEY")
 
-output = mixpeek.embed.text("lorem ipsum", model="mixedbread-ai/mxbai-embed-large-v1", )
+output = mixpeek.embed.text(
+  input="lorem ipsum",
+  model_id="mixedbread-ai/mxbai-embed-large-v1"
+)
 ```
 
 <Note>
-  Mixpeek cloud is currently in **private beta**. To use the API, you need to
-  [register an API key](https://mixpeek.com/start) and an engineer will contact
-  you.
+  To use the API, you need to [register an API key](https://mixpeek.com/start)
+  and an engineer will contact you.
 </Note>

@@ -10,17 +10,29 @@ To build a pipeline, you'll need to first have created a `source` and `destinati
 
 ## Request
 
-<ParamField body="connections" type="object" required>
-  Defines the source and destination connection identifiers for the data flow.
-  <Field name="source" type="string" required>
-    The unique identifier for the data source connection.
-  </Field>
-  <Field name="destination" type="string" required>
-    The unique identifier for the data destination connection.
-  </Field>
+<ParamField path="alias" type="string">
+  Alias for the execution function
+</ParamField>
+<ParamField path="code" type="string">
+  The JavaScript code to execute
+</ParamField>
+<ParamField path="source.connection_id" type="string">
+  Source connection ID
+</ParamField>
+<ParamField path="source.filters.foo" type="string">
+  Filter key "foo" value
+</ParamField>
+<ParamField path="destination.connection_id" type="string">
+  Destination connection ID
+</ParamField>
+<ParamField path="destination.collection" type="string">
+  Destination collection name
+</ParamField>
+<ParamField path="destination.metadata.type" type="string">
+  Metadata type
 </ParamField>
 
-<ParamField body="code" type="string" required>
+<ParamField body="transformation_code" type="string" required>
   The code, provided as a string, which dictates how the data will be
   transformed during the pipeline process.
 </ParamField>
@@ -84,20 +96,14 @@ curl --location 'https://api.mixpeek.com/pipelines' \
 --header 'Authorization: Bearer API_KEY' \
 --header 'Content-Type: application/json' \
 --data '{
-    "alias": "MyPipeline",
-    "code": "function execute() { return true; }",
-    "destination": {
-        "connection_id": "123",
-        "collection": "data_bucket",
-        "metadata": {
-            "type": "storage"
-        }
+    "connections": {
+        "source": "source_conn_id",
+        "destination": "destination_conn_id"
     },
-    "source": {
-        "connection_id": "src-456",
-        "filters": {
-            "foo": "bar"
-        }
+    "transformation_code": "data.map(item => ({...item, newField: item.oldField * 10}))",
+    "metadata": {
+        "pipeline_name": "Data Enrichment",
+        "description": "Enhances data by applying a transformation."
     }
 }'
 ```

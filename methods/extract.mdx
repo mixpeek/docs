@@ -11,7 +11,16 @@ The extract method allows you to pull data out of various modalities. Depending 
 - **video**: object detection, scene detection, etc.
 - **text**: named entity recognition, tokenization, etc.
 
+<Warning>
+  Currently only the text modality is available for public use. Contact us to
+  use the beta for image, video and audio.
+</Warning>
+
 ## Request
+
+<ParamField body="model_id" type="string">
+  Optional indication of which model to use
+</ParamField>
 
 <ParamField body="input" type="string" required>
   The input URL, text, or base64 encoding of the object to extract.

@@ -19,6 +19,11 @@ The generate method allows you to produce content across various modalities. Dep
 
 ## Request
 
+<ParamField body="model_id" type="str" required>
+  The model_id, see <a href="/introduction/models">supported models</a> for
+  reference.
+</ParamField>
+
 <ParamField body="response_format" type="json" required>
   The JSON schema for the response format
 </ParamField>
@@ -50,6 +55,7 @@ mixpeek = Mixpeek("API_KEY")
 
 # for text generation
 generated_content = mixpeek.generate.text(
+    model_id="openai/gpt-4-turbo",
     response_format=ResponseFormat,
     context="Please tell me the weather"
 )

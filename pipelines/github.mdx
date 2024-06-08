@@ -1,5 +1,5 @@
 ---
-title: "Setup Pipelines via Github"
+title: "Integrate via Github"
 description: "Setup your Mixpeek pipelines for CI/CD"
 icon: "github"
 iconType: "solid"
@@ -44,48 +44,6 @@ my-repo/
 ### Workflow
 
 `build-and-push-docker.yml` contains logic which that is triggered via Github actions. It bundles all the changes and loads it into a pipeline.
-
-```yaml
-name: Build and Push Docker Containers
-
-on:
-  push:
-    paths:
-      - "**/handler.py"
-      - "**/config.json"
-
-jobs:
-  send-to-mixpeek:
-    runs-on: ubuntu-latest
-
-    env:
-      MIXPEEK_API_KEY: ${{ secrets.MIXPEEK_API_KEY }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Prepare and Send Pipeline Data
-        run: |
-          files_changed=$(git diff --name-only ${{ github.event.before }} ${{ github.event.after }} | grep -E 'handler.py|config.json')
-          for file in $files_changed; do
-            if [[ $file == *handler.py ]]; then
-              pipeline_dir=$(dirname $file)
-              handler_content=$(cat ${{ github.workspace }}/$file)
-              config_content=$(cat ${{ github.workspace }}/$pipeline_dir/config.json)
-              alias=$(echo $config_content | jq -r '.alias')
-              curl --location 'https://api.mixpeek.com/pipelines' \
-                --header 'Authorization: Bearer ${{ secrets.MIXPEEK_API_KEY }}' \
-                --header 'Content-Type: application/json' \
-                --data "{
-                  \"alias\": \"$alias\",
-                  \"code\": \"$handler_content\",
-                  \"destination\": $(echo $config_content | jq '.destination'),
-                  \"source\": $(echo $config_content | jq '.source')
-                }"
-            fi
-          done
-```
 
 Each folder contains a pipeline `handler.py` file as well as a `config.json` file.
 
@@ -154,24 +112,3 @@ This contains how you want the configuration rules for your pipleline:
 
   - `connection_id`: This is the identifier for the downstream data destination connection. You set this up in the [Create Connections](/connections/create) section. It tells the pipeline where to send or store the processed data.
   - `collection`: This is the specific location or container within the destination where data will be stored. For example, `data_bucket` could be a specific database or storage bucket.
-
-  ## Alternative to Github
-
-  If you don't want to integrate via GitHub workflows, you can do this:
-
-  ```bash cURL
-  curl --location 'https://api.mixpeek.com/pipelines' \
-  --header 'Authorization: Bearer API_KEY' \
-  --header 'Content-Type: application/json' \
-  --data '{
-    "alias": "MyPipeline",
-    "code": "...",
-    "destination": {
-        "connection_id": "conn_123",
-        "collection": "mongodb_collection"
-    },
-    "source": {
-        "connection_id": "conn_321"
-    }
-  }'
-  ```

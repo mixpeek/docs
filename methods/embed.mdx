@@ -13,8 +13,8 @@ The embed method allows you to generate embeddings from various modalities. Depe
 
 ## Request
 
-<ParamField body="model" type="string" required>
-  The model to use for embedding
+<ParamField body="model_id" type="string" required>
+  The model_id to use for embedding
 </ParamField>
 
 <ParamField body="input" type="string" required>
@@ -39,28 +39,28 @@ mixpeek = Mixpeek("API_KEY")
 
 # For video embedding
 embedding = mixpeek.embed.video(
-  model="mixpeek/vuse-generic-v1",
+  model_id="mixpeek/vuse-generic-v1",
   input="s3://waving_boy.mp4",
   input_type="url"
 )
 
 # For text embedding
 embedding = mixpeek.embed.text(
-  model="jinaai/jina-embeddings-v2-base-en",
+  model_id="jinaai/jina-embeddings-v2-base-en",
   input="Hello, world!",
   input_type="text"
 )
 
 # For image embedding
 embedding = mixpeek.embed.image(
-  model="openai/clip-vit-large-patch14",
+  model_id="openai/clip-vit-large-patch14",
   input="https://example.com/image.jpg",
   input_type="url"
 )
 
 # For audio embedding
 embedding = mixpeek.embed.audio(
-  model="facebook/wav2vec2-base-960h",
+  model_id="facebook/wav2vec2-base-960h",
   input="https://example.com/audio.mp3",
   input_type="url"
 )
@@ -73,7 +73,7 @@ curl --location 'https://api.mixpeek.com/embed/{modality}' \
 --data '{
     "input": "s3://waving_boy.mp4",
     "modality": "video",
-    "model": "mixpeek/vuse-generic-v1",
+    "model_id": "mixpeek/vuse-generic-v1",
     "input_type": "url"
 }'
 ```

@@ -5,30 +5,23 @@ icon: "brain"
 iconType: "solid"
 ---
 
-Only Mixpeek's embedding models are exposed to you as a developer because you need it to do KNN. Whichever models you select via `embed` are optionally open source via HuggingFace or can be embedded for KNN via `mixpeek.embed()`.
+When using the mixpeek methods, you provide the `model` in each request regardless of method: `extract`, `embed`, and `generate`.
 
-`extract` and `generate` are abstracted so that we can swap in and out the best in class approaches.
+For instance `mixpeek.extract()`, `mixpeek.embed()` or `mixpeek.generate()`
 
-When using the mixpeek SDK methods, you provide the `model` in each payload like:
+<CodeGroup>
 
-```python
-mixpeek.embed(
-  model="jinaai/jina-embeddings-v2-base-en",
-  modality="text"
-)
+```python Mock Request
+mixpeek.embed("jinaai/jina-embeddings-v2-base-en")
 ```
 
-Which will return:
-
-```json
+```python Mock Response
 {
-    "embedding": [
-        -0.0021566820796579123,
-        ...
-    ],
-    "elapsed_time": 218.9970703125
+    "embedding": [0, 1, 3, 21]
 }
 ```
+
+</CodeGroup>
 
 The list below are all the embedding models currently supported in the SDK. For embed, use the dimensions to create your DB index.
 
@@ -37,7 +30,9 @@ The list below are all the embedding models currently supported in the SDK. For 
   <a href="https://mixpeek.com/contact">reach out</a>.
 </Note>
 
-## Embedding Models
+## Models
+
+### Embedding
 
 | Name                                         | Modality    | Dimensions | URL                                                           |
 | -------------------------------------------- | ----------- | ---------- | ------------------------------------------------------------- |
@@ -49,7 +44,48 @@ The list below are all the embedding models currently supported in the SDK. For 
 | `openai/clip-vit-base-patch32`               | Text, Image | 512        | [OpenAI Clip](https://github.com/openai/CLIP)                 |
 | `mixpeek/vuse-generic-v1`                    | Text, Video | 768        | [Mixpeek](https://mixpeek.com/models/mixpeek/vuse-generic-v1) |
 
-<Note>
-  For `extract` and `generate` models, we do not expose the model name, it's
-  configured automatically.
-</Note>
+### Generation
+
+| Name                         | Modality | URL                                                                            |
+| ---------------------------- | -------- | ------------------------------------------------------------------------------ |
+| `openai/gpt-3.5-turbo`       | Text     | [GPT-3.5 Turbo](https://beta.openai.com/docs/models/gpt-3.5-turbo)             |
+| `openai/gpt-4-turbo-preview` | Text     | [GPT-4 Turbo Preview](https://beta.openai.com/docs/models/gpt-4-turbo-preview) |
+| `openai/gpt-4-turbo`         | Text     | [GPT-4 Turbo](https://beta.openai.com/docs/models/gpt-4-turbo)                 |
+
+### Extraction
+
+<Info>Work in progress</Info>
+
+## Fine-Tuning
+
+To fine-tune any of the models (`extract`, `generate`, and `embed`), follow these steps:
+
+<Steps>
+  <Step title="Send Annotated Data">
+    Send your annotated data to an S3 bucket and connect it via the
+    <a href="/connections/s3">Connections</a> service. This will return a `connection_id`.
+    Ensure the data is well-organized and labeled according to the model's requirements
+    (we'll provide specs)
+  </Step>
+  <Step title="Initiate Fine-Tuning">
+    Use the Mixpeek API to start a fine-tuning job. Specify the
+    model_id, the S3 bucket path, and any other relevant parameters:
+
+    ```python
+    mixpeek.models.tune(
+      model_id="jinaai/jina-embeddings-v2-base-en",
+      annotated_data="conn_123"
+    )
+    ```
+
+    This will return a new model_id that you can use in your pipeline, for example: `model_1askdh2390`, which you'll then use in your pipeline.
+
+  </Step>
+  <Step title="Version Control">
+    It's recommended to store the different versions of each fine-tune. If you append a
+    `model_version` in the metadata of the pipeline it'll automatically be added to your database so you can do query-time filtering.
+    
+    This helps in tracking model evolutions and maintaining consistency across different versions.
+
+  </Step>
+</Steps>
