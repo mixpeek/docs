@@ -26,8 +26,11 @@ The extract method allows you to pull data out of various modalities. Depending 
   The input URL, text, or base64 encoding of the object to extract.
 </ParamField>
 
-<ParamField body="modality" type="string" required>
+<ParamField body="modality" type="string">
   The type of data to be extracted (e.g., image, audio, video, text).
+
+Note that modality is not required here. If you don't include it, we'll automatically detect how to process it. This is useful when it's the first step in the pipeline and you don't know what filetypes you want to process in advance.
+
 </ParamField>
 
 <ParamField body="input_type" type="string" required>
@@ -44,24 +47,6 @@ mixpeek = Mixpeek("API_KEY")
 # for text extraction
 extraction = mixpeek.extract.text(
   input="s3://document.pdf",
-  input_type="url"
-)
-
-# For image extraction
-extraction = mixpeek.extract.image(
-  input="https://example.com/photo.jpg",
-  input_type="url"
-)
-
-# For audio extraction
-extraction = mixpeek.extract.audio(
-  input="https://example.com/audio.mp3",
-  input_type="url"
-)
-
-# For video extraction
-extraction = mixpeek.extract.video(
-  input="https://example.com/video.mp4",
   input_type="url"
 )
 ```
