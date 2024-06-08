@@ -53,6 +53,23 @@ Sample Index Configuration:
 
 ### Set MongoDB as your Destination
 
+```python Python
+from mixpeek import Mixpeek
+
+mixpeek = Mixpeek('API_KEY')
+
+mixpeek.connections.create(
+    alias="my-mongo-test",
+    engine="mongodb",
+    details={
+        "host": "your_host_address",
+        "database": "your_database_name",
+        "username": "your_username",
+        "password": "your_password"
+    }
+)
+```
+
 ```shell Shell
 curl --location 'https://api.mixpeek.com/connections' \
 --header 'Authorization: Bearer API_KEY' \
