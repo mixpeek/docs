@@ -42,11 +42,6 @@
       "name": "Learning Center",
       "icon": "book-bookmark",
       "url": "https://mixpeek.com/learn"
-    },
-    {
-      "name": "Security",
-      "icon": "shield-halved",
-      "url": "https://mixpeek.com/security"
     }
   ],
   "navigation": [
