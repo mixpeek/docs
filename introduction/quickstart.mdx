@@ -26,7 +26,7 @@ Say you upload an image: `dog.png` to your S3 bucket and you want to extract the
 
 You'd create a Mixpeek pipeline that combines ML models and gets invoked whenever there's a new object in your bucket.
 
-#### Your first pipeline
+## Your first pipeline
 
 Here's an example pipeline that creates an embedding and tags.
 
@@ -46,9 +46,11 @@ def function(event, context):
 }
 ```
 
+[Create pipeline documentation](/pipelines/create)
+
 Once we create this pipeline then connect our S3 bucket and finally MongoDB collection then enable it.
 
-#### Setup connections
+## Your first connection
 
 <Tip>
   Every new account comes with a preconfigured S3 and MongoDB connection so you
@@ -57,23 +59,9 @@ Once we create this pipeline then connect our S3 bucket and finally MongoDB coll
 
 ![default connections](/images/default-connections.png)
 
-Your pipeline `config` would look like this:
+[Create connection documentation](/connections/create)
 
-```json
-{
-  "alias": "dog-pipeline",
-  "code_as_string": "..",
-  "enabled": true,
-  "source": {
-    "connection_id": "conn_123",
-    "bucket": "dogs"
-  },
-  "destination": {
-    "connection_id": "conn_321",
-    "collection": "dog_objects"
-  }
-}
-```
+## Setup pipelines
 
 #### Two options for pipeline creation
 
@@ -116,17 +104,7 @@ Here's an example output from the S3 object: `dog.png` that gets sent into your 
 }
 ```
 
-## What does it enable?
-
-Since you'll have fresh vectors, metadata and extracted contents you can design hyper-targeted queries that span all your use cases:
-
-- RAG (Retrieval Augmented Generation)
-- Recommendation Systems
-- Hybrid Search Engines
-
-All without having to think about data prep again. You can even modify your pipeline, and the new version will be appended to the `metadata.pipeline_version` key, so you can filter your pipeline code changes against the output data.
-
-### Use the Methods directly
+## Use the Methods directly
 
 You can also use the `extract`, `embed` and `generate` methods outside of a pipeline.
 
@@ -145,3 +123,13 @@ output = mixpeek.embed.text(
   To use the API, you need to [register an API key](https://mixpeek.com/start)
   and an engineer will contact you.
 </Note>
+
+## What does it enable?
+
+Since you'll have fresh vectors, metadata and extracted contents you can design hyper-targeted queries that span all your use cases:
+
+- RAG (Retrieval Augmented Generation)
+- Recommendation Systems
+- Hybrid Search Engines
+
+All without having to think about data prep again. You can even modify your pipeline, and the new version will be appended to the `metadata.pipeline_version` key, so you can filter your pipeline code changes against the output data.
