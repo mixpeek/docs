@@ -40,7 +40,7 @@ mixpeek = Mixpeek("API_KEY")
 embedding = mixpeek.embed.video(
   model_id="mixpeek/vuse-generic-v1",
   input="s3://waving_boy.mp4",
-  input_type="url"
+  input_type="base64"
 )
 
 # For text embedding
@@ -48,20 +48,6 @@ embedding = mixpeek.embed.text(
   model_id="jinaai/jina-embeddings-v2-base-en",
   input="Hello, world!",
   input_type="text"
-)
-
-# For image embedding
-embedding = mixpeek.embed.image(
-  model_id="openai/clip-vit-large-patch14",
-  input="https://example.com/image.jpg",
-  input_type="url"
-)
-
-# For audio embedding
-embedding = mixpeek.embed.audio(
-  model_id="facebook/wav2vec2-base-960h",
-  input="https://example.com/audio.mp3",
-  input_type="url"
 )
 ```
 
