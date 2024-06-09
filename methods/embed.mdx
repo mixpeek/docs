@@ -38,7 +38,7 @@ mixpeek = Mixpeek("API_KEY")
 embedding = mixpeek.embed.video(
   model_id="mixpeek/vuse-generic-v1",
   input="s3://waving_boy.mp4",
-  input_type="base64"
+  input_type="url"
 )
 
 # For text embedding
