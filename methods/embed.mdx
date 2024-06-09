@@ -4,12 +4,7 @@ description: "Generates embeddings for text, image, audio, or video data to crea
 api: "POST /embed"
 ---
 
-The embed method allows you to generate embeddings from various modalities. Depending on the modality, different techniques can be applied:
-
-- **image**: feature extraction, dimensionality reduction, etc.
-- **audio**: spectral analysis, feature extraction, etc.
-- **video**: frame analysis, feature extraction, etc.
-- **text**: vectorization, semantic analysis, etc.
+The embed method allows you to generate embeddings from various modalities.
 
 ## Request
 
@@ -19,6 +14,10 @@ The embed method allows you to generate embeddings from various modalities. Depe
 
 <ParamField body="input" type="string" required>
   The input source for the file to be embedded, e.g., a URL or direct content.
+
+  <Warning>
+  Max of 5mb per request can be sent (via url or base64), consider using the [File Tools API](/tools) to pre-process larger inputs
+  </Warning>
 </ParamField>
 
 <ParamField body="modality" type="string" required>
