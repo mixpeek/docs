@@ -89,7 +89,8 @@
       "pages": [
         "integrations/mongodb",
         "integrations/s3",
-        "integrations/pinecone"
+        "integrations/pinecone",
+        "integrations/qdrant"
       ]
     },
     {
