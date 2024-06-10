@@ -33,6 +33,12 @@ For cloud, use the full connection_url like `xyz-example.eu-central.aws.cloud.qd
   This is where you'll be sending objects from your mixpeek pipelines.
 </ParamField>
 
+## Response
+
+<ResponseField name="connection_id" type="string" required>
+  This is what you'll use when you create your pipeline.
+</ResponseField>
+
 <RequestExample>
 
 ```python Python
@@ -66,3 +72,9 @@ curl --location 'https://api.mixpeek.com/connections' \
 ```
 
 </RequestExample>
+
+<ResponseExample>
+```json
+{"connection_id": "conn_123"}
+```
+</ResponseExample>
