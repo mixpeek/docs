@@ -1,7 +1,6 @@
 ---
 title: "Create Connection"
-icon: "database"
-iconType: "solid"
+api: "POST /connections"
 ---
 
 The `Create Connection` endpoint allows you to establish connections to various data sources like MongoDB, S3, etc. This is crucial for applications that need to interact with external databases or storage services.
@@ -13,10 +12,11 @@ The `Create Connection` endpoint allows you to establish connections to various 
 
 ## Supported Connection Engines
 
-| Engine                          | Description                                                     |
-| ------------------------------- | --------------------------------------------------------------- |
-| [MongoDB](/connections/mongodb) | A document database that supports KNN, FTS and filtering        |
-| [S3](/connections/s3)           | Amazon Simple Storage Service (S3) is an object storage service |
+| Engine                             | Description                                                     |
+| ---------------------------------- | --------------------------------------------------------------- |
+| [MongoDB](/integrations/mongodb)   | A document database that supports KNN, FTS and filtering        |
+| [S3](/integrations/s3)             | Amazon Simple Storage Service (S3) is an object storage service |
+| [Pinecone](/integrations/pinecone) | Vector database                                                 |
 
 ## Request
 

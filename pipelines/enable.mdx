@@ -1,0 +1,61 @@
+---
+title: "Enable or Disable Pipeline"
+description: "Control the operational status of your pipelines"
+api: "PATCH /pipelines/{pipeline_id}/enable"
+---
+
+Pipelines in Mixpeek can be dynamically enabled or disabled, allowing you to control when they are active and processing data. This feature is useful for managing resource usage and operational flow without needing to delete or recreate pipelines.
+
+## Request
+
+<ParamField path="pipeline_id" type="string">
+  The unique identifier for the pipeline you wish to enable or disable.
+</ParamField>
+
+<ParamField body="enable" type="boolean" required>
+  Set to `true` to enable the pipeline, or `false` to disable it. Enabling a
+  pipeline constructs all the necessary underlying architecture to start
+  processing, while disabling it ceases all operations.
+</ParamField>
+
+## Response
+
+<ResponseField name="message" type="string" required>
+  Confirmation message indicating whether the pipeline has been enabled or
+  disabled.
+</ResponseField>
+
+<RequestExample>
+
+```python Python
+from mixpeek import Mixpeek
+mixpeek = Mixpeek("API_KEY")
+
+# Enable a pipeline
+response = mixpeek.pipelines.enable(
+    pipeline_id="b2ea3950",
+    enable=True
+)
+
+# Disable a pipeline
+response = mixpeek.pipelines.enable(
+    pipeline_id="b2ea3950",
+    enable=False
+)
+```
+
+```shell Shell
+# Enable a pipeline
+curl --location 'https://api.mixpeek.com/pipelines/b2ea3950/enable' \
+--header 'Authorization: Bearer API_KEY' \
+--header 'Content-Type: application/json' \
+--data '{"enable": true}'
+
+# Disable a pipeline
+curl --location 'https://api.mixpeek.com/pipelines/b2ea3950/enable' \
+--header 'Authorization: Bearer API_KEY' \
+--header 'Content-Type: application/json' \
+--data '{"enable": false}'
+```
+
+</RequestExample>

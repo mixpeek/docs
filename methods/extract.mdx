@@ -45,7 +45,8 @@ from mixpeek import Mixpeek
 mixpeek = Mixpeek("API_KEY")
 
 # for text extraction
-extraction = mixpeek.extract.text(
+# Notice how there's no modality provided, it's not required.
+extraction = mixpeek.extract(
   input="s3://document.pdf",
   input_type="url"
 )

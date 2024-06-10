@@ -44,7 +44,21 @@
       "url": "https://mixpeek.com/learn"
     }
   ],
+  "tabs": [
+    {
+      "name": "Integrations",
+      "url": "integrations"
+    }
+  ],
   "navigation": [
+    {
+      "group": "Documentation",
+      "pages": ["introduction"]
+    },
+    {
+      "group": "Integrations",
+      "pages": ["integrations/quickstart"]
+    },
     {
       "group": "Getting Started",
       "pages": [
@@ -58,17 +72,24 @@
       "pages": ["methods/extract", "methods/embed", "methods/generate"]
     },
     {
+      "group": "Connections",
+      "pages": ["connections/create"]
+    },
+    {
       "group": "Pipelines",
-      "pages": ["pipelines/github", "pipelines/create", "pipelines/invoke"]
+      "pages": [
+        "pipelines/create",
+        "pipelines/invoke",
+        "pipelines/enable",
+        "pipelines/github"
+      ]
     },
     {
       "group": "Connections",
       "pages": [
-        "connections/create",
-        {
-          "group": "Integrations",
-          "pages": ["connections/mongodb", "connections/s3"]
-        }
+        "integrations/mongodb",
+        "integrations/s3",
+        "integrations/pinecone"
       ]
     },
     {
