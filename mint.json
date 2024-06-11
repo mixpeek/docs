@@ -34,7 +34,12 @@
   },
   "anchors": [
     {
-      "name": "Templates",
+      "name": "Website Home",
+      "icon": "link",
+      "url": "https://mixpeek.com"
+    },
+    {
+      "name": "One-Click Templates",
       "icon": "notes",
       "url": "https://mixpeek.com/templates"
     },
@@ -45,23 +50,22 @@
     }
   ],
   "tabs": [
-    {"name": "Documentation", "url": "introduction"
     {
       "name": "Integrations",
       "url": "integrations"
+    },
+    {
+      "name": "Use Cases",
+      "url": "use-cases"
+    },
+    {
+      "name": "FAQs",
+      "url": "faqs"
     }
   ],
   "navigation": [
     {
-      "group": "Documentation",
-      "pages": ["introduction"]
-    },
-    {
-      "group": "Integrations",
-      "pages": ["integrations/quickstart"]
-    },
-    {
-      "group": "Getting Started",
+      "group": "Get Started",
       "pages": [
         "introduction/quickstart",
         "introduction/models",
@@ -86,13 +90,21 @@
       ]
     },
     {
-      "group": "Connections",
+      "group": "Data Connections",
       "pages": [
         "integrations/mongodb",
         "integrations/s3",
         "integrations/pinecone",
         "integrations/qdrant"
       ]
+    },
+    {
+      "group": "FAQs",
+      "pages": ["faqs/benefits", "faqs/whitelist-ip"]
+    },
+    {
+      "group": "Use Cases",
+      "pages": ["use-cases/overview"]
     },
     {
       "group": "File Tools",
