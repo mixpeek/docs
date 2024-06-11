@@ -45,6 +45,7 @@
     }
   ],
   "tabs": [
+    {"name": "Documentation", "url": "introduction"
     {
       "name": "Integrations",
       "url": "integrations"
