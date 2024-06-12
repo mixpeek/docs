@@ -1,0 +1,12 @@
+---
+title: "Delete Connection"
+api: "DELETE /connections/{connection_id}"
+---
+
+The `Delete Connection` endpoint allows you to remove an existing connection from your application. This is useful for cleaning up unused or outdated connections to various data sources like MongoDB, S3, etc.
+
+## Request
+
+<ParamField path="connection_id" type="string" required>
+  The unique identifier for the connection you want to delete
+</ParamField>

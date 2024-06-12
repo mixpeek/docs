@@ -78,7 +78,12 @@
     },
     {
       "group": "Connections",
-      "pages": ["connections/create"]
+      "pages": [
+        "connections/create",
+        "connections/list",
+        "connections/delete",
+        "connections/update"
+      ]
     },
     {
       "group": "Pipelines",
@@ -90,7 +95,11 @@
       ]
     },
     {
-      "group": "Data Connections",
+      "group": "Data Integrations",
+      "pages": ["integrations/overview"]
+    },
+    {
+      "group": "Connections",
       "pages": [
         "integrations/mongodb",
         "integrations/s3",

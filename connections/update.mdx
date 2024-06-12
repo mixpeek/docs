@@ -1,0 +1,12 @@
+---
+title: "Update Connection"
+api: "PATCH /connections/{connection_id}"
+---
+
+The `Update Connection` endpoint allows you to modify an existing connection in your application. This is useful for updating connection details such as credentials or configuration settings for various data sources like MongoDB, S3, etc.
+
+## Request
+
+<ParamField path="connection_id" type="string" required>
+  The unique identifier for the connection you want to update.
+</ParamField>
