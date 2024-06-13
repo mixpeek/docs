@@ -22,6 +22,9 @@
       "dark": "#121212"
     }
   },
+  "feedback": {
+    "thumbsRating": true
+  },
   "topbarLinks": [
     {
       "name": "Talk to Engineers",

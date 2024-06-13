@@ -10,7 +10,7 @@ Your software likely stores unstructured and structured data across various data
 
 Unstructured data tends to live in an object store like Amazon S3, Azure Blob Store or Google Cloud Storage. Then structured in your database like Postgres or MongoDB.
 
-Mixpeek allows you to construct ML pipelines that process files added to your object store like pdfs, pictures, videos, and recordings and store them in your database to support your downstream applications.
+Mixpeek allows you to setup automatic data processing files so as new files are added to your object store like pdfs, pictures, videos, and recordings you'll immediately have the structured, clean, application-ready data to work with. Always.
 
 ## How does it work?
 
@@ -19,6 +19,14 @@ It is a chain of user-defined tasks that are applied to your objects as they're 
 This allows you to structure your unstructured data using custom, powerful logic in real-time.
 
 ![mixpeek diagram](https://mixpeek.com/static/img/diagrams/high-level.png)
+
+**Eventually Consistent:** By using distributed queues, we ensure all objects get processed and atomically inserted, updated or deleted in your database.
+
+**Completely Synchronized:** It allows you to treat your object storage and database as one single entity, minimizing context shifting.
+
+**Guaranteed Execution:** Every object storage change, regardless of how many pipelines or how intense the pipeline is completed, even under high load or with failures.
+
+**Infinitely Flexible:** Any combination of `extract`, `embed` and `generate` methods that span all four modalities to chain into pipelines.
 
 ### A Simple Example
 
