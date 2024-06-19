@@ -1,0 +1,268 @@
+---
+title: Content Summarization
+sidebarTitle: Content Summarization
+icon: "list"
+---
+
+Content Summarization with Mixpeek enables efficient extraction and summarization of content from any text file. This feature empowers user to quickly grasp the essential points of large amounts of data and files, enhancing productivity and decision-making.
+
+## Overview
+
+Content Summarization leverages Mixpeek's advanced AI capabilities to analyze and summarize data accurately and contextually. By integrating Mixpeek with your existing datastores, you can automate the summarization process, reducing manual efforts and improving data comprehension.
+
+### Use Cases
+
+Some applications of Context Summarization are presented below:
+
+- **Social Media Monitoring**: Summarizing social media posts and comments to track trends and public sentiment efficiently, valuable for marketers and brand managers in understanding and responding to public opinions.
+- **Customer Support**: Generating concise summaries of support tickets and interactions to improve response times and resolution accuracy, crucial for businesses aiming to enhance customer satisfaction.
+- **Business Intelligence**: Summarizing complex data and reports to provide concise, actionable insights, enhancing decision-making, productivity, and communication for executives and managers.
+
+### Key Features
+
+- **Multimodal Summarization**: Summarize various text file types.
+- **AI-Powered Accuracy**: Utilize advanced AI algorithms to generate precise and contextually relevant summaries.
+- **Seamless Integration**: Connect with your existing datastores to automatically summarize new and existing data.
+- **Scalability**: Handle high volumes of data effortlessly, ensuring that your summarization system scales with your needs.
+
+### Benefits
+
+- **Enhanced Data Comprehension**: Quickly understand the critical points of large documents and datasets.
+- **Reduced Manual Effort**: Automate the labor-intensive task of summarizing data, freeing up valuable time for your team.
+- **Consistent Summarization**: Ensure consistent summaries across your data, eliminating human errors and biases.
+- **Improved Decision-Making**: Make informed decisions based on concise and accurate summaries of your data.
+
+## Creating a Content Summarization Application with S3 Bucket and MongoDB
+
+This tutorial presents how to create a context summarization application using S3 bucket and MongoDB. Whenever you add a new file to your S3 Bucket, the application will run to ensure it'll always be up to date with the available data. As a result, all summarization queries will receive responses that consider all information available.
+
+### Prerequisites
+
+Before getting started, ensure you have the following items set:
+
+- [S3 Bucket](https://docs.aws.amazon.com/AmazonS3/latest/userguide/creating-bucket.html) set up on AWS.
+- [AWS IAM role](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html) configured.
+- [MongoDB account with Atlas Search index](https://www.mongodb.com/docs/atlas/atlas-search/create-index/).
+- MixPeek API Keys (you can find your API Key on the [Mixpeek Dashboard](https://dash.mixpeek.com/account)).
+
+### Step 1: Integrate Mixpeek with Your Datastore
+
+To start developing your content summarization application, you first need to integrate Mixpeek with your existing datastore. For this tutorial, you will store files in an Amazon S3 Bucket and use MongoDB to store the extracted context.
+
+1. Access [AWS S3] to learn how to connect to the S3 Bucket.
+2. Access the [MongoDB](/integrations/mongodb) page to learn how to create an account, create a vector search index, and set up the connection.
+
+<Note>
+For additional information about the connections available in Mixpeek, access the [Integration Overview](/integrations/overview).
+</Note>
+
+### Step 2: Index
+
+The indexing phase prepares all text documents from the datastore to be efficiently searched and retrieved during generation. To perform the indexing process, use the [Multi-Page PDF Processing](https://mixpeek.com/templates/multi-page-pdf-processing?ref=learn.mixpeek.com) pipeline template provided by Mixpeek. The pipeline code is presented below:
+
+```python
+from mixpeek import Mixpeek, FileTools, SourceS3
+
+def handler(event, context):
+ mixpeek = Mixpeek("API_KEY")
+ file_url = SourceS3.file_url(event['bucket'], event['key'])
+ pdf_data = FileTools.load_document(file_url)
+ num_pages = FileTools.document_page_count(pdf_data)
+  
+ results = []
+  
+  for page_number in range(1, num_pages + 1):
+ page_text = FileTools.extract_text(pdf_data, page_number)
+ page_embedding = mixpeek.embed.text(page_text, "jinaai/jina-embeddings-v2-base-en")
+    
+ obj = {
+      "page_number": page_number,
+      "text": page_text,
+      "embedding": page_embedding,
+      "file_url": file_url
+    }
+ results.append(obj)
+  
+  return results
+```
+
+This pipeline will run every time a new document is added or updated in your S3 Bucket. Its process can be summarized in three steps:
+
+1. First, initialize the Mixpeek SDK with your API key and set up the connection to your S3 bucket. This setup allows Mixpeek to access and process the documents stored in your S3 bucket.
+2. Load the document from the S3 bucket using the `FileTools.load_document` method and determine the number of pages in the document with `FileTools.document_page_count`.
+3. Loop through each page of the document, extract the text, and create an embedding using the `jinaai/jina-embeddings-v2-base-en` model. Store the embeddings and other relevant information in MongoDB.
+
+<Note>
+ You can use other models instead of `jinaai/jina-embeddings-v2-base-en`. See the [Models](/introduction/models) page to check all available models.
+</Note>
+
+The indexing step converts text data into a format that can be indexed. Then, it builds an index structure that allows for fast and efficient searches by creating a vector index for future vector searches.
+
+### Step 3: Retrieve
+
+Retrieving information involves querying the indexed data to provide relevant content summarization. First, you have to provide the query to inform the topic you're looking for in the search. Next, embed the query into a vector to improve the search. Below is an example of how to create the `embedding` considering the initial `query_text`.
+
+```python
+text_query = "Summarize the main issues reported in the support tickets for the last month."
+embedding = mixpeek.embed(
+ query=text_query, 
+ model="jinaai/jina-embeddings-v2-base-en"
+)
+```
+
+<Warning>
+ Embed your query using the same model used during indexing to ensure consistency and accuracy in the search results.
+</Warning>
+
+After creating the `embedding`, you can use Reciprocal Rank Fusion (RRF) to perform a hybrid search combining results from vector-based and full-text searches to obtain the best results from your search. The following code snippet presents how to execute RRF with MongoDB:
+
+```javascript
+var vector_penalty = 1;
+var full_text_penalty = 10;
+results = db.embedded_documents.aggregate([
+{
+"$vectorSearch": {
+"index": "rrf-vector-search",
+"path": "plot_embedding",
+"queryVector": embedding,
+"numCandidates": 100,
+"limit": 20
+}
+}, {
+"$group": {
+"_id": null,
+"docs": {"$push": "$$ROOT"}
+}
+}, {
+"$unwind": {
+"path": "$docs",
+"includeArrayIndex": "rank"
+}
+}, {
+"$addFields": {
+"vs_score": {
+"$divide": [1.0, {"$add": ["$rank", vector_penalty, 1]}]
+}
+}
+}, {
+"$project": {
+"vs_score": 1,
+"_id": "$docs._id",
+"title": "$docs.title"
+}
+},
+{
+"$unionWith": {
+"coll": "documents",
+"pipeline": [
+{
+"$search": {
+"index": "rrf-full-text-search",
+"phrase": {
+"query": text_query,
+"path": "title"
+}
+}
+}, {
+"$limit": 20
+}, {
+"$group": {
+"_id": null,
+"docs": {"$push": "$$ROOT"}
+}
+}, {
+"$unwind": {
+"path": "$docs",
+"includeArrayIndex": "rank"
+}
+}, {
+"$addFields": {
+"fts_score": {
+"$divide": [
+1.0,
+{"$add": ["$rank", full_text_penalty, 1]}
+]
+}
+}
+},
+{
+"$project": {
+"fts_score": 1,
+"_id": "$docs._id",
+"title": "$docs.title"
+}
+}
+]
+}
+},
+{
+"$group": {
+"_id": "$title",
+"vs_score": {"$max": "$vs_score"},
+"fts_score": {"$max": "$fts_score"}
+}
+},
+{
+"$project": {
+"_id": 1,
+"title": 1,
+"vs_score": {"$ifNull": ["$vs_score", 0]},
+"fts_score": {"$ifNull": ["$fts_score", 0]}
+}
+},
+{
+"$project": {
+"score": {"$add": ["$fts_score", "$vs_score"]},
+"_id": 1,
+"title": 1,
+"vs_score": 1,
+"fts_score": 1
+}
+},
+{"$sort": {"score": -1}},
+{"$limit": 10}
+])
+```
+
+The code above combines the vector search with the full-text search to create a sorted list of results based on the combined score of the vector and full-text search. As a result, it returns the top 10 more relevant results for the search, which you can use to build the context summarization.
+
+<Note>
+You can access [MongoDB's](https://www.mongodb.com/docs/atlas/atlas-vector-search/tutorials/reciprocal-rank-fusion/?ref=learn.mixpeek.com) documentation for additional details about hybrid search. 
+</Note>
+
+### Step 4: Generate
+
+After retrieving the information, use the `mixpeek.generate` method to provide the result for the content summarization query. At this step, you need to select the machine learning model to be used to generate the summary and specify the expected response format.
+
+<Note>
+ See the [Models](/introduction/models) page to check all available models.
+</Note>
+
+The following code block presents how you can define the response type you want to receive and use the `mixpeek.generate` method using `gpt-4-turbo` model to generate the summarization.
+
+```python
+class Response(BaseModel):
+ title: str
+ answer: str
+
+response = mixpeek.generate(
+  model_id="openai/gpt-4-turbo",
+  response_format=Response,
+  context=f"Format this document and adhere to the provided JSON format: {file_output}",
+)
+```
+
+Below you find the result for the summarization query defined in [Step 3](#step-3-retrieve):
+
+```json
+{
+ "title": "Summarize the main issues reported in the support tickets for the last month",
+ "answer": "Over the past month, the main issues reported in support tickets include frequent crashes when saving large files in the latest software version on Windows 10, slow performance during peak hours on macOS, and a bug causing the software to freeze when importing data from external sources. Additionally, users experienced difficulties with the login process, particularly with password resets, and the mobile version on Android devices had layout issues causing navigation problems."
+}
+```
+
+The generated response is the summarization of the content based on the query. You can use it to present to your users through your interface.
+
+## What's Next?
+
+Explore more [Use Cases](/use-cases/overview) using Mixpeek.

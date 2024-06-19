@@ -6,7 +6,9 @@
     "light": "/logo/light.png"
   },
   "api": {
-    "baseUrl": ["https://api.mixpeek.com"],
+    "baseUrl": [
+      "https://api.mixpeek.com"
+    ],
     "auth": {
       "method": "key",
       "name": "Authorization"
@@ -79,7 +81,11 @@
     },
     {
       "group": "Methods",
-      "pages": ["methods/extract", "methods/embed", "methods/generate"]
+      "pages": [
+        "methods/extract",
+        "methods/embed",
+        "methods/generate"
+      ]
     },
     {
       "group": "Connections",
@@ -101,7 +107,9 @@
     },
     {
       "group": "Data Integrations",
-      "pages": ["integrations/overview"]
+      "pages": [
+        "integrations/overview"
+      ]
     },
     {
       "group": "Connections",
@@ -114,15 +122,23 @@
     },
     {
       "group": "FAQs",
-      "pages": ["faqs/benefits", "faqs/whitelist-ip"]
+      "pages": [
+        "faqs/benefits",
+        "faqs/whitelist-ip"
+      ]
     },
     {
       "group": "Use Cases",
-      "pages": ["use-cases/overview"]
+      "pages": [
+        "use-cases/overview",
+        "use-cases/content-summarization"
+      ]
     },
     {
       "group": "File Tools",
-      "pages": ["tools/video"]
+      "pages": [
+        "tools/video"
+      ]
     }
   ],
   "footerSocials": {
