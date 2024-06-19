@@ -1,143 +1,59 @@
 ---
-title: "Quickstart"
+title: "Introduction"
 icon: "truck-fast"
 iconType: "solid"
 ---
+Welcome to the Mixpeek documentation guide. This guide will help you get started with Mixpeek and how to integrate Mixpeek into your software.
 
 ## What is Mixpeek?
+Mixpeek is a tool that allows you to set up data processing pipelines. It is designed to process various data formats, including structured and unstructured data, and can transform new files added to object stores into structured data for applications to use. It supports the processing of different file types such as documents, images, videos, audio and text. 
 
-Your software likely stores unstructured and structured data across various datatypes: `documents`, `images`, `video` and `audio` not the least of which is `text`.
+Mixpeek is useful for handling data from object stores like Amazon S3, Azure Blob Store, or Google Cloud Storage and databases like Postgres or MongoDB.
 
-Unstructured data tends to live in an object store like Amazon S3, Azure Blob Store or Google Cloud Storage. Then structured in your database like Postgres or MongoDB.
+## How does Mixpeek Work?
 
-Mixpeek allows you to setup data processing pipelines, so as new files are added to your object store like pdfs, pictures, videos, and recordings you'll immediately have the structured, application-ready data to work with. Always.
-
-## How does it work?
-
-It is a chain of user-defined tasks that are applied to your objects as they're added to your own storage, processed then sent to your transactional database.
-
+It is a chain of user-defined tasks that are applied to your objects as they're added to your own storage, processed, and sent to your transactional database.
 This allows you to structure your unstructured data using custom, powerful logic in real-time.
 
 ![mixpeek diagram](https://mixpeek.com/static/img/diagrams/high-level.png)
 
-**Eventually Consistent:** By using distributed queues, we ensure all objects get processed and atomically inserted, updated or deleted in your database.
+**Create Pipeline:**
 
-**Completely Synchronized:** It allows you to treat your object storage and database as one single entity, minimizing context shifting.
+**Connect Storage:**
 
-**Guaranteed Execution:** Every object storage change, regardless of how many pipelines or how intense the pipeline is completed, even under high load or with failures.
-
-**Infinitely Flexible:** Any combination of `extract`, `embed` and `generate` methods that span all four modalities to chain into pipelines.
-
-### A Simple Example
-
-Say you upload an image: `dog.png` to your S3 bucket and you want to extract the tags and create an embedding of the image itself.
-
-You'd create a Mixpeek pipeline that combines ML models and gets invoked whenever there's a new object in your bucket.
-
-## Your first pipeline
-
-Here's an example pipeline that creates an embedding and tags.
-
-```python
-def function(event, context):
-  mixpeek = Mixpeek("API_KEY")
-
-  # create an embedding
-  embedding = mixpeek.embed.image(model_id="openai/clip-vit-base-patch32")
-  # create tags
-  tags = mixpeek.extract.text(model_id="microsoft/conditional-detr-resnet-50")
-
-  return {
-    "file_url": event.object_url,
-    "tags": tags,
-    "embedding": embedding
-}
-```
-
-[Create pipeline documentation](/pipelines/create)
-
-Once we create this pipeline then connect our S3 bucket and finally MongoDB collection then enable it.
-
-## Your first connection
-
-<Tip>
-  Every new account comes with a preconfigured S3 and MongoDB connection so you
-  can get started right away. Alternatively, you bring your own.
-</Tip>
-
-![default connections](/images/default-connections.png)
-
-[Create connection documentation](/connections/create)
-
-## Setup pipelines
-
-#### Two options for pipeline creation
+**Build your Application:**
 
 <CardGroup cols={2}>
-
-<Card 
-title="Github for CI/CD" 
-icon="github" 
-iconType="duotone" 
-color="#ca8b04"
-href="/pipelines/github"
->
-  Integrate a private Github repository directly. We'll update the pipeline everytime you commit.
-
-</Card>
-
-<Card title="API Post Directly" icon="code" iconType="duotone" color="#ca8b04" href="/pipelines/create">
-  Create and configure your pipeline by sending the pipeline as a string.
-
-</Card>
+  <Card title="Usecase" icon="square-1">
+   Explore Mixpeek usecases
+  </Card>
+  <Card title="Set Up Account" icon="square-2">
+   Create your Mixpeek account
+   </Card>
 </CardGroup>
 
-Previously, we would have created an AWS IAM role, which opens up a listener on your S3 bucket `dogs`, every new object gets sent through the pipeline-as-code we defined above and then sent into our MongoDB collection: `dog_objects` (which was also instantiated previously).
 
-That's really it! Mixpeek is designed to be "set and forget", never think about processing your S3 bucket again.
+## Benefits of Mixpeek
 
-#### Sample output
+Mixpeek enhances your data ecosystem by seamlessly integrating with your existing datastores and automating the extraction, generation, and embedding of multimodal data. By connecting various filetypes like images, videos, audio, text, and documents, Mixpeek ensures that your data is always structured, fresh, and queryable.
 
-Here's an example output from the S3 object: `dog.png` that gets sent into your MongoDB collection:
+Here are some benefits of using Mixpeek:
 
-```json
-{
-  "object_url": "s3://dog.png",
-  "text": "australian shepherd",
-  "tags": ["dog", "shepherd"],
-  "embedding": [0, 1, 2, 3],
-  "metadata": {
-    "pipeline_version": "v1"
-  }
-}
-```
+1. **Streamlined Data Integration and Processing**<br></br>
+   Mixpeek connects directly with your existing datastores, such as MongoDB, and handles the ingestion of multiple filetypes in parallel. This eliminates the need for manual data integration and complex processing pipelines, allowing you to focus on deriving value from your data.
 
-## Use the Methods directly
+2. **Automated Multimodal Data Workflows**<br></br>
+   Mixpeek automates the extraction, generation, and embedding of data from various modalities such as images, videos, audio, text, and documents. This automation ensures that your data is always enriched and up-to-date without requiring custom scripts or manual intervention.
 
-You can also use the `extract`, `embed` and `generate` methods outside of a pipeline.
+3. **Enhanced Data Accessibility and Queryability**<br></br>
+   By structuring and embedding your data into vectors, Mixpeek makes it easier to query and analyze data across different modalities. This enhanced accessibility allows for more comprehensive data analysis and insights, improving decision-making processes.
 
-```python
-from mixpeek import Mixpeek
+4. **Scalable and Efficient Performance**<br></br>
+   Whether you are processing a few files or managing large-scale data flows, Mixpeek scales efficiently to meet your needs. Its robust architecture ensures optimal performance, allowing you to handle high volumes of data with ease.
 
-mixpeek = Mixpeek("API_KEY")
+5. **Developer-Friendly Integration**<br></br>
+   Mixpeek is designed to be easily integrated into your existing workflows. Developers can leverage Mixpeek’s capabilities without needing specialized AI knowledge, making it accessible and useful for teams across your organization.
 
-output = mixpeek.embed.text(
-  input="lorem ipsum",
-  model_id="mixedbread-ai/mxbai-embed-large-v1"
-)
-```
+6. **Continuous Data Enrichment**<br></br>
+   With Mixpeek, your data is continuously enriched with AI-powered generation, such as summarization and tag creation. This process ensures that your dataset is always providing the most relevant and actionable insights.
 
-<Note>
-  To use the API, you need to [register an API key](https://mixpeek.com/start)
-  and an engineer will contact you.
-</Note>
-
-## What does it enable?
-
-Since you'll have fresh vectors, metadata and extracted contents you can design hyper-targeted queries that span all your use cases:
-
-- RAG (Retrieval Augmented Generation)
-- Recommendation Systems
-- Hybrid Search Engines
-
-All without having to think about data prep again. You can even modify your pipeline, and the new version will be appended to the `metadata.pipeline_version` key, so you can filter your pipeline code changes against the output data.

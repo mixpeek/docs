@@ -70,11 +70,13 @@
   ],
   "navigation": [
     {
-      "group": "Get Started",
+      "group": "Getting Started",
       "pages": [
         "introduction/quickstart",
         "introduction/models",
-        "introduction/libraries"
+        "introduction/libraries",
+        "introduction/faq"
+
       ]
     },
     {
