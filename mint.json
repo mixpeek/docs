@@ -70,7 +70,7 @@
   ],
   "navigation": [
     {
-      "group": "Get Started",
+      "group": "Getting Started",
       "pages": [
         "introduction/quickstart",
         "introduction/models",
@@ -87,7 +87,8 @@
         "connections/create",
         "connections/list",
         "connections/delete",
-        "connections/update"
+        "connections/update",
+        "connections/storage/upload"
       ]
     },
     {
