@@ -39,17 +39,17 @@
   },
   "anchors": [
     {
-      "name": "Website Home",
+      "name": "Home",
       "icon": "link",
       "url": "https://mixpeek.com"
     },
     {
-      "name": "One-Click Templates",
+      "name": "Explore",
       "icon": "notes",
-      "url": "https://mixpeek.com/templates"
+      "url": "https://mixpeek.com/explore"
     },
     {
-      "name": "Learning Center",
+      "name": "Blog",
       "icon": "book-bookmark",
       "url": "https://mixpeek.com/learn"
     }
@@ -89,7 +89,8 @@
         "connections/create",
         "connections/list",
         "connections/delete",
-        "connections/update"
+        "connections/update",
+        "connections/storage/upload"
       ]
     },
     {
@@ -120,7 +121,7 @@
     },
     {
       "group": "Use Cases",
-      "pages": ["use-cases/overview"]
+      "pages": ["use-cases/overview", "use-cases/video_understanding"]
     },
     {
       "group": "File Tools",
