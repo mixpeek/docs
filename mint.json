@@ -54,76 +54,95 @@
       "url": "https://mixpeek.com/learn"
     }
   ],
+  "primaryTab": {
+    "name": "Welcome"
+  },
   "tabs": [
     {
-      "name": "Integrations",
-      "url": "integrations"
+      "name": "API Documentation",
+      "url": "api-documentation"
+    },
+    {
+      "name": "Dashboard",
+      "url": "dashboard"
     },
     {
       "name": "Use Cases",
       "url": "use-cases"
-    },
-    {
-      "name": "FAQs",
-      "url": "faqs"
     }
   ],
   "navigation": [
     {
-      "group": "Getting Started",
+      "group": "Introduction",
+      "pages": ["introduction/quickstart"]
+    },
+    {
+      "group": "Models",
       "pages": [
-        "introduction/quickstart",
-        "introduction/models",
-        "introduction/libraries"
+        "models/overview",
+        {
+          "group": "Embed",
+          "pages": ["models/embed_video"]
+        }
       ]
     },
     {
+      "group": "Data Connections",
+      "pages": [
+        {
+          "group": "Sources",
+          "pages": ["integrations/s3"]
+        },
+        {
+          "group": "Destinations",
+          "pages": [
+            "integrations/mongodb",
+            "integrations/pinecone",
+            "integrations/qdrant"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Pipelines",
+      "pages": ["introduction/pipelines/overview"]
+    },
+    {
       "group": "Methods",
-      "pages": ["methods/extract", "methods/embed", "methods/generate"]
+      "pages": [
+        "api-documentation/methods/extract",
+        "api-documentation/methods/embed",
+        "api-documentation/methods/generate"
+      ]
     },
     {
       "group": "Connections",
       "pages": [
-        "connections/create",
-        "connections/list",
-        "connections/delete",
-        "connections/update",
-        "connections/storage/upload"
+        "api-documentation/connections/create",
+        "api-documentation/connections/list",
+        "api-documentation/connections/delete",
+        {
+          "group": "Storage",
+          "pages": ["api-documentation/connections/storage/upload"]
+        }
       ]
     },
     {
       "group": "Pipelines",
       "pages": [
-        "pipelines/create",
-        "pipelines/invoke",
-        "pipelines/enable",
-        "pipelines/github"
+        "api-documentation/pipelines/create",
+        "api-documentation/pipelines/invoke",
+        "api-documentation/pipelines/update",
+        "api-documentation/pipelines/delete"
       ]
     },
     {
-      "group": "Data Integrations",
-      "pages": ["integrations/overview"]
-    },
-    {
-      "group": "Connections",
-      "pages": [
-        "integrations/mongodb",
-        "integrations/s3",
-        "integrations/pinecone",
-        "integrations/qdrant"
-      ]
-    },
-    {
-      "group": "FAQs",
-      "pages": ["faqs/benefits", "faqs/whitelist-ip"]
+      "group": "Dashboard",
+      "pages": ["dashboard/overview"]
     },
     {
       "group": "Use Cases",
       "pages": ["use-cases/overview", "use-cases/video_understanding"]
-    },
-    {
-      "group": "File Tools",
-      "pages": ["tools/video"]
     }
   ],
   "footerSocials": {
