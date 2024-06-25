@@ -22,7 +22,7 @@ Whenever you add data to your source, Mixpeek automatically processes it through
 - **Updates**: Modified data is reprocessed and updated.
 - **Deletions**: Removed data is also deleted in the destination.
 
-This means you never have to worry about sync, replication, consistency, inference, etc. You can focus on your query patterns and never deal with stale data.
+This means you never have to worry about [sync, replication, consistency, inference, etc](/introduction/architecture). You can focus on your query patterns and never deal with stale data.
 
 ### Supported Integrations
 
@@ -32,16 +32,24 @@ This means you never have to worry about sync, replication, consistency, inferen
 </Note>
 
 <CardGroup cols={2}>
-  <Card title="Amazon S3" icon="cloud" href="/integrations/s3">
+  <Card title="Amazon S3" icon="cloud" href="/introduction/integrations/s3">
     Source for data such as images, videos, and documents.
   </Card>
-  <Card title="MongoDB" icon="database" href="/integrations/mongodb">
+  <Card
+    title="MongoDB"
+    icon="database"
+    href="/introduction/integrations/mongodb"
+  >
     Destination for storing processed and enriched data.
   </Card>
-  <Card title="Pinecone" icon="pinecone" href="/integrations/pinecone">
+  <Card
+    title="Pinecone"
+    icon="traffic-cone"
+    href="/introduction/integrations/pinecone"
+  >
     Vector database for building vector search applications.
   </Card>
-  <Card title="Qdrant" icon="database" href="/integrations/qdrant">
+  <Card title="Qdrant" icon="database" href="/introduction/integrations/qdrant">
     Open-source vector search engine that supports large-scale datasets.
   </Card>
 </CardGroup>
@@ -55,22 +63,22 @@ Setting up an integration in Mixpeek involves the following steps:
     Provide the necessary credentials and configuration details for your source.
     Configure the type of files you want Mixpeek to process (e.g., images,
     videos, audio, text, documents).
-    <a href="/connections/create">Create Connection</a>
+    <a href="/api-documentation/connections/create">Create Connection</a>
   </Step>
   <Step title="Configure the Mixpeek Pipeline">
     Define the extraction, generation, and embedding processes that will be
     applied to your data.
-    <a href="/pipelines/create">Create Pipeline</a>
+    <a href="/api-documentation/pipelines/create">Create Pipeline</a>
   </Step>
   <Step title="Connect Your Destination">
     Provide the credentials and configuration details for your destination
     database.
-    <a href="/connections/create">Create Connection</a>
+    <a href="/api-documentation/connections/create">Create Connection</a>
   </Step>
   <Step title="Activate the Integration">
     Once activated, Mixpeek will start monitoring your source for new or updated
     files and process them through the pipeline to your destination.
-    <a href="/pipelines/enable">Enable Pipeline</a>
+    <a href="/api-documentation/pipelines/enable">Enable Pipeline</a>
 
   </Step>
 </Steps>

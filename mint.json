@@ -84,6 +84,7 @@
     {
       "group": "Data Connections",
       "pages": [
+        "introduction/integrations/overview",
         {
           "group": "Sources",
           "pages": ["introduction/integrations/s3"]
