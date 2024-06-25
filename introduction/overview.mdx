@@ -65,6 +65,8 @@ Mixpeek doesn't require any changes to your existing retrieval architecture. It 
 
 ## How Does It Work?
 
+<Note>[Comprehensive achitecture guide](/introduction/architecture)</Note>
+
 1. **Connect Datastores**: Integrate your existing datastores, such as S3 and MongoDB.
 2. **Data Ingestion**: Add files (images, videos, audio, text, documents) to S3.
 3. **Pipeline Processing**: Define and enable your Mixpeek pipeline, so each of tehse files is processed according to your logic like:
@@ -73,5 +75,3 @@ Mixpeek doesn't require any changes to your existing retrieval architecture. It 
    - **Embedding**: Creates vectors for each modality.
 4. **Database Insertion**: Processed data is inserted into the customer's database as a single atomic unit.
 5. **Access and Query**: Access the freshly structured data to build rich query pipelines.
-
-<Note>[Comprehensive achitecture guide](/introduction/architecture)</Note>
