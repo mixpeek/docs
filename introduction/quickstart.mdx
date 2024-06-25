@@ -4,57 +4,36 @@ icon: "truck-fast"
 iconType: "solid"
 ---
 
-## What is Mixpeek?
-
-Your software likely stores unstructured and structured data across various datatypes: `documents`, `images`, `video` and `audio` not the least of which is `text`.
-
-Unstructured data tends to live in an object store like Amazon S3, Azure Blob Store or Google Cloud Storage. Then structured in your database like Postgres or MongoDB.
-
-Mixpeek allows you to setup data processing pipelines, so as new files are added to your object store like pdfs, pictures, videos, and recordings you'll immediately have the structured, application-ready data to work with. Always.
-
-## How does it work?
-
-It is a chain of user-defined tasks that are applied to your objects as they're added to your own storage, processed then sent to your transactional database.
-
-This allows you to structure your unstructured data using custom, powerful logic in real-time.
-
-![mixpeek diagram](https://mixpeek.com/static/img/diagrams/high-level.png)
-
-**Eventually Consistent:** By using distributed queues, we ensure all objects get processed and atomically inserted, updated or deleted in your database.
-
-**Completely Synchronized:** It allows you to treat your object storage and database as one single entity, minimizing context shifting.
-
-**Guaranteed Execution:** Every object storage change, regardless of how many pipelines or how intense the pipeline is completed, even under high load or with failures.
-
-**Infinitely Flexible:** Any combination of `extract`, `embed` and `generate` methods that span all four modalities to chain into pipelines.
-
 ### A Simple Example
 
-Say you upload an image: `dog.png` to your S3 bucket and you want to extract the tags and create an embedding of the image itself.
+Say you upload an image: `dress.png` to your S3 bucket for your apparel ecommerce store and you want to extract the description and keywords, and create an embedding of the dress itself.
 
 You'd create a Mixpeek pipeline that combines ML models and gets invoked whenever there's a new object in your bucket.
 
 ## Your first pipeline
 
-Here's an example pipeline that creates an embedding and tags.
+Here's an example pipeline that extracts a description, keywords, and creates an embedding.
 
 ```python
 def function(event, context):
   mixpeek = Mixpeek("API_KEY")
 
+  # extract description
+  description = mixpeek.extract.text(model_id="model_id_1")
+  # extract keywords
+  keywords = mixpeek.extract.text(model_id="model_id_2")
   # create an embedding
-  embedding = mixpeek.embed.image(model_id="openai/clip-vit-base-patch32")
-  # create tags
-  tags = mixpeek.extract.text(model_id="microsoft/conditional-detr-resnet-50")
+  embedding = mixpeek.embed.image(model_id="model_id_3")
 
   return {
     "file_url": event.object_url,
-    "tags": tags,
+    "description": description,
+    "keywords": keywords,
     "embedding": embedding
 }
 ```
 
-[Create pipeline documentation](/pipelines/create)
+[Create pipeline documentation](/api-documentation/pipelines/create)
 
 Once we create this pipeline then connect our S3 bucket and finally MongoDB collection then enable it.
 
@@ -67,7 +46,7 @@ Once we create this pipeline then connect our S3 bucket and finally MongoDB coll
 
 ![default connections](/images/default-connections.png)
 
-[Create connection documentation](/connections/create)
+[Create connection documentation](/api-documentation/connections/create)
 
 ## Setup pipelines
 
@@ -82,7 +61,7 @@ iconType="duotone"
 color="#ca8b04"
 href="/pipelines/github"
 >
-  Integrate a private Github repository directly. We'll update the pipeline everytime you commit.
+  Integrate a private Github repository directly. We'll update the pipeline every time you commit.
 
 </Card>
 
@@ -92,19 +71,19 @@ href="/pipelines/github"
 </Card>
 </CardGroup>
 
-Previously, we would have created an AWS IAM role, which opens up a listener on your S3 bucket `dogs`, every new object gets sent through the pipeline-as-code we defined above and then sent into our MongoDB collection: `dog_objects` (which was also instantiated previously).
+Previously, we would have created an AWS IAM role, which opens up a listener on your S3 bucket `apparel`, every new object gets sent through the pipeline-as-code we defined above and then sent into our MongoDB collection: `apparel_items` (which was also instantiated previously).
 
 That's really it! Mixpeek is designed to be "set and forget", never think about processing your S3 bucket again.
 
 #### Sample output
 
-Here's an example output from the S3 object: `dog.png` that gets sent into your MongoDB collection:
+Here's an example output from the S3 object: `dress.png` that gets sent into your MongoDB collection:
 
 ```json
 {
-  "object_url": "s3://dog.png",
-  "text": "australian shepherd",
-  "tags": ["dog", "shepherd"],
+  "object_url": "s3://dress.png",
+  "description": "Elegant summer dress",
+  "keywords": ["summer", "dress", "casual"],
   "embedding": [0, 1, 2, 3],
   "metadata": {
     "pipeline_version": "v1"
@@ -134,10 +113,10 @@ output = mixpeek.embed.text(
 
 ## What does it enable?
 
-Since you'll have fresh vectors, metadata and extracted contents you can design hyper-targeted queries that span all your use cases:
+With fresh vectors, metadata, and extracted content from your apparel images, you can design hyper-targeted marketing campaigns and improve product discovery on your ecommerce platform:
 
-- RAG (Retrieval Augmented Generation)
-- Recommendation Systems
-- Hybrid Search Engines
+- **Personalized Recommendations**: Suggest products based on user preferences and past interactions.
+- **Visual Search**: Allow users to search for products using images instead of text.
+- **Trend Analysis**: Identify and capitalize on emerging fashion trends by analyzing frequently occurring keywords and styles.
 
 All without having to think about data prep again. You can even modify your pipeline, and the new version will be appended to the `metadata.pipeline_version` key, so you can filter your pipeline code changes against the output data.

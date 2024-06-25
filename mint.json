@@ -74,16 +74,11 @@
   "navigation": [
     {
       "group": "Introduction",
-      "pages": ["introduction/quickstart"]
-    },
-    {
-      "group": "Models",
       "pages": [
-        "models/overview",
-        {
-          "group": "Embed",
-          "pages": ["models/embed_video"]
-        }
+        "introduction/overview",
+        "introduction/quickstart",
+        "introduction/architecture",
+        "introduction/faq"
       ]
     },
     {
@@ -91,21 +86,43 @@
       "pages": [
         {
           "group": "Sources",
-          "pages": ["integrations/s3"]
+          "pages": ["introduction/integrations/s3"]
         },
         {
           "group": "Destinations",
           "pages": [
-            "integrations/mongodb",
-            "integrations/pinecone",
-            "integrations/qdrant"
+            "introduction/integrations/mongodb",
+            "introduction/integrations/pinecone",
+            "introduction/integrations/qdrant"
           ]
         }
       ]
     },
     {
       "group": "Pipelines",
-      "pages": ["introduction/pipelines/overview"]
+      "pages": [
+        "introduction/pipelines/overview",
+        "introduction/pipelines/cicd"
+      ]
+    },
+    {
+      "group": "Models",
+      "pages": [
+        "introduction/models/overview",
+        "introduction/models/fine-tuning",
+        {
+          "group": "Embedding Models",
+          "pages": ["introduction/models/mixpeek/vuse-generic-v1"]
+        },
+        {
+          "group": "Generation Models",
+          "pages": ["introduction/models/openai/gpt"]
+        },
+        {
+          "group": "Extraction Models",
+          "pages": ["introduction/models/mixpeek/ocr-extractor"]
+        }
+      ]
     },
     {
       "group": "Methods",
@@ -137,12 +154,21 @@
       ]
     },
     {
+      "group": "Tools",
+      "pages": ["api-documentation/tools/video"]
+    },
+
+    {
       "group": "Dashboard",
       "pages": ["dashboard/overview"]
     },
     {
+      "group": "Introduction",
+      "pages": ["use-cases/overview"]
+    },
+    {
       "group": "Use Cases",
-      "pages": ["use-cases/overview", "use-cases/video_understanding"]
+      "pages": ["use-cases/video-understanding"]
     }
   ],
   "footerSocials": {

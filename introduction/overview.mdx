@@ -1,0 +1,77 @@
+---
+title: "Overview"
+icon: "traffic-light"
+iconType: "solid"
+---
+
+## What is Mixpeek?
+
+[Mixpeek](https://mixpeek.com) is a multimodal data processing pipeline. It allows you to define custom functions that processes changes from your S3 bucket, then automatically writes the structured outputs to your database.
+
+It keeps your unstructured object changes [consistent](/introduction/architecture) with your downstream database, so your application has fresh, structured data, always.
+
+Mixpeek doesn't require any changes to your existing retrieval architecture. It acts as an ETL/indexing tool that operates entirely in the background, empowering you to treat your object storage and database as one entity.
+
+## Demo
+
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/gLFOIPpP2QM?si=rr-s0V7hz2Wv6c3w"
+  title="YouTube video player"
+  frameborder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  referrerpolicy="strict-origin-when-cross-origin"
+  allowfullscreen
+></iframe>
+
+## Highlights
+
+<CardGroup cols={2}>
+  <Card title="Multimodal Data Handling" icon="files">
+    Supports [images](/introduction/faq#image),
+    [videos](/introduction/faq#video), [audio](/introduction/faq#audio),
+    [text](/introduction/faq#text), and [documents](/introduction/faq#document).
+  </Card>
+  <Card title="Automated Pipeline" icon="pipe-valve">
+    Processes data through [extraction](/api-documentation/methods/extract),
+    [generation](/api-documentation/methods/generate), and
+    [embedding](/api-documentation/methods/embed).
+  </Card>
+  <Card title="Seamless Integration" icon="plug">
+    Connect unstructured object storage like [Amazon
+    S3](/introduction/integrations/s3) with downstream structured databases like
+    [MongoDB](/introduction/integrations/mongodb).
+  </Card>
+  <Card title="Real-Time Updates" icon="timer">
+    Ensures always fresh and structured data for robust querying by using robust
+    [sync architecture](/introduction/architecture)
+  </Card>
+</CardGroup>
+
+## Use Cases
+
+<Note>
+  Check the [use case section](/use-cases) for live demos, code, videos, and
+  guides
+</Note>
+
+- **Search Engines**: Enhance search capabilities with rich, multimodal data.
+- **Recommendation Systems**: Improve recommendations using diverse data sources.
+- **Content Management**: Streamline and manage multimedia content efficiently.
+- **Data Analytics**: Perform advanced analytics with structured, multimodal data.
+- **Knowledge Graphs**: Build and maintain comprehensive knowledge graphs with real-time updates.
+- **RAG (Retrieval-Augmented Generation)**: Use the structured data to power advanced AI models for more accurate and contextually relevant outputs.
+
+## How Does It Work?
+
+1. **Connect Datastores**: Integrate your existing datastores, such as S3 and MongoDB.
+2. **Data Ingestion**: Add files (images, videos, audio, text, documents) to S3.
+3. **Pipeline Processing**: Define and enable your Mixpeek pipeline, so each of tehse files is processed according to your logic like:
+   - **Extraction**: Extracts relevant information from each modality.
+   - **Generation**: Generates AI-powered outputs like summaries and tags.
+   - **Embedding**: Creates vectors for each modality.
+4. **Database Insertion**: Processed data is inserted into the customer's database as a single atomic unit.
+5. **Access and Query**: Access the freshly structured data to build rich query pipelines.
+
+<Note>[Comprehensive achitecture guide](/introduction/architecture)</Note>
