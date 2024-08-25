@@ -1,0 +1,199 @@
+---
+title: "MongoDB"
+icon: "leaf"
+iconType: "solid"
+---
+
+## Video
+
+We'll be using `vuse-generic-v1` to build a collection of 1 second interval video chunks into a 768 dimension embedding collection.
+
+<Note>
+  You'll need to create an Atlas vector search index of `768 dimensions` for
+  `vuse-generic-v1` model embeddings. We're calling it `video_index`.
+</Note>
+
+### Ingest
+
+```python
+from mixpeek import Mixpeek
+from pymongo import MongoClient
+
+# Initialize the Mixpeek client with your API key
+mixpeek = Mixpeek("YOUR_API_KEY")
+client = MongoClient("YOUR_MONGODB_URI")
+
+# Process video chunks
+processed_chunks = mixpeek.tools.video.process(
+    video_source="https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/mongodb/Jurassic+Park+(2).mp4",
+    chunk_interval=1, # 1 second intervals
+    resolution=[720, 1280]
+)
+
+for index, chunk in enumerate(processed_chunks):
+    print(f"Processing video chunk: {index}")
+
+    # embed each chunk
+    embed_response = mixpeek.embed.video(
+        model_id="vuse-generic-v1",
+        input=chunk['base64_chunk'],
+        input_type="base64"
+    )
+
+    result = {
+        "start_time": chunk["start_time"],
+        "end_time": chunk["end_time"],
+        "embedding": embed_response['embedding']
+    }
+    client.db.collection.insert_one(result)
+```
+
+### Text Query
+
+```python
+query = "two boys inside a car"
+
+embed_response = mixpeek.embed.video(
+    model_id="vuse-generic-v1",
+    input=query,
+    input_type="text"
+)
+
+aggregation = [{
+    "$vectorSearch": {
+        "index": "default",
+        "path": "embedding",
+        "queryVector": embed_response['embedding'],
+        "numCandidates": 100
+        "limit": 10
+    }
+}]
+
+results = client.db.collection.aggregate(aggregation)
+for result in results:
+    print(result)
+```
+
+### Video Query
+
+```python
+# we'll use a cartoon version of jurassic park
+file_url = "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/mongodb/rabbit-jurassic.mp4"
+
+embed_response = mixpeek.embed.video(
+    model_id="vuse-generic-v1",
+    input=file_url,
+    input_type="url"
+)
+
+aggregation = [{
+    "$vectorSearch": {
+        "index": "default",
+        "path": "embedding",
+        "queryVector": embed_response['embedding'],
+        "numCandidates": 100
+        "limit": 10
+    }
+}]
+
+results = client.db.collection.aggregate(aggregation)
+for result in results:
+    print(result)
+```
+
+## Image
+
+We'll be using `clip-v1` to build a collection of image embeddings with 512 dimensions.
+
+<Note>
+  You'll need to create an Atlas vector search index of `512 dimensions` for
+  `clip-v1` model embeddings. We're calling it `image_index`.
+</Note>
+
+### Ingest
+
+```python
+from mixpeek import Mixpeek
+from pymongo import MongoClient
+
+# Initialize the Mixpeek client with your API key
+mixpeek = Mixpeek("YOUR_API_KEY")
+client = MongoClient("YOUR_MONGODB_URI")
+
+# List of image URLs to process
+image_urls = [
+    "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/mongodb/image1.jpg",
+    "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/mongodb/image2.jpg",
+    "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/mongodb/image3.jpg",
+    "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/mongodb/image4.jpg"
+]
+
+for url in image_urls:
+    print(f"Processing image: {url}")
+
+    # Embed each image
+    embed_response = mixpeek.embed.image(
+        model_id="openai-clip-vit-base-patch32",
+        input=url,
+        input_type="url"
+    )
+
+    result = {
+        "image_url": url,
+        "embedding": embed_response['embedding']
+    }
+    client.db.image_collection.insert_one(result)
+```
+
+### Text Query
+
+```python
+query = "a cat sitting on a windowsill"
+
+embed_response = mixpeek.embed.image(
+    model_id="openai-clip-vit-base-patch32",
+    input=query,
+    input_type="text"
+)
+
+aggregation = [{
+    "$vectorSearch": {
+        "index": "image_index",
+        "path": "embedding",
+        "queryVector": embed_response['embedding'],
+        "numCandidates": 100,
+        "limit": 5
+    }
+}]
+
+results = client.db.image_collection.aggregate(aggregation)
+for result in results:
+    print(result)
+```
+
+### Image Query
+
+```python
+# Use an image from the same bucket as a query
+query_image = "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/mongodb/query_image.jpg"
+
+embed_response = mixpeek.embed.image(
+    model_id="clip-v1",
+    input=query_image,
+    input_type="url"
+)
+
+aggregation = [{
+    "$vectorSearch": {
+        "index": "image_index",
+        "path": "embedding",
+        "queryVector": embed_response['embedding'],
+        "numCandidates": 100,
+        "limit": 5
+    }
+}]
+
+results = client.db.image_collection.aggregate(aggregation)
+for result in results:
+    print(result)
+```

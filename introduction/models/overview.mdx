@@ -5,24 +5,6 @@ icon: "brain"
 iconType: "solid"
 ---
 
-When using the mixpeek methods, you provide the `model` in each request regardless of method: `extract`, `embed`, and `generate`.
-
-For instance `mixpeek.extract()`, `mixpeek.embed()` or `mixpeek.generate()`
-
-<CodeGroup>
-
-```python Mock Request
-mixpeek.embed("jinaai/jina-embeddings-v2-base-en")
-```
-
-```python Mock Response
-{
-    "embedding": [0, 1, 3, 21]
-}
-```
-
-</CodeGroup>
-
 The list below are all the embedding models currently supported in the SDK. For embed, use the dimensions to create your DB index.
 
 <Note>
@@ -30,28 +12,14 @@ The list below are all the embedding models currently supported in the SDK. For 
   <a href="https://mixpeek.com/contact">reach out</a>.
 </Note>
 
-## Models
+### Embedding Models
 
-### Embedding
-
-| Name                                         | Modality    | Dimensions | URL                                                           |
-| -------------------------------------------- | ----------- | ---------- | ------------------------------------------------------------- |
-| `sentence-transformers/all-MiniLM-L6-v2`     | Text        | 384        | [Sentence Transformers](https://www.sbert.net/)               |
-| `nomic-ai/nomic-embed-text-v1`               | Text        | 768        | [Nomic AI](https://nomic.ai/)                                 |
-| `jinaai/jina-embeddings-v2-base-en`          | Text        | 768        | [Jina AI](https://jina.ai/)                                   |
-| `google-bert/bert-base-multilingual-uncased` | Text        | 768        | [Google BERT](https://github.com/google-research/bert)        |
-| `mixedbread-ai/mxbai-embed-large-v1`         | Text        | 1024       | [MixedBread AI](https://mixedbread.ai/)                       |
-| `openai/clip-vit-base-patch32`               | Text, Image | 512        | [OpenAI Clip](https://github.com/openai/CLIP)                 |
-| `mixpeek/vuse-generic-v1`                    | Text, Video | 768        | [Mixpeek](https://mixpeek.com/models/mixpeek/vuse-generic-v1) |
-
-### Generation
-
-| Name                         | Modality | URL                                                                            |
-| ---------------------------- | -------- | ------------------------------------------------------------------------------ |
-| `openai/gpt-3.5-turbo`       | Text     | [GPT-3.5 Turbo](https://beta.openai.com/docs/models/gpt-3.5-turbo)             |
-| `openai/gpt-4-turbo-preview` | Text     | [GPT-4 Turbo Preview](https://beta.openai.com/docs/models/gpt-4-turbo-preview) |
-| `openai/gpt-4-turbo`         | Text     | [GPT-4 Turbo](https://beta.openai.com/docs/models/gpt-4-turbo)                 |
-
-### Extraction
-
-<Info>Work in progress</Info>
+| Name                             | Modality    | Dimensions | URL                                                           |
+| -------------------------------- | ----------- | ---------- | ------------------------------------------------------------- |
+| `all-MiniLM-L6-v2`               | Text        | 384        | [Sentence Transformers](https://www.sbert.net/)               |
+| `nomic-embed-text-v1`            | Text        | 768        | [Nomic AI](https://nomic.ai/)                                 |
+| `jina-embeddings-v2-base-en`     | Text        | 768        | [Jina AI](https://jina.ai/)                                   |
+| `bert-base-multilingual-uncased` | Text        | 768        | [Google BERT](https://github.com/google-research/bert)        |
+| `mxbai-embed-large-v1`           | Text        | 1024       | [MixedBread AI](https://mixedbread.ai/)                       |
+| `clip-vit-base-patch32`          | Text, Image | 512        | [OpenAI Clip](https://github.com/openai/CLIP)                 |
+| `vuse-generic-v1`                | Text, Video | 768        | [Mixpeek](https://mixpeek.com/models/mixpeek/vuse-generic-v1) |

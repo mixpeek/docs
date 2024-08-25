@@ -9,43 +9,69 @@ iconType: "solid"
 
 ### What file types does Mixpeek support?
 
-Mixpeek supports extraction and searching of the most popular file types and many others:
-
 <CardGroup cols={2}>
-  <Card
-    title="Text"
-    icon="file-pdf"
-    color="#ea5a0c"
-    href="https://mixpeek.com/files/pdf"
-  >
-    Find the exact page where your text exists
-  </Card>
-  <Card
-    title="Image"
-    icon="file-image"
-    color="#0285c7"
-    href="https://mixpeek.com/files/png"
-  >
-    Discover the pictures that contain your search
-  </Card>
-  <Card
-    title="Video"
-    icon="file-video"
-    color="#dc2626"
-    href="https://mixpeek.com/files/mp4"
-  >
-    See the exact frames where your words are shown
-  </Card>
-  <Card
-    title="Audio"
-    icon="file-music"
-    color="#16a34a"
-    href="https://mixpeek.com/files/mp3"
-  >
-    Find the timestamp where your term is mentioned
-  </Card>
-</CardGroup>
 
+{" "}
+<Accordion
+  title={
+    <>
+      <Icon icon="file-pdf" /> Text
+    </>
+  }
+>
+  <ul>
+    <li>PDF, DOC, DOCX</li>
+    <li>TXT, RTF, CSV</li>
+    <li>HTML, XML, JSON</li>
+  </ul>
+</Accordion>
+
+{" "}
+<Accordion
+  title={
+    <>
+      <Icon icon="file-image" /> Image
+    </>
+  }
+>
+  <ul>
+    <li>PNG, JPG, JPEG</li>
+    <li>GIF, SVG, WEBP</li>
+    <li>TIFF, BMP</li>
+  </ul>
+</Accordion>
+
+{" "}
+<Accordion
+  title={
+    <>
+      <Icon icon="file-video" /> Video
+    </>
+  }
+>
+  <ul>
+    <li>MP4, AVI, MOV</li>
+    <li>WMV, FLV, MKV</li>
+    <li>WEBM, M4V</li>
+  </ul>
+</Accordion>
+
+{" "}
+<Accordion
+  title={
+    <>
+      <Icon icon="file-auxdio" /> Audio
+    </>
+  }
+>
+  <ul>
+    <li>MP3, WAV, AAC</li>
+    <li>OGG, FLAC, M4A</li>
+    <li>WMA, AIFF</li>
+  </ul>
+</Accordion>
+
+</CardGroup>
 
 <br />
 

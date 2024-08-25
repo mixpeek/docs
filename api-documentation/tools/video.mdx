@@ -1,30 +1,27 @@
 ---
 title: "Video Processing"
-api: "POST /tools/video/process"
 ---
 
-Split a video given it's URL by specific characteristics.
+Process a video given its URL or file path into chunks for easier embedding.
+
+<Note>
+  This method, which is only available in
+  <a href="https://pypi.org/project/mixpeek">the Python SDK</a> runs inside the client.
+</Note>
 
 ## Request
 
-<ParamField body="url" type="string" required>
-  Remote url of the file to be processed
+<ParamField body="video_source" type="string" required>
+  URL or file path of the video to be processed
 </ParamField>
 
-<ParamField body="frame_interval" type="integer" optional>
-  Interval between frames to process in seconds
+<ParamField body="chunk_interval" type="float" required>
+  Duration of each video chunk in seconds
 </ParamField>
 
 <ParamField body="resolution" type="array" optional>
-  Resolution of the output frames as [height, width]
+  Desired resolution of the video chunks as [height, width]
 </ParamField>
-
-<ParamField body="use_base64" type="boolean" optional>
-  Whether to return the frames in base64-encoded format. If `false` it will
-  return a pre-signed S3 object url as `file_url`. If `true` it will return a
-  `base64_string`.
-</ParamField>
-
 <RequestExample>
 
 ```python Python
@@ -33,45 +30,57 @@ from mixpeek import Mixpeek
 # Initialize the Mixpeek client with your API key
 mixpeek = Mixpeek("YOUR_API_KEY")
 
-# Call the video processing tool
-response = mixpeek.video.process(
-    url="https://s3/video.mp4",
-    frame_interval=5,
-    resolution=[720, 1280],
-    return_base64=True
+# Process video chunks
+processed_chunks = mixpeek.tools.video.process(
+    video_source="https://example.com/video.mp4",
+    chunk_interval=1,
+    resolution=[720, 1280]
 )
-```
 
-```shell Shell
-curl --location 'https://api.mixpeek.com/tools/video/process' \
---header 'Authorization: Bearer API_KEY' \
---header 'Content-Type: application/json' \
---data '{
-    "url":"https://s3/video.mp4",
-    "frame_interval": 5,
-    "resolution": [720, 1280],
-    "use_base64": true
-}'
+# Example of embedding each chunk
+results = []
+for index, chunk in enumerate(processed_chunks):
+    print(f"Processing video chunk: {index}")
+
+    embedding = mixpeek.embed.video(
+        model_id="vuse-generic-v1",
+        input=chunk['base64_chunk'],
+        input_type="base64"
+    )['embedding']
+
+    result = {
+        "start_time": chunk["start_time"],
+        "end_time": chunk["end_time"],
+        "embedding": embedding
+    }
+    results.append(result)
+    print(f"  Embedding preview: {embedding[:5] + ['...'] + embedding[-5:]}")
+    print("Insert into DB here")
+
+print(f"Processed {len(results)} chunks")
 ```
 
 </RequestExample>
 
 <ResponseExample>
-  ```json
+```json
 [
     {
-        "base64_string": "...",                
         "start_time": 0.0,
         "end_time": 1.0,
-        "fps": 5.0,
-        "duration": 41.8,
-        "resolution": [
-            768,
-            432
-        ],
-        "size_kb": 69.93
+        "base64_chunk": "..."
     },
-    ...
+    // ... more chunks
 ]
-  ```
+```
 </ResponseExample>
+
+## Response
+
+The process method returns a list of dictionaries, each containing:
+
+- `start_time` (float): Start time of the chunk in seconds.
+- `end_time` (float): End time of the chunk in seconds.
+- `base64_chunk` (str): Base64-encoded video chunk.
+
+This tool is particularly useful when you need to embed long videos, as it allows you to process the video in smaller chunks and embed each chunk separately.

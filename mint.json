@@ -39,17 +39,12 @@
   },
   "anchors": [
     {
-      "name": "Home",
+      "name": "Homepage",
       "icon": "link",
       "url": "https://mixpeek.com"
     },
     {
-      "name": "Explore",
-      "icon": "notes",
-      "url": "https://mixpeek.com/explore"
-    },
-    {
-      "name": "Blog",
+      "name": "Learning Center",
       "icon": "book-bookmark",
       "url": "https://mixpeek.com/learn"
     }
@@ -69,6 +64,10 @@
     {
       "name": "Use Cases",
       "url": "use-cases"
+    },
+    {
+      "name": "Integrations",
+      "url": "integrations"
     }
   ],
   "navigation": [
@@ -77,33 +76,7 @@
       "pages": [
         "introduction/overview",
         "introduction/quickstart",
-        "introduction/architecture",
         "introduction/faq"
-      ]
-    },
-    {
-      "group": "Data Connections",
-      "pages": [
-        "introduction/integrations/overview",
-        {
-          "group": "Sources",
-          "pages": ["introduction/integrations/s3"]
-        },
-        {
-          "group": "Destinations",
-          "pages": [
-            "introduction/integrations/mongodb",
-            "introduction/integrations/pinecone",
-            "introduction/integrations/qdrant"
-          ]
-        }
-      ]
-    },
-    {
-      "group": "Pipelines",
-      "pages": [
-        "introduction/pipelines/overview",
-        "introduction/pipelines/cicd"
       ]
     },
     {
@@ -114,45 +87,12 @@
         {
           "group": "Embedding Models",
           "pages": ["introduction/models/mixpeek/vuse-generic-v1"]
-        },
-        {
-          "group": "Generation Models",
-          "pages": ["introduction/models/openai/gpt"]
-        },
-        {
-          "group": "Extraction Models",
-          "pages": ["introduction/models/mixpeek/ocr-extractor"]
         }
       ]
     },
     {
-      "group": "Methods",
-      "pages": [
-        "api-documentation/methods/extract",
-        "api-documentation/methods/embed",
-        "api-documentation/methods/generate"
-      ]
-    },
-    {
-      "group": "Connections",
-      "pages": [
-        "api-documentation/connections/create",
-        "api-documentation/connections/list",
-        "api-documentation/connections/delete",
-        {
-          "group": "Storage",
-          "pages": ["api-documentation/connections/storage/upload"]
-        }
-      ]
-    },
-    {
-      "group": "Pipelines",
-      "pages": [
-        "api-documentation/pipelines/create",
-        "api-documentation/pipelines/invoke",
-        "api-documentation/pipelines/update",
-        "api-documentation/pipelines/delete"
-      ]
+      "group": "Inference",
+      "pages": ["api-documentation/inference/embed"]
     },
     {
       "group": "Tools",
@@ -161,7 +101,11 @@
 
     {
       "group": "Dashboard",
-      "pages": ["dashboard/overview"]
+      "pages": [
+        "dashboard/account",
+        "dashboard/collections",
+        "dashboard/search"
+      ]
     },
     {
       "group": "Introduction",
@@ -169,7 +113,31 @@
     },
     {
       "group": "Use Cases",
-      "pages": ["use-cases/video-understanding"]
+      "pages": [
+        "use-cases/video-alerting",
+        "use-cases/visual-discovery",
+        "use-cases/multimodal-search",
+        "use-cases/content-recommendation",
+        "use-cases/media-analytics",
+        "use-cases/multimodal-rag"
+      ]
+    },
+    {
+      "group": "Integrations",
+      "pages": [
+        "integrations/overview",
+        {
+          "group": "Databases",
+          "pages": [
+            "integrations/mongodb",
+            "integrations/postgresql",
+            "integrations/pinecone",
+            "integrations/weaviate",
+            "integrations/qdrant",
+            "integrations/redis"
+          ]
+        }
+      ]
     }
   ],
   "footerSocials": {

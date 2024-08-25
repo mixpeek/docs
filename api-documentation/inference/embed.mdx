@@ -7,14 +7,14 @@ api: "POST /embed"
 ## Request
 
 <ParamField body="model_id" type="string" required>
-  The model_id to use for embedding
+  The model_id to use for embedding,
 </ParamField>
 
 <ParamField body="input" type="string" required>
   The input source for the file to be embedded, e.g., a URL or direct content.
 
   <Warning>
-  Max of 5mb per request can be sent (via url or base64), consider using the [File Tools API](/tools) to pre-process larger inputs
+  Max of 5mb per request can be sent (via url or base64), consider using the [File Tools API](/api-documentation/tools/video) to pre-process larger inputs
   </Warning>
 </ParamField>
 
@@ -36,7 +36,7 @@ mixpeek = Mixpeek("API_KEY")
 
 # For video embedding
 embedding = mixpeek.embed.video(
-  model_id="mixpeek/vuse-generic-v1",
+  model_id="vuse-generic-v1",
   input="s3://waving_boy.mp4",
   input_type="url"
 )
@@ -49,7 +49,7 @@ curl --location 'https://api.mixpeek.com/embed/{modality}' \
 --data '{
     "input": "s3://waving_boy.mp4",
     "modality": "video",
-    "model_id": "mixpeek/vuse-generic-v1",
+    "model_id": "vuse-generic-v1",
     "input_type": "url"
 }'
 ```
