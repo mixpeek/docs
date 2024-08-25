@@ -4,119 +4,150 @@ icon: "truck-fast"
 iconType: "solid"
 ---
 
-### A Simple Example
-
-Say you upload an image: `dress.png` to your S3 bucket for your apparel ecommerce store and you want to extract the description and keywords, and create an embedding of the dress itself.
-
-You'd create a Mixpeek pipeline that combines ML models and gets invoked whenever there's a new object in your bucket.
-
-## Your first pipeline
-
-Here's an example pipeline that extracts a description, keywords, and creates an embedding.
-
-```python
-def function(event, context):
-  mixpeek = Mixpeek("API_KEY")
-
-  # extract description
-  description = mixpeek.extract.text(model_id="model_id_1")
-  # extract keywords
-  keywords = mixpeek.extract.text(model_id="model_id_2")
-  # create an embedding
-  embedding = mixpeek.embed.image(model_id="model_id_3")
-
-  return {
-    "file_url": event.object_url,
-    "description": description,
-    "keywords": keywords,
-    "embedding": embedding
-}
-```
-
-[Create pipeline documentation](/api-documentation/pipelines/create)
-
-Once we create this pipeline then connect our S3 bucket and finally MongoDB collection then enable it.
-
-## Your first connection
-
-<Tip>
-  Every new account comes with a preconfigured S3 and MongoDB connection so you
-  can get started right away. Alternatively, you bring your own.
-</Tip>
-
-![default connections](/images/default-connections.png)
-
-[Create connection documentation](/api-documentation/connections/create)
-
-## Setup pipelines
-
-#### Two options for pipeline creation
-
-<CardGroup cols={2}>
-
-<Card 
-title="Github for CI/CD" 
-icon="github" 
-iconType="duotone" 
-color="#ca8b04"
-href="/pipelines/github"
->
-  Integrate a private Github repository directly. We'll update the pipeline every time you commit.
-
-</Card>
-
-<Card title="API Post Directly" icon="code" iconType="duotone" color="#ca8b04" href="/pipelines/create">
-  Create and configure your pipeline by sending the pipeline as a string.
-
-</Card>
-</CardGroup>
-
-Previously, we would have created an AWS IAM role, which opens up a listener on your S3 bucket `apparel`, every new object gets sent through the pipeline-as-code we defined above and then sent into our MongoDB collection: `apparel_items` (which was also instantiated previously).
-
-That's really it! Mixpeek is designed to be "set and forget", never think about processing your S3 bucket again.
-
-#### Sample output
-
-Here's an example output from the S3 object: `dress.png` that gets sent into your MongoDB collection:
-
-```json
-{
-  "object_url": "s3://dress.png",
-  "description": "Elegant summer dress",
-  "keywords": ["summer", "dress", "casual"],
-  "embedding": [0, 1, 2, 3],
-  "metadata": {
-    "pipeline_version": "v1"
-  }
-}
-```
-
-## Use the Methods directly
-
-You can also use the `extract`, `embed` and `generate` methods outside of a pipeline.
-
-```python
-from mixpeek import Mixpeek
-
-mixpeek = Mixpeek("API_KEY")
-
-output = mixpeek.embed.text(
-  input="lorem ipsum",
-  model_id="mixedbread-ai/mxbai-embed-large-v1"
-)
-```
+# Mixpeek Quickstart Guide
 
 <Note>
-  To use the API, you need to [register an API key](https://mixpeek.com/start)
-  and an engineer will contact you.
+  There is an interactive version of this guide embedded in your dashboard on
+  the <a href="https://dash.mixpeek.com/notebooks">Notebooks page</a>
 </Note>
 
-## What does it enable?
+## Getting Started
 
-With fresh vectors, metadata, and extracted content from your apparel images, you can design hyper-targeted marketing campaigns and improve product discovery on your ecommerce platform:
+First, install the Mixpeek library:
 
-- **Personalized Recommendations**: Suggest products based on user preferences and past interactions.
-- **Visual Search**: Allow users to search for products using images instead of text.
-- **Trend Analysis**: Identify and capitalize on emerging fashion trends by analyzing frequently occurring keywords and styles.
+```bash
+pip install --upgrade mixpeek
+```
 
-All without having to think about data prep again. You can even modify your pipeline, and the new version will be appended to the `metadata.pipeline_version` key, so you can filter your pipeline code changes against the output data.
+Then, import the necessary libraries and initialize the Mixpeek client:
+
+```python
+import pprint
+from mixpeek import Mixpeek
+
+mixpeek = Mixpeek(api_key="YOUR_API_KEY")
+pp = pprint.PrettyPrinter(indent=4)
+
+# All files for indexing and searching will be sent to this collection
+collection_id = "starter"
+```
+
+## Simple API
+
+### Image
+
+#### Adding Images to Your Collection
+
+```python
+image_urls = [
+    "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/sample-media/CR-579700.jpg",
+    "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/sample-media/CR-11f9d5.jpg",
+    "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/sample-media/CR-3f19f3.jpg",
+    "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/sample-media/CR-163d6a.jpg"
+]
+
+for image_url in image_urls:
+    index_image_response = mixpeek.index.url(
+        target_url=image_url,
+        collection_id=collection_id
+    )
+    pp.pprint(index_image_response)
+```
+
+#### Text and Image Queries
+
+```python
+# Text query
+text_search_response_image = mixpeek.search.text(
+    input="boy outside standing",
+    filters={"$or": [{"collection_id": collection_id}]},
+    modality="image"
+)
+pp.pprint(text_search_response_image['results'][:3])
+
+# Image query
+url_search_response_image = mixpeek.search.url(
+    target_url="https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/sample-media/CR-11f9d5.jpg",
+    filters={"$or": [{"collection_id": collection_id}]},
+    modality="image"
+)
+pp.pprint(url_search_response_image['results'][:3])
+```
+
+### Video
+
+#### Adding Videos to Your Collection
+
+```python
+video_url = "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/sample-media/CR-218829.mp4"
+
+index_video_response = mixpeek.index.url(
+    target_url=video_url,
+    collection_id=collection_id
+)
+pp.pprint(index_video_response)
+```
+
+#### Text and Video Queries
+
+```python
+# Text query
+text_search_response_video = mixpeek.search.text(
+    input="boy outside standing",
+    filters={"$or": [{"collection_id": collection_id}]},
+    modality="video"
+)
+pp.pprint(text_search_response_video['results'][:3])
+
+# Video query
+text_search_response_video = mixpeek.search.url(
+    target_url="https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/mongodb/rabbit-jurassic.mp4",
+    filters={"$or": [{"collection_id": collection_id}]},
+    modality="video"
+)
+pp.pprint(text_search_response_video['results'][:3])
+```
+
+## Custom Toolkit
+
+For more customization over your multimodal embeddings and structured data:
+
+```python
+video_url = "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/sample-media/CR-785386.mp4"
+
+# Process video chunks
+processed_chunks = mixpeek.tools.video.process(
+    video_source=video_url,
+    chunk_interval=1,
+    resolution=[720, 1280]
+)
+
+results = []
+for index, chunk in enumerate(processed_chunks):
+    print(f"Processing video chunk: {index}")
+
+    embedding = mixpeek.embed.video(
+        model_id="vuse-generic-v1",
+        input=chunk['base64_chunk'],
+        input_type="base64"
+    )['embedding']
+
+    result = {
+        "start_time": chunk["start_time"],
+        "end_time": chunk["end_time"],
+        "embedding": embedding
+    }
+    results.append(result)
+    print(f"Embedded chunk {index}:")
+    print(f"  Start time: {result['start_time']:.2f}s")
+    print(f"  End time: {result['end_time']:.2f}s")
+    print(f"  Embedding preview: {embedding[:5] + ['...'] + embedding[-5:]}")
+
+print(f"Processed {len(results)} chunks")
+```
+
+## Next Steps
+
+- Explore database integrations (MongoDB, PostgreSQL, Pinecone, etc.)
+- Check out file storage integrations (AWS S3, GCP Cloud Storage, Azure Blob Storage)
+- Dive into exciting use cases like Real-Time Video Alerting, Visual Discovery, and Multimodal Search & Retrieval

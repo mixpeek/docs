@@ -6,18 +6,20 @@ iconType: "solid"
 
 ## What is Mixpeek?
 
-[Mixpeek](https://mixpeek.com) is a multimodal data processing pipeline. It allows you to define custom functions that processes changes from your S3 bucket, then automatically writes the structured outputs to your database.
+[Mixpeek](https://mixpeek.com) is a multimodal intelligence platform.
 
-It captures your unstructured object changes [consistent](/introduction/architecture), transforms them and inserts the structured output into your downstream database, so your application has fresh, structured data, always.
+It allows you to pull structured data out of unstructed file types like images, videos, audio and text.
 
-Mixpeek doesn't require any changes to your existing retrieval architecture. It acts as an ETL/indexing tool that operates entirely in the background, empowering you to treat your object storage and database as one entity.
+These files can come from object storage like Amazon S3, Google Cloud Storage, or Azure Blob Storage and the structured output directly into your database or application.
+
+You can use the end-to-end indexing and retrieval APIs or the SDK methods directly.
 
 ## Demo
 
 <iframe
   width="560"
   height="315"
-  src="https://www.youtube.com/embed/gLFOIPpP2QM?si=rr-s0V7hz2Wv6c3w"
+  src="https://www.youtube.com/embed/wta3uQCvC28?si=nlWrkUS-ePTyYiNY"
   title="YouTube video player"
   frameborder="0"
   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -28,24 +30,24 @@ Mixpeek doesn't require any changes to your existing retrieval architecture. It 
 ## Highlights
 
 <CardGroup cols={2}>
-  <Card title="Multimodal Data Handling" icon="files">
+  <Card title="Multimodal" icon="files">
     Supports [images](/introduction/faq#image),
     [videos](/introduction/faq#video), [audio](/introduction/faq#audio),
     [text](/introduction/faq#text), and [documents](/introduction/faq#document).
   </Card>
-  <Card title="Automated Pipeline" icon="pipe-valve">
+  <Card title="Automatic" icon="pipe-valve">
     Processes data through [extraction](/api-documentation/methods/extract),
     [generation](/api-documentation/methods/generate), and
     [embedding](/api-documentation/methods/embed).
   </Card>
-  <Card title="Seamless Integration" icon="plug">
+  <Card title="Seamless" icon="plug">
     Connect unstructured object storage like [Amazon
     S3](/introduction/integrations/s3) with downstream structured databases like
     [MongoDB](/introduction/integrations/mongodb).
   </Card>
-  <Card title="Real-Time Updates" icon="timer">
+  <Card title="Real-Time" icon="timer">
     Ensures always fresh and structured data for robust querying by using robust
-    [sync architecture](/introduction/architecture)
+    sync architecture.
   </Card>
 </CardGroup>
 
@@ -69,9 +71,4 @@ Mixpeek doesn't require any changes to your existing retrieval architecture. It 
 
 1. **Connect Datastores**: Integrate your existing datastores, such as S3 and MongoDB.
 2. **Data Ingestion**: Add files (images, videos, audio, text, documents) to S3.
-3. **Pipeline Processing**: Define and enable your Mixpeek pipeline, so each of tehse files is processed according to your logic like:
-   - **Extraction**: Extracts relevant information from each modality.
-   - **Generation**: Generates AI-powered outputs like summaries and tags.
-   - **Embedding**: Creates vectors for each modality.
-4. **Database Insertion**: Processed data is inserted into the customer's database as a single atomic unit.
-5. **Access and Query**: Access the freshly structured data to build rich query pipelines.
+3. **Access and Query**: Access the freshly structured data to build rich queries.

@@ -1,0 +1,50 @@
+---
+title: "Image Preprocessing"
+---
+
+Process a video given its URL or file path into chunks for easier embedding.
+
+<Note>
+  This method, which is only available in
+  <a href="https://pypi.org/project/mixpeek">the Python SDK</a> runs inside the client.
+</Note>
+
+## Request
+
+<RequestExample>
+
+```python Python
+from mixpeek import Mixpeek
+
+mixpeek = Mixpeek("YOUR_API_KEY")
+
+image_url = "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/sample-media/CR-579700.jpg"
+base64_img = mixpeek.tools.image.process(image_source=image_url)
+
+embedding = mixpeek.embed.image(
+    model_id="openai-clip-vit-base-patch32",
+    input=base64_img,
+    input_type="base64"
+)
+
+```
+
+</RequestExample>
+
+<ResponseExample>
+```json
+{
+    "embedding": [1, 2, 3]
+}
+```
+</ResponseExample>
+
+## Response
+
+The process method returns a list of dictionaries, each containing:
+
+- `start_time` (float): Start time of the chunk in seconds.
+- `end_time` (float): End time of the chunk in seconds.
+- `base64_chunk` (str): Base64-encoded video chunk.
+
+This tool is particularly useful when you need to embed long videos, as it allows you to process the video in smaller chunks and embed each chunk separately.

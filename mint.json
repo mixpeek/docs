@@ -96,7 +96,10 @@
     },
     {
       "group": "Tools",
-      "pages": ["api-documentation/tools/video"]
+      "pages": [
+        "api-documentation/tools/video",
+        "api-documentation/tools/image"
+      ]
     },
 
     {
