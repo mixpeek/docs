@@ -40,10 +40,9 @@ collection_id = "starter"
 
 ```python
 image_urls = [
-    "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/sample-media/CR-579700.jpg",
-    "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/sample-media/CR-11f9d5.jpg",
-    "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/sample-media/CR-3f19f3.jpg",
-    "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/sample-media/CR-163d6a.jpg"
+    "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/aussie_jumping.jpg",
+    "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/aussie_running.jpg",
+    "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/aussie_with_ball.jpg",
 ]
 
 for image_url in image_urls:
@@ -59,7 +58,7 @@ for image_url in image_urls:
 ```python
 # Text query
 text_search_response_image = mixpeek.search.text(
-    input="boy outside standing",
+    input="dog with a ball",
     filters={"$or": [{"collection_id": collection_id}]},
     modality="image"
 )
@@ -67,7 +66,7 @@ pp.pprint(text_search_response_image['results'][:3])
 
 # Image query
 url_search_response_image = mixpeek.search.url(
-    target_url="https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/sample-media/CR-11f9d5.jpg",
+    target_url="https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/aussie_jumping_with_ball.jpg",
     filters={"$or": [{"collection_id": collection_id}]},
     modality="image"
 )
@@ -79,7 +78,7 @@ pp.pprint(url_search_response_image['results'][:3])
 #### Adding Videos to Your Collection
 
 ```python
-video_url = "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/sample-media/CR-218829.mp4"
+video_url = "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/aussie_agility.mp4"
 
 index_video_response = mixpeek.index.url(
     target_url=video_url,
@@ -93,7 +92,7 @@ pp.pprint(index_video_response)
 ```python
 # Text query
 text_search_response_video = mixpeek.search.text(
-    input="boy outside standing",
+    input="dog jumping",
     filters={"$or": [{"collection_id": collection_id}]},
     modality="video"
 )
@@ -101,7 +100,7 @@ pp.pprint(text_search_response_video['results'][:3])
 
 # Video query
 text_search_response_video = mixpeek.search.url(
-    target_url="https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/mongodb/rabbit-jurassic.mp4",
+    target_url="https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/aussie_jumping.mp4",
     filters={"$or": [{"collection_id": collection_id}]},
     modality="video"
 )
@@ -113,7 +112,7 @@ pp.pprint(text_search_response_video['results'][:3])
 For more customization over your multimodal embeddings and structured data:
 
 ```python
-video_url = "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/sample-media/CR-785386.mp4"
+video_url = "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/aussie_agility.mp4"
 
 # Process video chunks
 processed_chunks = mixpeek.tools.video.process(
@@ -144,6 +143,22 @@ for index, chunk in enumerate(processed_chunks):
     print(f"  Embedding preview: {embedding[:5] + ['...'] + embedding[-5:]}")
 
 print(f"Processed {len(results)} chunks")
+```
+
+We can do the same with images
+
+```python
+# We can also do the same with images
+image_url = "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/aussie_with_ball.jpg"
+base64_img = mixpeek.tools.image.process(image_source=image_url)
+
+embedding = mixpeek.embed.image(
+    model_id="openai-clip-vit-base-patch32",
+    input=base64_img,
+    input_type="base64"
+)['embedding']
+
+print(f"  Embedding preview: {embedding[:5] + ['...'] + embedding[-5:]}")
 ```
 
 ## Next Steps
