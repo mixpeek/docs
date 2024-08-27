@@ -1,0 +1,75 @@
+---
+title: "URL"
+description: "Index content from a specified URL with optional metadata and processing settings."
+api: "POST /index/url"
+---
+
+The `Index by URL` endpoint allows you to index content from a specified URL. This is useful for processing and indexing remote files or web pages directly.
+
+## Request
+
+<ParamField body="url" type="string" required>
+  The URL of the content to be indexed
+</ParamField>
+
+<ParamField body="collection_id" type="string" required>
+  The ID of the collection to index the content into
+</ParamField>
+
+<ParamField body="metadata" type="object" optional>
+  Additional metadata to associate with the indexed content
+</ParamField>
+
+<ParamField body="settings" type="object" optional>
+  Optional settings for processing the content (e.g., image caption model)
+</ParamField>
+
+<RequestExample>
+
+```python Python
+from mixpeek import Mixpeek
+
+mixpeek = Mixpeek('API_KEY')
+
+response = mixpeek.index.url(
+    url="https://example.com",
+    collection_id="collection_id",
+    metadata={"key": "value"},
+    settings={"image": {"caption_model_id": "", "model_id": ""}}
+)
+```
+
+```shell Shell
+curl --location 'https://api.mixpeek.com/index/url' \
+--header 'Authorization: Bearer API_KEY' \
+--header 'Content-Type: application/json' \
+--data '{
+    "url": "http://url/to/file.jpg",
+    "collection_id": "<str>"
+}'
+```
+
+</RequestExample>
+
+## Response
+
+<ResponseField name="message" type="string">
+  A message indicating the status of the indexing process
+</ResponseField>
+
+<ResponseField name="task_id" type="string">
+  A unique identifier for the indexing task
+</ResponseField>
+
+<ResponseExample>
+
+```json Response
+{
+  "message": "URL content processing started",
+  "task_id": "<str>"
+}
+```
+
+</ResponseExample>
+
+The indexing process is asynchronous. You can use the returned `task_id` to check the status of the indexing task if needed.

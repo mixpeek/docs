@@ -1,0 +1,123 @@
+---
+title: "URL"
+description: "Search for similar content using a URL, with support for various input types, modalities, and optional filters."
+api: "POST /search/url"
+---
+
+The `Search by URL` endpoint allows you to search for content using a URL pointing to an image or file. This is useful for finding similar or related content across your indexed data without uploading a file directly.
+
+## Request
+
+<ParamField body="url" type="string" required>
+  The URL of the image or file to search with
+</ParamField>
+
+<ParamField body="input_type" type="string" required>
+  The type of input (e.g., "file")
+</ParamField>
+
+<ParamField body="modality" type="string" required>
+  The modality to search in (e.g., "image", "video", "text")
+</ParamField>
+
+<ParamField body="filters" type="object" optional>
+  Additional filters to apply to the search
+</ParamField>
+
+<ParamField body="page" type="integer" optional>
+  The page number for pagination
+</ParamField>
+
+<ParamField body="page_size" type="integer" optional>
+  The number of results per page
+</ParamField>
+
+<RequestExample>
+
+```python Python
+from mixpeek import Mixpeek
+
+client = Mixpeek('<API_KEY>')
+
+response = client.search.url(
+    url="<url>",
+    input_type="<str>",
+    modality="<str>",
+    filters={"$or": [{"collection_id": "<str>"}]},
+    page=<int>,
+    page_size=<int>
+)
+```
+
+```shell Shell
+curl --location 'https://api.mixpeek.com/search/url' \
+--header 'Authorization: Bearer <API_KEY>' \
+--header 'Content-Type: application/json' \
+--data '{
+  "url": "<url>",
+  "input_type": "<str>",
+  "modality": "<str>",
+  "filters": {
+    "$or": [
+      { "collection_id": "<str>" }
+    ]
+  },
+  "page": <int>,
+  "page_size": <int>
+}'
+```
+
+</RequestExample>
+
+## Response
+
+<ResponseField name="results" type="array">
+  An array of search results
+</ResponseField>
+
+<ResponseField name="pagination" type="object">
+  Pagination information
+</ResponseField>
+
+<ResponseExample>
+
+```json Response
+{
+  "results": [
+    {
+      "created_at": "<timestamp>",
+      "caption": "<str>",
+      "file_id": "<uuid>",
+      "collection_id": "<str>",
+      "metadata": {
+        "description": "<str>",
+        "timestamp": "<timestamp>",
+        "likes": <int>,
+        "comments": <int>,
+        "url": "<url>",
+        "author_img": "<url>",
+        "author": "<str>",
+        "file_size_bytes": <int>,
+        "last_modified": "<timestamp>",
+        "filename": "<str>",
+        "preview_url": "<url>"
+      },
+      "url": "<url>",
+      "score": <float>
+    }
+    // ... more results ...
+  ],
+  "pagination": {
+    "total": <int>,
+    "page": <int>,
+    "page_size": <int>,
+    "total_pages": <int>,
+    "next_page": "https://api.mixpeek.com/search/url?page=<int>&page_size=<int>",
+    "previous_page": null
+  }
+}
+```
+
+</ResponseExample>
+
+The search results include detailed information about each matching item, including metadata, scores, and file information. The pagination object provides information for navigating through multiple pages of results.

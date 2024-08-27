@@ -1,0 +1,91 @@
+---
+title: "Upload"
+description: "Search for similar content using an uploaded file, with optional filters and pagination."
+api: "POST /search/upload"
+---
+
+The `Search by Upload` endpoint allows you to search for content using an uploaded file. This is useful for finding similar or related content across your indexed data.
+
+## Request
+
+<ParamField body="file" type="file" required>
+  The file to upload and search with
+</ParamField>
+
+<ParamField body="filters" type="object" optional>
+  Additional filters to apply to the search
+</ParamField>
+
+<ParamField body="page" type="integer" optional>
+  The page number for pagination
+</ParamField>
+
+<ParamField body="page_size" type="integer" optional>
+  The number of results per page
+</ParamField>
+
+<RequestExample>
+
+```shell Shell
+curl --location 'https://api.mixpeek.com/search/upload' \
+--header 'Authorization: Bearer <API_KEY>' \
+--form 'file=@"<file_path>"' \
+--form 'filters="{\"collection_id\":\"<str>\"}"' \
+--form 'page="<int>"' \
+--form 'page_size="<int>"'
+```
+
+</RequestExample>
+
+## Response
+
+<ResponseField name="results" type="array">
+  An array of search results
+</ResponseField>
+
+<ResponseField name="pagination" type="object">
+  Pagination information
+</ResponseField>
+
+<ResponseExample>
+
+```json Response
+{
+  "results": [
+    {
+      "created_at": "<timestamp>",
+      "caption": "<str>",
+      "file_id": "<uuid>",
+      "collection_id": "<str>",
+      "metadata": {
+        "description": "<str>",
+        "timestamp": "<timestamp>",
+        "likes": <int>,
+        "comments": <int>,
+        "url": "<url>",
+        "author_img": "<url>",
+        "author": "<str>",
+        "file_size_bytes": <int>,
+        "last_modified": "<timestamp>",
+        "filename": "<str>",
+        "preview_url": "<url>"
+      },
+      "url": "<url>",
+      "score": <float>
+    }
+    // ... more results ...
+  ],
+  "pagination": {
+    "total": <int>,
+    "page": <int>,
+    "page_size": <int>,
+    "total_pages": <int>,
+    "next_page": "https://api.mixpeek.com/search/upload?page=<int>&page_size=<int>",
+    "previous_page": null
+  }
+}
+```
+
+</ResponseExample>
+
+The search results include detailed information about each matching item, including metadata, scores, and file information. The pagination object provides information for navigating through multiple pages of results.

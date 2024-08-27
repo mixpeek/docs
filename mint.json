@@ -95,6 +95,22 @@
       "pages": ["api-documentation/inference/embed"]
     },
     {
+      "group": "Index",
+      "pages": [
+        "api-documentation/index/url",
+        "api-documentation/index/upload",
+        "api-documentation/index/youtube"
+      ]
+    },
+    {
+      "group": "Search",
+      "pages": [
+        "api-documentation/search/url",
+        "api-documentation/search/upload",
+        "api-documentation/search/text"
+      ]
+    },
+    {
       "group": "Tools",
       "pages": [
         "api-documentation/tools/video",
@@ -132,12 +148,13 @@
         {
           "group": "Databases",
           "pages": [
-            "integrations/mongodb",
-            "integrations/postgresql",
-            "integrations/pinecone",
-            "integrations/weaviate",
-            "integrations/qdrant",
-            "integrations/redis"
+            "integrations/databases/mongodb",
+            "integrations/databases/postgresql",
+            "integrations/databases/pinecone",
+            "integrations/databases/weaviate",
+            "integrations/databases/qdrant",
+            "integrations/databases/redis",
+            "integrations/databases/zilliz"
           ]
         }
       ]

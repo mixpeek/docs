@@ -1,0 +1,128 @@
+---
+title: "Text"
+description: "Search indexed content using text queries with customizable filters and pagination."
+api: "POST /search/text"
+---
+
+The `Search by Text` endpoint allows you to search for content using a text query. This is useful for finding relevant information across your indexed content.
+
+## Request
+
+<ParamField body="input" type="string" required>
+  The text query to search for
+</ParamField>
+
+<ParamField body="modality" type="string" required>
+  The modality to search in (e.g., "text", "video", "image")
+</ParamField>
+
+<ParamField body="input_type" type="string" required>
+  The type of input (e.g., "text")
+</ParamField>
+
+<ParamField body="filters" type="object" optional>
+  Additional filters to apply to the search
+</ParamField>
+
+<ParamField body="group_by_file" type="boolean" optional>
+  Whether to group results by file
+</ParamField>
+
+<ParamField body="page" type="integer" optional>
+  The page number for pagination
+</ParamField>
+
+<ParamField body="page_size" type="integer" optional>
+  The number of results per page
+</ParamField>
+
+<RequestExample>
+
+```python Python
+from mixpeek import Mixpeek
+
+client = Mixpeek('<API_KEY>')
+
+response = client.search.text(
+    input="<str>",
+    modality="<str>",
+    input_type="<str>",
+    filters={"$or": [{"collection_id": "<str>"}]},
+    group_by_file=<bool>,
+    page=<int>,
+    page_size=<int>
+)
+```
+
+```shell Shell
+curl --location 'https://api.mixpeek.com/search/text' \
+--header 'Authorization: Bearer <API_KEY>' \
+--header 'Content-Type: application/json' \
+--data '{
+    "modality": "<str>",
+    "input": "<str>",
+    "group_by_file": <bool>,
+    "filters": {
+        "$or": [
+            {
+                "collection_id": "<str>"
+            }
+        ]
+    }
+}'
+```
+
+</RequestExample>
+
+## Response
+
+<ResponseField name="results" type="array">
+  An array of search results
+</ResponseField>
+
+<ResponseField name="pagination" type="object">
+  Pagination information
+</ResponseField>
+
+<ResponseExample>
+
+```json Response
+{
+  "results": [
+    {
+      "created_at": "<timestamp>",
+      "caption": "<str>",
+      "file_id": "<uuid>",
+      "collection_id": "<str>",
+      "metadata": {
+        "description": "<str>",
+        "timestamp": "<timestamp>",
+        "likes": <int>,
+        "comments": <int>,
+        "url": "<url>",
+        "author_img": "<url>",
+        "author": "<str>",
+        "file_size_bytes": <int>,
+        "last_modified": "<timestamp>",
+        "filename": "<str>",
+        "preview_url": "<url>"
+      },
+      "url": "<url>",
+      "score": <float>
+    }
+    // ... more results ...
+  ],
+  "pagination": {
+    "total": <int>,
+    "page": <int>,
+    "page_size": <int>,
+    "total_pages": <int>,
+    "next_page": "https://api.mixpeek.com/search/text?page=<int>&page_size=<int>",
+    "previous_page": null
+  }
+}
+```
+
+</ResponseExample>
+
+The search results include detailed information about each matching item, including metadata, scores, and file information. The pagination object provides information for navigating through multiple pages of results.

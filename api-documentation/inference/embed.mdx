@@ -40,6 +40,13 @@ embedding = mixpeek.embed.video(
   input="s3://waving_boy.mp4",
   input_type="url"
 )
+
+# For image embedding
+embedding = mixpeek.image.video(
+  model_id="openai-clip-vit-base-patch32",
+  input="s3://waving_boy.jpg",
+  input_type="url"
+)
 ```
 
 ```shell Shell
