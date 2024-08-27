@@ -40,7 +40,7 @@ from mixpeek import Mixpeek
 client = Mixpeek('<API_KEY>')
 
 response = client.search.url(
-    url="<url>",
+    target_url="<url>",
     input_type="<str>",
     modality="<str>",
     filters={"$or": [{"collection_id": "<str>"}]},
