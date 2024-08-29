@@ -8,12 +8,14 @@ iconType: "solid"
 
 We'll be using `vuse-generic-v1` to build a collection of 1 second interval video chunks into a 768 dimension embedding collection.
 
+For an end-to-end guide using real data from the movie Jurassic Park follow this link: https://learn.mixpeek.com/mixpeek-embed-with-weaviate-for-multimodal-ai/
+
+### Ingest
+
 <Note>
   You'll need to create a Weaviate schema with a class called `VideoChunk` that
   has a vector index of 768 dimensions.
 </Note>
-
-### Ingest
 
 ```python
 from mixpeek import Mixpeek
@@ -234,7 +236,3 @@ results = (
 for result in results['data']['Get']['Image']:
     print(result)
 ```
-
-## Learn More
-
-Want to dive deeper into building advanced multimodal AI systems with Mixpeek and Weaviate? Check out <a href="https://learn.mixpeek.com/mixpeek-embed-with-weaviate-for-multimodal-ai/">our comprehensive tutorial</a>

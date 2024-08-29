@@ -91,10 +91,6 @@
       ]
     },
     {
-      "group": "Inference",
-      "pages": ["api-documentation/inference/embed"]
-    },
-    {
       "group": "Index",
       "pages": [
         "api-documentation/index/url",
@@ -109,6 +105,10 @@
         "api-documentation/search/upload",
         "api-documentation/search/text"
       ]
+    },
+    {
+      "group": "Inference",
+      "pages": ["api-documentation/inference/embed"]
     },
     {
       "group": "Tools",
