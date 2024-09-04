@@ -149,12 +149,12 @@
           "group": "Databases",
           "pages": [
             "integrations/databases/mongodb",
+            "integrations/databases/supabase",
             "integrations/databases/postgresql",
             "integrations/databases/pinecone",
             "integrations/databases/weaviate",
             "integrations/databases/qdrant",
-            "integrations/databases/redis",
-            "integrations/databases/zilliz"
+            "integrations/databases/redis"
           ]
         }
       ]
