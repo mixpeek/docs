@@ -4,11 +4,11 @@ icon: "wave-square"
 iconType: "solid"
 ---
 
+For an end-to-end guide follow this link: https://learn.mixpeek.com/mixpeek-embed-with-weaviate-for-multimodal-ai/
+
 ## Video
 
 We'll be using `vuse-generic-v1` to build a collection of 1 second interval video chunks into a 768 dimension embedding collection.
-
-For an end-to-end guide using real data from the movie Jurassic Park follow this link: https://learn.mixpeek.com/mixpeek-embed-with-weaviate-for-multimodal-ai/
 
 ### Ingest
 
@@ -45,7 +45,7 @@ client.schema.create(schema)
 
 # Process video chunks
 processed_chunks = mixpeek.tools.video.process(
-    video_source="https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/weaviate/Jurassic+Park+(2).mp4",
+    video_source="https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/mixpek-public-demo/Jurassic+Park+(2).mp4",
     chunk_interval=1, # 1 second intervals
     resolution=[720, 1280]
 )

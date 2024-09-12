@@ -6,13 +6,13 @@ iconType: "solid"
 
 ## What is Mixpeek?
 
-[Mixpeek](https://mixpeek.com) is a multimodal intelligence platform.
+[Mixpeek](https://mixpeek.com) provides vision understanding infrastructure for developers.
 
-It allows you to pull structured data out of unstructed file types like images, videos, audio and text.
+Using our set of APIs, you can pull out structured data out of videos and images like embeddings, objects, text, and more.
 
-These files can come from object storage like Amazon S3, Google Cloud Storage, or Azure Blob Storage and the structured output directly into your database or application.
+These files can come from object storage like Amazon S3 or real-time feeds like RTSP.
 
-You can use the end-to-end indexing and retrieval APIs or the SDK methods directly.
+You can use the end-to-end indexing and retrieval APIs (Easy but Rigid) or the SDK methods directly (Flexible but Complex).
 
 ## Demo
 
@@ -30,24 +30,19 @@ You can use the end-to-end indexing and retrieval APIs or the SDK methods direct
 ## Highlights
 
 <CardGroup cols={2}>
-  <Card title="Multimodal" icon="files">
-    Supports [images](/introduction/faq#image),
-    [videos](/introduction/faq#video), [audio](/introduction/faq#audio),
-    [text](/introduction/faq#text), and [documents](/introduction/faq#document).
+  <Card title="Multimodal" icon="layer-group">
+    Supports images and videos out of the box. Extract embeddings, objects,
+    text, faces, and more from visual assets.
   </Card>
-  <Card title="Automatic" icon="pipe-valve">
-    Processes data through [extraction](/api-documentation/methods/extract),
-    [generation](/api-documentation/methods/generate), and
-    [embedding](/api-documentation/methods/embed).
+  <Card title="Storage Agnostic" icon="database">
+    Works with various data sources including object storage e.g., AWS S3,
+    real-time streams (e.g., RTSP), and databases.
   </Card>
-  <Card title="Seamless" icon="plug">
-    Connect unstructured object storage like [Amazon
-    S3](/introduction/integrations/s3) with downstream structured databases like
-    [MongoDB](/introduction/integrations/mongodb).
+  <Card title="Flexible" icon="puzzle-piece">
+    Offers multiple methods, SDKs, and integrations for customizable workflows.
   </Card>
-  <Card title="Real-Time" icon="timer">
-    Ensures always fresh and structured data for robust querying by using robust
-    sync architecture.
+  <Card title="Scalable" icon="chart-line">
+    Designed to handle large volumes of data and grow with your needs.
   </Card>
 </CardGroup>
 
@@ -58,12 +53,14 @@ You can use the end-to-end indexing and retrieval APIs or the SDK methods direct
   guides
 </Note>
 
-- **Search Engines**: Enhance search capabilities with rich, multimodal data.
-- **Recommendation Systems**: Improve recommendations using diverse data sources.
-- **Content Management**: Streamline and manage multimedia content efficiently.
-- **Data Analytics**: Perform advanced analytics with structured, multimodal data.
-- **Knowledge Graphs**: Build and maintain comprehensive knowledge graphs with real-time updates.
-- **RAG (Retrieval-Augmented Generation)**: Use the structured data to power advanced AI models for more accurate and contextually relevant outputs.
+- [Real-Time Video Alerting](/use-cases/video-alerting): Enhance security and monitoring with intelligent video analysis.
+- [Visual Discovery](/use-cases/visual-discovery): Enable users to explore and find visual content intuitively.
+- [Multimodal Search](/use-cases/multimodal-search): Improve search capabilities with rich, multimodal data.
+- [Content Recommendation](/use-cases/content-recommendation): Enhance recommendations using diverse data sources.
+- [Media Analytics](/use-cases/media-analytics): Perform advanced analytics with structured, multimodal data.
+- [Multimodal RAG](/use-cases/multimodal-rag): Power advanced AI models for more accurate and contextually relevant outputs.
+- [Multimodal Generation](/use-cases/multimodal-generation): Create AI-generated content using multimodal inputs.
+- [Content Organization](/use-cases/content-organization): Streamline and manage multimedia content efficiently.
 
 ## How Does It Work?
 
@@ -72,3 +69,5 @@ You can use the end-to-end indexing and retrieval APIs or the SDK methods direct
 1. **Connect Datastores**: Integrate your existing datastores, such as S3 and MongoDB.
 2. **Data Ingestion**: Add files (images, videos, audio, text, documents) to S3.
 3. **Access and Query**: Access the freshly structured data to build rich queries.
+
+See the [quick start guide](/introduction/quickstart) to get started.
