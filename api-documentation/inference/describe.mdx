@@ -1,0 +1,63 @@
+---
+title: "Describe"
+description: "Generates descriptions for video content based on a given prompt."
+api: "POST /describe/"
+---
+
+<Warning>This feature is in beta and may change without notice.</Warning>
+
+## Request
+
+<ParamField body="file" type="file" required>
+  The video file to be described. Supported formats: .mp4, .avi, .mov, .mkv,
+  .flv, .wmv
+</ParamField>
+
+<ParamField body="prompt" type="string" required>
+  The description or prompt of what to look for in the video.
+</ParamField>
+
+<RequestExample>
+
+```python Python
+import requests
+
+url = "https://api.mixpeek.com/describe/"
+headers = {"Authorization": "Bearer MIXPEEK_API_KEY"}
+files = {
+    "file": ("video.mp4", open("path/to/video.mp4", "rb"), "video/mp4")
+}
+data = {
+    "prompt": "Describe any people waving in the video"
+}
+
+response = requests.post(url, headers=headers, files=files, data=data)
+```
+
+```shell Shell
+curl --location 'https://api.mixpeek.com/describe/' \
+--header 'Authorization: Bearer API_KEY' \
+--form 'file=@"/path/to/video.mp4"' \
+--form 'prompt="Describe any people waving in the video"'
+```
+
+</RequestExample>
+
+## Response
+
+The API returns a JSON object containing the structured description of the video based on the given prompt.
+
+<ResponseExample>
+
+```json JSON
+{
+  "description": "The boy starts waving his right hand enthusiastically"
+}
+```
+
+</ResponseExample>
+
+## Notes
+
+- The video file size is limited to 5MB per request. For larger files, consider using the [File Tools API](/api-documentation/tools/video) to pre-process the input.
+- The API uses the `video-descriptor-v1` model for video description.

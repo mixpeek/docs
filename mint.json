@@ -109,7 +109,10 @@
     },
     {
       "group": "Inference",
-      "pages": ["api-documentation/inference/embed"]
+      "pages": [
+        "api-documentation/inference/embed",
+        "api-documentation/inference/describe"
+      ]
     },
     {
       "group": "Tools",
