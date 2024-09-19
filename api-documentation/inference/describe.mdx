@@ -1,44 +1,55 @@
 ---
 title: "Describe"
-description: "Generates descriptions for video content based on a given prompt."
-api: "POST /describe/"
+description: "Generates descriptions for video content based on a given prompt and URL."
+api: "POST /describe/url"
 ---
 
 <Warning>This feature is in beta and may change without notice.</Warning>
 
 ## Request
 
-<ParamField body="file" type="file" required>
-  The video file to be described. Supported formats: .mp4, .avi, .mov, .mkv,
-  .flv, .wmv
+<ParamField body="url" type="string" required>
+  The URL of the video file to be described.
 </ParamField>
 
 <ParamField body="prompt" type="string" required>
   The description or prompt of what to look for in the video.
 </ParamField>
 
+<ParamField body="model_id" type="string" required>
+  The ID of the model to use for video description. Default is
+  "video-descriptor-v1".
+</ParamField>
+
 <RequestExample>
 
 ```python Python
 import requests
+import json
 
-url = "https://api.mixpeek.com/describe/"
-headers = {"Authorization": "Bearer MIXPEEK_API_KEY"}
-files = {
-    "file": ("video.mp4", open("path/to/video.mp4", "rb"), "video/mp4")
-}
-data = {
-    "prompt": "Describe any people waving in the video"
+url = "https://api.mixpeek.com/describe/url"
+
+payload = json.dumps({
+  "url": "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/jurassic_bunny.mp4",
+  "prompt": "What's happening here",
+  "model_id": "video-descriptor-v1"
+})
+headers = {
+  'Authorization': 'Bearer MIXPEEK_API_KEY',
+  'Content-Type': 'application/json'
 }
 
-response = requests.post(url, headers=headers, files=files, data=data)
+response = requests.request("POST", url, headers=headers, data=payload)
 ```
 
 ```shell Shell
-curl --location 'https://api.mixpeek.com/describe/' \
---header 'Authorization: Bearer API_KEY' \
---form 'file=@"/path/to/video.mp4"' \
---form 'prompt="Describe any people waving in the video"'
+curl --location 'https://api.mixpeek.com/describe/url' \
+--header 'Authorization: Bearer MIXPEEK_API_KEY' \
+--header 'Content-Type: application/json' \
+--data '{
+  "url": "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/jurassic_bunny.mp4",
+  "prompt": "What'\''s happening here"
+}'
 ```
 
 </RequestExample>
@@ -51,7 +62,7 @@ The API returns a JSON object containing the structured description of the video
 
 ```json JSON
 {
-  "description": "The boy starts waving his right hand enthusiastically"
+  "description": "The video shows a cartoon animation of a small white rabbit hopping through a prehistoric landscape with large dinosaurs in the background."
 }
 ```
 
@@ -59,5 +70,5 @@ The API returns a JSON object containing the structured description of the video
 
 ## Notes
 
-- The video file size is limited to 5MB per request. For larger files, consider using the [File Tools API](/api-documentation/tools/video) to pre-process the input.
 - The API uses the `video-descriptor-v1` model for video description.
+- Ensure that the provided URL is publicly accessible.

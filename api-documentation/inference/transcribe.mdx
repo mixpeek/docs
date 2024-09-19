@@ -1,0 +1,59 @@
+---
+title: "Transcribe"
+description: "Generates text transcriptions from audio or video data."
+api: "POST /transcribe/url"
+---
+
+## Request
+
+<ParamField body="url" type="string" required>
+  The URL of the audio or video file to be transcribed.
+</ParamField>
+
+<RequestExample>
+
+```python Python
+import requests
+import json
+
+url = "https://api.mixpeek.com/transcribe/url"
+
+payload = json.dumps({
+  "url": "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/jurassic_bunny.mp4"
+})
+headers = {
+  'Authorization': 'Bearer API_KEY',
+  'Content-Type': 'application/json'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload)
+
+print(response.text)
+```
+
+```shell Shell
+curl --location 'https://api.mixpeek.com/transcribe/url' \
+--header 'Authorization: Bearer API_KEY' \
+--header 'Content-Type: application/json' \
+--data '{
+    "url": "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/jurassic_bunny.mp4"
+}'
+```
+
+</RequestExample>
+
+## Response
+
+<ResponseField name="transcription" type="string">
+  The generated text transcription of the audio or video content.
+</ResponseField>
+
+<ResponseExample>
+
+```json Response
+{
+  "transcription": "or something? Ah! Ah!"
+}
+```
+
+</ResponseExample>

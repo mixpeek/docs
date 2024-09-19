@@ -108,11 +108,16 @@
       ]
     },
     {
-      "group": "Inference",
+      "group": "Understanding SDK",
       "pages": [
         "api-documentation/inference/embed",
-        "api-documentation/inference/describe"
+        "api-documentation/inference/describe",
+        "api-documentation/inference/transcribe"
       ]
+    },
+    {
+      "group": "Collections",
+      "pages": ["api-documentation/collections/full-file"]
     },
     {
       "group": "Tools",
@@ -121,7 +126,6 @@
         "api-documentation/tools/image"
       ]
     },
-
     {
       "group": "Dashboard",
       "pages": [

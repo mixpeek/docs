@@ -1,0 +1,46 @@
+---
+title: "Full File"
+description: "Retrieve all the contents of a file by its' file_id."
+api: "GET /collections/file/<file_id>/full"
+---
+
+Once a file is indexed, Mixpeek has automatically pulled out data including, `embeddings`, `transcriptions`, `labels`, `descriptions` and more. By calling this API you can retrieve all the indexed data associated with the `file_id`.
+
+## Request
+
+<ParamField url="file_id" type="string" required>
+  The ID of the collection to index the content into
+</ParamField>
+
+<ResponseField name="transcriptions" type="list">
+  lorem
+</ResponseField>
+
+<ResponseField name="descriptions" type="list">
+  lorem
+</ResponseField>
+
+<ResponseExample>
+
+```json Response
+{
+    "transcriptions": [
+        {
+            "text": "We are transforming video",
+            "start_time": 0.0,
+            "end_time": 30.0
+        }
+        ...
+    ],
+    "descriptions": [
+        {
+            "description": "The video is an animation ..."
+            "start_time": 0.0,
+            "end_time": 30.0
+        }
+        ...
+    ]
+}
+```
+
+</ResponseExample>
