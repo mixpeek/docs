@@ -90,7 +90,7 @@
         "introduction/models/overview",
         "introduction/models/fine-tuning",
         {
-          "group": "Embedding Models",
+          "group": "Models",
           "pages": ["introduction/models/mixpeek/vuse-generic-v1"]
         }
       ]
