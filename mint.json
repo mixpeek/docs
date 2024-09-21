@@ -165,6 +165,7 @@
         {
           "group": "Databases",
           "pages": [
+            "integrations/databases/timescale",
             "integrations/databases/mongodb",
             "integrations/databases/supabase",
             "integrations/databases/postgresql",
