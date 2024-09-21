@@ -64,10 +64,76 @@ You can use the end-to-end indexing and retrieval APIs (Easy but Rigid) or the S
 
 ## How Does It Work?
 
-<Note>[Comprehensive achitecture guide](/introduction/architecture)</Note>
+<Note>[Comprehensive architecture guide](/introduction/architecture)</Note>
 
 1. **Connect Datastores**: Integrate your existing datastores, such as S3 and MongoDB.
-2. **Data Ingestion**: Add files (images, videos, audio, text, documents) to S3.
-3. **Access and Query**: Access the freshly structured data to build rich queries.
+2. **Data Ingestion**: Add files (images, videos, audio, text, documents) to S3 or provide URLs.
+3. **Indexing**: Use the powerful indexing API to process and structure your data.
+4. **Access and Query**: Access the freshly structured data to build rich queries.
+
+### Indexing Example
+
+Here's a sample of how you can use the indexing API:
+
+```python
+import requests
+import json
+
+url = "https://api.mixpeek.com/index/url"
+
+payload = json.dumps({
+    "url": "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/jurassic_bunny.mp4",
+    "collection_id": "starter",
+    "metadata": {"foo": ["foo", "bar"]},
+    "should_save": False,  # Instructs the service not to download, only do this if the file is immutable
+    "settings": [
+        {
+            "split_interval": 1,  # Split intervals are how the processing is grouped (seconds)
+            "read": {
+                "model_id": "video-descriptor-v1"
+            },
+            "embed": {
+                "model_id": "vuse-generic-v1"
+            }
+        },
+        {
+            "split_interval": 30,
+            "transcribe": {
+                "model_id": "polyglot-v1"
+            }
+        },
+        {
+            "split_interval": 120,
+            "describe": {
+                "model_id": "video-descriptor-v1"
+            }
+        }
+    ]
+})
+headers = {
+    'Authorization': 'Bearer MIXPEEK_API_KEY',
+    'Content-Type': 'application/json'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload)
+```
+
+This example demonstrates how to index a video file, applying various processing steps at different intervals. Let's break down the key components:
+
+- **split_interval**: This determines how the processing is grouped in seconds. Different operations can be performed at different intervals for efficiency and granularity.
+
+- **Methods**:
+  - **read**: Extracts basic information from the video frames.
+  - **embed**: Generates vector embeddings for the content.
+  - **transcribe**: Converts speech to text.
+  - **describe**: Generates textual descriptions of the video content.
+
+In this example:
+
+- Every 1 second, the video is read and embedded.
+- Every 30 seconds, the audio is transcribed.
+- Every 120 seconds, a description of the video content is generated.
+
+This flexible approach allows for efficient processing tailored to your specific needs.
 
 See the [quick start guide](/introduction/quickstart) to get started.

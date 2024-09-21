@@ -36,44 +36,6 @@ The `Search by Text` endpoint allows you to search for content using a text quer
   The number of results per page
 </ParamField>
 
-<RequestExample>
-
-```python Python
-from mixpeek import Mixpeek
-
-client = Mixpeek('<API_KEY>')
-
-response = client.search.text(
-    input="<str>",
-    modality="<str>",
-    input_type="<str>",
-    filters={"$or": [{"collection_id": "<str>"}]},
-    group_by_file=<bool>,
-    page=<int>,
-    page_size=<int>
-)
-```
-
-```shell Shell
-curl --location 'https://api.mixpeek.com/search/text' \
---header 'Authorization: Bearer <API_KEY>' \
---header 'Content-Type: application/json' \
---data '{
-    "modality": "<str>",
-    "input": "<str>",
-    "group_by_file": <bool>,
-    "filters": {
-        "$or": [
-            {
-                "collection_id": "<str>"
-            }
-        ]
-    }
-}'
-```
-
-</RequestExample>
-
 ## Response
 
 <ResponseField name="results" type="array">
@@ -94,19 +56,7 @@ curl --location 'https://api.mixpeek.com/search/text' \
       "caption": "<str>",
       "file_id": "<uuid>",
       "collection_id": "<str>",
-      "metadata": {
-        "description": "<str>",
-        "timestamp": "<timestamp>",
-        "likes": <int>,
-        "comments": <int>,
-        "url": "<url>",
-        "author_img": "<url>",
-        "author": "<str>",
-        "file_size_bytes": <int>,
-        "last_modified": "<timestamp>",
-        "filename": "<str>",
-        "preview_url": "<url>"
-      },
+      "metadata": {},
       "url": "<url>",
       "score": <float>
     }

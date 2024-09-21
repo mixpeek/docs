@@ -97,7 +97,7 @@
     },
     {
       "group": "Index",
-      "pages": ["api-documentation/index/url", "api-documentation/index/upload"]
+      "pages": ["api-documentation/index/url", "api-documentation/index/face"]
     },
     {
       "group": "Search",
@@ -110,9 +110,17 @@
     {
       "group": "Understanding SDK",
       "pages": [
-        "api-documentation/inference/embed",
-        "api-documentation/inference/describe",
-        "api-documentation/inference/transcribe"
+        "api-documentation/understand/embed",
+        "api-documentation/understand/describe",
+        "api-documentation/understand/transcribe",
+        "api-documentation/understand/read"
+      ]
+    },
+    {
+      "group": "Tasks",
+      "pages": [
+        "api-documentation/tasks/status",
+        "api-documentation/tasks/cancel"
       ]
     },
     {

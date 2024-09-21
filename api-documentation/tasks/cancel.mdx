@@ -1,0 +1,47 @@
+---
+title: "Cancel Task"
+description: "Cancel and delete a specific task by its ID."
+api: "DELETE /tasks/{task_id}"
+---
+
+The `Delete Task` endpoint allows you to cancel and delete a task that is currently in progress or queued. This is useful for managing resources and stopping unnecessary or mistakenly initiated tasks.
+
+## Request
+
+<ParamField path="task_id" type="string" required>
+  The unique identifier of the task to be deleted
+</ParamField>
+
+## Response
+
+<ResponseField name="message" type="string">
+  A message indicating the result of the delete operation
+</ResponseField>
+
+<ResponseExample>
+
+```json Response
+{
+  "message": "Task 33862fdc-2213-40be-8dd2-867dc48b4cd5 has been successfully canceled"
+}
+```
+
+</ResponseExample>
+
+## When to Use Delete Task
+
+The Delete Task endpoint is particularly useful in scenarios such as:
+
+1. Cancelling long-running tasks that are no longer needed
+2. Stopping tasks that were initiated by mistake
+3. Managing system resources by terminating unnecessary processes
+4. Handling user-requested cancellations of ongoing operations
+
+## Important Considerations
+
+- Deleting a task that has already completed may not have any effect
+- Ensure proper authorization checks are in place to prevent unauthorized task deletions
+- Consider implementing confirmation steps in your application before deleting important tasks
+- Be aware that deleting a task may not immediately free up all associated resources
+
+By providing the ability to delete tasks, you give users more control over their operations and help maintain efficient use of system resources.

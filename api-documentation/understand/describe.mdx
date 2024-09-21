@@ -21,39 +21,6 @@ api: "POST /describe/url"
   "video-descriptor-v1".
 </ParamField>
 
-<RequestExample>
-
-```python Python
-import requests
-import json
-
-url = "https://api.mixpeek.com/describe/url"
-
-payload = json.dumps({
-  "url": "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/jurassic_bunny.mp4",
-  "prompt": "What's happening here",
-  "model_id": "video-descriptor-v1"
-})
-headers = {
-  'Authorization': 'Bearer MIXPEEK_API_KEY',
-  'Content-Type': 'application/json'
-}
-
-response = requests.request("POST", url, headers=headers, data=payload)
-```
-
-```shell Shell
-curl --location 'https://api.mixpeek.com/describe/url' \
---header 'Authorization: Bearer MIXPEEK_API_KEY' \
---header 'Content-Type: application/json' \
---data '{
-  "url": "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/jurassic_bunny.mp4",
-  "prompt": "What'\''s happening here"
-}'
-```
-
-</RequestExample>
-
 ## Response
 
 The API returns a JSON object containing the structured description of the video based on the given prompt.

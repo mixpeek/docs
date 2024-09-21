@@ -16,36 +16,73 @@ The `Index by URL` endpoint allows you to index content from a specified URL. Th
   The ID of the collection to index the content into
 </ParamField>
 
-<ParamField body="metadata" type="object" optional>
-  Additional metadata to associate with the indexed content
+<ParamField body="should_save" type="boolean" optional>
+  Whether to save the indexed content (default: true)
 </ParamField>
 
-<ParamField body="settings" type="object" optional>
-  Optional settings for processing the content (e.g., image caption model)
+<ParamField body="settings" type="array" optional>
+  An array of processing settings for the content
 </ParamField>
+
+### Settings Object
+
+<ParamField body="split_interval" type="number" required>
+  The interval (in seconds) at which to split the content for processing
+</ParamField>
+
+<ParamField body="read" type="object" optional>
+  Settings for reading the text in each video interval
+</ParamField>
+
+<ParamField body="embed" type="object" optional>
+  Settings for embedding each video interval
+</ParamField>
+
+<ParamField body="transcribe" type="object" optional>
+  Settings for transcribing each video interval
+</ParamField>
+
+<ParamField body="describe" type="object" optional>
+  Settings for describing the content in each video interval
+</ParamField>
+
+Each processing method (read, embed, transcribe, describe) can have a `model_id` specified. The available models can be found in the [Models](/introduction/models/overview) section.
+
+Additionally, model_ids can be fine-tuned for `out of distribution` data. This can be done by providing a `model_config`.
 
 <RequestExample>
-
-```python Python
-from mixpeek import Mixpeek
-
-mixpeek = Mixpeek('API_KEY')
-
-response = mixpeek.index.url(
-    target_url="https://example.com",
-    collection_id="collection_id",
-    metadata={"key": "value"},
-    settings={"image": {"caption_model_id": "", "model_id": ""}}
-)
-```
 
 ```shell Shell
 curl --location 'https://api.mixpeek.com/index/url' \
 --header 'Authorization: Bearer API_KEY' \
 --header 'Content-Type: application/json' \
 --data '{
-    "url": "http://url/to/file.jpg",
-    "collection_id": "<str>"
+    "url": "https://example.com/video.mp4",
+    "collection_id": "my_collection",
+    "should_save": false,
+    "settings": [
+        {
+            "split_interval": 1,
+            "read": {
+                "model_id": "video-descriptor-v1"
+            },
+            "embed": {
+                "model_id": "vuse-generic-v1"
+            }
+        },
+        {
+            "split_interval": 30,
+            "transcribe": {
+                "model_id": "polyglot-v1"
+            }
+        },
+        {
+            "split_interval": 120,
+            "describe": {
+                "model_id": "video-descriptor-v1"
+            }
+        }
+    ]
 }'
 ```
 

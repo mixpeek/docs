@@ -26,39 +26,3 @@ api: "POST /embed"
   The type of input provided (e.g., "url" for remote URLs, "text" for text or
   "base64" for base64-encoded content).
 </ParamField>
-
-<RequestExample>
-
-```python Python
-from mixpeek import Mixpeek
-
-mixpeek = Mixpeek("API_KEY")
-
-# For video embedding
-embedding = mixpeek.embed.video(
-  model_id="vuse-generic-v1",
-  input="s3://waving_boy.mp4",
-  input_type="url"
-)
-
-# For image embedding
-embedding = mixpeek.embed.image(
-  model_id="openai-clip-vit-base-patch32",
-  input="s3://waving_boy.jpg",
-  input_type="url"
-)
-```
-
-```shell Shell
-curl --location 'https://api.mixpeek.com/embed/{modality}' \
---header 'Authorization: Bearer API_KEY' \
---header 'Content-Type: application/json' \
---data '{
-    "input": "s3://waving_boy.mp4",
-    "modality": "video",
-    "model_id": "vuse-generic-v1",
-    "input_type": "url"
-}'
-```
-
-</RequestExample>

@@ -24,22 +24,46 @@ Once a file is indexed, Mixpeek has automatically pulled out data including, `em
 
 ```json Response
 {
-    "transcriptions": [
+  "groups": [
+    {
+      "split_interval": 1,
+      "segments": [
         {
-            "text": "We are transforming video",
-            "start_time": 0.0,
-            "end_time": 30.0
+          "start_time": 0,
+          "end_time": 1,
+          "text": "# MIT\nTechnology\nReview\n\n"
         }
-        ...
-    ],
-    "descriptions": [
+      ]
+    },
+    {
+      "split_interval": 30,
+      "segments": [
         {
-            "description": "The video is an animation ..."
-            "start_time": 0.0,
-            "end_time": 30.0
+          "start_time": 0,
+          "end_time": 30,
+          "transcription": "To be or not to be"
         }
-        ...
-    ]
+      ]
+    },
+    {
+      "split_interval": 120,
+      "segments": [
+        {
+          "start_time": 0,
+          "end_time": 90.406,
+          "description": "A woman with dark hair is wearing a black sweater against a white "
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "total": 3,
+    "page": 1,
+    "page_size": 10,
+    "total_pages": 1,
+    "next_page": null,
+    "previous_page": null
+  }
 }
 ```
 
