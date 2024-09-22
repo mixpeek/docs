@@ -46,6 +46,11 @@ The `Index by URL` endpoint allows you to index content from a specified URL. Th
   Settings for describing the content in each video interval
 </ParamField>
 
+<ParamField body="detect" type="object" optional>
+  Settings for detecting faces, objects, or other elements in each video
+  interval
+</ParamField>
+
 Each processing method (read, embed, transcribe, describe) can have a `model_id` specified. The available models can be found in the [Models](/introduction/models/overview) section.
 
 Additionally, model_ids can be fine-tuned for `out of distribution` data. This can be done by providing a `model_config`.
@@ -68,6 +73,11 @@ curl --location 'https://api.mixpeek.com/index/url' \
             },
             "embed": {
                 "model_id": "vuse-generic-v1"
+            },
+            "detect": {
+                "faces": {
+                    "model_id": "face-detector-v1"
+                }
             }
         },
         {
