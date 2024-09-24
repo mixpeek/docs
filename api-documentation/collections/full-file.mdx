@@ -1,77 +1,112 @@
 ---
 title: "Full File"
-description: "Retrieve all the contents of a file by its' file_id."
+description: "Retrieve all the contents of a file by its file_id."
 api: "GET /collections/file/<file_id>/full"
 ---
 
-Once a file is indexed, Mixpeek has automatically pulled out data including, `embeddings`, `transcriptions`, `labels`, `descriptions` and more. By calling this API you can retrieve all the indexed data associated with the `file_id`.
+Once a file is indexed, Mixpeek has automatically pulled out data including `embeddings`, `transcriptions`, `labels`, `descriptions`, and more. By calling this API, you can retrieve all the indexed data associated with the `file_id`.
 
 ## Request
 
 <ParamField url="file_id" type="string" required>
-  The ID of the collection to index the content into
+  The ID of the file to retrieve the full contents for
 </ParamField>
 
-<ResponseField name="transcriptions" type="list">
-  lorem
+## Response
+
+<ResponseField name="index_id" type="string">
+  The unique identifier for the indexed file
 </ResponseField>
 
-<ResponseField name="descriptions" type="list">
-  lorem
+<ResponseField name="file_id" type="string">
+  The unique identifier for the file
+</ResponseField>
+
+<ResponseField name="collection_id" type="string">
+  The ID of the collection the file belongs to
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  The current status of the file processing
+</ResponseField>
+
+<ResponseField name="url" type="string">
+  The URL of the original file
+</ResponseField>
+
+<ResponseField name="metadata" type="object">
+  Additional metadata about the file and its context
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  The timestamp when the file was created or indexed
+</ResponseField>
+
+<ResponseField name="video_segments" type="object">
+  Contains grouped segments of the video content
 </ResponseField>
 
 <ResponseExample>
 
 ```json Response
 {
-  "groups": [
-    {
-      "split_interval": 1,
-      "segments": [
-        {
-          "start_time": 0,
-          "end_time": 1,
-          "text": "# **MIT**\nTechnology\nReview\nThis is an AI avatar of Melissa\nHeikkilä created with Synthesia \n",
-          "detect": {
-            "faces": [
-              "faces/face_d7761ea9-ad4c-4940-a97c-f4df806df5e9.jpg",
-              "faces/face_faff0ba5-e768-4d78-affc-b5954e46c471.jpg"
-            ]
-          }
-        }
-        ...
-      ]
-    },
-    {
-      "split_interval": 30,
-      "segments": [
-        {
-          "start_time": 0,
-          "end_time": 30,
-          "transcription": "To be or not to be, that is the question. "
-        }
-        ...
-      ]
-    },
-    {
-      "split_interval": 120,
-      "segments": [
-        {
-          "start_time": 0,
-          "end_time": 90.405013,
-          "description": "The video begins...” \n"
-        }
-        ...
-      ]
+  "index_id": "ix_123",
+  "file_id": "123",
+  "collection_id": "collection_123",
+  "status": null,
+  "url": "file.mp4",
+  "metadata": {
+    "file": {
+      "file_size_bytes": 2074535,
+      "last_modified": "Tue, 20 Aug 2024 03:24:42 GMT",
+      "mime_type": "video/mp4",
+      "file_type": "video"
     }
-  ],
-  "pagination": {
-    "total": 3,
-    "page": 1,
-    "page_size": 10,
-    "total_pages": 1,
-    "next_page": null,
-    "previous_page": null
+    // ... other metadata fields ...
+  },
+  "created_at": "2024-09-24T00:25:57.807000",
+  "video_segments": {
+    "groups": [
+      {
+        "split_interval": 1,
+        "segments": [
+          {
+            "start_time": 0,
+            "end_time": 1,
+            "text": "Cooking Recipe Show"
+          }
+          // ... other 1-second segments ...
+        ]
+      },
+      {
+        "split_interval": 30,
+        "segments": [
+          {
+            "start_time": 0,
+            "end_time": 28.287,
+            "transcription": "If you're like me..."
+          }
+        ]
+      },
+      {
+        "split_interval": 120,
+        "segments": [
+          {
+            "start_time": 0,
+            "end_time": 28.287,
+            "description": "The video segment shows a man..."
+          }
+        ]
+      }
+    ],
+    "pagination": {
+      "total": 3,
+      "page": 1,
+      "page_size": 10,
+      "total_pages": 1,
+      "next_page": null,
+      "previous_page": null
+    }
   }
 }
 ```
