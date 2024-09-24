@@ -8,11 +8,13 @@ iconType: "solid"
 
 [Mixpeek](https://mixpeek.com) provides vision understanding infrastructure for developers.
 
-Using our set of APIs, you can pull out structured data out of videos and images like embeddings, objects, text, and more.
+Videos and images are the most rich sources of information, it's how humans understand the world. However, preparing these visual assets for applications is complex and time-consuming.
 
-These files can come from object storage like Amazon S3 or real-time feeds like RTSP.
+As a developer, you need to build complex pipelines to prepare, chunk, extract and analyze them. Not to mention doing it at scale which requires disributed queuing.
 
-You can use the end-to-end indexing and retrieval APIs (Easy but Rigid) or the SDK methods directly (Flexible but Complex).
+Using the Mixpeek SDK, you can pull out structured data out of videos and images like embeddings, objects, text, and more to build applications like video search, recommendation, and analytics.
+
+You have two options of integrating via end-to-end [indexing](/api-documentation/index/url) and [retrieval](/api-documentation/search/url) APIs (Easy but Rigid) or the [SDK methods](/api-documentation/understand) directly (Flexible but Complex).
 
 ## Demo
 
@@ -111,7 +113,7 @@ response = requests.request("POST", url, headers=headers, data=payload)
 
 This example demonstrates how to index a video file, applying various processing steps at different intervals. Let's break down the key components:
 
-- **split_interval**: This determines how the processing is grouped in seconds. Different operations can be performed at different intervals for efficiency and granularity.
+- **split_interval**: This determines how the processing is grouped in seconds. Different operations can be performed at different intervals for efficiency and granularity. This is useful because some methods like spoken words may not change as frequently as visual content, so you want to index it at longer intervals.
 
 - **Methods**:
   - **read**: Extracts basic information from the video frames.
