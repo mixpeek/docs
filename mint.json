@@ -44,6 +44,11 @@
       "url": "https://mixpeek.com"
     },
     {
+      "name": "Release Notes",
+      "icon": "bell",
+      "url": "https://learn.mixpeek.com/release-notes/"
+    },
+    {
       "name": "Learning Center",
       "icon": "book-bookmark",
       "url": "https://mixpeek.com/learn"
