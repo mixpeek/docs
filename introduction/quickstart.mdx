@@ -11,158 +11,212 @@ iconType: "solid"
   the <a href="https://dash.mixpeek.com/notebooks">Notebooks page</a>
 </Note>
 
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/jkIXzfKBvM0"
+  title="YouTube video player"
+  frameborder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowfullscreen
+></iframe>
+
+## System Flow Diagram
+
+```mermaid
+graph TD
+    B[Mixpeek API] -->|1. Process Video| C[Video Processing]
+    C -->|2. Extract Data| D[Data Extraction]
+    D -->|3. Store Data| E[Mixpeek Database]
+    B -->|4. Fetch File Data| E
+    B -->|5. Query| E
+
+    subgraph Mixpeek
+        B
+        C
+        D
+        E
+    end
+
+    class B,C,D,E mixpeek;
+```
+
 ## Getting Started
 
-First, install the Mixpeek library:
-
-```bash
-pip install --upgrade mixpeek
-```
-
-Then, import the necessary libraries and initialize the Mixpeek client:
+First, import the necessary libraries and initialize the mixpeek api key:
 
 ```python
-import pprint
-from mixpeek import Mixpeek
+import time
+import requests
 
-mixpeek = Mixpeek(api_key="YOUR_API_KEY")
-pp = pprint.PrettyPrinter(indent=4)
-
-# All files for indexing and searching will be sent to this collection
-collection_id = "starter"
+api_key = "sk_123"  # Replace with your Mixpeek API key
 ```
 
-## Simple API
+## Indexing and Retrieving Video Data
 
-### Image
+### Step 1: Index a Video
 
-#### Adding Images to Your Collection
-
-```python
-image_urls = [
-    "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/aussie_jumping.jpg",
-    "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/aussie_running.jpg",
-    "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/aussie_with_ball.jpg",
-]
-
-for image_url in image_urls:
-    index_image_response = mixpeek.index.url(
-        target_url=image_url,
-        collection_id=collection_id
-    )
-    pp.pprint(index_image_response)
-```
-
-#### Text and Image Queries
-
-```python
-# Text query
-text_search_response_image = mixpeek.search.text(
-    input="dog with a ball",
-    filters={"$or": [{"collection_id": collection_id}]},
-    modality="image"
-)
-pp.pprint(text_search_response_image['results'][:3])
-
-# Image query
-url_search_response_image = mixpeek.search.url(
-    target_url="https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/aussie_jumping_with_ball.jpg",
-    filters={"$or": [{"collection_id": collection_id}]},
-    modality="image"
-)
-pp.pprint(url_search_response_image['results'][:3])
-```
-
-### Video
-
-#### Adding Videos to Your Collection
+Start by indexing a video URL. This process will extract various data points from the video based on your specified settings.
 
 ```python
 video_url = "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/aussie_agility.mp4"
 
-index_video_response = mixpeek.index.url(
-    target_url=video_url,
-    collection_id=collection_id
-)
-pp.pprint(index_video_response)
-```
-
-#### Text and Video Queries
-
-```python
-# Text query
-text_search_response_video = mixpeek.search.text(
-    input="dog jumping",
-    filters={"$or": [{"collection_id": collection_id}]},
-    modality="video"
-)
-pp.pprint(text_search_response_video['results'][:3])
-
-# Video query
-text_search_response_video = mixpeek.search.url(
-    target_url="https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/aussie_jumping.mp4",
-    filters={"$or": [{"collection_id": collection_id}]},
-    modality="video"
-)
-pp.pprint(text_search_response_video['results'][:3])
-```
-
-## Custom Toolkit
-
-For more customization over your multimodal embeddings and structured data:
-
-```python
-video_url = "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/aussie_agility.mp4"
-
-# Process video chunks
-processed_chunks = mixpeek.tools.video.process(
-    video_source=video_url,
-    chunk_interval=1,
-    resolution=[720, 1280]
-)
-
-results = []
-for index, chunk in enumerate(processed_chunks):
-    print(f"Processing video chunk: {index}")
-
-    embedding = mixpeek.embed.video(
-        model_id="vuse-generic-v1",
-        input=chunk['base64_chunk'],
-        input_type="base64"
-    )['embedding']
-
-    result = {
-        "start_time": chunk["start_time"],
-        "end_time": chunk["end_time"],
-        "embedding": embedding
+index_response = requests.post(
+    "https://api.mixpeek.com/index/url",
+    headers={
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    },
+    json={
+        "url": video_url,
+        "collection_id": "quickstart",
+        "video_settings": {
+            "interval_sec": 10,
+            "read": {"model_id": "video-descriptor-v1"},
+            "embed": {"model_id": "multimodal-v1"},
+            "transcribe": {"model_id": "polyglot-v1"},
+            "describe": {
+                "model_id": "video-descriptor-v1",
+                "prompt": "Create a holistic description of the video, include sounds and screenplay"
+            },
+            "json_output": {
+                "response_shape": {"emotions": ["str", "str"]},
+                "prompt": "This is a list of emotion labels, each one should be a string representing the scene."
+            }
+        }
     }
-    results.append(result)
-    print(f"Embedded chunk {index}:")
-    print(f"  Start time: {result['start_time']:.2f}s")
-    print(f"  End time: {result['end_time']:.2f}s")
-    print(f"  Embedding preview: {embedding[:5] + ['...'] + embedding[-5:]}")
+)
 
-print(f"Processed {len(results)} chunks")
+task_id = index_response.json()["task_id"]
+print(f"Indexing started. Task ID: {task_id}")
 ```
 
-We can do the same with images
+### Step 2: Poll for Task Status
+
+Check the status of the indexing task until it's complete:
 
 ```python
-# We can also do the same with images
-image_url = "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/aussie_with_ball.jpg"
-base64_img = mixpeek.tools.image.process(image_source=image_url)
+def poll_task_status(task_id):
+    while True:
+        response = requests.get(
+            f"https://api.mixpeek.com/tasks/{task_id}",
+            headers={"Authorization": f"Bearer {mixpeek.api_key}"}
+        )
+        status = response.json()["status"]
+        print(f"Task status: {status}")
+        if status == "DONE":
+            return response.json()["file_id"]
+        time.sleep(10)  # Wait 10 seconds before checking again
 
-embedding = mixpeek.embed.image(
-    model_id="openai-clip-vit-base-patch32",
-    input=base64_img,
-    input_type="base64"
-)['embedding']
+file_id = poll_task_status(task_id)
+print(f"Indexing complete. File ID: {file_id}")
+```
 
-print(f"  Embedding preview: {embedding[:5] + ['...'] + embedding[-5:]}")
+### Step 3: Retrieve Full File Properties
+
+Once the indexing is complete, retrieve the fully extracted video data:
+
+```python
+import json
+
+file_properties = requests.get(
+    f"https://api.mixpeek.com/collections/file/{file_id}/full",
+    headers={"Authorization": f"Bearer {mixpeek.api_key}"}
+).json()
+
+
+{
+  "file_id": "9e82b838-4c88-41b3-83c2-a83232a52024",
+  "collection_id": "quickstart",
+  "status": "DONE",
+  "url": "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/aussie_agility.mp4",
+  "created_at": "2024-03-15T17:43:50.681000",
+  "video_segments": [
+    {
+      "start_time": 0.0,
+      "end_time": 10.0,
+      "transcription": "An Australian Shepherd dog is running through an agility course...",
+      "description": "The video starts with an Australian Shepherd dog running through an outdoor agility course. The dog is black, white, and brown in color. It's a sunny day, and the agility course is set up on grass...",
+      "text": "Australian Shepherd dog agility course",
+      "detect": None,
+      "emotions": ["excited", "focused"]
+    },
+    {
+      "start_time": 10.0,
+      "end_time": 20.0,
+      "transcription": "The dog jumps over hurdles and weaves through poles...",
+      "description": "The Australian Shepherd continues its run through the agility course. It jumps over several hurdles in quick succession, then navigates a series of weave poles with precision...",
+      "text": "Dog jumps hurdles and weaves through poles",
+      "detect": {
+        "faces": {
+            "registered_face_ids: ['face_1', 'face_2'],
+            "face_details": {
+                "face_1": {"age": 5},
+            },
+        },
+      },
+      "emotions": ["determined", "energetic"]
+    },
+  ],
+}
+```
+
+## Searching Indexed Content
+
+With your video indexed, you can now perform text, video or image based searches across your collection:
+
+```python
+search_response = requests.post(
+    "https://api.mixpeek.com/search/text",
+    headers={
+        "Authorization": f"Bearer {mixpeek.api_key}",
+        "Content-Type": "application/json"
+    },
+    json={
+        "input": "dog jumping",
+        "model_id": "multimodal-v1",
+        "filters": {"$or": [{"collection_id": "quickstart"}]}
+    }
+).json()
+
+{
+  "results": [
+    {
+      "modality": "video",
+      "file_id": "9e82b838-4c88-41b3-83c2-a83232a52024",
+      "results": [
+        {
+          "score": 0.8923,
+          "start_time": 10.0,
+          "end_time": 20.0,
+          "description": "The Australian Shepherd continues its run through the agility course. It jumps over several hurdles in quick succession...",
+          "transcription": "The dog jumps over hurdles and weaves through poles...",
+          "text": "Dog jumps hurdles and weaves through poles"
+        },
+        {
+          "score": 0.7845,
+          "start_time": 0.0,
+          "end_time": 10.0,
+          "description": "The video starts with an Australian Shepherd dog running through an outdoor agility course...",
+          "transcription": "An Australian Shepherd dog is running through an agility course...",
+          "text": "Australian Shepherd dog agility course"
+        }
+      ]
+    }
+  ],
+  "pagination": {
+    "total": 1,
+    "page": 1,
+    "page_size": 10,
+    "total_pages": 1,
+    "next_page": None,
+    "previous_page": None
+  }
+}
 ```
 
 ## Next Steps
 
-- Check out <a href="/integrations">file storage integrations</a> (AWS S3, GCP Cloud Storage, Azure Blob Storage) as your unstructured data source
-- Explore <a href="/integrations">database integrations</a> like MongoDB, PostgreSQL, Pinecone, etc. for your structured data
-- Dive into <a href="/use-cases">exciting use cases</a> like Real-Time Video Alerting, Visual Discovery, and Multimodal Search & Retrieval
+- Explore more advanced indexing options in the [API documentation](/api-documentation)
+- Learn about [file storage integrations](/integrations) for various cloud providers
+- Discover [exciting use cases](/use-cases) like Real-Time Video Alerting and Visual Discovery

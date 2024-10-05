@@ -1,132 +1,48 @@
 ---
 title: "Overview"
-icon: "traffic-light"
+icon: "truck-fast"
 iconType: "solid"
 ---
 
 ## What is Mixpeek?
 
-[Mixpeek](https://mixpeek.com) provides vision understanding infrastructure for developers.
+Mixpeek is a powerful vision understanding infrastructure designed for developers. It simplifies the complex process of extracting, analyzing, and utilizing data from visual assets like videos and images. With Mixpeek, you can:
 
-Videos and images are the most rich sources of information, it's how humans understand the world. However, preparing these visual assets for applications is complex and time-consuming.
+- Process and index large volumes of visual content efficiently
+- Extract rich, structured data from videos and images
+- Perform advanced searches across your visual content
+- Integrate sophisticated visual understanding capabilities into your applications
 
-As a developer, you need to build complex pipelines to prepare, chunk, extract and analyze them. Not to mention doing it at scale which requires disributed queuing.
+Mixpeek handles the intricate backend processes, allowing you to focus on building innovative features and applications without worrying about the complexities of visual data processing.
 
-Using the Mixpeek SDK, you can pull out structured data out of videos and images like embeddings, objects, text, and more to build applications like video search, recommendation, and analytics.
+## Quickstart
 
-You have two options of integrating via end-to-end [indexing](/api-documentation/index/url) and [retrieval](/api-documentation/search/url) APIs (Easy but Rigid) or the [SDK methods](/api-documentation/understand) directly (Flexible but Complex).
+To see Mixpeek in action and get started quickly, check out our [Quickstart Guide](/introduction/quickstart). This guide provides a hands-on demonstration of key features like video indexing, data retrieval, and content searching.
 
-## Demo
+## Key Capabilities of Mixpeek
 
-<iframe
-  width="560"
-  height="315"
-  src="https://www.youtube.com/embed/wta3uQCvC28?si=nlWrkUS-ePTyYiNY"
-  title="YouTube video player"
-  frameborder="0"
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-  referrerpolicy="strict-origin-when-cross-origin"
-  allowfullscreen
-></iframe>
+Mixpeek provides powerful vision understanding infrastructure for developers, enabling you to:
 
-## Highlights
+1. **Extract Rich Data from Videos and Images**: Automatically extract embeddings, objects, text, faces, and more from visual assets.
 
-<CardGroup cols={2}>
-  <Card title="Multimodal" icon="layer-group">
-    Supports images and videos out of the box. Extract embeddings, objects,
-    text, faces, and more from visual assets.
-  </Card>
-  <Card title="Storage Agnostic" icon="database">
-    Works with various data sources including object storage e.g., AWS S3,
-    real-time streams (e.g., RTSP), and databases.
-  </Card>
-  <Card title="Flexible" icon="puzzle-piece">
-    Offers multiple methods, SDKs, and integrations for customizable workflows.
-  </Card>
-  <Card title="Scalable" icon="chart-line">
-    Designed to handle large volumes of data and grow with your needs.
-  </Card>
-</CardGroup>
+2. **Perform Multimodal Indexing**: Index your visual content with various processing steps at different intervals for maximum efficiency and granularity.
 
-## Use Cases
+3. **Conduct Advanced Searches**: Search across your indexed content using text, video, or image inputs.
 
-<Note>
-  Check the [use case section](/use-cases) for live demos, code, videos, and
-  guides
-</Note>
+4. **Generate AI-Powered Descriptions**: Automatically create detailed descriptions of video content.
 
-- [Real-Time Video Alerting](/use-cases/video-alerting): Enhance security and monitoring with intelligent video analysis.
-- [Visual Discovery](/use-cases/visual-discovery): Enable users to explore and find visual content intuitively.
-- [Multimodal Search](/use-cases/multimodal-search): Improve search capabilities with rich, multimodal data.
-- [Content Recommendation](/use-cases/content-recommendation): Enhance recommendations using diverse data sources.
-- [Media Analytics](/use-cases/media-analytics): Perform advanced analytics with structured, multimodal data.
-- [Multimodal RAG](/use-cases/multimodal-rag): Power advanced AI models for more accurate and contextually relevant outputs.
-- [Multimodal Generation](/use-cases/multimodal-generation): Create AI-generated content using multimodal inputs.
-- [Content Organization](/use-cases/content-organization): Streamline and manage multimedia content efficiently.
+5. **Transcribe Audio**: Convert speech in videos to text for further analysis or search capabilities.
 
-### Indexing Example
+6. **Detect Emotions and Objects**: Identify emotions and objects present in video scenes.
 
-Here's a sample of how you can use the indexing API:
+7. **Customize Processing**: Tailor the processing to your specific needs with flexible settings and intervals.
 
-```python
-import requests
-import json
+## Value Proposition
 
-url = "https://api.mixpeek.com/index/url"
+By leveraging Mixpeek, you can:
 
-payload = json.dumps({
-    "url": "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/jurassic_bunny.mp4",
-    "collection_id": "starter",
-    "metadata": {"foo": ["foo", "bar"]},
-    "should_save": False,  # Instructs the service not to download, only do this if the file is immutable
-    "settings": [
-        {
-            "split_interval": 1,  # Split intervals are how the processing is grouped (seconds)
-            "read": {
-                "model_id": "video-descriptor-v1"
-            },
-            "embed": {
-                "model_id": "vuse-generic-v1"
-            }
-        },
-        {
-            "split_interval": 30,
-            "transcribe": {
-                "model_id": "polyglot-v1"
-            }
-        },
-        {
-            "split_interval": 120,
-            "describe": {
-                "model_id": "video-descriptor-v1"
-            }
-        }
-    ]
-})
-headers = {
-    'Authorization': 'Bearer MIXPEEK_API_KEY',
-    'Content-Type': 'application/json'
-}
-
-response = requests.request("POST", url, headers=headers, data=payload)
-```
-
-This example demonstrates how to index a video file, applying various processing steps at different intervals. Let's break down the key components:
-
-- **split_interval**: This determines how the processing is grouped in seconds. Different operations can be performed at different intervals for efficiency and granularity. This is useful because some methods like spoken words may not change as frequently as visual content, so you want to index it at longer intervals.
-
-- **Methods**:
-  - **read**: Extracts basic information from the video frames.
-  - **embed**: Generates vector embeddings for the content.
-  - **transcribe**: Converts speech to text.
-  - **describe**: Generates textual descriptions of the video content.
-
-In this example:
-
-- Every 1 second, the video is read and embedded.
-- Every 30 seconds, the audio is transcribed.
-- Every 120 seconds, a description of the video content is generated.
-
-This flexible approach allows for efficient processing tailored to your specific needs.
-
-See the [quick start guide](/introduction/quickstart) to get started.
+- **Save Development Time**: Avoid building complex pipelines for visual asset processing.
+- **Enhance Applications**: Easily add advanced video and image understanding capabilities to your projects.
+- **Scale Effortlessly**: Handle large volumes of visual data without worrying about infrastructure.
+- **Improve User Experience**: Enable intuitive visual search and discovery features in your applications.
+- **Gain Deeper Insights**: Extract valuable information from your visual content for analytics and decision-making.
