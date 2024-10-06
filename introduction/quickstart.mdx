@@ -21,26 +21,6 @@ iconType: "solid"
   allowfullscreen
 ></iframe>
 
-## System Flow Diagram
-
-```mermaid
-graph TD
-    B[Mixpeek API] -->|1. Process Video| C[Video Processing]
-    C -->|2. Extract Data| D[Data Extraction]
-    D -->|3. Store Data| E[Mixpeek Database]
-    B -->|4. Fetch File Data| E
-    B -->|5. Query| E
-
-    subgraph Mixpeek
-        B
-        C
-        D
-        E
-    end
-
-    class B,C,D,E mixpeek;
-```
-
 ## Getting Started
 
 First, install the Mixpeek Python SDK and import the necessary libraries:
