@@ -102,7 +102,7 @@
     },
     {
       "group": "Index",
-      "pages": ["api-documentation/index/url", "api-documentation/index/face"]
+      "pages": ["api-documentation/index/url", "api-documentation/index/upload"]
     },
     {
       "group": "Search",
@@ -110,6 +110,13 @@
         "api-documentation/search/url",
         "api-documentation/search/upload",
         "api-documentation/search/text"
+      ]
+    },
+    {
+      "group": "Register",
+      "pages": [
+        "api-documentation/register/faces",
+        "api-documentation/register/logos"
       ]
     },
     {

@@ -1,0 +1,85 @@
+---
+title: "Logo"
+description: "Register logo for future detection and search operations."
+api: "POST /register/logo"
+---
+
+The `Register Logo` endpoint allows you to register a logo image that can be later used for detection and search operations. This is particularly useful when you want to associate metadata with specific logos for identification purposes.
+
+## Request
+
+<ParamField body="file" type="file" required>
+  The image file containing the logo to register
+</ParamField>
+
+<ParamField body="collection_id" type="string" required>
+  The ID of the collection to associate the logo with
+</ParamField>
+
+<ParamField body="metadata" type="object" optional>
+  Additional metadata to associate with the registered logo
+</ParamField>
+
+<RequestExample>
+
+```python Python
+import requests
+
+url = "https://api.mixpeek.com/register/logo"
+
+payload = {'collection_id': 'brand_logos'}
+files = [
+  ('file', ('logo_image.png', open('/path/to/logo_image.png', 'rb'), 'image/png'))
+]
+headers = {
+  'Authorization': 'Bearer <API_KEY>'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload, files=files)
+
+print(response.text)
+```
+
+```shell Shell
+curl --location 'https://api.mixpeek.com/register/logo' \
+--header 'Authorization: Bearer <API_KEY>' \
+--form 'file=@"/path/to/logo_image.png"' \
+--form 'collection_id="brand_logos"'
+```
+
+</RequestExample>
+
+## Response
+
+<ResponseField name="task_id" type="string">
+  The unique identifier for the asynchronous registration task
+</ResponseField>
+
+<ResponseExample>
+
+```json Response
+{
+  "task_id": "<uuid>",
+  "status": "processing"
+}
+```
+
+</ResponseExample>
+
+The response includes a `task_id` for the asynchronous logo registration task. This task ID can be used to check the status of the registration process.
+
+### Checking Task Status
+
+To check the status of the registration task, you can use the [Task Status](/api-documentation/tasks/status) endpoint:
+
+```
+GET /tasks/<task_id>
+```
+
+Please refer to the [Task Status](/api-documentation/tasks/status) page for more details on how to check the status of your task and retrieve the results.
+
+Once the task is completed, the result will contain the details of the registered logo, including the `logo_id`, `collection_id`, and any associated metadata.
+
+Now when you use the `/understand/detect` method (within `/index`), it will automatically find the registered logo and return the associated metadata.
+
+Additionally, when doing a search, the `logo_id` found will be returned in the search results, allowing you to retrieve the associated metadata.

@@ -1,0 +1,85 @@
+---
+title: "Face"
+description: "Register a face for future detection and search operations."
+api: "POST /register/face"
+---
+
+The `Register Face` endpoint allows you to register a face image that can be later used for detection and search operations. This is particularly useful when you want to associate metadata with specific faces for identification purposes.
+
+## Request
+
+<ParamField body="file" type="file" required>
+  The image file containing the face to register
+</ParamField>
+
+<ParamField body="collection_id" type="string" required>
+  The ID of the collection to associate the face with
+</ParamField>
+
+<ParamField body="metadata" type="object" optional>
+  Additional metadata to associate with the registered face
+</ParamField>
+
+<RequestExample>
+
+```python Python
+import requests
+
+url = "https://api.mixpeek.com/register/face"
+
+payload = {'collection_id': 'starter'}
+files = [
+  ('file', ('face_image.jpg', open('/path/to/face_image.jpg', 'rb'), 'image/jpeg'))
+]
+headers = {
+  'Authorization': 'Bearer <API_KEY>'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload, files=files)
+
+print(response.text)
+```
+
+```shell Shell
+curl --location 'https://api.mixpeek.com/register/face' \
+--header 'Authorization: Bearer <API_KEY>' \
+--form 'file=@"/path/to/face_image.jpg"' \
+--form 'collection_id="starter"'
+```
+
+</RequestExample>
+
+## Response
+
+<ResponseField name="task_id" type="string">
+  The unique identifier for the asynchronous registration task
+</ResponseField>
+
+<ResponseExample>
+
+```json Response
+{
+  "task_id": "<uuid>",
+  "status": "processing"
+}
+```
+
+</ResponseExample>
+
+The response includes a `task_id` for the asynchronous face registration task. This task ID can be used to check the status of the registration process.
+
+### Checking Task Status
+
+To check the status of the registration task, you can use the [Task Status](/api-documentation/tasks/status) endpoint:
+
+```
+GET /tasks/<task_id>
+```
+
+Please refer to the [Task Status](/api-documentation/tasks/status) page for more details on how to check the status of your task and retrieve the results.
+
+Once the task is completed, the result will contain the details of the registered face, including the `face_id`, `collection_id`, and any associated metadata.
+
+Now when you use the `/understand/detect` method (within `/index`), it will automatically find the registered face and return the associated metadata.
+
+Additionally, when doing a search the `face_id` found will be returned in the search results, allowing you to retrieve the associated metadata.
