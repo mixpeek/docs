@@ -43,13 +43,16 @@ graph TD
 
 ## Getting Started
 
-First, import the necessary libraries and initialize the mixpeek api key:
+First, install the Mixpeek Python SDK and import the necessary libraries:
+
+`pip install mixpeek`
 
 ```python
+import mixpeek
 import time
-import requests
 
-api_key = "sk_123"  # Replace with your Mixpeek API key
+# Initialize the Mixpeek client
+client = mixpeek.Client(api_key="sk_123")  # Replace with your Mixpeek API key
 ```
 
 ## Indexing and Retrieving Video Data
@@ -61,55 +64,41 @@ Start by indexing a video URL. This process will extract various data points fro
 ```python
 video_url = "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/aussie_agility.mp4"
 
-index_response = requests.post(
-    "https://api.mixpeek.com/index/url",
-    headers={
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json"
-    },
-    json={
-        "url": video_url,
-        "collection_id": "quickstart",
-        "video_settings": {
-            "interval_sec": 10,
-            "read": {"model_id": "video-descriptor-v1"},
-            "embed": {"model_id": "multimodal-v1"},
-            "transcribe": {"model_id": "polyglot-v1"},
-            "describe": {
-                "model_id": "video-descriptor-v1",
-                "prompt": "Create a holistic description of the video, include sounds and screenplay"
-            },
-            "json_output": {
-                "response_shape": {"emotions": ["str", "str"]},
-                "prompt": "This is a list of emotion labels, each one should be a string representing the scene."
-            }
+task = client.index.url(
+    target_url=video_url,
+    collection_id="quickstart",
+    video_settings={
+        "interval_sec": 10,
+        "read": {"model_id": "video-descriptor-v1"},
+        "embed": {"model_id": "multimodal-v1"},
+        "transcribe": {"model_id": "polyglot-v1"},
+        "describe": {
+            "model_id": "video-descriptor-v1",
+            "prompt": "Create a holistic description of the video, include sounds and screenplay"
+        },
+        "json_output": {
+            "response_shape": {"emotions": ["str", "str"]},
+            "prompt": "This is a list of emotion labels, each one should be a string representing the scene."
         }
     }
 )
 
-task_id = index_response.json()["task_id"]
-print(f"Indexing started. Task ID: {task_id}")
+print(f"Indexing started. Task ID: {task.id}")
 ```
 
-### Step 2: Poll for Task Status
+### Step 2: Wait for Task Completion
 
-Check the status of the indexing task until it's complete:
+Wait for the indexing task to complete:
 
 ```python
-def poll_task_status(task_id):
-    while True:
-        response = requests.get(
-            f"https://api.mixpeek.com/tasks/{task_id}",
-            headers={"Authorization": f"Bearer {mixpeek.api_key}"}
-        )
-        status = response.json()["status"]
-        print(f"Task status: {status}")
-        if status == "DONE":
-            return response.json()["file_id"]
-        time.sleep(10)  # Wait 10 seconds before checking again
+def on_task_update(status):
+    print(f"Current task status: {status}")
 
-file_id = poll_task_status(task_id)
-print(f"Indexing complete. File ID: {file_id}")
+status = task.wait_for_done(
+    sleep_interval=10,
+    callback=on_task_update
+)
+file_id = task.file_id
 ```
 
 ### Step 3: Retrieve Full File Properties
@@ -117,48 +106,69 @@ print(f"Indexing complete. File ID: {file_id}")
 Once the indexing is complete, retrieve the fully extracted video data:
 
 ```python
-import json
-
-file_properties = requests.get(
-    f"https://api.mixpeek.com/collections/file/{file_id}/full",
-    headers={"Authorization": f"Bearer {mixpeek.api_key}"}
-).json()
-
+client.collections.get_full_file(file_id)
 
 {
-  "file_id": "9e82b838-4c88-41b3-83c2-a83232a52024",
-  "collection_id": "quickstart",
-  "status": "DONE",
-  "url": "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/aussie_agility.mp4",
-  "created_at": "2024-03-15T17:43:50.681000",
-  "video_segments": [
-    {
-      "start_time": 0.0,
-      "end_time": 10.0,
-      "transcription": "An Australian Shepherd dog is running through an agility course...",
-      "description": "The video starts with an Australian Shepherd dog running through an outdoor agility course. The dog is black, white, and brown in color. It's a sunny day, and the agility course is set up on grass...",
-      "text": "Australian Shepherd dog agility course",
-      "detect": None,
-      "emotions": ["excited", "focused"]
-    },
-    {
-      "start_time": 10.0,
-      "end_time": 20.0,
-      "transcription": "The dog jumps over hurdles and weaves through poles...",
-      "description": "The Australian Shepherd continues its run through the agility course. It jumps over several hurdles in quick succession, then navigates a series of weave poles with precision...",
-      "text": "Dog jumps hurdles and weaves through poles",
-      "detect": {
-        "faces": {
-            "registered_face_ids: ['face_1', 'face_2'],
-            "face_details": {
-                "face_1": {"age": 5},
-            },
-        },
+  "index_id": "ix_123",
+  "file_id": "123",
+  "collection_id": "collection_123",
+  "status": null,
+  "url": "file.mp4",
+  "metadata": {
+    "file": {
+      "file_size_bytes": 2074535,
+      "last_modified": "Tue, 20 Aug 2024 03:24:42 GMT",
+      "mime_type": "video/mp4",
+      "file_type": "video"
+    }
+    // ... other metadata fields ...
+  },
+  "created_at": "2024-09-24T00:25:57.807000",
+  "video_segments": {
+    "groups": [
+      {
+        "split_interval": 1,
+        "segments": [
+          {
+            "start_time": 0,
+            "end_time": 1,
+            "text": "Cooking Recipe Show"
+          }
+          // ... other 1-second segments ...
+        ]
       },
-      "emotions": ["determined", "energetic"]
-    },
-  ],
+      {
+        "split_interval": 30,
+        "segments": [
+          {
+            "start_time": 0,
+            "end_time": 28.287,
+            "transcription": "If you're like me..."
+          }
+        ]
+      },
+      {
+        "split_interval": 120,
+        "segments": [
+          {
+            "start_time": 0,
+            "end_time": 28.287,
+            "description": "The video segment shows a man..."
+          }
+        ]
+      }
+    ],
+    "pagination": {
+      "total": 3,
+      "page": 1,
+      "page_size": 10,
+      "total_pages": 1,
+      "next_page": null,
+      "previous_page": null
+    }
+  }
 }
+
 ```
 
 ## Searching Indexed Content
@@ -166,53 +176,35 @@ file_properties = requests.get(
 With your video indexed, you can now perform text, video or image based searches across your collection:
 
 ```python
-search_response = requests.post(
-    "https://api.mixpeek.com/search/text",
-    headers={
-        "Authorization": f"Bearer {mixpeek.api_key}",
-        "Content-Type": "application/json"
-    },
-    json={
-        "input": "dog jumping",
-        "model_id": "multimodal-v1",
-        "filters": {"$or": [{"collection_id": "quickstart"}]}
-    }
-).json()
+search_results = client.search.text(
+    input="dog jumping",
+    model_id="multimodal-v1",
+    filters={"$or": [{"collection_id": "quickstart"}]}
+)
 
 {
   "results": [
     {
-      "modality": "video",
-      "file_id": "9e82b838-4c88-41b3-83c2-a83232a52024",
-      "results": [
-        {
-          "score": 0.8923,
-          "start_time": 10.0,
-          "end_time": 20.0,
-          "description": "The Australian Shepherd continues its run through the agility course. It jumps over several hurdles in quick succession...",
-          "transcription": "The dog jumps over hurdles and weaves through poles...",
-          "text": "Dog jumps hurdles and weaves through poles"
-        },
-        {
-          "score": 0.7845,
-          "start_time": 0.0,
-          "end_time": 10.0,
-          "description": "The video starts with an Australian Shepherd dog running through an outdoor agility course...",
-          "transcription": "An Australian Shepherd dog is running through an agility course...",
-          "text": "Australian Shepherd dog agility course"
-        }
-      ]
+      "created_at": "<timestamp>",
+      "caption": "<str>",
+      "file_id": "<uuid>",
+      "collection_id": "<str>",
+      "metadata": {},
+      "url": "<url>",
+      "score": <float>
     }
+    // ... more results ...
   ],
   "pagination": {
-    "total": 1,
-    "page": 1,
-    "page_size": 10,
-    "total_pages": 1,
-    "next_page": None,
-    "previous_page": None
+    "total": <int>,
+    "page": <int>,
+    "page_size": <int>,
+    "total_pages": <int>,
+    "next_page": "https://api.mixpeek.com/search/url?page=<int>&page_size=<int>",
+    "previous_page": null
   }
 }
+
 ```
 
 ## Next Steps
