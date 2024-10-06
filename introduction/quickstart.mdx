@@ -109,64 +109,47 @@ Once the indexing is complete, retrieve the fully extracted video data:
 client.collections.get_full_file(file_id)
 
 {
-  "index_id": "ix_123",
-  "file_id": "123",
-  "collection_id": "collection_123",
-  "status": null,
-  "url": "file.mp4",
-  "metadata": {
-    "file": {
-      "file_size_bytes": 2074535,
-      "last_modified": "Tue, 20 Aug 2024 03:24:42 GMT",
-      "mime_type": "video/mp4",
-      "file_type": "video"
-    }
-    // ... other metadata fields ...
-  },
-  "created_at": "2024-09-24T00:25:57.807000",
-  "video_segments": {
-    "groups": [
-      {
-        "split_interval": 1,
-        "segments": [
-          {
-            "start_time": 0,
-            "end_time": 1,
-            "text": "Cooking Recipe Show"
-          }
-          // ... other 1-second segments ...
-        ]
-      },
-      {
-        "split_interval": 30,
-        "segments": [
-          {
-            "start_time": 0,
-            "end_time": 28.287,
-            "transcription": "If you're like me..."
-          }
-        ]
-      },
-      {
-        "split_interval": 120,
-        "segments": [
-          {
-            "start_time": 0,
-            "end_time": 28.287,
-            "description": "The video segment shows a man..."
-          }
-        ]
-      }
-    ],
-    "pagination": {
-      "total": 3,
-      "page": 1,
-      "page_size": 10,
-      "total_pages": 1,
-      "next_page": null,
-      "previous_page": null
-    }
-  }
+    "index_id": "ix-123",
+    "file_id": "123",
+    "collection_id": "testing-123",
+    "status": "DONE",
+    "metadata": {
+        "file": {
+            "source": "url",
+            "file_name": "123.mp4",
+            "file_extension": ".mp4",
+            "mime_type": "video/mp4",
+            "url": "video.mp4",
+            "file_size_bytes": 1900065,
+            "modality": "video"
+        },
+        "preview_url": "thumbnail.jpg"
+    },
+    "created_at": "2024-10-04T23:27:32.305000",
+    "video_segments": [
+        {
+            "start_time": 0.0,
+            "end_time": 10.0,
+            "text": "GoPure\nLift & Tighten\nNeck Cream\n#gopure \n",
+            "transcription": "Hi I'm back ",
+            "description": "The video starts with a woman...",
+            "embedding": [123],
+            "emotions": [
+                "happy"
+            ]
+        },
+        {
+            "start_time": 10.0,
+            "end_time": 12.0,
+            "text": "GoPure \n#gopure \nP \n",
+            "transcription": "Go Pure ",
+            "emotions": [
+                "happy"
+            ],
+            "embedding": [123],
+            "description": "The woman in the video smiles..."
+        }
+    ]
 }
 
 ```
