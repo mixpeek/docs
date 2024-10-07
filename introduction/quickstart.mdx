@@ -63,7 +63,7 @@ task = client.index.url(
     }
 )
 
-print(f"Indexing started. Task ID: {task.id}")
+print(f"Indexing started. Task ID: {task.task_id}")
 ```
 
 ### Step 2: Wait for Task Completion
@@ -74,11 +74,11 @@ Wait for the indexing task to complete:
 def on_task_update(status):
     print(f"Current task status: {status}")
 
-status = task.wait_for_done(
-    sleep_interval=10,
+response = task.wait_for_done(
+    sleep_interval=2,
     callback=on_task_update
 )
-file_id = task.file_id
+file_id = response['file_id']
 ```
 
 ### Step 3: Retrieve Full File Properties
