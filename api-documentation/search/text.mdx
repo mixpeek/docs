@@ -8,16 +8,12 @@ The `Search by Text` endpoint allows you to search for content using a text quer
 
 ## Request
 
-<ParamField body="input" type="string" required>
+<ParamField body="query" type="string" required>
   The text query to search for
 </ParamField>
 
-<ParamField body="modality" type="string" required>
-  The modality to search in (e.g., "text", "video", "image")
-</ParamField>
-
-<ParamField body="input_type" type="string" required>
-  The type of input (e.g., "text")
+<ParamField body="model_id" type="string" optional>
+  The ID of the model to use for the search (e.g., "multimodal-v1")
 </ParamField>
 
 <ParamField body="filters" type="object" optional>
@@ -26,14 +22,6 @@ The `Search by Text` endpoint allows you to search for content using a text quer
 
 <ParamField body="group_by_file" type="boolean" optional>
   Whether to group results by file
-</ParamField>
-
-<ParamField body="page" type="integer" optional>
-  The page number for pagination
-</ParamField>
-
-<ParamField body="page_size" type="integer" optional>
-  The number of results per page
 </ParamField>
 
 ## Response
