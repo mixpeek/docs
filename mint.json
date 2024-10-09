@@ -8,7 +8,7 @@
   "api": {
     "baseUrl": ["https://api.mixpeek.com"],
     "auth": {
-      "method": "key",
+      "method": "bearer",
       "name": "Authorization"
     }
   },
