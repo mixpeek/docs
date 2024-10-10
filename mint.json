@@ -154,9 +154,9 @@
     {
       "group": "Search",
       "pages": [
-        "api-reference/search/search",
+        "api-reference/search/search-text",
         "api-reference/search/search-url",
-        "api-reference/search/search-video"
+        "api-reference/search/search-file"
       ]
     },
     {
