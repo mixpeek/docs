@@ -102,52 +102,6 @@
       ]
     },
     {
-      "group": "Index",
-      "pages": ["api-documentation/index/url", "api-documentation/index/upload"]
-    },
-    {
-      "group": "Search",
-      "pages": [
-        "api-documentation/search/url",
-        "api-documentation/search/upload",
-        "api-documentation/search/text"
-      ]
-    },
-    {
-      "group": "Register",
-      "pages": [
-        "api-documentation/register/faces",
-        "api-documentation/register/logos"
-      ]
-    },
-    {
-      "group": "Understanding SDK",
-      "pages": [
-        "api-documentation/understand/embed",
-        "api-documentation/understand/describe",
-        "api-documentation/understand/transcribe",
-        "api-documentation/understand/read"
-      ]
-    },
-    {
-      "group": "Tasks",
-      "pages": [
-        "api-documentation/tasks/status",
-        "api-documentation/tasks/cancel"
-      ]
-    },
-    {
-      "group": "Collections",
-      "pages": ["api-documentation/collections/full-file"]
-    },
-    {
-      "group": "Tools",
-      "pages": [
-        "api-documentation/tools/video",
-        "api-documentation/tools/image"
-      ]
-    },
-    {
       "group": "Dashboard",
       "pages": [
         "dashboard/account",
@@ -191,44 +145,6 @@
       ]
     },
     {
-      "group": "Accounts",
-      "pages": [
-        "api-reference/accounts/get-user",
-        "api-reference/accounts/update-user"
-      ]
-    },
-    {
-      "group": "Describing Routes",
-      "pages": [
-        "api-reference/describing-routes/describe-uploaded-video",
-        "api-reference/describing-routes/describe-video-by-url"
-      ]
-    },
-    {
-      "group": "Embedding Routes",
-      "pages": ["api-reference/embedding-routes/embed"]
-    },
-    {
-      "group": "Transcribing Routes",
-      "pages": ["api-reference/transcribing-routes/transcribe-by-url"]
-    },
-    {
-      "group": "Reading Routes",
-      "pages": ["api-reference/reading-routes/test"]
-    },
-    {
-      "group": "Recognizing Routes",
-      "pages": ["api-reference/recognizing-routes/test"]
-    },
-    {
-      "group": "Register",
-      "pages": ["api-reference/register/register-faces"]
-    },
-    {
-      "group": "Agent",
-      "pages": ["api-reference/agent/start-agent"]
-    },
-    {
       "group": "Index",
       "pages": [
         "api-reference/index/index-url",
@@ -244,21 +160,41 @@
       ]
     },
     {
+      "group": "Files",
+      "pages": [
+        "api-reference/files/get-file-details",
+        "api-reference/files/delete-file-by-id",
+        "api-reference/files/update-file-by-id",
+        "api-reference/files/search-files",
+        "api-reference/files/list-files"
+      ]
+    },
+    {
       "group": "Collections",
       "pages": [
-        "api-reference/collections/list-files",
-        "api-reference/collections/search-files",
         "api-reference/collections/list-collections",
-        "api-reference/collections/get-file-by-id",
-        "api-reference/collections/update-file-by-id",
-        "api-reference/collections/delete-file-by-id",
-        "api-reference/collections/get-file-full",
         "api-reference/collections/delete-collection"
       ]
     },
     {
       "group": "Tasks",
       "pages": ["api-reference/tasks/get-task", "api-reference/tasks/kill-task"]
+    },
+    {
+      "group": "Embedding Routes",
+      "pages": ["api-reference/embedding-routes/embed"]
+    },
+    {
+      "group": "Describing Routes",
+      "pages": [
+        "api-reference/describing-routes/describe-uploaded-video",
+        "api-reference/describing-routes/describe-video-by-url"
+      ]
+    },
+
+    {
+      "group": "Register",
+      "pages": ["api-reference/register/register-faces"]
     }
   ],
   "footerSocials": {
