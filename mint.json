@@ -1,6 +1,7 @@
 {
   "name": "Mixpeek",
   "favicon": "/favicon.png",
+  "openapi": "https://api.mixpeek.com/docs/openapi.json",
   "logo": {
     "dark": "/logo/dark.png",
     "light": "/logo/light.png"
@@ -64,8 +65,8 @@
   },
   "tabs": [
     {
-      "name": "API Documentation",
-      "url": "api-documentation"
+      "name": "API Reference",
+      "url": "api-reference"
     },
     {
       "name": "Dashboard",
@@ -188,6 +189,76 @@
           ]
         }
       ]
+    },
+    {
+      "group": "Accounts",
+      "pages": [
+        "api-reference/accounts/get-user",
+        "api-reference/accounts/update-user"
+      ]
+    },
+    {
+      "group": "Describing Routes",
+      "pages": [
+        "api-reference/describing-routes/describe-uploaded-video",
+        "api-reference/describing-routes/describe-video-by-url"
+      ]
+    },
+    {
+      "group": "Embedding Routes",
+      "pages": ["api-reference/embedding-routes/embed"]
+    },
+    {
+      "group": "Transcribing Routes",
+      "pages": ["api-reference/transcribing-routes/transcribe-by-url"]
+    },
+    {
+      "group": "Reading Routes",
+      "pages": ["api-reference/reading-routes/test"]
+    },
+    {
+      "group": "Recognizing Routes",
+      "pages": ["api-reference/recognizing-routes/test"]
+    },
+    {
+      "group": "Register",
+      "pages": ["api-reference/register/register-faces"]
+    },
+    {
+      "group": "Agent",
+      "pages": ["api-reference/agent/start-agent"]
+    },
+    {
+      "group": "Index",
+      "pages": [
+        "api-reference/index/index-url",
+        "api-reference/index/index-upload"
+      ]
+    },
+    {
+      "group": "Search",
+      "pages": [
+        "api-reference/search/search",
+        "api-reference/search/search-url",
+        "api-reference/search/search-video"
+      ]
+    },
+    {
+      "group": "Collections",
+      "pages": [
+        "api-reference/collections/list-files",
+        "api-reference/collections/search-files",
+        "api-reference/collections/list-collections",
+        "api-reference/collections/get-file-by-id",
+        "api-reference/collections/update-file-by-id",
+        "api-reference/collections/delete-file-by-id",
+        "api-reference/collections/get-file-full",
+        "api-reference/collections/delete-collection"
+      ]
+    },
+    {
+      "group": "Tasks",
+      "pages": ["api-reference/tasks/get-task", "api-reference/tasks/kill-task"]
     }
   ],
   "footerSocials": {
