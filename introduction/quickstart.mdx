@@ -23,31 +23,41 @@ iconType: "solid"
 
 ## Getting Started
 
-First, install the Mixpeek Python SDK and import the necessary libraries:
+First, install the required libraries:
 
-`pip install mixpeek`
+`pip install requests`
 
 ```python
-import mixpeek
+import requests
+import json
 import time
 
-# Initialize the Mixpeek client
-client = mixpeek.Client(api_key="sk_123")  # Replace with your Mixpeek API key
+# Replace with your Mixpeek API key
+API_KEY = "sk_OldCtNxFD2Yu744JPWPCUut5h6XihVM7UzZN271R-3kmeJk7NDsRNkG2Ae1K01YK2dI"
+BASE_URL = "https://api.mixpeek.com"
+
+headers = {
+    'Authorization': f'Bearer {API_KEY}',
+    'Content-Type': 'application/json'
+}
 ```
 
 ## Indexing and Retrieving Video Data
 
-### Step 1: Index a Video
+### Step 1: Index and Perform Feature Extraction
 
-Start by indexing a video URL. This process will extract various data points from the video based on your specified settings.
+Start by indexing a video URL:
 
 ```python
-video_url = "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/aussie_agility.mp4"
+url = f"{BASE_URL}/index/url"
 
-task = client.index.url(
-    target_url=video_url,
-    collection_id="quickstart",
-    video_settings={
+payload = json.dumps({
+    "url": "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/aussie_agility.mp4",
+    "collection_id": "quickstart",
+    "metadata": {
+        "hello": "world"
+    }
+    "video_settings": [{
         "interval_sec": 10,
         "read": {"model_id": "video-descriptor-v1"},
         "embed": {"model_id": "multimodal-v1"},
@@ -57,13 +67,15 @@ task = client.index.url(
             "prompt": "Create a holistic description of the video, include sounds and screenplay"
         },
         "json_output": {
-            "response_shape": {"emotions": ["str", "str"]},
+            "response_shape": {"emotions": ["str"]},
             "prompt": "This is a list of emotion labels, each one should be a string representing the scene."
         }
-    }
-)
+    }]
+})
 
-print(f"Indexing started. Task ID: {task.task_id}")
+response = requests.post(url, headers=headers, data=payload)
+task_id = response.json()['task_id']
+print(f"Indexing started. Task ID: {task_id}")
 ```
 
 ### Step 2: Wait for Task Completion
@@ -71,14 +83,19 @@ print(f"Indexing started. Task ID: {task.task_id}")
 Wait for the indexing task to complete:
 
 ```python
-def on_task_update(status):
-    print(f"Current task status: {status}")
+def check_task_status(task_id):
+    url = f"{BASE_URL}/tasks/{task_id}"
+    response = requests.get(url, headers=headers)
+    return response.json()['status']
 
-response = task.wait_for_done(
-    sleep_interval=2,
-    callback=on_task_update
-)
-file_id = response['file_id']
+while True:
+    status = check_task_status(task_id)
+    print(f"Current task status: {status}")
+    if status == 'DONE':
+        break
+    time.sleep(2)
+
+file_id = response.json()['file_id']
 ```
 
 ### Step 3: Retrieve Full File Properties
@@ -86,88 +103,69 @@ file_id = response['file_id']
 Once the indexing is complete, retrieve the fully extracted video data:
 
 ```python
-client.collections.get_full_file(file_id)
+url = f"{BASE_URL}/files/{file_id}?full=true"
 
+response = requests.get(url, headers=headers)
+file_data = response.json()
+print(json.dumps(file_data, indent=2))
+```
+
+```
 {
-    "index_id": "ix-123",
-    "file_id": "123",
-    "collection_id": "testing-123",
-    "status": "DONE",
-    "metadata": {
-        "file": {
-            "source": "url",
-            "file_name": "123.mp4",
-            "file_extension": ".mp4",
-            "mime_type": "video/mp4",
-            "url": "video.mp4",
-            "file_size_bytes": 1900065,
-            "modality": "video"
-        },
-        "preview_url": "thumbnail.jpg"
+    "file": {
+        "file_id": "198dacbb-c7d2-41c3-b008-83ea41b29c31"
     },
-    "created_at": "2024-10-04T23:27:32.305000",
     "video_segments": [
         {
-            "start_time": 0.0,
-            "end_time": 10.0,
-            "text": "GoPure\nLift & Tighten\nNeck Cream\n#gopure \n",
-            "transcription": "Hi I'm back ",
-            "description": "The video starts with a woman...",
-            "embedding": [123],
-            "emotions": [
-                "happy"
-            ]
-        },
-        {
             "start_time": 10.0,
-            "end_time": 12.0,
-            "text": "GoPure \n#gopure \nP \n",
-            "transcription": "Go Pure ",
-            "emotions": [
-                "happy"
-            ],
-            "embedding": [123],
-            "description": "The woman in the video smiles..."
-        }
-    ]
+            "end_time": 20.0,
+            "interval_sec": 10,
+            "transcription": "0:10 Can't lose weight. She might have high cortisol levels. 0:15 Neck, shoulder, and back tension. Often due to \"fight or flight\" stress response. 0:19 Procrastination is a freeze response to trauma. \n",
+            "text": "CORTISOL DETOX\nSomatic Yoga challenge\n",
+            "description": "The video starts with a still image ...",
+            "json_output": {
+                "emotions": [
+                    "neutral"
+                ]
+            }
+        },
+    ],
+    "image_details": null,
+    "pagination": {
+        "total": 12,
+        "page": 1,
+        "page_size": 10,
+        "total_pages": 2,
+        "next_page": "https://api.mixpeek.com/files/198dacbb-c7d2-41c3-b008-83ea41b29c31?page=2&page_size=10",
+        "previous_page": null
+    }
 }
-
 ```
 
 ## Searching Indexed Content
 
-With your video indexed, you can now perform text, video or image based searches across your collection:
+With your video indexed, you can now perform text-based searches across your collection:
 
 ```python
-search_results = client.search.text(
-    input="dog jumping",
-    model_id="multimodal-v1",
-    filters={"$or": [{"collection_id": "quickstart"}]}
-)
+url = f"{BASE_URL}/search/text"
 
-{
-  "results": [
-    {
-      "created_at": "<timestamp>",
-      "caption": "<str>",
-      "file_id": "<uuid>",
-      "collection_id": "<str>",
-      "metadata": {},
-      "url": "<url>",
-      "score": <float>
+payload = json.dumps({
+    "query": "dog jumping",
+    "collection_ids": ["quickstart"],
+    "filters": {
+        "AND": [
+            {
+                "key": "metadata.hello",
+                "value": "world",
+                "operator": "eq"
+            }
+        ]
     }
-    // ... more results ...
-  ],
-  "pagination": {
-    "total": <int>,
-    "page": <int>,
-    "page_size": <int>,
-    "total_pages": <int>,
-    "next_page": "https://api.mixpeek.com/search/url?page=<int>&page_size=<int>",
-    "previous_page": null
-  }
-}
+})
 
+response = requests.post(url, headers=headers, data=payload)
+search_results = response.json()
+print(json.dumps(search_results, indent=2))
 ```
 
 ## Next Steps
