@@ -199,11 +199,7 @@
   ],
   "footerSocials": {
     "website": "https://mixpeek.com/",
-    "community": "https://mixpeek.com/community",
     "github": "https://github.com/mixpeek"
   },
-  "backgroundImage": "/images/background.png",
-  "seo": {
-    "indexHiddenPages": true
-  }
+  "backgroundImage": "/images/background.png"
 }
