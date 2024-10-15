@@ -147,6 +147,7 @@
     {
       "group": "Index",
       "pages": [
+        "api-reference/index/index-text",
         "api-reference/index/index-url",
         "api-reference/index/index-upload"
       ]
