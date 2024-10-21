@@ -161,6 +161,14 @@
       ]
     },
     {
+      "group": "Features",
+      "pages": [
+        "api-reference/features/get-feature-by-id",
+        "api-reference/features/delete-feature-by-id",
+        "api-reference/features/list-features"
+      ]
+    },
+    {
       "group": "Files",
       "pages": [
         "api-reference/files/get-file-details",
@@ -188,17 +196,6 @@
         "api-reference/register/register-faces",
         "api-reference/register/list-logos",
         "api-reference/register/register-logos"
-      ]
-    },
-    {
-      "group": "Embedding Routes",
-      "pages": ["api-reference/embedding-routes/embed"]
-    },
-    {
-      "group": "Describing Routes",
-      "pages": [
-        "api-reference/describing-routes/describe-uploaded-video",
-        "api-reference/describing-routes/describe-video-by-url"
       ]
     }
   ],
