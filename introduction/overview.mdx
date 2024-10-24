@@ -6,14 +6,53 @@ iconType: "solid"
 
 ## What is Mixpeek?
 
-Mixpeek is a powerful vision understanding infrastructure designed for developers. It simplifies the complex process of extracting, analyzing, and utilizing data from visual assets like videos and images. With Mixpeek, you can:
+Mixpeek provides flexible vision understanding infrastructure for developers. It simplifies the process of extracting, analyzing, and utilizing data from visual assets like videos and images.
 
-- Process and index large volumes of visual content efficiently
-- Extract rich, structured data from videos and images
-- Perform advanced searches across your visual content
-- Integrate sophisticated visual understanding capabilities into your applications
+### The Traditional Approach
 
-Mixpeek handles the intricate backend processes, allowing you to focus on building innovative features and applications without worrying about the complexities of visual data processing.
+Today, developers face a complex and time-consuming process to build a robust vision understanding system:
+
+1. **Accept Requests**: Design and implement an API gateway to handle incoming requests
+2. **Manage Data Volumes**: Set up a queuing system (e.g., RabbitMQ, Apache Kafka) to manage large volumes of data
+3. **Content Segmentation**: Develop video/image chunking algorithms to break content into semantically independent segments
+4. **Efficient Processing**: Create a batching system for efficient use of inference services
+5. **Feature Extraction**: Implement asynchronous feature extraction pipelines for various attributes (objects, text, faces, etc.)
+6. **Data Indexing**: Design and build a hierarchical indexing system for efficient data storage and retrieval
+7. **Search Functionality**: Develop a hybrid search functionality that can handle text, image, and video inputs
+8. **Storage Synchronization**: Ensure synchronization with upstream storage systems
+9. **System Reliability**: Implement robust consistency, durability, and availability measures for all components
+10. **Scalability**: Continuously maintain and scale the infrastructure as data volumes grow
+
+This process requires significant time, expertise, and resources to develop and maintain.
+
+```mermaid
+graph TD
+subgraph Mixpeek Solution
+K[Initialize Mixpeek] --> L[Index Content]
+end
+
+subgraph Traditional Approach
+A[Accept Requests] --> B[Manage Data Volumes]
+B --> C[Content Segmentation]
+C --> D[Efficient Processing]
+D --> E[Feature Extraction]
+E --> F[Data Indexing]
+F --> G[Search Functionality]
+G --> H[Storage Synchronization]
+end
+```
+
+### The Mixpeek Solution
+
+Mixpeek handles all of these complex backend processes, allowing you to focus on building innovative features and applications. With Mixpeek, you can achieve the same functionality in just three lines of code:
+
+```python
+from mixpeek import Mixpeek
+
+mp = Mixpeek(api_key="your_api_key")
+mp.index("https://example.com/your_video.mp4")
+mp.search("cat")
+```
 
 ## Quickstart
 
@@ -24,17 +63,11 @@ To see Mixpeek in action and get started quickly, check out our [Quickstart Guid
 Mixpeek provides powerful vision understanding infrastructure for developers, enabling you to:
 
 1. **Extract Rich Data from Videos and Images**: Automatically extract embeddings, objects, text, faces, and more from visual assets.
-
 2. **Perform Multimodal Indexing**: Index your visual content with various processing steps at different intervals for maximum efficiency and granularity.
-
 3. **Conduct Advanced Searches**: Search across your indexed content using text, video, or image inputs.
-
 4. **Generate AI-Powered Descriptions**: Automatically create detailed descriptions of video content.
-
 5. **Transcribe Audio**: Convert speech in videos to text for further analysis or search capabilities.
-
 6. **Detect Emotions and Objects**: Identify emotions and objects present in video scenes.
-
 7. **Customize Processing**: Tailor the processing to your specific needs with flexible settings and intervals.
 
 ## Value Proposition
