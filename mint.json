@@ -145,37 +145,46 @@
       ]
     },
     {
-      "group": "Index",
+      "group": "Accounts",
       "pages": [
-        "api-reference/index/index-text",
-        "api-reference/index/index-url",
-        "api-reference/index/index-upload"
-      ]
-    },
-    {
-      "group": "Search",
-      "pages": [
-        "api-reference/search/search-text",
-        "api-reference/search/search-url",
-        "api-reference/search/search-file"
+        "api-reference/accounts/get-user",
+        "api-reference/accounts/update-user"
       ]
     },
     {
       "group": "Features",
       "pages": [
-        "api-reference/features/get-feature-by-id",
-        "api-reference/features/delete-feature-by-id",
+        "api-reference/features/get-feature",
+        "api-reference/features/delete-feature",
+        "api-reference/features/update-feature",
         "api-reference/features/list-features"
       ]
     },
     {
-      "group": "Files",
+      "group": "Search",
       "pages": [
-        "api-reference/files/get-file-details",
-        "api-reference/files/delete-file-by-id",
-        "api-reference/files/update-file-by-id",
-        "api-reference/files/search-files",
-        "api-reference/files/list-files"
+        "api-reference/search/search-features-by-text",
+        "api-reference/search/search-features-by-url",
+        "api-reference/search/search-features-by-file"
+      ]
+    },
+    {
+      "group": "Assets",
+      "pages": [
+        "api-reference/assets/get-asset",
+        "api-reference/assets/delete-asset-by-id",
+        "api-reference/assets/update-asset-by-id",
+        "api-reference/assets/get-asset-with-features",
+        "api-reference/assets/list-assets",
+        "api-reference/assets/search-assets"
+      ]
+    },
+    {
+      "group": "Index",
+      "pages": [
+        "api-reference/index/index-text",
+        "api-reference/index/index-url",
+        "api-reference/index/index-upload"
       ]
     },
     {
@@ -188,15 +197,6 @@
     {
       "group": "Tasks",
       "pages": ["api-reference/tasks/get-task", "api-reference/tasks/kill-task"]
-    },
-    {
-      "group": "Register",
-      "pages": [
-        "api-reference/register/list-faces",
-        "api-reference/register/register-faces",
-        "api-reference/register/list-logos",
-        "api-reference/register/register-logos"
-      ]
     }
   ],
   "footerSocials": {
