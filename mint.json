@@ -145,10 +145,19 @@
       ]
     },
     {
-      "group": "Accounts",
+      "group": "Index",
       "pages": [
-        "api-reference/accounts/get-user",
-        "api-reference/accounts/update-user"
+        "api-reference/index/index-text",
+        "api-reference/index/index-url",
+        "api-reference/index/index-upload"
+      ]
+    },
+    {
+      "group": "Search",
+      "pages": [
+        "api-reference/search/search-features-by-text",
+        "api-reference/search/search-features-by-url",
+        "api-reference/search/search-features-by-file"
       ]
     },
     {
@@ -161,14 +170,6 @@
       ]
     },
     {
-      "group": "Search",
-      "pages": [
-        "api-reference/search/search-features-by-text",
-        "api-reference/search/search-features-by-url",
-        "api-reference/search/search-features-by-file"
-      ]
-    },
-    {
       "group": "Assets",
       "pages": [
         "api-reference/assets/get-asset",
@@ -177,14 +178,6 @@
         "api-reference/assets/get-asset-with-features",
         "api-reference/assets/list-assets",
         "api-reference/assets/search-assets"
-      ]
-    },
-    {
-      "group": "Index",
-      "pages": [
-        "api-reference/index/index-text",
-        "api-reference/index/index-url",
-        "api-reference/index/index-upload"
       ]
     },
     {
