@@ -148,16 +148,14 @@
       "group": "Index",
       "pages": [
         "api-reference/index/index-text",
-        "api-reference/index/index-url",
-        "api-reference/index/index-upload"
+        "api-reference/index/index-url"
       ]
     },
     {
       "group": "Search",
       "pages": [
         "api-reference/search/search-features-by-text",
-        "api-reference/search/search-features-by-url",
-        "api-reference/search/search-features-by-file"
+        "api-reference/search/search-features-by-url"
       ]
     },
     {
