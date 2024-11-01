@@ -95,7 +95,7 @@ while True:
         break
     time.sleep(2)
 
-file_id = response.json()['file_id']
+asset_id = response.json()['asset_id']
 ```
 
 ### Step 3: Retrieve Full File Properties
@@ -103,18 +103,15 @@ file_id = response.json()['file_id']
 Once the indexing is complete, retrieve the fully extracted video data:
 
 ```python
-url = f"{BASE_URL}/files/{file_id}?full=true"
+url = f"{BASE_URL}/assets/{asset_id}/features"
 
 response = requests.get(url, headers=headers)
-file_data = response.json()
-print(json.dumps(file_data, indent=2))
+asstet_data = response.json()
+print(json.dumps(asstet_data, indent=2))
 ```
 
 ```
 {
-    "file": {
-        "file_id": "198dacbb-c7d2-41c3-b008-83ea41b29c31"
-    },
     "video_segments": [
         {
             "start_time": 10.0,
@@ -130,13 +127,12 @@ print(json.dumps(file_data, indent=2))
             }
         },
     ],
-    "image_details": null,
     "pagination": {
         "total": 12,
         "page": 1,
         "page_size": 10,
         "total_pages": 2,
-        "next_page": "https://api.mixpeek.com/files/198dacbb-c7d2-41c3-b008-83ea41b29c31?page=2&page_size=10",
+        "next_page": "https://api.mixpeek.com/assets/198dacbb-c7d2-41c3-b008-83ea41b29c31?page=2&page_size=10",
         "previous_page": null
     }
 }
@@ -147,7 +143,7 @@ print(json.dumps(file_data, indent=2))
 With your video indexed, you can now perform text-based searches across your collection:
 
 ```python
-url = f"{BASE_URL}/search/text"
+url = f"{BASE_URL}/features/search/text"
 
 payload = json.dumps({
     "query": "dog jumping",
@@ -160,7 +156,9 @@ payload = json.dumps({
                 "operator": "eq"
             }
         ]
-    }
+    },
+    "model_id": "multimodal-v1",
+    "search_type": "semantic"
 })
 
 response = requests.post(url, headers=headers, data=payload)
