@@ -145,6 +145,10 @@
       ]
     },
     {
+      "group": "API Documentation",
+      "pages": ["api-reference/get-started"]
+    },
+    {
       "group": "Index",
       "pages": [
         "api-reference/index/index-text",
