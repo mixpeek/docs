@@ -175,9 +175,9 @@
       "group": "Assets",
       "pages": [
         "api-reference/assets/get-asset",
-        "api-reference/assets/delete-asset-by-id",
-        "api-reference/assets/full-update-asset-by-id",
-        "api-reference/assets/partial-update-asset-by-id",
+        "api-reference/assets/full-asset-update",
+        "api-reference/assets/delete-asset",
+        "api-reference/assets/partial-asset-update",
         "api-reference/assets/get-asset-with-features",
         "api-reference/assets/list-assets",
         "api-reference/assets/search-assets"
