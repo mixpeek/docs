@@ -184,6 +184,15 @@
       ]
     },
     {
+      "group": "Entities",
+      "pages": [
+        "api-reference/entities/register-face",
+        "api-reference/entities/delete-face",
+        "api-reference/entities/update-face",
+        "api-reference/entities/list-faces"
+      ]
+    },
+    {
       "group": "Collections",
       "pages": [
         "api-reference/collections/list-collections",
