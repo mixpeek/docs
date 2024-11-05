@@ -149,26 +149,50 @@
       "pages": ["api-reference/get-started"]
     },
     {
-      "group": "Index",
+      "group": "Health",
+      "pages": ["api-reference/health/healthcheck"]
+    },
+    {
+      "group": "Index Assets",
       "pages": [
-        "api-reference/index/index-text",
-        "api-reference/index/index-url"
+        "api-reference/index-text/index-text",
+        "api-reference/index-images/index-image-url",
+        "api-reference/index-videos/index-video-url"
       ]
     },
     {
-      "group": "Search",
+      "group": "Features",
       "pages": [
-        "api-reference/search/search-features-by-text",
-        "api-reference/search/search-features-by-url"
+        "api-reference/feature-search/search-features-by-text",
+        "api-reference/feature-search/search-features-by-url",
+        "api-reference/feature-search/search-features-by-file",
+        "api-reference/feature-search/submit-search-feedback"
       ]
     },
     {
       "group": "Features",
       "pages": [
         "api-reference/features/get-feature",
+        "api-reference/features/full-feature-update",
         "api-reference/features/delete-feature",
-        "api-reference/features/update-feature",
         "api-reference/features/list-features"
+      ]
+    },
+    {
+      "group": "Face Entities",
+      "pages": [
+        "api-reference/face-entities/register-face",
+        "api-reference/face-entities/delete-face",
+        "api-reference/face-entities/update-face",
+        "api-reference/face-entities/list-faces"
+      ]
+    },
+    {
+      "group": "Label Entities",
+      "pages": [
+        "api-reference/label-entities/delete-label",
+        "api-reference/label-entities/update-label",
+        "api-reference/label-entities/list-labels"
       ]
     },
     {
@@ -181,15 +205,6 @@
         "api-reference/assets/get-asset-with-features",
         "api-reference/assets/list-assets",
         "api-reference/assets/search-assets"
-      ]
-    },
-    {
-      "group": "Entities",
-      "pages": [
-        "api-reference/entities/register-face",
-        "api-reference/entities/delete-face",
-        "api-reference/entities/update-face",
-        "api-reference/entities/list-faces"
       ]
     },
     {
