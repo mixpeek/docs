@@ -95,10 +95,7 @@
       "pages": [
         "introduction/models/overview",
         "introduction/models/fine-tuning",
-        {
-          "group": "Models",
-          "pages": ["introduction/models/mixpeek/vuse-generic-v1"]
-        }
+        "introduction/models/embedding-storage"
       ]
     },
     {

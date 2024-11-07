@@ -1,0 +1,144 @@
+---
+title: "Embedding Storage"
+description: "Guide to storing and retrieving embeddings"
+icon: "database"
+iconType: "solid"
+---
+
+This guide walks you through the process of storing and retrieving embeddings using the Mixpeek API. Follow the steps below to get the full payload on a per feature basis, along with the corresponding named vectors.
+
+### Step 1: Index
+
+First, index your video using the Mixpeek API. You can do this by sending a request to the [Index Video URL](/api-reference/index-videos/index-video-url) endpoint.
+
+```python
+import requests
+import json
+
+url = "https://api.mixpeek.com/index/videos/url"
+
+payload = json.dumps({
+  "url": "video.mp4",
+  "collection_id": "example"
+})
+headers = {
+  'Authorization': 'Bearer API_KEY',
+  'Content-Type': 'application/json'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload)
+```
+
+You'll then get a `task_id` in the response. Use this ID to poll the status of the task.
+
+```json
+{
+  "message": "Video URL processing queued",
+  "task_id": "857056f8-1f0d-4cad-aa37-96757e12872e"
+}
+```
+
+### Step 2: Poll Status
+
+After indexing, poll the status of the task to ensure it has completed. Use the [Get Task](/api-reference/tasks/get-task) endpoint.
+
+```python
+url = "https://api.mixpeek.com/tasks/3f0189c2-2f49-4119-851d-56a5701436a9"
+
+response = requests.request("GET", url, headers=headers)
+```
+
+Which should reeturn this response:
+
+```json
+{
+  "asset_id": "60f391eb-b5ea-41cd-ba75-98d1bca25432",
+  "task_id": "3f0189c2-2f49-4119-851d-56a5701436a9",
+  "status": "DONE"
+}
+```
+
+### Step 3: Get Asset with Features
+
+Once the task is complete, retrieve the asset with its features using the [Get Asset with Features](/api-reference/assets/get-asset-with-features) endpoint.
+
+```python
+url = "https://api.mixpeek.com/assets/60f391eb-b5ea-41cd-ba75-98d1bca25432/features"
+
+response = requests.request("GET", url, headers=headers, data=payload)
+```
+
+```json
+{
+  "asset": {
+    "asset_id": "60f391eb-b5ea-41cd-ba75-98d1bca25432",
+    "collection_id": "example",
+    "status": "DONE",
+    "url": null,
+    "metadata": {
+      "asset": {},
+      "author": "user",
+      "preview_url": null
+    },
+    "error": null,
+    "modality": "text",
+    "task_id": "3f0189c2-2f49-4119-851d-56a5701436a9",
+    "unique_hash": null,
+    "updated_at": "2024-11-07T14:31:56.428000",
+    "created_at": "2024-11-07T14:31:55.473000",
+    "score": null
+  },
+  "features": {
+    "video": [],
+    "image": [],
+    "text": [
+      {
+        "feature_id": "98b693c0-6fc1-4420-97bd-6c4506356230",
+        "modality": "text",
+        "asset_id": "60f391eb-b5ea-41cd-ba75-98d1bca25432",
+        "collection_id": "example",
+        "metadata": {
+          "author": "user"
+        },
+        "text": "two people inside a car",
+        "created_at": "2024-11-07T14:31:56.053031Z"
+      }
+    ],
+    "audio": []
+  }
+}
+```
+
+Iterate through each modality's list of features to access detailed information.
+
+### Step 4: Get Features with Vector
+
+For each feature, retrieve the vectors using the [Get Feature](/api-reference/features/get-feature) endpoint.
+
+```python
+url = "https://api.mixpeek.com/features/98b693c0-6fc1-4420-97bd-6c4506356230?include_vectors=true"
+
+
+response = requests.request("GET", url, headers=headers)
+```
+
+### Example Payload
+
+The following is an example of the full payload you can expect to receive:
+
+```json
+{
+  "created_at": "2024-11-06T18:19:43.340820Z",
+  "asset_id": "cfa6c2a4-b695-4fc2-84df-868391b218e0",
+  "metadata": {},
+  "feature_id": "3086f1ee-62f1-49cf-b859-b553044aebed",
+  "modality": "image",
+  "vectors": {
+    "multimodal-v1": [-0.022097813, 0.021723306]
+  }
+}
+```
+
+This payload provides the full details of the asset and its features, including the named vectors for each modality.
+
+You can then store these vectors in your database for future use, see example database integrations: [Database Integrations](/integrations/databases)
