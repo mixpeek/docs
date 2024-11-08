@@ -49,7 +49,7 @@ headers = {
 Start by indexing a video URL:
 
 ```python
-url = f"{BASE_URL}/index/url"
+url = f"{BASE_URL}/index/videos/url"
 
 payload = json.dumps({
     "url": "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/aussie_agility.mp4",
@@ -110,31 +110,29 @@ asstet_data = response.json()
 print(json.dumps(asstet_data, indent=2))
 ```
 
-```
+```json
 {
-    "video_segments": [
-        {
-            "start_time": 10.0,
-            "end_time": 20.0,
-            "interval_sec": 10,
-            "transcription": "0:10 Can't lose weight. She might have high cortisol levels. 0:15 Neck, shoulder, and back tension. Often due to \"fight or flight\" stress response. 0:19 Procrastination is a freeze response to trauma. \n",
-            "text": "CORTISOL DETOX\nSomatic Yoga challenge\n",
-            "description": "The video starts with a still image ...",
-            "json_output": {
-                "emotions": [
-                    "neutral"
-                ]
-            }
-        },
+  "asset": {
+    "asset_id": "c2ea4838-f6bd-4bc5-892b-a98e22c3b8fd",
+    "collection_id": "quickstart",
+    "status": "DONE",
+    "url": "video.mp4",
+    "modality": "video"
+  },
+  "features": {
+    "video": [
+      {
+        "start_time": 0.0,
+        "end_time": 5.0,
+        "interval_sec": 60,
+        "modality": "video",
+        "created_at": "2024-11-08T16:56:01.330858Z"
+      }
     ],
-    "pagination": {
-        "total": 12,
-        "page": 1,
-        "page_size": 10,
-        "total_pages": 2,
-        "next_page": "https://api.mixpeek.com/assets/198dacbb-c7d2-41c3-b008-83ea41b29c31?page=2&page_size=10",
-        "previous_page": null
-    }
+    "image": [],
+    "text": [],
+    "audio": []
+  }
 }
 ```
 
@@ -157,7 +155,6 @@ payload = json.dumps({
             }
         ]
     },
-    "model_id": "multimodal-v1",
     "search_type": "semantic"
 })
 
