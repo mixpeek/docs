@@ -84,11 +84,7 @@
   "navigation": [
     {
       "group": "Introduction",
-      "pages": [
-        "introduction/overview",
-        "introduction/quickstart",
-        "introduction/faq"
-      ]
+      "pages": ["introduction/quickstart", "introduction/faq"]
     },
     {
       "group": "Models",
