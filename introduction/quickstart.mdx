@@ -106,8 +106,8 @@ Once the indexing is complete, retrieve the fully extracted video data:
 url = f"{BASE_URL}/assets/{asset_id}/features"
 
 response = requests.get(url, headers=headers)
-asstet_data = response.json()
-print(json.dumps(asstet_data, indent=2))
+asset_data = response.json()
+print(json.dumps(asset_data, indent=2))
 ```
 
 ```json

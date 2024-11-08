@@ -1,0 +1,32 @@
+### Video Resizer
+
+```python
+import subprocess
+
+def resize_video(input_file, output_file, fps=30, resolution="1280x720"):
+    """
+    Resize a video using ffmpeg by changing its frame rate and resolution.
+
+    :param input_file: Path to the input video file.
+    :param output_file: Path to save the resized video.
+    :param fps: Desired frames per second.
+    :param resolution: Desired resolution (e.g., "1280x720").
+    """
+    command = [
+        'ffmpeg',
+        '-i', input_file,
+        '-r', str(fps),
+        '-s', resolution,
+        '-c:a', 'copy',  # Copy audio without re-encoding
+        output_file
+    ]
+
+    try:
+        subprocess.run(command, check=True)
+        print(f"Video resized successfully: {output_file}")
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred: {e}")
+
+# Example usage
+resize_video('input.mp4', 'output.mp4', fps=24, resolution='640x360')
+```
