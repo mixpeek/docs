@@ -69,10 +69,6 @@
       "url": "api-reference"
     },
     {
-      "name": "Dashboard",
-      "url": "dashboard"
-    },
-    {
       "name": "Use Cases",
       "url": "use-cases"
     },
@@ -92,14 +88,6 @@
         "introduction/models/overview",
         "introduction/models/fine-tuning",
         "introduction/models/embedding-storage"
-      ]
-    },
-    {
-      "group": "Dashboard",
-      "pages": [
-        "dashboard/account",
-        "dashboard/collections",
-        "dashboard/search"
       ]
     },
     {
