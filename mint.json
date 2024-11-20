@@ -78,14 +78,6 @@
       "pages": ["introduction/quickstart", "introduction/faq"]
     },
     {
-      "group": "Models",
-      "pages": [
-        "introduction/models/overview",
-        "introduction/models/fine-tuning",
-        "introduction/models/embedding-storage"
-      ]
-    },
-    {
       "group": "Introduction",
       "pages": ["use-cases/overview"]
     },
