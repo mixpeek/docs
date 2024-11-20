@@ -53,11 +53,6 @@
       "name": "Learning Center",
       "icon": "book-bookmark",
       "url": "https://mixpeek.com/learn"
-    },
-    {
-      "name": "Industry Solutions",
-      "icon": "lightbulb",
-      "url": "https://mixpeek.com/solutions"
     }
   ],
   "primaryTab": {
@@ -134,20 +129,17 @@
       "pages": ["api-reference/health/healthcheck"]
     },
     {
-      "group": "Index Assets",
-      "pages": [
-        "api-reference/index-text/index-text",
-        "api-reference/index-images/index-image-url",
-        "api-reference/index-videos/index-video-url"
-      ]
+      "group": "Multimodal Search",
+      "pages": ["api-reference/features/search-features"]
     },
     {
-      "group": "Features",
+      "group": "Multimodal Index",
       "pages": [
-        "api-reference/feature-search/search-features-by-text",
-        "api-reference/feature-search/search-features-by-url",
-        "api-reference/feature-search/search-features-by-file",
-        "api-reference/feature-search/submit-search-feedback"
+        "api-reference/index/index-text",
+        "api-reference/index/index-video-url",
+        "api-reference/index/index-video-upload",
+        "api-reference/index/index-image-url",
+        "api-reference/index/index-image-upload"
       ]
     },
     {
@@ -160,20 +152,34 @@
       ]
     },
     {
-      "group": "Face Entities",
+      "group": "Namespaces",
       "pages": [
-        "api-reference/face-entities/register-face",
-        "api-reference/face-entities/delete-face",
-        "api-reference/face-entities/update-face",
-        "api-reference/face-entities/list-faces"
+        "api-reference/namespaces/list-namespaces",
+        "api-reference/namespaces/create-namespace",
+        "api-reference/namespaces/update-namespace",
+        "api-reference/namespaces/delete-namespace",
+        "api-reference/namespaces/list-available-indexes"
       ]
     },
     {
-      "group": "Label Entities",
+      "group": "Search Interactions",
       "pages": [
-        "api-reference/label-entities/delete-label",
-        "api-reference/label-entities/update-label",
-        "api-reference/label-entities/list-labels"
+        "api-reference/search-interactions/list-interactions",
+        "api-reference/search-interactions/create-interaction",
+        "api-reference/search-interactions/get-interaction",
+        "api-reference/search-interactions/delete-interaction"
+      ]
+    },
+    {
+      "group": "Entities",
+      "pages": [
+        "api-reference/entities/register-face",
+        "api-reference/entities/delete-face",
+        "api-reference/entities/update-face",
+        "api-reference/entities/list-faces",
+        "api-reference/entities/delete-taxonomy",
+        "api-reference/entities/update-taxonomy",
+        "api-reference/entities/list-taxonomies"
       ]
     },
     {
@@ -187,6 +193,10 @@
         "api-reference/assets/list-assets",
         "api-reference/assets/search-assets"
       ]
+    },
+    {
+      "group": "Accounts",
+      "pages": ["api-reference/accounts/get-usage"]
     },
     {
       "group": "Collections",
