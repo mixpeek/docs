@@ -200,6 +200,10 @@
     {
       "group": "Tasks",
       "pages": ["api-reference/tasks/get-task", "api-reference/tasks/kill-task"]
+    },
+    {
+      "group": "Feature Extractors",
+      "pages": ["api-reference/feature-extractors/extract-embeddings"]
     }
   ],
   "footerSocials": {

@@ -30,7 +30,6 @@ First, install the required libraries:
 ```python
 import requests
 import json
-import time
 
 # Replace with your Mixpeek API key
 API_KEY = "YOUR_API_KEY"
@@ -40,125 +39,173 @@ headers = {
     'Authorization': f'Bearer {API_KEY}',
     'Content-Type': 'application/json'
 }
+
+# Optional: Set namespace for data isolation
+namespace_headers = {
+    **headers,
+    'X-Namespace': 'quickstart'  # Example namespace
+}
 ```
 
-## Indexing and Retrieving Video Data
+## Creating a Namespace
 
-### Step 1: Index and Perform Feature Extraction
+First, let's create a namespace with both text and vector indexes:
 
-Start by indexing a video URL:
+```python
+url = f"{BASE_URL}/namespaces"
+
+payload = {
+    "namespace_id": "spotify_playlists_dev",
+    "vector_indexes": ["image_vector", "multimodal_vector", "text_vector", "keyword_vector"],
+    "payload_indexes": [
+        {
+            "field_name": "metadata.title",
+            "type": "text"
+        },
+        {
+            "field_name": "metadata.description",
+            "type": "keyword"
+        }
+    ]
+}
+
+response = requests.post(url, headers=headers, json=payload)
+print(json.dumps(response.json(), indent=2))
+```
+
+## Indexing Content
+
+You can index various types of content including images, videos, and text:
+
+### Image Indexing
+
+```python
+url = f"{BASE_URL}/index/images/url"
+
+image_payload = {
+    "url": "https://example.com/sample-image.jpg",
+    "collection_id": "quickstart",
+    "metadata": {
+        "title": "Sample Image",
+        "category": "demo"
+    },
+    "feature_extractors": {
+        "embed": [
+            {
+                "type": "url",
+                "vector_name": "image_vector"
+            }
+        ],
+        "describe": {
+            "enabled": True,
+            "vector_name": "text_vector"
+        }
+    }
+}
+
+response = requests.post(url, headers=namespace_headers, json=image_payload)
+print(json.dumps(response.json(), indent=2))
+```
+
+### Video Indexing
 
 ```python
 url = f"{BASE_URL}/index/videos/url"
 
-payload = json.dumps({
-    "url": "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/aussie_agility.mp4",
+video_payload = {
+    "url": "https://example.com/sample-video.mp4",
     "collection_id": "quickstart",
     "metadata": {
-        "hello": "world"
+        "title": "Sample Video",
+        "category": "demo"
     },
-    "video_settings": [{
-        "interval_sec": 10,
-        "read": {"model_id": "video-descriptor-v1"},
-        "embed": {"model_id": "multimodal-v1"},
-        "transcribe": {"model_id": "polyglot-v1"},
-        "describe": {
-            "model_id": "video-descriptor-v1",
-            "prompt": "Create a holistic description of the video, include sounds and screenplay"
-        },
-        "json_output": {
-            "response_shape": {"emotions": ["str"]},
-            "prompt": "This is a list of emotion labels, each one should be a string representing the scene."
-        }
+    "feature_extractors": [{
+        "interval_sec": 15,
+        "embed": [
+            {
+                "type": "url",
+                "vector_name": "multimodal_vector"
+            }
+        ],
+        "transcribe": {"enabled": True},
+        "describe": {"enabled": True}
     }]
-})
-
-response = requests.post(url, headers=headers, data=payload)
-task_id = response.json()['task_id']
-print(f"Indexing started. Task ID: {task_id}")
-```
-
-### Step 2: Wait for Task Completion
-
-Wait for the indexing task to complete:
-
-```python
-def check_task_status(task_id):
-    url = f"{BASE_URL}/tasks/{task_id}"
-    response = requests.get(url, headers=headers)
-    return response.json()['status']
-
-while True:
-    status = check_task_status(task_id)
-    print(f"Current task status: {status}")
-    if status == 'DONE':
-        break
-    time.sleep(2)
-
-asset_id = response.json()['asset_id']
-```
-
-### Step 3: Retrieve Full File Properties
-
-Once the indexing is complete, retrieve the fully extracted video data:
-
-```python
-url = f"{BASE_URL}/assets/{asset_id}/features"
-
-response = requests.get(url, headers=headers)
-asset_data = response.json()
-print(json.dumps(asset_data, indent=2))
-```
-
-```json
-{
-  "asset": {
-    "asset_id": "c2ea4838-f6bd-4bc5-892b-a98e22c3b8fd",
-    "collection_id": "quickstart",
-    "status": "DONE",
-    "url": "video.mp4",
-    "modality": "video"
-  },
-  "features": {
-    "video": [
-      {
-        "start_time": 0.0,
-        "end_time": 5.0,
-        "interval_sec": 60,
-        "modality": "video",
-        "created_at": "2024-11-08T16:56:01.330858Z"
-      }
-    ],
-    "image": [],
-    "text": [],
-    "audio": []
-  }
 }
+
+response = requests.post(url, headers=namespace_headers, json=video_payload)
+print(json.dumps(response.json(), indent=2))
 ```
 
-## Searching Indexed Content
-
-With your video indexed, you can now perform text-based searches across your collection:
+### Text Indexing
 
 ```python
-url = f"{BASE_URL}/features/search/text"
+url = f"{BASE_URL}/index/text"
 
-payload = json.dumps({
-    "query": "dog jumping",
+text_payload = {
+    "collection_id": "quickstart",
+    "metadata": {
+        "title": "Sample Text",
+        "category": "demo"
+    },
+    "feature_extractors": {
+        "embed": [
+            {
+                "field_name": "content",
+                "type": "text",
+                "value": "Your text content here",
+                "vector_name": "text_vector"
+            }
+        ]
+    }
+}
+
+response = requests.post(url, headers=namespace_headers, json=text_payload)
+print(json.dumps(response.json(), indent=2))
+```
+
+## Searching Content
+
+Now you can perform both text and vector searches across your collections:
+
+```python
+url = f"{BASE_URL}/features/search"
+
+payload = {
+    "queries": [
+        # Text vector search
+        {
+            "vector_index": "text_vector",
+            "value": "dog jumping in the park",
+            "type": "text",
+            "settings": {
+                "limit": 10,
+                "relevance_threshold": 0.5
+            }
+        },
+        # Image vector search (using URL)
+        {
+            "vector_index": "image_vector",
+            "value": "https://example.com/sample-image.jpg",
+            "type": "url",
+            "settings": {
+                "limit": 10,
+                "relevance_threshold": 0.7
+            }
+        }
+    ],
     "collection_ids": ["quickstart"],
     "filters": {
         "AND": [
             {
-                "key": "metadata.hello",
-                "value": "world",
+                "key": "metadata.category",
+                "value": "animals",
                 "operator": "eq"
             }
         ]
-    },
-    "search_type": "semantic"
-})
+    }
+}
 
-response = requests.post(url, headers=headers, data=payload)
+response = requests.post(url, headers=namespace_headers, json=payload)
 search_results = response.json()
 print(json.dumps(search_results, indent=2))
 ```
