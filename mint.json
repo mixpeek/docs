@@ -94,44 +94,32 @@
       ]
     },
     {
-      "group": "Integrations",
+      "group": "Databases",
       "pages": [
-        "integrations/overview",
-        {
-          "group": "Databases",
-          "pages": [
-            "integrations/databases/timescale",
-            "integrations/databases/mongodb",
-            "integrations/databases/supabase",
-            "integrations/databases/postgresql",
-            "integrations/databases/pinecone",
-            "integrations/databases/weaviate",
-            "integrations/databases/qdrant",
-            "integrations/databases/redis"
-          ]
-        }
+        "integrations/databases/timescale",
+        "integrations/databases/mongodb",
+        "integrations/databases/supabase",
+        "integrations/databases/postgresql",
+        "integrations/databases/pinecone",
+        "integrations/databases/weaviate",
+        "integrations/databases/qdrant",
+        "integrations/databases/redis"
       ]
-    },
-    {
-      "group": "API Documentation",
-      "pages": ["api-reference/get-started"]
     },
     {
       "group": "Health",
       "pages": ["api-reference/health/healthcheck"]
     },
     {
-      "group": "Multimodal Search",
+      "group": "Multimodal Searching",
       "pages": ["api-reference/features/search-features"]
     },
     {
-      "group": "Multimodal Index",
+      "group": "Multimodal Indexing",
       "pages": [
         "api-reference/index/index-text",
         "api-reference/index/index-video-url",
-        "api-reference/index/index-video-upload",
-        "api-reference/index/index-image-url",
-        "api-reference/index/index-image-upload"
+        "api-reference/index/index-image-url"
       ]
     },
     {

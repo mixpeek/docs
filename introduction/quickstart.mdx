@@ -39,38 +39,6 @@ headers = {
     'Authorization': f'Bearer {API_KEY}',
     'Content-Type': 'application/json'
 }
-
-# Optional: Set namespace for data isolation
-namespace_headers = {
-    **headers,
-    'X-Namespace': 'quickstart'  # Example namespace
-}
-```
-
-## Creating a Namespace
-
-First, let's create a namespace with both text and vector indexes:
-
-```python
-url = f"{BASE_URL}/namespaces"
-
-payload = {
-    "namespace_id": "spotify_playlists_dev",
-    "vector_indexes": ["image_vector", "multimodal_vector", "text_vector", "keyword_vector"],
-    "payload_indexes": [
-        {
-            "field_name": "metadata.title",
-            "type": "text"
-        },
-        {
-            "field_name": "metadata.description",
-            "type": "keyword"
-        }
-    ]
-}
-
-response = requests.post(url, headers=headers, json=payload)
-print(json.dumps(response.json(), indent=2))
 ```
 
 ## Indexing Content
@@ -93,17 +61,17 @@ image_payload = {
         "embed": [
             {
                 "type": "url",
-                "vector_name": "image_vector"
+                "vector_name": "image"
             }
         ],
         "describe": {
             "enabled": True,
-            "vector_name": "text_vector"
+            "vector_name": "text"
         }
     }
 }
 
-response = requests.post(url, headers=namespace_headers, json=image_payload)
+response = requests.post(url, headers=headers, json=image_payload)
 print(json.dumps(response.json(), indent=2))
 ```
 
@@ -124,7 +92,7 @@ video_payload = {
         "embed": [
             {
                 "type": "url",
-                "vector_name": "multimodal_vector"
+                "vector_name": "multimodal"
             }
         ],
         "transcribe": {"enabled": True},
@@ -132,7 +100,7 @@ video_payload = {
     }]
 }
 
-response = requests.post(url, headers=namespace_headers, json=video_payload)
+response = requests.post(url, headers=headers, json=video_payload)
 print(json.dumps(response.json(), indent=2))
 ```
 
@@ -153,13 +121,13 @@ text_payload = {
                 "field_name": "content",
                 "type": "text",
                 "value": "Your text content here",
-                "vector_name": "text_vector"
+                "vector_name": "text"
             }
         ]
     }
 }
 
-response = requests.post(url, headers=namespace_headers, json=text_payload)
+response = requests.post(url, headers=headers, json=text_payload)
 print(json.dumps(response.json(), indent=2))
 ```
 
@@ -174,7 +142,7 @@ payload = {
     "queries": [
         # Text vector search
         {
-            "vector_index": "text_vector",
+            "vector_index": "text",
             "value": "dog jumping in the park",
             "type": "text",
             "settings": {
@@ -184,7 +152,7 @@ payload = {
         },
         # Image vector search (using URL)
         {
-            "vector_index": "image_vector",
+            "vector_index": "image",
             "value": "https://example.com/sample-image.jpg",
             "type": "url",
             "settings": {
@@ -205,7 +173,7 @@ payload = {
     }
 }
 
-response = requests.post(url, headers=namespace_headers, json=payload)
+response = requests.post(url, headers=headers, json=payload)
 search_results = response.json()
 print(json.dumps(search_results, indent=2))
 ```
