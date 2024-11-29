@@ -1,0 +1,227 @@
+---
+title: "Queries"
+---
+
+Search queries in Mixpeek allow you to search across multiple modalities (text, images, videos) simultaneously using an array of query objects.
+
+## Understanding Queries
+
+### Query Types
+
+1. **Text Queries**
+
+   - Natural language text
+   - Keywords and phrases
+   - Semantic understanding
+   - Language support
+
+2. **URL Queries**
+
+   - Image URLs
+   - Video URLs
+   - Document URLs
+   - Web content
+
+3. **Vector Indexes**
+   - `text`: Text embeddings
+   - `image`: Image embeddings
+   - `video`: Video embeddings
+   - `multimodal`: Cross-modal embeddings
+
+## Query Structure
+
+### Basic Query
+
+```json
+{
+  "queries": [
+    {
+      "type": "text",
+      "value": "red sports car",
+      "vector_index": "text"
+    }
+  ]
+}
+```
+
+### Multi-Modal Query
+
+```json
+{
+  "queries": [
+    {
+      "type": "url",
+      "value": "https://example.com/dog.jpg",
+      "vector_index": "image"
+    },
+    {
+      "type": "text",
+      "value": "playful golden retriever",
+      "vector_index": "text"
+    }
+  ]
+}
+```
+
+## Query Parameters
+
+### Required Fields
+
+| Field          | Type   | Description                  |
+| -------------- | ------ | ---------------------------- |
+| `type`         | string | Query type ("text" or "url") |
+| `value`        | string | The query content            |
+| `vector_index` | string | Index to search against      |
+
+### Optional Fields
+
+| Field       | Type   | Description              |
+| ----------- | ------ | ------------------------ |
+| `settings`  | object | Query-specific settings  |
+| `weights`   | object | Importance of each query |
+| `threshold` | number | Minimum relevance score  |
+
+## Result Combination
+
+### Reciprocal Rank Fusion (RRF)
+
+When multiple queries are provided, results are combined using RRF:
+
+1. Each query runs independently
+2. Results are ranked within each query
+3. RRF score calculated for each item
+4. Final results ordered by combined RRF score
+
+### RRF Formula
+
+```
+RRF Score = sum(1 / (k + r)) for each rank r
+where k = constant (default: 60)
+```
+
+## Common Use Cases
+
+### Visual Search
+
+1. **Similar Image Search**
+
+```json
+{
+  "queries": [
+    {
+      "type": "url",
+      "value": "https://example.com/product.jpg",
+      "vector_index": "image"
+    }
+  ]
+}
+```
+
+### Hybrid Search
+
+1. **Image + Text**
+
+```json
+{
+  "queries": [
+    {
+      "type": "url",
+      "value": "https://example.com/scene.jpg",
+      "vector_index": "image"
+    },
+    {
+      "type": "text",
+      "value": "urban landscape at night",
+      "vector_index": "text"
+    }
+  ]
+}
+```
+
+## Limitations
+
+### Technical Constraints
+
+1. **Query Limits**
+
+   - Maximum 5 queries per request
+   - URL size restrictions
+   - Text length limits
+   - Response time constraints
+
+2. **URL Requirements**
+
+   - Must be publicly accessible
+   - Supported formats only
+   - Size limitations
+   - Valid URL structure
+
+3. **Processing Limits**
+   - Timeout thresholds
+   - Resource constraints
+   - Rate limits
+   - Concurrent query limits
+
+## Best Practices
+
+### Query Optimization
+
+1. **Query Selection**
+
+   - Choose appropriate types
+   - Use relevant vector indexes
+   - Balance query count
+   - Consider performance
+
+2. **Performance Tips**
+   - Limit number of queries
+   - Optimize query content
+   - Use appropriate indexes
+   - Monitor response times
+
+### Common Patterns
+
+1. **Progressive Enhancement**
+
+   - Start with single modality
+   - Add complementary queries
+   - Monitor result quality
+   - Adjust as needed
+
+2. **Result Refinement**
+   - Use specific queries
+   - Combine modalities effectively
+   - Apply appropriate weights
+   - Set relevant thresholds
+
+## Error Handling
+
+### Common Issues
+
+1. **Invalid Queries**
+
+   - Unsupported types
+   - Invalid URLs
+   - Missing fields
+   - Wrong index types
+
+2. **Performance Problems**
+   - Too many queries
+   - Large content size
+   - Slow processing
+   - Timeout issues
+
+### Resolution Steps
+
+1. **Query Validation**
+
+   - Check query types
+   - Validate URLs
+   - Verify indexes
+   - Test query combinations
+
+2. **Performance Optimization**
+   - Reduce query count
+   - Optimize content size
+   - Use appropriate indexes
+   - Monitor processing time

@@ -1,0 +1,155 @@
+---
+title: "Filters"
+---
+
+Search filters allow you to narrow down results based on specific criteria using logical operators and field conditions.
+
+## Understanding Filters
+
+### Filter Types
+
+1. **Logical Operators**
+
+   - `AND`: All conditions must match
+   - `OR`: Any condition can match
+   - `NOR`: No conditions should match
+
+2. **Field Operators**
+   - `eq`: Exact match
+   - `neq`: Not equal
+   - `gt`: Greater than
+   - `gte`: Greater than or equal
+   - `lt`: Less than
+   - `lte`: Less than or equal
+   - `in`: Value in array
+   - `nin`: Value not in array
+   - `exists`: Field exists
+   - `regex`: Regular expression match
+
+## Filter Structure
+
+### Basic Filter
+
+```json
+{
+  "filters": {
+    "AND": [
+      {
+        "key": "category",
+        "operator": "eq",
+        "value": "electronics"
+      }
+    ]
+  }
+}
+```
+
+### Complex Filter
+
+```json
+{
+  "filters": {
+    "case_sensitive": true,
+    "AND": [
+      {
+        "key": "price",
+        "operator": "gte",
+        "value": 100
+      },
+      {
+        "key": "in_stock",
+        "operator": "eq",
+        "value": true
+      }
+    ],
+    "OR": [
+      {
+        "key": "category",
+        "operator": "eq",
+        "value": "electronics"
+      },
+      {
+        "key": "category",
+        "operator": "eq",
+        "value": "accessories"
+      }
+    ],
+    "NOR": [
+      {
+        "key": "status",
+        "operator": "eq",
+        "value": "discontinued"
+      }
+    ]
+  }
+}
+```
+
+## Best Practices
+
+### Performance Optimization
+
+- Use indexed fields for filtering
+- Combine related conditions under single operators
+- Order conditions from most to least selective
+- Use appropriate operators for data types
+
+### Common Use Cases
+
+1. **Metadata Filtering**
+
+   - Filter by author, date, status
+   - Filter by categories or tags
+   - Filter by custom metadata fields
+
+2. **Content Filtering**
+
+   - Filter by content type
+   - Filter by content length
+   - Filter by content language
+
+3. **Quality Filtering**
+   - Filter by confidence scores
+   - Filter by relevance thresholds
+   - Filter by feature quality metrics
+
+## Limitations
+
+### Technical Limitations
+
+- Only indexed fields can be filtered
+- Complex filters may impact performance
+- Maximum of 20 conditions per operator
+- Nested filters not supported
+
+### Performance Impact
+
+- Each additional filter adds overhead
+- Complex regex operations are expensive
+- Large IN/NIN arrays affect performance
+- Case-sensitive filtering requires more resources
+
+### Data Type Constraints
+
+- Date fields must use ISO 8601 format
+- Numeric comparisons require consistent types
+- Boolean values must be true/false
+- String comparisons are exact by default
+
+## Error Handling
+
+### Common Errors
+
+- Invalid field names
+- Unsupported operators
+- Type mismatches
+- Missing required values
+
+### Resolution Steps
+
+1. Verify field names are correct
+2. Check operator compatibility
+3. Validate value types
+4. Ensure all required fields are present
+
+For implementation details and examples, see the [Search API Reference](/api-reference/search/overview).

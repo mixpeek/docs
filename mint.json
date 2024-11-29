@@ -68,8 +68,8 @@
       "url": "use-cases"
     },
     {
-      "name": "Compass",
-      "url": "compass"
+      "name": "Studio",
+      "url": "studio"
     },
     {
       "name": "Integrations",
@@ -110,11 +110,11 @@
       "group": "Search",
       "pages": [
         "search/queries",
-        "search/filtering",
-        "search/sorting",
-        "search/pagination",
-        "search/grouping",
-        "search/reranking"
+        "search/filters",
+        "search/sort",
+        "search/paginate",
+        "search/group",
+        "search/rerank"
       ]
     },
     {
@@ -137,12 +137,12 @@
       ]
     },
     {
-      "group": "Compass",
+      "group": "Studio",
       "pages": [
-        "compass/overview",
-        "compass/account",
-        "compass/collections",
-        "compass/search"
+        "studio/overview",
+        "studio/account",
+        "studio/collections",
+        "studio/search"
       ]
     },
     {

@@ -1,0 +1,158 @@
+---
+title: "Grouping"
+---
+
+Grouping allows you to organize search results into logical clusters based on common fields, making it easier to analyze and present related content together.
+
+## Understanding Grouping
+
+### Key Concepts
+
+1. **Group Fields**
+
+   - Asset ID grouping (default)
+   - Metadata field grouping
+   - Feature type grouping
+   - Custom field grouping
+
+2. **Group Properties**
+   - Maximum features per group
+   - Internal group sorting
+   - Group metadata
+   - Group statistics
+
+## Group Configuration
+
+### Basic Structure
+
+```json
+{
+  "group_by": {
+    "field": "asset_id",
+    "max_features": 10,
+    "sort": {
+      "direction": "desc",
+      "field": "metadata.field_name"
+    }
+  }
+}
+```
+
+### Configuration Options
+
+1. **Group Field Selection**
+
+   - Must be an indexed field
+   - Supports dot notation for nested fields
+   - Limited to predefined grouping fields
+   - Contact support to add custom grouping fields
+
+2. **Group Size Control**
+
+   - Default: 10 features per group
+   - Maximum: 50 features per group
+   - Configurable via max_features
+   - Affects performance and memory usage
+
+3. **Group Sorting**
+   - Sort by any indexed field
+   - Ascending or descending order
+   - Supports metadata fields
+   - Maintains relevance within groups
+
+## Common Use Cases
+
+### Content Organization
+
+1. **Document Groups**
+
+   - Group pages from same document
+   - Group sections by topic
+   - Group by document type
+   - Group by author or source
+
+2. **Media Groups**
+
+   - Group frames from same video
+   - Group images by event
+   - Group by visual similarity
+   - Group by timestamp
+
+3. **Feature Groups**
+   - Group by feature type
+   - Group by confidence score
+   - Group by extraction method
+   - Group by processing status
+
+## Limitations
+
+### Technical Constraints
+
+1. **Field Restrictions**
+
+   - Only predefined fields supported
+   - No dynamic field grouping
+   - No computed field grouping
+   - Limited nested field support
+
+2. **Size Limitations**
+
+   - Maximum groups per request
+   - Maximum features per group
+   - Memory usage constraints
+   - Response size limits
+
+3. **Functionality Restrictions**
+   - No cross-group operations
+   - No group aggregations
+   - No group-level filtering
+   - Not compatible with offset pagination
+
+### Performance Considerations
+
+1. **Resource Usage**
+
+   - Groups consume additional memory
+   - Sorting within groups adds overhead
+   - Large group sizes impact performance
+   - Complex group fields slow response time
+
+2. **Scaling Factors**
+   - Number of groups
+   - Features per group
+   - Group field complexity
+   - Sort field complexity
+
+## Best Practices
+
+### Optimization Tips
+
+1. **Group Selection**
+
+   - Choose meaningful group fields
+   - Limit group sizes appropriately
+   - Use efficient sort fields
+   - Consider result set size
+
+2. **Performance Tuning**
+   - Monitor group counts
+   - Optimize max_features
+   - Use indexed sort fields
+   - Cache frequent group results
+
+### Common Patterns
+
+1. **Hierarchical Grouping**
+
+   - Primary grouping by asset
+   - Secondary sorting within groups
+   - Maintain relevance ordering
+   - Preserve feature relationships
+
+2. **Result Presentation**
+   - Display group summaries
+   - Show top features per group
+   - Enable group expansion
+   - Provide group navigation
+
+For implementation details and examples, see the [Search API Reference](/api-reference/search/overview).

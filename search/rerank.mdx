@@ -1,0 +1,182 @@
+---
+title: "Reranking"
+---
+
+Reranking adjusts the order of search results using additional signals beyond initial relevance scores, such as user feedback and popularity metrics.
+
+## Understanding Reranking
+
+### Key Concepts
+
+1. **Ranking Signals**
+
+   - Initial relevance score
+   - User feedback
+   - Popularity metrics
+   - Custom weights
+
+2. **Weight Configuration**
+   - Signal importance
+   - Score normalization
+   - Dynamic adjustment
+   - Feedback incorporation
+
+## Reranking Configuration
+
+### Basic Structure
+
+```json
+{
+  "reranking_options": {
+    "weights": {
+      "feedback": 0.7,
+      "popularity": 0.3
+    },
+    "enable_reranking": true
+  }
+}
+```
+
+### Configuration Options
+
+1. **Signal Weights**
+
+   - Range: 0.0 to 1.0
+   - Must sum to 1.0
+   - Configurable per signal
+   - Default weights available
+
+2. **Enable/Disable**
+   - Toggle reranking
+   - Default: disabled
+   - Per-query control
+   - Performance impact
+
+## Common Use Cases
+
+### Result Optimization
+
+1. **E-commerce Search**
+
+   - Product popularity
+   - Purchase history
+   - Click-through rates
+   - Conversion signals
+
+2. **Content Discovery**
+
+   - User engagement
+   - Content freshness
+   - Social signals
+   - Quality metrics
+
+3. **Personalization**
+   - User preferences
+   - Historical interactions
+   - Behavioral patterns
+   - Context awareness
+
+## Limitations
+
+### Technical Constraints
+
+1. **Signal Availability**
+
+   - Required feedback data
+   - Historical interactions
+   - Metric computation
+   - Data freshness
+
+2. **Performance Impact**
+
+   - Additional processing time
+   - Memory requirements
+   - Score computation
+   - Result stability
+
+3. **Functionality Restrictions**
+   - Limited signal types
+   - No real-time updates
+   - Fixed weight ranges
+   - Signal dependencies
+
+### Performance Considerations
+
+1. **Resource Usage**
+
+   - Score computation overhead
+   - Memory for signal data
+   - Cache effectiveness
+   - Update frequency
+
+2. **Scaling Factors**
+   - Result set size
+   - Signal complexity
+   - Update frequency
+   - Data volume
+
+## Best Practices
+
+### Optimization Tips
+
+1. **Weight Selection**
+
+   - Test different weights
+   - Monitor impact
+   - Validate improvements
+   - Consider use case
+
+2. **Signal Quality**
+   - Validate signal data
+   - Handle missing signals
+   - Update regularly
+   - Monitor accuracy
+
+### Common Patterns
+
+1. **A/B Testing**
+
+   - Test weight combinations
+   - Measure impact
+   - Compare configurations
+   - Validate improvements
+
+2. **Feedback Loop**
+   - Collect user interactions
+   - Update signal data
+   - Adjust weights
+   - Monitor performance
+
+## Error Handling
+
+### Common Issues
+
+1. **Invalid Configuration**
+
+   - Weight sum errors
+   - Missing signals
+   - Invalid ranges
+   - Type mismatches
+
+2. **Performance Problems**
+   - Slow reranking
+   - Memory limits
+   - Data staleness
+   - Signal computation
+
+### Resolution Steps
+
+1. **Configuration Validation**
+
+   - Check weight sum
+   - Validate ranges
+   - Verify signals
+   - Test impact
+
+2. **Performance Optimization**
+   - Cache signals
+   - Batch updates
+   - Optimize computation
+   - Monitor resources
+
+For implementation details and examples, see the [Search API Reference](/api-reference/search/overview).

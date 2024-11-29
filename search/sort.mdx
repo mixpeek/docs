@@ -1,0 +1,179 @@
+---
+title: "Sorting"
+---
+
+Sorting allows you to control the order of search results based on specific fields or relevance scores.
+
+## Understanding Sorting
+
+### Key Concepts
+
+1. **Sort Fields**
+
+   - Relevance score (default)
+   - Metadata fields
+   - Feature properties
+   - Custom fields
+
+2. **Sort Direction**
+   - Ascending order
+   - Descending order
+   - Multiple fields
+   - Default ordering
+
+## Sort Configuration
+
+### Basic Structure
+
+```json
+{
+  "sort": {
+    "direction": "desc",
+    "field": "relevance"
+  }
+}
+```
+
+### Configuration Options
+
+1. **Field Selection**
+
+   - Must be indexed fields
+   - Supports dot notation
+   - Multiple field types
+   - Special fields (e.g., relevance)
+
+2. **Direction Control**
+   - "asc" for ascending
+   - "desc" for descending
+   - Default: descending
+   - Per-field control
+
+## Common Use Cases
+
+### Result Ordering
+
+1. **Relevance-Based**
+
+   - Search result ranking
+   - Similarity ordering
+   - Quality-based sorting
+   - Confidence scores
+
+2. **Temporal Ordering**
+
+   - Date created
+   - Last modified
+   - Sequence order
+   - Time-based relevance
+
+3. **Metadata Sorting**
+   - Alphabetical order
+   - Numerical values
+   - Custom rankings
+   - Category order
+
+## Limitations
+
+### Technical Constraints
+
+1. **Field Restrictions**
+
+   - Only indexed fields
+   - Type limitations
+   - No computed fields
+   - No dynamic sorting
+
+2. **Performance Impact**
+
+   - Sort field complexity
+   - Result set size
+   - Memory requirements
+   - Query optimization
+
+3. **Functionality Restrictions**
+   - Single sort direction
+   - Limited field combinations
+   - No custom sort functions
+   - Type compatibility
+
+### Performance Considerations
+
+1. **Resource Usage**
+
+   - Index utilization
+   - Memory consumption
+   - CPU utilization
+   - I/O impact
+
+2. **Scaling Factors**
+   - Dataset size
+   - Field cardinality
+   - Sort complexity
+   - Result volume
+
+## Best Practices
+
+### Optimization Tips
+
+1. **Field Selection**
+
+   - Use indexed fields
+   - Consider cardinality
+   - Monitor performance
+   - Test combinations
+
+2. **Implementation**
+   - Cache sorted results
+   - Use appropriate indexes
+   - Handle missing values
+   - Consider defaults
+
+### Common Patterns
+
+1. **Mixed Sorting**
+
+   - Combine with filters
+   - Use with pagination
+   - Apply to groups
+   - Preserve relevance
+
+2. **Dynamic Ordering**
+   - User preferences
+   - Context-aware
+   - Adaptive sorting
+   - Business rules
+
+## Error Handling
+
+### Common Issues
+
+1. **Invalid Configuration**
+
+   - Unknown fields
+   - Type mismatches
+   - Missing indexes
+   - Direction errors
+
+2. **Performance Problems**
+   - Slow sorts
+   - Memory limits
+   - Large datasets
+   - Complex fields
+
+### Resolution Steps
+
+1. **Configuration Validation**
+
+   - Verify fields
+   - Check types
+   - Validate direction
+   - Test performance
+
+2. **Performance Optimization**
+   - Use proper indexes
+   - Limit result sets
+   - Cache results
+   - Monitor resources
+
+For implementation details and examples, see the [Search API Reference](/api-reference/search/overview).
