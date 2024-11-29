@@ -1,0 +1,127 @@
+---
+title: "Limits"
+---
+
+# API Limits
+
+This document outlines the various limits and restrictions in place when using the Mixpeek API.
+
+## Rate Limits
+
+Rate limits are applied based on your account type and vary by API endpoint. Limits are calculated per minute.
+
+### Free Tier
+
+- Default: 10 requests/minute
+- Search endpoints:
+  - Text search: 10 requests/minute
+  - URL search: 10 requests/minute
+  - Upload search: 10 requests/minute
+  - Feature search: 10 requests/minute
+- Index endpoints:
+  - Text indexing: 10 requests/minute
+  - URL indexing: 10 requests/minute
+  - Upload indexing: 10 requests/minute
+
+### Pro Tier
+
+- Default: 60 requests/minute
+- Search endpoints:
+  - Feature search: 100 requests/minute
+- Index endpoints:
+  - Text indexing: 200 requests/minute
+  - URL indexing: 120 requests/minute
+  - Upload indexing: 120 requests/minute
+
+### Enterprise Tier
+
+- Unlimited requests for all endpoints
+
+## Size Limits
+
+### File Upload Limits
+
+- Maximum file size: 1 GB
+
+### Supported File Types
+
+The API supports various file types across different categories:
+
+#### Images
+
+- JPEG (.jpg, .jpeg)
+- PNG (.png)
+- GIF (.gif)
+- WebP (.webp)
+- TIFF (.tiff)
+- SVG (.svg)
+
+#### Videos
+
+- MP4 (.mp4)
+- MPEG (.mpeg)
+- MOV (.mov)
+- AVI (.avi)
+- WMV (.wmv)
+- WebM (.webm)
+
+#### Audio
+
+- MP3 (.mp3)
+- WAV (.wav)
+- OGG (.ogg)
+- FLAC (.flac)
+
+#### Documents
+
+- PDF (.pdf)
+- Word (.doc, .docx)
+- Text (.txt)
+- Rich Text (.rtf)
+
+## Credit System
+
+Free tier accounts require credits for certain operations:
+
+- Minimum credit requirement varies by operation
+- Operations will fail if insufficient credits are available
+- Credit count is checked before each operation
+
+## Error Responses
+
+When limits are exceeded, you'll receive appropriate error responses:
+
+### Rate Limit Exceeded
+
+```json
+{
+  "error": "TooManyRequests",
+  "message": "Rate limit exceeded",
+  "details": {
+    "rate_limit": <limit>,
+    "api_name": <endpoint>
+  }
+}
+```
+
+### Insufficient Credits
+
+```json
+{
+  "error": "Unauthorized",
+  "message": "Insufficient credits. Please upgrade your account.",
+  "details": {
+    "required_credits": <required>,
+    "current_credits": <available>
+  }
+}
+```
+
+### File Size Exceeded
+
+```json
+{
+  "error": "BadRequest",
+  "message": "File size exceeds maximum limit of 1 GB"
+}
+```

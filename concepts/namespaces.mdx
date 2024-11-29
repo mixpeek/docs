@@ -1,0 +1,100 @@
+---
+title: "Namespaces"
+---
+
+Namespaces in Mixpeek are isolated environments that help you organize and manage your content and search applications. They provide logical separation for different use cases, applications, or environments.
+
+## Understanding Namespaces
+
+### Key Concepts
+
+- **Isolation**: Each namespace is completely isolated from others
+- **Resource Management**: Separate resource allocation and limits
+- **Access Control**: Independent security and permissions
+- **Configuration**: Custom settings per namespace
+- **Indexing**: Defines vector and payload indexes for search and retrieval
+
+## Vector Indexes
+
+Mixpeek provides managed vector indexes that automatically handle embedding updates, model advancements, and fine-tuning:
+
+```python
+# Available vector indexes and their capabilities
+vector_indexes = {
+    "image": {
+        "supported_modalities": ["image", "text"],
+        "vector_type": "dense",
+        "size": 512
+    },
+    "multimodal": {
+        "supported_modalities": ["image", "video", "text"],
+        "vector_type": "dense",
+        "size": 1408
+    },
+    "text": {
+        "supported_modalities": ["text"],
+        "vector_type": "dense",
+        "size": 1024
+    },
+    "keyword": {
+        "supported_modalities": ["text"],
+        "vector_type": "sparse",
+        "size": None
+    }
+}
+```
+
+## Payload Indexes
+
+Mixpeek supports various payload index types for structured data:
+
+```python
+payload_indexes = [
+    "keyword",    # Text exact match
+    "integer",    # Whole numbers
+    "float",      # Decimal numbers
+    "bool",       # Boolean values
+    "geo",        # Geographical coordinates
+    "datetime",   # Date and time values
+    "text",       # Full-text search
+    "uuid"        # Unique identifiers
+]
+```
+
+## Best Practices
+
+### Namespace Organization
+
+1. **Environment Separation**
+
+   - Development
+   - Staging
+   - Production
+
+2. **Use Case Separation**
+
+   - Product Search
+   - Content Discovery
+   - Analytics
+
+3. **Client Separation**
+   - Different customers
+   - Different applications
+   - Different regions
+
+### Naming Conventions
+
+- Use descriptive, lowercase names
+- Include environment or purpose
+- Be consistent across teams
+- Add relevant prefixes/suffixes
+
+Example:
+
+```
+prod-ecommerce
+dev-content-search
+staging-recommendations
+```
+
+Learn more about namespace management in our [API Reference](/api-reference/namespaces/list-namespaces).

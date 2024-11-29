@@ -56,7 +56,7 @@
     }
   ],
   "primaryTab": {
-    "name": "Welcome"
+    "name": "Guide"
   },
   "tabs": [
     {
@@ -68,18 +68,61 @@
       "url": "use-cases"
     },
     {
+      "name": "Compass",
+      "url": "compass"
+    },
+    {
       "name": "Integrations",
       "url": "integrations"
     }
   ],
   "navigation": [
     {
-      "group": "Introduction",
-      "pages": ["introduction/quickstart", "introduction/faq"]
+      "group": "Overview",
+      "pages": [
+        "overview/introduction",
+        "overview/benefits",
+        "overview/quickstart",
+        "overview/client-libraries",
+        "overview/limits"
+      ]
     },
     {
       "group": "Introduction",
       "pages": ["use-cases/overview"]
+    },
+    {
+      "group": "Concepts",
+      "pages": [
+        "concepts/namespaces",
+        "concepts/vector-indexes",
+        "concepts/collections",
+        "concepts/assets",
+        "concepts/features",
+        "concepts/tasks"
+      ]
+    },
+    {
+      "group": "Index",
+      "pages": ["index/extractors", "index/embeddings", "index/entities"]
+    },
+    {
+      "group": "Search",
+      "pages": [
+        "search/queries",
+        "search/filtering",
+        "search/sorting",
+        "search/pagination",
+        "search/grouping",
+        "search/reranking"
+      ]
+    },
+    {
+      "group": "Models",
+      "pages": [
+        "overview/models/embedding-storage",
+        "overview/models/fine-tuning"
+      ]
     },
     {
       "group": "Use Cases",
@@ -91,6 +134,15 @@
         "use-cases/media-analytics",
         "use-cases/multimodal-rag",
         "use-cases/content-organization"
+      ]
+    },
+    {
+      "group": "Compass",
+      "pages": [
+        "compass/overview",
+        "compass/account",
+        "compass/collections",
+        "compass/search"
       ]
     },
     {

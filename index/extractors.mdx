@@ -1,0 +1,43 @@
+---
+title: "Feature Extractors"
+---
+
+Feature extractors are the core components that process your content and extract meaningful information. Mixpeek provides a variety of pre-built extractors and allows you to create custom ones.
+
+## Available Extractors
+
+### read
+
+Processes and reads the content of files, enabling basic content extraction and analysis.
+
+### embed
+
+Generates vector embeddings from content for similarity search and semantic analysis. Supports multiple embedding types:
+
+- `url`: Creates embeddings from URL content
+- `text`: Generates embeddings from text input
+- `keyword`: Creates keyword-based embeddings
+
+### transcribe
+
+Converts audio/video content into text, providing searchable transcriptions of spoken content.
+
+### describe
+
+Generates natural language descriptions of content, particularly useful for images and videos.
+
+### detect
+
+Performs object and entity detection in visual content:
+
+- `faces`: Identifies and analyzes faces with configurable confidence thresholds
+- Objects: Detects and labels visible objects
+- Scenes: Identifies scene contexts
+
+### json_output
+
+Structures extracted information into customizable JSON formats. Configure the output shape for:
+
+- `objects`: Array of detected object strings
+- `scenes`: Array of scene description strings
+- Custom fields based on your needs

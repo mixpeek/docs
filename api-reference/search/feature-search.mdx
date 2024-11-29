@@ -1,0 +1,137 @@
+---
+title: "Feature Search API"
+description: "API reference for searching features within assets"
+---
+
+# Feature Search API
+
+Search for specific features extracted from your assets using natural language queries.
+
+## Endpoint
+
+```bash
+POST /search/features
+```
+
+## Request Body
+
+```json
+{
+  "query": "quarterly revenue projections for 2024",
+  "namespace": "financial-docs",
+  "collection": "reports",
+  "feature_types": ["text", "table"],
+  "filters": {
+    "date": {
+      "gte": "2024-01-01",
+      "lte": "2024-12-31"
+    }
+  },
+  "limit": 10,
+  "offset": 0
+}
+```
+
+### Parameters
+
+| Parameter       | Type    | Required | Description                                                         |
+| --------------- | ------- | -------- | ------------------------------------------------------------------- |
+| `query`         | string  | Yes      | Natural language search query                                       |
+| `namespace`     | string  | Yes      | Namespace to search within                                          |
+| `collection`    | string  | No       | Optional collection to narrow search scope                          |
+| `feature_types` | array   | No       | Array of feature types to search (e.g., ["text", "image", "table"]) |
+| `filters`       | object  | No       | Additional filters to apply to the search                           |
+| `limit`         | integer | No       | Maximum number of results (default: 10, max: 100)                   |
+| `offset`        | integer | No       | Number of results to skip for pagination                            |
+
+### Filter Options
+
+| Filter       | Type   | Description                               |
+| ------------ | ------ | ----------------------------------------- |
+| `date`       | object | Filter by date range with `gte` and `lte` |
+| `metadata`   | object | Filter by custom metadata fields          |
+| `confidence` | number | Minimum confidence score (0-1)            |
+| `asset_type` | string | Filter by asset type                      |
+
+## Response
+
+```json
+{
+  "results": [
+    {
+      "id": "feat_123abc",
+      "asset_id": "asset_456def",
+      "feature_type": "text",
+      "content": "The Q2 2024 revenue is projected to reach $2.5M...",
+      "score": 0.92,
+      "location": {
+        "page": 2,
+        "bbox": [100, 200, 300, 400]
+      },
+      "metadata": {
+        "confidence": 0.95,
+        "source": "financial_report.pdf"
+      }
+    }
+  ],
+  "total": 45,
+  "offset": 0,
+  "limit": 10
+}
+```
+
+### Response Fields
+
+| Field          | Type   | Description                         |
+| -------------- | ------ | ----------------------------------- |
+| `id`           | string | Unique feature identifier           |
+| `asset_id`     | string | ID of the parent asset              |
+| `feature_type` | string | Type of feature (text, image, etc.) |
+| `content`      | string | Feature content or description      |
+| `score`        | number | Relevance score (0-1)               |
+| `location`     | object | Position within the asset           |
+| `metadata`     | object | Additional feature metadata         |
+
+## Example Requests
+
+### Basic Search
+
+```bash
+curl -X POST https://api.mixpeek.com/v1/search/features \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "quarterly revenue projections",
+    "namespace": "financial-docs"
+  }'
+```
+
+### Filtered Search
+
+```bash
+curl -X POST https://api.mixpeek.com/v1/search/features \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "quarterly revenue projections",
+    "namespace": "financial-docs",
+    "feature_types": ["text", "table"],
+    "filters": {
+      "date": {
+        "gte": "2024-01-01"
+      }
+    }
+  }'
+```
+
+## Error Responses
+
+| Status Code | Description                |
+| ----------- | -------------------------- |
+| `400`       | Invalid request parameters |
+| `401`       | Invalid or missing API key |
+| `403`       | Insufficient permissions   |
+| `404`       | Namespace not found        |
+| `429`       | Rate limit exceeded        |
+
+For conceptual understanding of feature search, see the [Search Concepts guide](/concepts/search).

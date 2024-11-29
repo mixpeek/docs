@@ -1,7 +1,5 @@
 ---
 title: "Fine-Tuning"
-icon: "wrench"
-iconType: "solid"
 ---
 
 <Warning>
@@ -17,41 +15,15 @@ iconType: "solid"
   </Step>
   <Step title="Initiate Fine-Tuning">
     Use the Mixpeek Dashboard (and soon to be API) to schedule a fine-tuning job. Specify the base
-    `model_id`, the S3 bucket path, and `specs` that tell the fine-tuner how to run:
-
-    ```python
-    mixpeek.models.tune(
-      model_id="vuse-generic-v1",
-      annotation={
-        "connection_id": "conn_123",
-        "specs": "specs.json"
-      }
-    )
-    ```
+    `model_id`, the S3 bucket path, and `specs` that tell the fine-tuner how to run.
 
     This will return a new model_id, for example: `model_1askdh2390`, which you'll then use in your methods like:
-
-    ```python
-      mixpeek.embed.text(model_id="model_1askdh2390", input="hello")
-    ```
 
   </Step>
   <Step title="Version Control">
     It's recommended to store the version_id of each model state as it is fine-tuned. 
     
-    If you append a `model_version` in the metadata of the pipeline it'll automatically be added to your database so you can do query-time filtering:
-
-    ```python
-    mixpeek.pipelines.create(
-      ...
-      destination={
-        ...
-        "metadata": {
-          "model_version": "model_1askdh2390"
-        }
-      }
-    )
-    ```
+    If you append a `model_version` in the metadata of the pipeline it'll automatically be added to your database so you can do query-time filtering.
 
   </Step>
 </Steps>

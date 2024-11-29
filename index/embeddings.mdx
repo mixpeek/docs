@@ -1,0 +1,84 @@
+---
+title: "Embeddings"
+---
+
+# Embeddings
+
+Embeddings are dense vector representations of content that enable semantic search and similarity matching. Mixpeek provides state-of-the-art embedding models for different types of content.
+
+## Available Models
+
+### Text Embeddings
+
+- **General Purpose**: Optimized for broad text understanding
+- **Domain-Specific**: Specialized for particular industries
+- **Multilingual**: Support for multiple languages
+- **Cross-Modal**: Text-to-image alignment
+
+### Image Embeddings
+
+- **Visual Features**: Capture visual characteristics
+- **Object-Based**: Focus on object recognition
+- **Scene Understanding**: Capture scene context
+- **Style-Based**: Represent artistic styles
+
+### Video Embeddings
+
+- **Temporal Features**: Capture motion and changes
+- **Frame-Level**: Process individual frames
+- **Scene-Level**: Understand scene composition
+- **Action-Based**: Represent activities
+
+### Keyword Embeddings
+
+- **SPLADE**: Sparse lexical model
+
+## Model Selection
+
+### Factors to Consider
+
+1. **Use Case**
+
+   - Search requirements
+   - Similarity matching
+   - Classification needs
+   - Cross-modal applications
+
+2. **Performance**
+
+   - Accuracy
+   - Speed
+   - Resource usage
+   - Latency requirements
+
+3. **Data Characteristics**
+   - Content type
+   - Language
+   - Domain
+   - Scale
+
+### Available Models
+
+| Model ID   | Modality | Dimensions | Description                                  |
+| ---------- | -------- | ---------- | -------------------------------------------- |
+| text       | Text     | 768        | General purpose text embedding, multilingual |
+| image      | Image    | 1024       | Visual feature embedding                     |
+| video      | Video    | 1536       | Temporal feature embedding                   |
+| multimodal | Multiple | 1024       | Cross-modal embedding                        |
+| keyword    | Text     | Variable   | SPLADE sparse lexical model                  |
+
+## Best Practices
+
+### Preprocessing
+
+- **Text Normalization**: Clean and standardize text
+- **Image Resizing**: Standardize dimensions
+- **Quality Control**: Filter low-quality inputs
+- **Format Conversion**: Ensure compatible formats
+
+### Optimization
+
+- **Batch Processing**: Generate embeddings in batches
+- **Caching**: Store frequently used embeddings
+- **Dimension Reduction**: Use when appropriate
+- **Quality Thresholds**: Filter poor embeddings
