@@ -103,18 +103,22 @@
       ]
     },
     {
-      "group": "Index",
-      "pages": ["index/extractors", "index/embeddings", "index/entities"]
+      "group": "Indexing",
+      "pages": [
+        "indexing/extractors",
+        "indexing/embeddings",
+        "indexing/entities"
+      ]
     },
     {
-      "group": "Search",
+      "group": "Searching",
       "pages": [
-        "search/queries",
-        "search/filters",
-        "search/sort",
-        "search/paginate",
-        "search/group",
-        "search/rerank"
+        "searching/queries",
+        "searching/filters",
+        "searching/sort",
+        "searching/paginate",
+        "searching/group",
+        "searching/rerank"
       ]
     },
     {
