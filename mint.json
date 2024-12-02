@@ -232,6 +232,17 @@
       ]
     },
     {
+      "group": "Percolators",
+      "pages": [
+        "api-reference/percolators/list-percolator-queries",
+        "api-reference/percolators/create-percolator-query",
+        "api-reference/percolators/get-percolator-query",
+        "api-reference/percolators/delete-percolator-query",
+        "api-reference/percolators/get-percolator-matches",
+        "api-reference/percolators/delete-percolator-match"
+      ]
+    },
+    {
       "group": "Accounts",
       "pages": ["api-reference/accounts/get-usage"]
     },
