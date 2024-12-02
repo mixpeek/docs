@@ -99,7 +99,8 @@
         "concepts/collections",
         "concepts/assets",
         "concepts/features",
-        "concepts/tasks"
+        "concepts/tasks",
+        "concepts/percolators"
       ]
     },
     {

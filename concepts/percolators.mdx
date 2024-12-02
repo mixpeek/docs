@@ -1,0 +1,67 @@
+---
+title: "Percolators"
+---
+
+Percolators in Mixpeek allow developers to search against saved queries, enabling efficient and dynamic content indexing. By leveraging the same syntax as normal hybrid multimodal searches, percolators save these queries for future use. When indexing an asset, you can specify to percolate the asset across your saved queries. For every match above a certain relevance threshold, results are appended to a matches collection.
+
+### Understanding Percolators
+
+#### Key Concepts
+
+- **Saved Queries**: Predefined search queries stored for reuse
+- **Hybrid Search**: Combining multiple search modalities
+- **Relevance Threshold**: Minimum score for a match to be considered
+- **Feedback Loop**: Incremental improvement of alerts through percolator matches
+
+### Use Cases
+
+1. **Content Monitoring**: Automatically detect and flag content that matches specific criteria.
+2. **Personalized Recommendations**: Suggest content based on user preferences and past interactions.
+3. **Alert Systems**: Trigger alerts when new content matches predefined conditions.
+
+### Code Examples
+
+#### Create Query
+
+```json
+POST /percolators/queries
+{
+  "collection_ids": ["scam"],
+  "metadata": {"foo": "bar"},
+  "queries": [
+    {"vector_index": "multimodal", "value": "https://example.com/image.jpg", "type": "url"},
+    {"vector_index": "text", "value": "lorem", "type": "text"}
+  ]
+}
+```
+
+#### Percolate on Index
+
+```json
+POST /index/text
+{
+  "collection_id": "scam",
+  "percolate": {
+    "enabled": true,
+    "min_relevance": 0.5,
+    "filters": {
+      "AND": [{"key": "metadata.foo", "operator": "eq", "value": "bar"}]
+    }
+  },
+  "feature_extractors": {
+    "embed": [
+      {"field_name": "description", "type": "text", "value": "lorem ipsum", "vector_index": "text"},
+      {"field_name": "title", "type": "text", "value": "Thing #1", "vector_index": "keyword"}
+    ]
+  }
+}
+```
+
+#### Get Matches
+
+```json
+POST /percolators/matches
+{
+  "collection_ids": ["scam"]
+}
+```
