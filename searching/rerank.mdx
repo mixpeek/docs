@@ -21,6 +21,61 @@ Reranking adjusts the order of search results using additional signals beyond in
    - Dynamic adjustment
    - Feedback incorporation
 
+## Search Interactions
+
+### Interaction Types
+
+1. **Positive Signals**
+
+   ```json
+   {
+     "feature_id": "prod_123",
+     "interaction_type": "click",
+     "position": 2,
+     "metadata": {
+       "duration_ms": 45000,
+       "device": "mobile"
+     }
+   }
+   ```
+
+2. **Negative Signals**
+   ```json
+   {
+     "feature_id": "prod_456",
+     "interaction_type": "skip",
+     "position": 1,
+     "metadata": {
+       "interaction_reason": "not_relevant"
+     }
+   }
+   ```
+
+### Recording Interactions
+
+1. **Required Fields**
+
+   - `feature_id`: Unique identifier for the result
+   - `interaction_type`: Type of interaction (click, skip, etc.)
+   - `position`: Position in search results
+   - `metadata`: Additional context (optional)
+
+2. **Session Tracking**
+   ```json
+   {
+     "session_id": "sess_abc123",
+     "search_request": {
+       "queries": [
+         {
+           "type": "text",
+           "value": "blue dress",
+           "vector_index": "text"
+         }
+       ]
+     }
+   }
+   ```
+
 ## Reranking Configuration
 
 ### Basic Structure
@@ -32,120 +87,121 @@ Reranking adjusts the order of search results using additional signals beyond in
       "feedback": 0.7,
       "popularity": 0.3
     },
-    "enable_reranking": true
+    "enable_reranking": true,
+    "interaction_window_days": 30,
+    "min_interaction_threshold": 5
   }
 }
 ```
 
-### Configuration Options
+### Advanced Options
 
-1. **Signal Weights**
+1. **Interaction Windows**
 
-   - Range: 0.0 to 1.0
-   - Must sum to 1.0
-   - Configurable per signal
-   - Default weights available
+   ```json
+   {
+     "reranking_options": {
+       "interaction_weights": {
+         "recent": 0.6,
+         "historical": 0.4
+       },
+       "time_decay": {
+         "half_life_days": 7
+       }
+     }
+   }
+   ```
 
-2. **Enable/Disable**
-   - Toggle reranking
-   - Default: disabled
-   - Per-query control
-   - Performance impact
+2. **Signal Thresholds**
+   ```json
+   {
+     "reranking_options": {
+       "min_signals": {
+         "clicks": 10,
+         "views": 50
+       },
+       "confidence_threshold": 0.8
+     }
+   }
+   ```
 
-## Common Use Cases
+## Implementation Guide
 
-### Result Optimization
+### Recording Interactions
 
-1. **E-commerce Search**
+1. **Client-Side Integration**
 
-   - Product popularity
-   - Purchase history
-   - Click-through rates
-   - Conversion signals
+   ```javascript
+   // Track click interaction
+   await mixpeek.trackInteraction({
+     feature_id: resultId,
+     interaction_type: "click",
+     position: resultIndex,
+     metadata: {
+       device: "mobile",
+       duration_ms: viewDuration,
+     },
+   });
+   ```
 
-2. **Content Discovery**
+2. **Batch Processing**
 
-   - User engagement
-   - Content freshness
-   - Social signals
-   - Quality metrics
+   ```python
+   # Process multiple interactions
+   interactions = [
+     {
+       "feature_id": "prod_123",
+       "interaction_type": "click",
+       "position": 2
+     },
+     {
+       "feature_id": "prod_456",
+       "interaction_type": "skip",
+       "position": 1
+     }
+   ]
 
-3. **Personalization**
-   - User preferences
-   - Historical interactions
-   - Behavioral patterns
-   - Context awareness
+   await mixpeek.bulk_track_interactions(interactions)
+   ```
 
-## Limitations
+### Enabling Reranking
 
-### Technical Constraints
+```python
+# Configure search with reranking
+search_request = {
+  "queries": [{
+    "type": "text",
+    "value": "summer dress",
+    "vector_index": "text"
+  }],
+  "reranking_options": {
+    "weights": {
+      "feedback": 0.7,
+      "popularity": 0.3
+    },
+    "enable_reranking": true
+  }
+}
 
-1. **Signal Availability**
-
-   - Required feedback data
-   - Historical interactions
-   - Metric computation
-   - Data freshness
-
-2. **Performance Impact**
-
-   - Additional processing time
-   - Memory requirements
-   - Score computation
-   - Result stability
-
-3. **Functionality Restrictions**
-   - Limited signal types
-   - No real-time updates
-   - Fixed weight ranges
-   - Signal dependencies
-
-### Performance Considerations
-
-1. **Resource Usage**
-
-   - Score computation overhead
-   - Memory for signal data
-   - Cache effectiveness
-   - Update frequency
-
-2. **Scaling Factors**
-   - Result set size
-   - Signal complexity
-   - Update frequency
-   - Data volume
+results = await mixpeek.search(search_request)
+```
 
 ## Best Practices
 
 ### Optimization Tips
 
-1. **Weight Selection**
+1. **Weight Tuning**
 
-   - Test different weights
-   - Monitor impact
-   - Validate improvements
-   - Consider use case
+   - Start with balanced weights (0.5/0.5)
+   - Adjust based on interaction volume
+   - Monitor impact on key metrics
+   - A/B test different configurations
 
-2. **Signal Quality**
-   - Validate signal data
-   - Handle missing signals
-   - Update regularly
-   - Monitor accuracy
-
-### Common Patterns
-
-1. **A/B Testing**
-
-   - Test weight combinations
-   - Measure impact
-   - Compare configurations
-   - Validate improvements
-
-2. **Feedback Loop**
-   - Collect user interactions
-   - Update signal data
-   - Adjust weights
-   - Monitor performance
+2. **Data Quality**
+   - Filter bot/spam interactions
+   - Validate interaction data
+   - Handle edge cases
+   - Maintain consistent tracking
 
 ## Error Handling
 
@@ -153,30 +209,21 @@ Reranking adjusts the order of search results using additional signals beyond in
 
 1. **Invalid Configuration**
 
-   - Weight sum errors
-   - Missing signals
-   - Invalid ranges
-   - Type mismatches
+   ```json
+   {
+     "error": "invalid_weights",
+     "message": "Weights must sum to 1.0",
+     "weights": {
+       "feedback": 0.7,
+       "popularity": 0.5
+     }
+   }
+   ```
 
-2. **Performance Problems**
-   - Slow reranking
-   - Memory limits
-   - Data staleness
-   - Signal computation
-
-### Resolution Steps
-
-1. **Configuration Validation**
-
-   - Check weight sum
-   - Validate ranges
-   - Verify signals
-   - Test impact
-
-2. **Performance Optimization**
-   - Cache signals
-   - Batch updates
-   - Optimize computation
-   - Monitor resources
+2. **Resolution Steps**
+   - Validate weight configurations
+   - Check interaction data format
+   - Monitor reranking performance
+   - Handle missing signals gracefully
 
 For implementation details and examples, see the [Search API Reference](/api-reference/search/overview).
