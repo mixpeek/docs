@@ -33,9 +33,14 @@ POST /percolators/queries
   "queries": [
     {"vector_index": "multimodal", "value": "https://example.com/image.jpg", "type": "url"},
     {"vector_index": "text", "value": "lorem", "type": "text"}
-  ]
+  ],
+  "filters": {
+    "AND": [{"key": "metadata.foo", "operator": "eq", "value": "bar"}]
+  }
 }
 ```
+
+This example demonstrates how to create a percolator query. It specifies a collection of queries that include both a URL and text, along with metadata filters.
 
 #### Percolate on Index
 
@@ -45,10 +50,7 @@ POST /index/text
   "collection_id": "scam",
   "percolate": {
     "enabled": true,
-    "min_relevance": 0.5,
-    "filters": {
-      "AND": [{"key": "metadata.foo", "operator": "eq", "value": "bar"}]
-    }
+    "min_relevance": 0.5
   },
   "feature_extractors": {
     "embed": [
@@ -59,6 +61,8 @@ POST /index/text
 }
 ```
 
+This example shows how to percolate an asset when indexing. It enables percolation with a minimum relevance threshold and specifies feature extractors for embedding.
+
 #### Get Matches
 
 ```json
@@ -67,3 +71,5 @@ POST /percolators/matches
   "collection_ids": ["scam"]
 }
 ```
+
+This example retrieves matches from the percolator for the specified collection. It returns results that meet the criteria defined in the saved queries.
