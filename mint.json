@@ -168,11 +168,7 @@
       "pages": ["api-reference/health/healthcheck"]
     },
     {
-      "group": "Multimodal Searching",
-      "pages": ["api-reference/features/search-features"]
-    },
-    {
-      "group": "Multimodal Indexing",
+      "group": "Indexing",
       "pages": [
         "api-reference/index/index-text",
         "api-reference/index/index-video-url",
@@ -182,6 +178,7 @@
     {
       "group": "Features",
       "pages": [
+        "api-reference/features/search-features",
         "api-reference/features/get-feature",
         "api-reference/features/full-feature-update",
         "api-reference/features/delete-feature",
