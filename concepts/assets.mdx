@@ -60,3 +60,33 @@ Assets are the individual pieces of content that you index and search in Mixpeek
 - **Efficient Updates**: Use partial updates when possible
 - **Caching Strategy**: Cache frequently accessed assets
 - **Resource Management**: Monitor storage and processing
+
+### Asset URL Management
+
+When retrieving assets, Mixpeek provides secure, temporary access through presigned URLs. This is controlled through the `return_url` parameter:
+
+- **Presigned URLs**: Temporary, secure URLs that grant time-limited access to assets
+- **Access Control**: Ensures assets are only accessible to authorized users
+- **Security**: URLs automatically expire after a set period
+- **Performance**: Enables direct asset downloads from storage without proxy routing
+
+`return_url` is a parameter available in all `/assets` and `/features` retrieval endpoints.
+
+#### Benefits
+
+1. **Security**
+
+   - Controlled access to sensitive assets
+   - No need to expose permanent storage URLs
+   - Automatic expiration reduces security risks
+
+2. **Performance**
+
+   - Direct downloads from storage providers
+   - Reduced server load
+   - Optimized for large files and media
+
+3. **Flexibility**
+   - Time-limited access for temporary sharing
+   - Works with various storage backends
+   - Supports both public and private assets
