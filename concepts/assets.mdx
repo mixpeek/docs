@@ -70,7 +70,37 @@ When retrieving assets, Mixpeek provides secure, temporary access through presig
 - **Security**: URLs automatically expire after a set period
 - **Performance**: Enables direct asset downloads from storage without proxy routing
 
-`return_url` is a parameter available in all `/assets` and `/features` retrieval endpoints.
+<Note>
+  `return_url` is a parameter available in all `/assets` and `/features`
+  retrieval endpoints.
+</Note>
+
+#### Example Response
+
+When `return_url: true` is set, the API will return a presigned URL that looks like this:
+
+```json
+{
+  "asset_id": "b0a43750-af14-48fb-840f-f11a511c7198",
+  "url": "https://mixpeek-api.s3.amazonaws.com/assets/ix-0Sqm__ZbVpAIHRkOJIyqEyhGEaNXs2dvY6WXJ6o6GkEzI0lXfR7S-qBimKKhI_OS8Bw/collection_id/b0a43750-af14-48fb-840f-f11a511c7198?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA5RWB335CYLLDSQHZ%2F20241206%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20241206T194101Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=d18f3a39a684b36fbe06199a7955adb68ec1c67f1e5ca74185de2c33d4c2ec81"
+}
+```
+
+Let's break down the URL components:
+
+1. **Base URL**: `https://mixpeek-api.s3.amazonaws.com/assets/...`
+
+   - Points to the storage location of the asset
+
+2. **Authentication Parameters**:
+   - `X-Amz-Algorithm`: Specifies the signing algorithm (AWS4-HMAC-SHA256)
+   - `X-Amz-Credential`: AWS credentials used for signing
+   - `X-Amz-Date`: Timestamp when the URL was generated
+   - `X-Amz-Expires`: URL expiration time in seconds (3600 = 1 hour)
+   - `X-Amz-SignedHeaders`: Headers included in signature calculation
+   - `X-Amz-Signature`: Cryptographic signature ensuring URL authenticity
+
+This URL will be valid for the specified expiration time (1 hour in this example) and can be used to directly download or access the asset.
 
 #### Benefits
 
