@@ -48,6 +48,106 @@ Explore our [Features documentation](/concepts/features) to learn more.
 - **[Features](/concepts/features)**: Extracted data points from your content
 - **[Tasks](/concepts/tasks)**: Background processing jobs
 
+### Key Concepts
+
+- **Content Types**: Different types of media content
+- **Feature Extraction**: Automated processing and analysis
+- **Metadata**: Additional information about assets
+- **Lifecycle Management**: Asset creation to deletion
+
+#### How Everything Relates
+
+The Mixpeek system is organized hierarchically, with Organizations at the top level managing access and resources across the platform. Here's how the different components interact:
+
+```mermaid
+erDiagram
+    Organization ||--|{ User : has
+    Organization ||--|{ Namespace : owns
+    User }|--o{ Namespace : has_access_to
+    Namespace ||--|{ VectorIndex : contains
+    Namespace ||--|{ Collection : contains
+    Collection ||--|{ Asset : contains
+    Asset ||--|{ Feature : has
+    Feature }|--|| VectorIndex : stored_in
+
+    Organization {
+        string id PK
+        string name
+        datetime created_at
+    }
+
+    User {
+        string id PK
+        string email
+        string org_id FK
+        array roles
+    }
+
+    Namespace {
+        string id PK
+        string name
+        string org_id FK
+        datetime created_at
+    }
+
+    VectorIndex {
+        string id PK
+        string name
+        string namespace_id FK
+        string type
+        dict settings
+    }
+
+    Collection {
+        string id PK
+        string name
+        string namespace_id FK
+        datetime created_at
+    }
+
+    Asset {
+        string id PK
+        string collection_id FK
+        string namespace_id FK
+        string url
+        string type
+        dict metadata
+    }
+
+    Feature {
+        string id PK
+        string asset_id FK
+        string collection_id FK
+        string namespace_id FK
+        string vector_index_id FK
+        string type
+        dict value
+    }
+```
+
+#### Component Relationships
+
+1. **Organizations & Users**
+
+   - Organizations are the top-level entities that contain users and namespaces
+   - Users belong to organizations and can have access to multiple namespaces
+
+2. **Namespaces**
+
+   - Act as containers for collections and vector indexes
+   - Provide isolation and organization of resources
+   - Can be accessed by multiple users
+
+3. **Collections & Assets**
+
+   - Collections organize related assets
+   - Assets are stored within collections and can have multiple features
+
+4. **Features & Vector Indexes**
+   - Features are extracted from assets and stored in vector indexes
+   - Vector indexes enable efficient similarity search and retrieval
+   - Each feature is associated with a specific vector index type
+
 ### 🔌 Existing Integrations
 
 Connect with your existing stack:
