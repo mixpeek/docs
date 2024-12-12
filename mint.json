@@ -170,9 +170,9 @@
     {
       "group": "Ingest",
       "pages": [
-        "api-reference/ingest/index-text",
-        "api-reference/ingest/index-video-url",
-        "api-reference/ingest/index-image-url"
+        "api-reference/ingest/ingest-text",
+        "api-reference/ingest/ingest-video-url",
+        "api-reference/ingest/ingest-image-url"
       ]
     },
     {
