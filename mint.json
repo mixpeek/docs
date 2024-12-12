@@ -168,21 +168,30 @@
       "pages": ["api-reference/health/healthcheck"]
     },
     {
-      "group": "Indexing",
+      "group": "Ingest",
       "pages": [
-        "api-reference/index/index-text",
-        "api-reference/index/index-video-url",
-        "api-reference/index/index-image-url"
+        "api-reference/ingest/index-text",
+        "api-reference/ingest/index-video-url",
+        "api-reference/ingest/index-image-url"
       ]
     },
     {
       "group": "Features",
       "pages": [
-        "api-reference/features/search-features",
         "api-reference/features/get-feature",
         "api-reference/features/full-feature-update",
         "api-reference/features/delete-feature",
-        "api-reference/features/list-features"
+        "api-reference/features/list-features",
+        "api-reference/features/search-features"
+      ]
+    },
+    {
+      "group": "Collections",
+      "pages": [
+        "api-reference/collections/list-collections",
+        "api-reference/collections/create-collection",
+        "api-reference/collections/update-collection",
+        "api-reference/collections/delete-collection"
       ]
     },
     {
@@ -190,6 +199,7 @@
       "pages": [
         "api-reference/namespaces/list-namespaces",
         "api-reference/namespaces/create-namespace",
+        "api-reference/namespaces/get-namespace",
         "api-reference/namespaces/update-namespace",
         "api-reference/namespaces/delete-namespace",
         "api-reference/namespaces/list-available-indexes"
@@ -240,8 +250,12 @@
       ]
     },
     {
-      "group": "Accounts",
-      "pages": ["api-reference/accounts/get-usage"]
+      "group": "Organizations",
+      "pages": [
+        "api-reference/organizations/get-organization",
+        "api-reference/organizations/get-usage",
+        "api-reference/organizations/get-user"
+      ]
     },
     {
       "group": "Collections",
