@@ -1,7 +1,7 @@
 {
   "name": "Mixpeek",
   "favicon": "/favicon.png",
-  "openapi": "https://api.mixpeek.com/docs/openapi.json",
+  "openapi": "https://spec.speakeasy.com/mixpeek/api/mixpeek-api-with-code-samples",
   "logo": {
     "dark": "/logo/dark.png",
     "light": "/logo/light.png"
@@ -99,17 +99,12 @@
         "concepts/collections",
         "concepts/assets",
         "concepts/features",
-        "concepts/tasks",
-        "concepts/percolators"
+        "concepts/tasks"
       ]
     },
     {
-      "group": "Indexing",
-      "pages": [
-        "indexing/extractors",
-        "indexing/embeddings",
-        "indexing/entities"
-      ]
+      "group": "Ingestion",
+      "pages": ["ingestion/extractors", "ingestion/embeddings"]
     },
     {
       "group": "Searching",
@@ -178,11 +173,11 @@
     {
       "group": "Features",
       "pages": [
+        "api-reference/features/search-features",
         "api-reference/features/get-feature",
         "api-reference/features/full-feature-update",
         "api-reference/features/delete-feature",
-        "api-reference/features/list-features",
-        "api-reference/features/search-features"
+        "api-reference/features/list-features"
       ]
     },
     {
