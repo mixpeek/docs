@@ -1,7 +1,7 @@
 {
   "name": "Mixpeek",
   "favicon": "/favicon.png",
-  "openapi": "https://spec.speakeasy.com/mixpeek/api/mixpeek-api-with-code-samples",
+  "openapi": "https://api.mixpeek.com/docs/openapi.json",
   "logo": {
     "dark": "/logo/dark.png",
     "light": "/logo/light.png"
