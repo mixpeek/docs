@@ -81,8 +81,9 @@
       "group": "Overview",
       "pages": [
         "overview/introduction",
-        "overview/benefits",
         "overview/quickstart",
+        "overview/concepts",
+        "overview/benefits",
         "overview/client-libraries",
         "overview/limits"
       ]
@@ -90,17 +91,6 @@
     {
       "group": "Introduction",
       "pages": ["use-cases/overview"]
-    },
-    {
-      "group": "Concepts",
-      "pages": [
-        "concepts/namespaces",
-        "concepts/vector-indexes",
-        "concepts/collections",
-        "concepts/assets",
-        "concepts/features",
-        "concepts/tasks"
-      ]
     },
     {
       "group": "Ingestion",
