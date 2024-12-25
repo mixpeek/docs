@@ -203,14 +203,6 @@
       ]
     },
     {
-      "group": "Organizations",
-      "pages": [
-        "api-reference/organizations/get-organization",
-        "api-reference/organizations/get-usage",
-        "api-reference/organizations/get-user"
-      ]
-    },
-    {
       "group": "Collections",
       "pages": [
         "api-reference/collections/list-collections",
