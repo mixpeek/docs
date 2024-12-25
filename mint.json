@@ -191,27 +191,6 @@
       ]
     },
     {
-      "group": "Search Interactions",
-      "pages": [
-        "api-reference/search-interactions/list-interactions",
-        "api-reference/search-interactions/create-interaction",
-        "api-reference/search-interactions/get-interaction",
-        "api-reference/search-interactions/delete-interaction"
-      ]
-    },
-    {
-      "group": "Entities",
-      "pages": [
-        "api-reference/entities/register-face",
-        "api-reference/entities/delete-face",
-        "api-reference/entities/update-face",
-        "api-reference/entities/list-faces",
-        "api-reference/entities/delete-taxonomy",
-        "api-reference/entities/update-taxonomy",
-        "api-reference/entities/list-taxonomies"
-      ]
-    },
-    {
       "group": "Assets",
       "pages": [
         "api-reference/assets/get-asset",
@@ -221,17 +200,6 @@
         "api-reference/assets/get-asset-with-features",
         "api-reference/assets/list-assets",
         "api-reference/assets/search-assets"
-      ]
-    },
-    {
-      "group": "Percolators",
-      "pages": [
-        "api-reference/percolators/list-percolator-queries",
-        "api-reference/percolators/create-percolator-query",
-        "api-reference/percolators/get-percolator-query",
-        "api-reference/percolators/delete-percolator-query",
-        "api-reference/percolators/get-percolator-matches",
-        "api-reference/percolators/delete-percolator-match"
       ]
     },
     {
