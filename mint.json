@@ -84,7 +84,6 @@
         "overview/quickstart",
         "overview/concepts",
         "overview/benefits",
-        "overview/client-libraries",
         "overview/limits"
       ]
     },
@@ -93,8 +92,15 @@
       "pages": ["use-cases/overview"]
     },
     {
-      "group": "Ingestion",
-      "pages": ["ingestion/extractors", "ingestion/embeddings"]
+      "group": "Features",
+      "pages": [
+        "ingestion/extractors", 
+        "ingestion/embeddings",           
+        {
+          "group": "Entities",
+          "pages": ["entities/taxonomies", "entities/clusters"]
+        }
+      ]
     },
     {
       "group": "Searching",
