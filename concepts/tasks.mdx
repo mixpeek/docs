@@ -53,7 +53,7 @@ description: "Monitor and manage asynchronous operations in your Mixpeek applica
   <Accordion title="Final States" icon="flag-checkered">
     - `DONE` - Successfully completed
     - `FAILED` - Error occurred
-    - `SKIPPED` - Task ignored
+    - `SKIPPED` - Task ignored (occurs with duplicate content, can be prevented by setting `skip_duplicate=false` in the [ingest endpoint](/api-reference/ingest))
     - `CANCELLED` - Manually terminated
   </Accordion>
 </AccordionGroup>
