@@ -241,23 +241,6 @@ POST /ingest/videos/url
 }
 ```
 
-## Video Node Configuration
-
-Each video taxonomy node supports:
-```python
-class TaxonomyNode:
-    taxonomy_id: str        # Unique identifier (auto-generated)
-    name: str              # Node name
-    description: str       # Optional description
-    embedding_config: List[EmbeddingConfig] # Multiple embedding configurations
-    parent_id: str        # Reference to parent node
-    children: List        # Child nodes
-
-class EmbeddingConfig:
-    embedding_model: str   # e.g., "vertex-multimodal"
-    type: str            # "video", "text"
-    value: str           # Description or reference frame
-```
 
 ## Best Practices for Video Taxonomies
 
