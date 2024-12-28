@@ -120,13 +120,13 @@ response = mixpeek.features.search(
     queries=[
         # Text vector search
         {
-            "vector_index": "text",
+            "embedding_model": "text",
             "value": "dog jumping in the park",
             "type": "text",
         },
         # Image vector search
         {
-            "vector_index": "image",
+            "embedding_model": "image",
             "value": "https://example.com/sample-image.jpg",
             "type": "url"
         }

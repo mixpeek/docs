@@ -1,100 +1,129 @@
 ---
 title: "Namespaces"
+description: "Create isolated environments for organizing and managing your search applications"
 ---
 
-Namespaces in Mixpeek are isolated environments that help you organize and manage your content and search applications. They provide logical separation for different use cases, applications, or environments.
+<Note>
+  Namespaces provide logical separation for different use cases, applications, or environments while maintaining independent configurations and security controls.
+</Note>
 
-## Understanding Namespaces
+## Key Concepts
 
-### Key Concepts
-
-- **Isolation**: Each namespace is completely isolated from others
-- **Resource Management**: Separate resource allocation and limits
-- **Access Control**: Independent security and permissions
-- **Configuration**: Custom settings per namespace
-- **Indexing**: Defines vector and payload indexes for search and retrieval
+<CardGroup cols={2}>
+  <Card title="Isolation" icon="shield-halved">
+    Each namespace operates as a completely isolated environment with its own:
+    - Resource allocation
+    - Access controls
+    - Configuration settings
+  </Card>
+  
+  <Card title="Indexing" icon="database">
+    Configure vector and payload indexes for:
+    - Feature extraction
+    - Search capabilities
+    - Data organization
+  </Card>
+</CardGroup>
 
 ## Vector Indexes
 
-Mixpeek provides managed vector indexes that automatically handle embedding updates, model advancements, and fine-tuning:
+Mixpeek provides managed vector indexes that automatically handle embedding updates and model improvements:
 
 ```python
-# Available vector indexes and their capabilities
-vector_indexes = {
+# Available vector indexes
+embedding_models = {
     "image": {
-        "supported_modalities": ["image", "text"],
-        "vector_type": "dense",
+        "modalities": ["image", "text"],
+        "type": "dense",
         "size": 512
     },
     "multimodal": {
-        "supported_modalities": ["image", "video", "text"],
-        "vector_type": "dense",
+        "modalities": ["image", "video", "text"],
+        "type": "dense", 
         "size": 1408
     },
     "text": {
-        "supported_modalities": ["text"],
-        "vector_type": "dense",
+        "modalities": ["text"],
+        "type": "dense",
         "size": 1024
     },
     "keyword": {
-        "supported_modalities": ["text"],
-        "vector_type": "sparse",
-        "size": None
+        "modalities": ["text"],
+        "type": "sparse"
     }
 }
 ```
 
-## Payload Indexes
+## Payload Indexes 
 
-Mixpeek supports various payload index types for structured data:
+<AccordionGroup>
+  <Accordion title="Supported Index Types" icon="layer-group">
+    - `keyword` - Text exact match
+    - `integer` - Whole numbers
+    - `float` - Decimal numbers
+    - `bool` - Boolean values
+    - `geo` - Geographical coordinates
+    - `datetime` - Date and time values
+    - `text` - Full-text search
+    - `uuid` - Unique identifiers
+  </Accordion>
 
-```python
-payload_indexes = [
-    "keyword",    # Text exact match
-    "integer",    # Whole numbers
-    "float",      # Decimal numbers
-    "bool",       # Boolean values
-    "geo",        # Geographical coordinates
-    "datetime",   # Date and time values
-    "text",       # Full-text search
-    "uuid"        # Unique identifiers
-]
-```
+  <Accordion title="Example Configuration" icon="code">
+    ```python
+    payload_indexes = [
+      {
+        "field_name": "metadata.title",
+        "type": "text",
+        "field_schema": {
+          "type": "text",
+          "tokenizer": "word",
+          "lowercase": true,
+          "min_token_len": 2,
+          "max_token_len": 15
+        }
+      },
+      {
+        "field_name": "metadata.category",
+        "type": "keyword",
+        "field_schema": {
+          "type": "keyword"
+        }
+      }
+    ]
+    ```
+  </Accordion>
+</AccordionGroup>
 
 ## Best Practices
 
-### Namespace Organization
+### Organization Strategies
 
-1. **Environment Separation**
-
-   - Development
-   - Staging
-   - Production
-
-2. **Use Case Separation**
-
-   - Product Search
-   - Content Discovery
-   - Analytics
-
-3. **Client Separation**
-   - Different customers
-   - Different applications
-   - Different regions
+<Steps>
+  <Step title="Environment Separation">
+    Create separate namespaces for development, staging, and production
+  </Step>
+  <Step title="Use Case Separation">
+    Isolate different applications like product search, content discovery, etc.
+  </Step>
+  <Step title="Client Separation">
+    Maintain distinct namespaces for different customers or regions
+  </Step>
+</Steps>
 
 ### Naming Conventions
 
-- Use descriptive, lowercase names
-- Include environment or purpose
-- Be consistent across teams
-- Add relevant prefixes/suffixes
+<Check>Use descriptive, lowercase names</Check>
+<Check>Include environment or purpose</Check>
+<Check>Be consistent across teams</Check>
+<Check>Add relevant prefixes/suffixes</Check>
 
-Example:
-
+Examples:
 ```
 prod-ecommerce
 dev-content-search
 staging-recommendations
 ```
 
+<Note>
 Learn more about namespace management in our [API Reference](/api-reference/namespaces/list-namespaces).
+</Note>

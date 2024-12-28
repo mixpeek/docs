@@ -1,41 +1,120 @@
 ---
 title: "Tasks"
+description: "Monitor and manage asynchronous operations in your Mixpeek applications"
 ---
 
-Tasks in Mixpeek represent asynchronous operations that may take time to complete, such as content processing, feature extraction, and index building. The task system helps you manage and monitor these long-running operations.
+<Note>
+  Tasks represent asynchronous operations that handle content processing, feature extraction, and index management. They provide real-time status tracking and error handling capabilities.
+</Note>
 
-## Understanding Tasks
+## Key Concepts
 
-### Key Concepts
+<CardGroup cols={2}>
+  <Card title="Asynchronous Processing" icon="clock">
+    Non-blocking operations that:
+    - Run in the background
+    - Support parallel execution
+    - Handle long-running processes
+  </Card>
+  
+  <Card title="Status Tracking" icon="chart-line">
+    Monitor task lifecycle with:
+    - Real-time status updates
+    - Progress indicators
+    - Completion notifications
+  </Card>
+</CardGroup>
 
-- **Asynchronous Processing**: Non-blocking operations
-- **Status Tracking**: Monitor progress and completion
-- **Error Handling**: Manage failures and retries
-- **Resource Management**: Control concurrent operations
+## Task Lifecycle
 
-## Task Types
+<Steps>
+  <Step title="Initialization">
+    Task is created and queued for processing
+  </Step>
+  <Step title="Processing">
+    Content is downloaded and processed according to task type
+  </Step>
+  <Step title="Completion">
+    Task finishes with success or failure status
+  </Step>
+</Steps>
 
-### Common Tasks
+## Task States
 
-1. **Content Processing**
+<AccordionGroup>
+  <Accordion title="Processing States" icon="spinner">
+    - `INITIALIZING` - Task setup and validation
+    - `QUEUED` - Waiting for processing
+    - `DOWNLOADING` - Retrieving content
+    - `PROCESSING` - Active execution
+    - `UPLOADING` - Saving results
+  </Accordion>
 
-   - Feature extraction
-   - Asset indexing
-   - Batch operations
-   - Model training
+  <Accordion title="Final States" icon="flag-checkered">
+    - `DONE` - Successfully completed
+    - `FAILED` - Error occurred
+    - `SKIPPED` - Task ignored
+    - `CANCELLED` - Manually terminated
+  </Accordion>
+</AccordionGroup>
 
-2. **System Operations**
-   - Index building
-   - Collection updates
-   - Data migrations
-   - Maintenance tasks
+## Common Task Types
 
-### Task Statuses
+### Content Operations
 
-Tasks can have the following statuses:
+<CardGroup cols={2}>
+  <Card title="Feature Extraction" icon="microscope">
+    - Text analysis
+    - Image processing
+    - Video processing
+    - Multimodal extraction
+  </Card>
+  
+  <Card title="Asset Management" icon="database">
+    - Content indexing
+    - Metadata updates
+    - Batch operations
+    - Data validation
+  </Card>
+</CardGroup>
 
-- `INITIALIZING`: Task is being set up
-- `DOWNLOADING`: Content is being downloaded
-- `PROCESSING`: Task is actively being processed
-- `DONE`: Task completed successfully
-- `FAILED`: Task encountered an error and could not complete
+### System Operations
+
+<CardGroup cols={2}>
+  <Card title="Index Management" icon="layer-group">
+    - Index creation
+    - Updates and rebuilds
+    - Optimization tasks
+  </Card>
+  
+  <Card title="Maintenance" icon="wrench">
+    - Data migrations
+    - System updates
+    - Health checks
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+<Check>Monitor task status regularly</Check>
+<Check>Implement proper error handling</Check>
+<Check>Set appropriate timeouts</Check>
+<Check>Clean up completed tasks</Check>
+
+## Example Usage
+
+```python
+# Check task status
+task_status = mixpeek.tasks.get(task_id="task_123")
+
+if task_status.status == "DONE":
+    results = task_status.outputs
+    # Process results
+elif task_status.status == "FAILED":
+    error = task_status.error
+    # Handle error
+```
+
+<Note>
+For detailed API information about task management, see our [API Reference](/api-reference/tasks/get-task).
+</Note>

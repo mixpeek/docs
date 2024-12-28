@@ -153,7 +153,7 @@ graph TD
     POST /namespaces
     {
       "namespace_name": "sports_training_dev",
-      "vector_indexes": ["text", "video", "multimodal"]
+      "embedding_models": ["text", "video", "multimodal"]
     }
 
     # Create collections
@@ -229,7 +229,7 @@ POST /ingest/videos/url
       "embed": [
         {
           "type": "url",
-          "vector_index": "multimodal"
+          "embedding_model": "multimodal"
         }
       ],
       "entities": {

@@ -42,7 +42,7 @@ description: "Configure and customize multimodal feature extraction for differen
         "embed": [
           {
             "type": "text",
-            "vector_index": "default"
+            "embedding_model": "default"
           }
         ]
       }
@@ -59,12 +59,12 @@ description: "Configure and customize multimodal feature extraction for differen
         "embed": [
           {
             "type": "url",
-            "vector_index": "multimodal"
+            "embedding_model": "multimodal"
           },
           {
             "type": "text",
             "value": "describe this scene",
-            "vector_index": "text"
+            "embedding_model": "text"
           }
         ],
         "transcribe": { "enabled": true },
@@ -89,7 +89,7 @@ description: "Configure and customize multimodal feature extraction for differen
     |--------|------|-------------|---------|
     | `interval_sec` | number | Processing interval for videos | `10` |
     | `confidence_threshold` | number | Detection confidence threshold | `0.5` |
-    | `vector_index` | string | Target index for embeddings | `"default"` |
+    | `embedding_model` | string | Target index for embeddings | `"default"` |
   </Accordion>
 
   <Accordion title="Processing Modules">
