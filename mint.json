@@ -1,5 +1,6 @@
 {
   "name": "Mixpeek",
+  "layout": "sidenav",
   "favicon": "/favicon.png",
   "openapi": "https://api.mixpeek.com/docs/openapi.json",
   "logo": {
@@ -7,7 +8,9 @@
     "light": "/logo/light.png"
   },
   "api": {
-    "baseUrl": ["https://api.mixpeek.com"],
+    "baseUrl": [
+      "https://api.mixpeek.com"
+    ],
     "auth": {
       "method": "bearer",
       "name": "Authorization"
@@ -45,18 +48,18 @@
       "url": "https://mixpeek.com"
     },
     {
-      "name": "Release Notes",
-      "icon": "bell",
-      "url": "https://learn.mixpeek.com/release-notes/"
+      "name": "Engineering Blog",
+      "icon": "book-bookmark",
+      "url": "https://mixpeek.com/blog"
     },
     {
-      "name": "Learning Center",
+      "name": "Multimodal University",
       "icon": "book-bookmark",
       "url": "https://mixpeek.com/learn"
     }
   ],
   "primaryTab": {
-    "name": "Guide"
+    "name": "Documentation"
   },
   "tabs": [
     {
@@ -64,16 +67,12 @@
       "url": "api-reference"
     },
     {
-      "name": "Use Cases",
-      "url": "use-cases"
-    },
-    {
-      "name": "Studio",
-      "url": "studio"
-    },
-    {
       "name": "Integrations",
       "url": "integrations"
+    },
+    {
+      "name": "Changelog",
+      "url": "changelog"
     }
   ],
   "navigation": [
@@ -82,63 +81,43 @@
       "pages": [
         "overview/introduction",
         "overview/quickstart",
-        "overview/concepts",
+        {
+          "group": "Concepts",
+          "pages": [
+            "concepts/overview",
+            "concepts/assets",
+            "concepts/collections",
+            "concepts/namespaces",
+            "concepts/tasks"
+          ]
+        },
         "overview/benefits",
         "overview/limits"
       ]
     },
     {
-      "group": "Introduction",
-      "pages": ["use-cases/overview"]
-    },
-    {
-      "group": "Features",
+      "group": "Ingestion",
       "pages": [
-        "ingestion/extractors", 
-        "ingestion/embeddings",           
-        {
-          "group": "Entities",
-          "pages": ["entities/taxonomies", "entities/clusters"]
-        }
-      ]
-    },
-    {
-      "group": "Searching",
-      "pages": [
-        "searching/queries",
-        "searching/filters",
-        "searching/sort",
-        "searching/paginate",
-        "searching/group",
-        "searching/rerank"
+        "ingestion/extractors",
+        "ingestion/entities/taxonomies",
+        "ingestion/entities/clusters"
       ]
     },
     {
       "group": "Models",
       "pages": [
+        "overview/models/available-models",
         "overview/models/embedding-storage",
         "overview/models/fine-tuning"
       ]
     },
     {
-      "group": "Use Cases",
+      "group": "Search",
       "pages": [
-        "use-cases/video-alerting",
-        "use-cases/visual-discovery",
-        "use-cases/multimodal-search",
-        "use-cases/content-recommendation",
-        "use-cases/media-analytics",
-        "use-cases/multimodal-rag",
-        "use-cases/content-organization"
-      ]
-    },
-    {
-      "group": "Studio",
-      "pages": [
-        "studio/overview",
-        "studio/account",
-        "studio/collections",
-        "studio/search"
+        "searching/queries",
+        "searching/filters",
+        "searching/group",
+        "searching/rerank"
       ]
     },
     {
@@ -156,7 +135,9 @@
     },
     {
       "group": "Health",
-      "pages": ["api-reference/health/healthcheck"]
+      "pages": [
+        "api-reference/health/healthcheck"
+      ]
     },
     {
       "group": "Ingest",
@@ -217,11 +198,22 @@
     },
     {
       "group": "Tasks",
-      "pages": ["api-reference/tasks/get-task", "api-reference/tasks/kill-task"]
+      "pages": [
+        "api-reference/tasks/get-task",
+        "api-reference/tasks/kill-task"
+      ]
     },
     {
       "group": "Feature Extractors",
-      "pages": ["api-reference/feature-extractors/extract-embeddings"]
+      "pages": [
+        "api-reference/feature-extractors/extract-embeddings"
+      ]
+    },
+    {
+      "group": "Changelog",
+      "pages": [
+        "changelog/overview"
+      ]
     }
   ],
   "footerSocials": {

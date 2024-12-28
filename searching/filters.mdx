@@ -1,155 +1,170 @@
 ---
 title: "Filters"
+description: "Narrow down search results with powerful filtering capabilities"
 ---
 
-Search filters allow you to narrow down results based on specific criteria using logical operators and field conditions.
+<Note>
+  Search filters allow you to refine results using logical operators and field conditions, helping you find exactly what you need.
+</Note>
 
-## Understanding Filters
+## Filter Types
 
-### Filter Types
-
-1. **Logical Operators**
-
-   - `AND`: All conditions must match
-   - `OR`: Any condition can match
-   - `NOR`: No conditions should match
-
-2. **Field Operators**
-   - `eq`: Exact match
-   - `neq`: Not equal
-   - `gt`: Greater than
-   - `gte`: Greater than or equal
-   - `lt`: Less than
-   - `lte`: Less than or equal
-   - `in`: Value in array
-   - `nin`: Value not in array
-   - `exists`: Field exists
-   - `regex`: Regular expression match
+<CardGroup cols={2}>
+  <Card title="Logical Operators" icon="code-branch">
+    - AND: All conditions must match
+    - OR: Any condition can match
+    - NOR: No conditions should match
+    - Nested combinations supported
+  </Card>
+  
+  <Card title="Field Operators" icon="equals">
+    - Comparison (eq, neq, gt, lt)
+    - Range (gte, lte)
+    - Collection (in, nin)
+    - Existence & Pattern (exists, regex)
+  </Card>
+</CardGroup>
 
 ## Filter Structure
 
-### Basic Filter
-
-```json
-{
-  "filters": {
-    "AND": [
-      {
-        "key": "category",
-        "operator": "eq",
-        "value": "electronics"
-      }
-    ]
+<CodeGroup>
+  ```json Basic Filter
+  {
+    "filters": {
+      "AND": [
+        {
+          "key": "category",
+          "operator": "eq",
+          "value": "electronics"
+        }
+      ]
+    }
   }
-}
-```
+  ```
 
-### Complex Filter
-
-```json
-{
-  "filters": {
-    "case_sensitive": true,
-    "AND": [
-      {
-        "key": "price",
-        "operator": "gte",
-        "value": 100
-      },
-      {
-        "key": "in_stock",
-        "operator": "eq",
-        "value": true
-      }
-    ],
-    "OR": [
-      {
-        "key": "category",
-        "operator": "eq",
-        "value": "electronics"
-      },
-      {
-        "key": "category",
-        "operator": "eq",
-        "value": "accessories"
-      }
-    ],
-    "NOR": [
-      {
-        "key": "status",
-        "operator": "eq",
-        "value": "discontinued"
-      }
-    ]
+  ```json Complex Filter
+  {
+    "filters": {
+      "case_sensitive": true,
+      "AND": [
+        {
+          "key": "price",
+          "operator": "gte",
+          "value": 100
+        },
+        {
+          "key": "in_stock",
+          "operator": "eq",
+          "value": true
+        }
+      ],
+      "OR": [
+        {
+          "key": "category",
+          "operator": "in",
+          "value": ["electronics", "accessories"]
+        }
+      ]
+    }
   }
-}
-```
+  ```
+</CodeGroup>
+
+## Supported Operators
+
+<AccordionGroup>
+  <Accordion title="Comparison Operators">
+    | Operator | Description | Example |
+    |----------|-------------|---------|
+    | `eq` | Exact match | `"operator": "eq"` |
+    | `neq` | Not equal | `"operator": "neq"` |
+    | `gt` | Greater than | `"operator": "gt"` |
+    | `gte` | Greater than or equal | `"operator": "gte"` |
+    | `lt` | Less than | `"operator": "lt"` |
+    | `lte` | Less than or equal | `"operator": "lte"` |
+  </Accordion>
+
+  <Accordion title="Collection Operators">
+    | Operator | Description | Example |
+    |----------|-------------|---------|
+    | `in` | Value in array | `"operator": "in"` |
+    | `nin` | Value not in array | `"operator": "nin"` |
+    | `exists` | Field exists | `"operator": "exists"` |
+    | `regex` | Regular expression match | `"operator": "regex"` |
+  </Accordion>
+</AccordionGroup>
+
+## Common Use Cases
+
+<Tabs>
+  <Tab title="Metadata Filtering">
+    ```json
+    {
+      "filters": {
+        "AND": [
+          {
+            "key": "author",
+            "operator": "eq",
+            "value": "John Doe"
+          },
+          {
+            "key": "date",
+            "operator": "gte",
+            "value": "2024-01-01"
+          }
+        ]
+      }
+    }
+    ```
+  </Tab>
+
+  <Tab title="Content Filtering">
+    ```json
+    {
+      "filters": {
+        "AND": [
+          {
+            "key": "content_type",
+            "operator": "in",
+            "value": ["article", "blog"]
+          },
+          {
+            "key": "language",
+            "operator": "eq",
+            "value": "en"
+          }
+        ]
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
 
 ## Best Practices
 
-### Performance Optimization
-
-- Use indexed fields for filtering
-- Combine related conditions under single operators
-- Order conditions from most to least selective
-- Use appropriate operators for data types
-
-### Common Use Cases
-
-1. **Metadata Filtering**
-
-   - Filter by author, date, status
-   - Filter by categories or tags
-   - Filter by custom metadata fields
-
-2. **Content Filtering**
-
-   - Filter by content type
-   - Filter by content length
-   - Filter by content language
-
-3. **Quality Filtering**
-   - Filter by confidence scores
-   - Filter by relevance thresholds
-   - Filter by feature quality metrics
+<Steps>
+  <Step title="Use Indexed Fields">
+    Filter on indexed fields for optimal performance
+  </Step>
+  <Step title="Optimize Conditions">
+    Order conditions from most to least selective
+  </Step>
+  <Step title="Combine Related Filters">
+    Group related conditions under single operators
+  </Step>
+  <Step title="Validate Data Types">
+    Ensure correct data types for each operator
+  </Step>
+</Steps>
 
 ## Limitations
 
-### Technical Limitations
+<Warning>
+  Be aware of these technical constraints when building filters:
+  - Maximum 20 conditions per operator
+  - Only indexed fields can be filtered
+  - Nested filters have performance impact
+  - Case-sensitive filtering requires more resources
+</Warning>
 
-- Only indexed fields can be filtered
-- Complex filters may impact performance
-- Maximum of 20 conditions per operator
-- Nested filters not supported
-
-### Performance Impact
-
-- Each additional filter adds overhead
-- Complex regex operations are expensive
-- Large IN/NIN arrays affect performance
-- Case-sensitive filtering requires more resources
-
-### Data Type Constraints
-
-- Date fields must use ISO 8601 format
-- Numeric comparisons require consistent types
-- Boolean values must be true/false
-- String comparisons are exact by default
-
-## Error Handling
-
-### Common Errors
-
-- Invalid field names
-- Unsupported operators
-- Type mismatches
-- Missing required values
-
-### Resolution Steps
-
-1. Verify field names are correct
-2. Check operator compatibility
-3. Validate value types
-4. Ensure all required fields are present
-
-For implementation details and examples, see the [Search API Reference](/api-reference/search/overview).
+For detailed implementation examples, see the [Search API Reference](/api-reference/search/overview).

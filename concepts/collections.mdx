@@ -1,14 +1,124 @@
 ---
 title: "Collections"
+description: "Logical groupings of related content for optimized search and management"
 ---
 
-Collections in Mixpeek are logical groupings of related content that share similar characteristics, search configurations, and access patterns. They help organize your content and optimize search experiences.
+<Note>
+  Collections in Mixpeek are logical groupings of related content that share similar characteristics, search configurations, and access patterns. They help organize your content and optimize search experiences.
+</Note>
 
-## Understanding Collections
+## Collection Types
 
-### Key Concepts
+<CardGroup cols={2}>
+  <Card title="Content Collections" icon="folder">
+    - Document libraries
+    - Media galleries
+    - Product catalogs
+    - Knowledge bases
+  </Card>
+  
+  <Card title="Feature Collections" icon="layer-group">
+    - Embedding clusters
+    - Search indexes
+    - Feature stores
+    - Vector databases
+  </Card>
+</CardGroup>
 
-- **Content Organization**: Group related content together
-- **Search Configuration**: Shared search settings
-- **Access Control**: Granular permissions
-- **Performance Optimization**: Efficient resource usage
+## Key Concepts
+
+<AccordionGroup>
+  <Accordion title="Content Organization">
+    - Group related assets together
+    - Maintain logical separation
+    - Enable efficient browsing
+    - Support hierarchical structures
+  </Accordion>
+
+  <Accordion title="Search Configuration">
+    - Shared search settings
+    - Index configurations
+    - Relevance tuning
+    - Query templates
+  </Accordion>
+
+  <Accordion title="Access Control">
+    - Collection-level permissions
+    - User/role management
+    - Access patterns
+    - Security policies
+  </Accordion>
+</AccordionGroup>
+
+## Collection Structure
+
+<CodeGroup>
+  ```json Basic Collection
+  {
+    "collection": "product_catalog",
+    "description": "Main product catalog",
+    "metadata": {
+      "category": "e-commerce",
+      "region": "us-east"
+    }
+  }
+  ```
+
+  ```json Collection with Settings
+  {
+    "collection": "document_library",
+    "description": "Technical documentation",
+    "metadata": {
+      "department": "engineering",
+      "access_level": "internal"
+    }
+  }
+  ```
+</CodeGroup>
+
+## Best Practices
+
+<Steps>
+  <Step title="Plan Collection Structure">
+    Design collections around logical content groupings
+  </Step>
+  <Step title="Configure Indexes">
+    Set up appropriate indexes for content types
+  </Step>
+  <Step title="Manage Access">
+    Implement proper access controls and permissions
+  </Step>
+  <Step title="Monitor Usage">
+    Track collection performance and growth
+  </Step>
+</Steps>
+
+## Performance Optimization
+
+<CardGroup cols={2}>
+  <Card title="Resource Management" icon="server">
+    - Efficient storage usage
+    - Query optimization
+    - Cache configuration
+    - Load distribution
+  </Card>
+  
+  <Card title="Scaling Strategy" icon="arrow-up-right-dots">
+    - Horizontal scaling
+    - Shard management
+    - Resource allocation
+    - Growth planning
+  </Card>
+</CardGroup>
+
+## Limitations
+
+<Warning>
+  Be aware of these technical constraints:
+  - Maximum 1000 collections per namespace
+  - Collection names must be unique within namespace
+  - Maximum 10M assets per collection
+  - Collection metadata size limit: 100KB
+</Warning>
+
+For detailed implementation examples, see the [Collections API Reference](/api-reference/collections).

@@ -1,229 +1,157 @@
 ---
 title: "Reranking"
+description: "Adjust search result order using feedback signals and popularity metrics"
 ---
 
-Reranking adjusts the order of search results using additional signals beyond initial relevance scores, such as user feedback and popularity metrics.
+<Note>
+  Reranking improves search relevance by incorporating user feedback, popularity metrics, and custom weights to dynamically adjust result ordering.
+</Note>
 
-## Understanding Reranking
+## Ranking Types
 
-### Key Concepts
+<CardGroup cols={2}>
+  <Card title="Feedback Signals" icon="thumbs-up">
+    - Click interactions
+    - View duration
+    - Skip actions
+    - Custom events
+  </Card>
+  
+  <Card title="Popularity Metrics" icon="chart-line">
+    - Historical engagement
+    - Recent interactions
+    - Time decay
+    - Confidence scores
+  </Card>
+</CardGroup>
 
-1. **Ranking Signals**
+## Configuration
 
-   - Initial relevance score
-   - User feedback
-   - Popularity metrics
-   - Custom weights
-
-2. **Weight Configuration**
-   - Signal importance
-   - Score normalization
-   - Dynamic adjustment
-   - Feedback incorporation
-
-## Search Interactions
-
-### Interaction Types
-
-1. **Positive Signals**
-
-   ```json
-   {
-     "feature_id": "prod_123",
-     "interaction_type": "click",
-     "position": 2,
-     "metadata": {
-       "duration_ms": 45000,
-       "device": "mobile"
-     }
-   }
-   ```
-
-2. **Negative Signals**
-   ```json
-   {
-     "feature_id": "prod_456",
-     "interaction_type": "skip",
-     "position": 1,
-     "metadata": {
-       "interaction_reason": "not_relevant"
-     }
-   }
-   ```
-
-### Recording Interactions
-
-1. **Required Fields**
-
-   - `feature_id`: Unique identifier for the result
-   - `interaction_type`: Type of interaction (click, skip, etc.)
-   - `position`: Position in search results
-   - `metadata`: Additional context (optional)
-
-2. **Session Tracking**
-   ```json
-   {
-     "session_id": "sess_abc123",
-     "search_request": {
-       "queries": [
-         {
-           "type": "text",
-           "value": "blue dress",
-           "vector_index": "text"
-         }
-       ]
-     }
-   }
-   ```
-
-## Reranking Configuration
-
-### Basic Structure
-
-```json
-{
-  "reranking_options": {
-    "weights": {
-      "feedback": 0.7,
-      "popularity": 0.3
-    },
-    "enable_reranking": true,
-    "interaction_window_days": 30,
-    "min_interaction_threshold": 5
+<CodeGroup>
+  ```json Basic Reranking
+  {
+    "reranking_options": {
+      "weights": {
+        "feedback": 0.7,
+        "popularity": 0.3
+      },
+      "enable_reranking": true
+    }
   }
-}
-```
+  ```
 
-### Advanced Options
-
-1. **Interaction Windows**
-
-   ```json
-   {
-     "reranking_options": {
-       "interaction_weights": {
-         "recent": 0.6,
-         "historical": 0.4
-       },
-       "time_decay": {
-         "half_life_days": 7
-       }
-     }
-   }
-   ```
-
-2. **Signal Thresholds**
-   ```json
-   {
-     "reranking_options": {
-       "min_signals": {
-         "clicks": 10,
-         "views": 50
-       },
-       "confidence_threshold": 0.8
-     }
-   }
-   ```
-
-## Implementation Guide
-
-### Recording Interactions
-
-1. **Client-Side Integration**
-
-   ```javascript
-   // Track click interaction
-   await mixpeek.trackInteraction({
-     feature_id: resultId,
-     interaction_type: "click",
-     position: resultIndex,
-     metadata: {
-       device: "mobile",
-       duration_ms: viewDuration,
-     },
-   });
-   ```
-
-2. **Batch Processing**
-
-   ```python
-   # Process multiple interactions
-   interactions = [
-     {
-       "feature_id": "prod_123",
-       "interaction_type": "click",
-       "position": 2
-     },
-     {
-       "feature_id": "prod_456",
-       "interaction_type": "skip",
-       "position": 1
-     }
-   ]
-
-   await mixpeek.bulk_track_interactions(interactions)
-   ```
-
-### Enabling Reranking
-
-```python
-# Configure search with reranking
-search_request = {
-  "queries": [{
-    "type": "text",
-    "value": "summer dress",
-    "vector_index": "text"
-  }],
-  "reranking_options": {
-    "weights": {
-      "feedback": 0.7,
-      "popularity": 0.3
-    },
-    "enable_reranking": true
+  ```json Advanced Reranking
+  {
+    "reranking_options": {
+      "interaction_weights": {
+        "recent": 0.6,
+        "historical": 0.4
+      },
+      "time_decay": {
+        "half_life_days": 7
+      },
+      "min_interaction_threshold": 5
+    }
   }
-}
+  ```
+</CodeGroup>
 
-results = await mixpeek.search(search_request)
-```
+## Interaction Recording
+
+<AccordionGroup>
+  <Accordion title="Required Fields">
+    | Field | Type | Description | Example |
+    |-------|------|-------------|---------|
+    | `feature_id` | string | Result identifier | `"prod_123"` |
+    | `interaction_type` | string | Type of interaction | `"click"` |
+    | `position` | number | Result position | `2` |
+  </Accordion>
+
+  <Accordion title="Optional Fields">
+    | Field | Type | Description | Example |
+    |-------|------|-------------|---------|
+    | `metadata` | object | Additional context | `{"duration_ms": 45000}` |
+    | `session_id` | string | Session identifier | `"sess_abc123"` |
+    | `timestamp` | string | Event timestamp | `"2024-01-01T12:00:00Z"` |
+  </Accordion>
+</AccordionGroup>
+
+## Common Use Cases
+
+<Tabs>
+  <Tab title="Click Tracking">
+    ```javascript
+    await mixpeek.trackInteraction({
+      feature_id: "prod_123",
+      interaction_type: "click",
+      position: 2,
+      metadata: {
+        device: "mobile",
+        duration_ms: 45000
+      }
+    });
+    ```
+  </Tab>
+
+  <Tab title="Batch Processing">
+    ```python
+    interactions = [
+      {
+        "feature_id": "prod_123",
+        "interaction_type": "click",
+        "position": 2
+      },
+      {
+        "feature_id": "prod_456",
+        "interaction_type": "skip",
+        "position": 1
+      }
+    ]
+
+    await mixpeek.bulk_track_interactions(interactions)
+    ```
+  </Tab>
+</Tabs>
+
+## Implementation Flow
+
+<Frame>
+  ```mermaid
+  graph TD
+    A[User Interaction] --> B[Record Event]
+    B --> C[Process Signal]
+    C --> D[Update Scores]
+    D --> E[Apply Reranking]
+    style A fill:#f9f,stroke:#333
+    style E fill:#9ff,stroke:#333
+  ```
+</Frame>
 
 ## Best Practices
 
-### Optimization Tips
+<Steps>
+  <Step title="Configure Weights">
+    Start with balanced weights and adjust based on data
+  </Step>
+  <Step title="Monitor Quality">
+    Filter spam and validate interaction data
+  </Step>
+  <Step title="Handle Edge Cases">
+    Account for new items and missing signals
+  </Step>
+  <Step title="Test Changes">
+    A/B test different reranking configurations
+  </Step>
+</Steps>
 
-1. **Weight Tuning**
+## Limitations
 
-   - Start with balanced weights (0.5/0.5)
-   - Adjust based on interaction volume
-   - Monitor impact on key metrics
-   - A/B test different configurations
+<Warning>
+  Be aware of these technical constraints:
+  - Minimum interaction threshold required
+  - Historical data retention limits
+  - Processing delay for new signals
+  - Resource impact of complex configurations
+</Warning>
 
-2. **Data Quality**
-   - Filter bot/spam interactions
-   - Validate interaction data
-   - Handle edge cases
-   - Maintain consistent tracking
-
-## Error Handling
-
-### Common Issues
-
-1. **Invalid Configuration**
-
-   ```json
-   {
-     "error": "invalid_weights",
-     "message": "Weights must sum to 1.0",
-     "weights": {
-       "feedback": 0.7,
-       "popularity": 0.5
-     }
-   }
-   ```
-
-2. **Resolution Steps**
-   - Validate weight configurations
-   - Check interaction data format
-   - Monitor reranking performance
-   - Handle missing signals gracefully
-
-For implementation details and examples, see the [Interactions API Reference](/api-reference/search-interactions/create-interaction).
+For detailed implementation examples, see the [Interactions API Reference](/api-reference/search-interactions/create-interaction).

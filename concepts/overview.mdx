@@ -1,0 +1,109 @@
+---
+title: "Overview"
+description: "Learn about the fundamental concepts and components of Mixpeek"
+---
+
+<CardGroup cols={2}>
+  <Card title="Assets" icon="file" >
+    Individual pieces of content (text, images, videos) that you index and search. Assets are processed to extract features and make them searchable.
+  </Card>
+  
+  <Card title="Collections" icon="folder">
+    Logical groupings of related content that share similar characteristics, search configurations, and access patterns.
+  </Card>
+
+  <Card title="Features" icon="puzzle-piece">
+    Extracted data points and characteristics from your content that enable advanced search and analysis using AI models.
+  </Card>
+
+  <Card title="Namespaces" icon="box">
+    Isolated environments for organizing and managing content and search applications with separate configurations and permissions.
+  </Card>
+
+  <Card title="Search" icon="magnifying-glass">
+    Powerful search capabilities including feature search, asset search, semantic search, and multi-modal search across content types.
+  </Card>
+
+  <Card title="Tasks" icon="list-check">
+    Asynchronous operations for content processing, feature extraction, and index building with status tracking.
+  </Card>
+
+  <Card title="Organizations" icon="building">
+    Manage organizations, users, API keys, and monitor usage across your account with comprehensive administrative controls.
+  </Card>
+
+  <Card title="Embedding Models" icon="database">
+    Specialized data structures optimized for similarity search across content embeddings with support for different modalities.
+  </Card>
+</CardGroup>
+
+
+## System Architecture
+
+<Frame>
+```mermaid
+erDiagram
+    Organization ||--|{ User : has
+    Organization ||--|{ Namespace : owns
+    User }|--o{ Namespace : has_access_to
+    Namespace ||--|{ VectorIndex : contains
+    Namespace ||--|{ Collection : contains
+    Collection ||--|{ Asset : contains
+    Asset ||--|{ Feature : has
+    Feature }|--|| VectorIndex : stored_in
+
+    Organization {
+        string id PK
+        string name
+        datetime created_at
+    }
+
+    User {
+        string id PK
+        string email
+        string org_id FK
+        array roles
+    }
+
+    Namespace {
+        string id PK
+        string name
+        string org_id FK
+        datetime created_at
+    }
+
+    VectorIndex {
+        string id PK
+        string name
+        string namespace_id FK
+        string type
+        dict settings
+    }
+
+    Collection {
+        string id PK
+        string name
+        string namespace_id FK
+        datetime created_at
+    }
+
+    Asset {
+        string id PK
+        string collection_id FK
+        string namespace_id FK
+        string url
+        string type
+        dict metadata
+    }
+
+    Feature {
+        string id PK
+        string asset_id FK
+        string collection_id FK
+        string namespace_id FK
+        string vector_index_id FK
+        string type
+        dict value
+    }
+```
+</Frame>

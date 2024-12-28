@@ -1,43 +1,180 @@
 ---
-title: "Feature Extractors"
+title: "Feature Extraction"
+description: "Configure and customize multimodal feature extraction for different content types"
 ---
 
-Feature extractors are the core components that process your content and extract meaningful information. Mixpeek provides a variety of pre-built extractors and allows you to create custom ones.
+<Note>
+  Feature extractors allow you to define how content is processed and what information is extracted, with support for text, images, video, and audio content.
+</Note>
 
-## Available Extractors
+## Extractor Types
 
-### read
+<CardGroup cols={3}>
+  <Card title="Text Processing" icon="font">
+    - Text embedding
+    - Language detection
+    - Sentiment analysis
+    - Named entity recognition
+  </Card>
+  
+  <Card title="Image Analysis" icon="image">
+    - Object detection
+    - Scene classification
+    - Face recognition
+    - OCR extraction
+  </Card>
 
-Processes and reads the content of files, enabling basic content extraction and analysis.
+  <Card title="Video Processing" icon="video">
+    - Frame analysis
+    - Transcription
+    - Scene detection
+    - Motion tracking
+  </Card>
+</CardGroup>
 
-### embed
+## Configuration
 
-Generates vector embeddings from content for similarity search and semantic analysis. Supports multiple embedding types:
+<CodeGroup>
+  ```json Basic Extraction
+  {
+    "feature_extractors": [
+      {
+        "embed": [
+          {
+            "type": "text",
+            "vector_index": "default"
+          }
+        ]
+      }
+    ]
+  }
+  ```
 
-- `url`: Creates embeddings from URL content
-- `text`: Generates embeddings from text input
-- `keyword`: Creates keyword-based embeddings
+  ```json Advanced Video Processing
+  {
+    "feature_extractors": [
+      {
+        "interval_sec": 15,
+        "read": { "enabled": true },
+        "embed": [
+          {
+            "type": "url",
+            "vector_index": "multimodal"
+          },
+          {
+            "type": "text",
+            "value": "describe this scene",
+            "vector_index": "text"
+          }
+        ],
+        "transcribe": { "enabled": true },
+        "describe": { "enabled": true },
+        "detect": {
+          "faces": {
+            "confidence_threshold": 0.8,
+            "enabled": true
+          }
+        }
+      }
+    ]
+  }
+  ```
+</CodeGroup>
 
-### transcribe
+## Extractor Options
 
-Converts audio/video content into text, providing searchable transcriptions of spoken content.
+<AccordionGroup>
+  <Accordion title="Common Settings">
+    | Option | Type | Description | Default |
+    |--------|------|-------------|---------|
+    | `interval_sec` | number | Processing interval for videos | `10` |
+    | `confidence_threshold` | number | Detection confidence threshold | `0.5` |
+    | `vector_index` | string | Target index for embeddings | `"default"` |
+  </Accordion>
 
-### describe
+  <Accordion title="Processing Modules">
+    | Module | Capabilities | Output |
+    |--------|-------------|---------|
+    | `embed` | Vector embeddings | Embeddings array |
+    | `transcribe` | Speech-to-text | Text transcript |
+    | `describe` | Scene description | Natural language |
+    | `detect` | Object/face detection | Bounding boxes |
+  </Accordion>
+</AccordionGroup>
 
-Generates natural language descriptions of content, particularly useful for images and videos.
+## Output Configuration
 
-### detect
+<Tabs>
+  <Tab title="JSON Output">
+    ```json
+    {
+      "json_output": {
+        "response_shape": {
+          "objects": ["str"],
+          "scenes": ["str"],
+          "faces": {
+            "count": "int",
+            "locations": ["array"]
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
 
-Performs object and entity detection in visual content:
+  <Tab title="Vector Output">
+    ```json
+    {
+      "vector_output": {
+        "format": "float32",
+        "dimensions": 1024,
+        "include_metadata": true
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
 
-- `faces`: Identifies and analyzes faces with configurable confidence thresholds
-- Objects: Detects and labels visible objects
-- Scenes: Identifies scene contexts
+## Processing Flow
 
-### json_output
+<Frame>
+  ```mermaid
+  graph TD
+    A[Content Input] --> B[Feature Extraction]
+    B --> C[Vector Embedding]
+    B --> D[Metadata Generation]
+    C --> E[Index Storage]
+    D --> E
+    style A fill:#f9f,stroke:#333
+    style E fill:#9ff,stroke:#333
+  ```
+</Frame>
 
-Structures extracted information into customizable JSON formats. Configure the output shape for:
+## Best Practices
 
-- `objects`: Array of detected object strings
-- `scenes`: Array of scene description strings
-- Custom fields based on your needs
+<Steps>
+  <Step title="Optimize Intervals">
+    Choose appropriate processing intervals for video content
+  </Step>
+  <Step title="Configure Thresholds">
+    Set confidence thresholds based on use case requirements
+  </Step>
+  <Step title="Select Indexes">
+    Use appropriate vector indexes for different content types
+  </Step>
+  <Step title="Monitor Resources">
+    Balance processing depth with resource utilization
+  </Step>
+</Steps>
+
+## Limitations
+
+<Warning>
+  Be aware of these technical constraints:
+  - Maximum video duration: 4 hours
+  - Maximum file size: 2GB
+  - Processing timeout: 30 minutes
+  - Rate limits apply to extraction requests
+</Warning>
+
+For detailed implementation examples, see the [Feature Extraction API Reference](/api-reference/features/get-feature). 

@@ -2,11 +2,8 @@
 title: "Quickstart"
 ---
 
-# Mixpeek Quickstart Guide
-
 <Note>
-  There is an interactive version of this guide embedded in your dashboard on
-  the <a href="https://dash.mixpeek.com/notebooks">Notebooks page</a>
+  There is an interactive version of this guide embedded in your studio portal.
 </Note>
 
 <iframe
@@ -23,20 +20,17 @@ title: "Quickstart"
 
 First, install the required libraries:
 
-`pip install requests`
+`pip install mixpeek`
+
+https://pypi.org/project/mixpeek
+
+Initialize the Mixpeek client:
 
 ```python
-import requests
-import json
+import os
+from mixpeek import Mixpeek
 
-# Replace with your Mixpeek API key
-API_KEY = "YOUR_API_KEY"
-BASE_URL = "https://api.mixpeek.com"
-
-headers = {
-    'Authorization': f'Bearer {API_KEY}',
-    'Content-Type': 'application/json'
-}
+client = Mixpeek(token="MIXPEEK_API_KEY")
 ```
 
 ## Indexing Content
@@ -46,87 +40,75 @@ You can index various types of content including images, videos, and text:
 ### Image Indexing
 
 ```python
-url = f"{BASE_URL}/index/images/url"
-
-image_payload = {
-    "url": "https://example.com/sample-image.jpg",
-    "collection_id": "quickstart",
-    "metadata": {
+# Index an image from URL
+response = client.ingest.image_url(
+    url="https://example.com/sample-image.jpg",
+    collection="quickstart",
+    metadata={
         "title": "Sample Image",
         "category": "demo"
     },
-    "feature_extractors": {
-        "embed": [
+    feature_extractors=client.ImageSettings(
+        embed=[
             {
-                "type": "url",
-                "vector_name": "image"
+                "type": client.InputType.URL,
+                "embedding_model": client.EmbeddingModel.IMAGE
             }
         ],
-        "describe": {
-            "enabled": True,
-            "vector_name": "text"
+        describe={
+            "enabled": True
         }
-    }
-}
-
-response = requests.post(url, headers=headers, json=image_payload)
-print(json.dumps(response.json(), indent=2))
+    )
+)
 ```
 
 ### Video Indexing
 
 ```python
-url = f"{BASE_URL}/index/videos/url"
-
-video_payload = {
-    "url": "https://example.com/sample-video.mp4",
-    "collection_id": "quickstart",
-    "metadata": {
+# Index a video from URL
+response = client.ingest.video_from_url(
+    url="https://example.com/sample-video.mp4",
+    collection="quickstart",
+    metadata={
         "title": "Sample Video",
         "category": "demo"
     },
-    "feature_extractors": [{
-        "interval_sec": 15,
-        "embed": [
-            {
-                "type": "url",
-                "vector_name": "multimodal"
-            }
-        ],
-        "transcribe": {"enabled": True},
-        "describe": {"enabled": True}
-    }]
-}
-
-response = requests.post(url, headers=headers, json=video_payload)
-print(json.dumps(response.json(), indent=2))
+    feature_extractors=[
+        client.VideoSettings(
+            interval_sec=15,
+            embed=[
+                {
+                    "type": client.InputType.URL,
+                    "embedding_model": client.EmbeddingModel.MULTIMODAL
+                }
+            ],
+            transcribe={"enabled": True},
+            describe={"enabled": True}
+        )
+    ]
+)
 ```
 
 ### Text Indexing
 
 ```python
-url = f"{BASE_URL}/index/text"
-
-text_payload = {
-    "collection_id": "quickstart",
-    "metadata": {
+# Index text content
+response = client.ingest.text(
+    collection="quickstart",
+    metadata={
         "title": "Sample Text",
         "category": "demo"
     },
-    "feature_extractors": {
+    feature_extractors={
         "embed": [
             {
-                "field_name": "content",
-                "type": "text",
-                "value": "Your text content here",
-                "vector_name": "text"
+                "type": client.InputType.TEXT,
+                "embedding_model": client.EmbeddingModel.TEXT,
+                "value": "Your text content here"
             }
         ]
     }
-}
-
-response = requests.post(url, headers=headers, json=text_payload)
-print(json.dumps(response.json(), indent=2))
+)
 ```
 
 ## Searching Content
@@ -134,46 +116,34 @@ print(json.dumps(response.json(), indent=2))
 Now you can perform both text and vector searches across your collections:
 
 ```python
-url = f"{BASE_URL}/features/search"
-
-payload = {
-    "queries": [
+response = mixpeek.features.search(
+    queries=[
         # Text vector search
         {
             "vector_index": "text",
             "value": "dog jumping in the park",
             "type": "text",
-            "settings": {
-                "limit": 10,
-                "relevance_threshold": 0.5
-            }
         },
-        # Image vector search (using URL)
+        # Image vector search
         {
             "vector_index": "image",
             "value": "https://example.com/sample-image.jpg",
-            "type": "url",
-            "settings": {
-                "limit": 10,
-                "relevance_threshold": 0.7
-            }
+            "type": "url"
         }
     ],
-    "collection_ids": ["quickstart"],
-    "filters": {
-        "AND": [
+    collections=["quickstart"],
+    page_size=10,
+    filters={
+        "case_sensitive": True,
+        "and_": [
             {
                 "key": "metadata.category",
-                "value": "animals",
+                "value": "demo",
                 "operator": "eq"
             }
         ]
     }
-}
-
-response = requests.post(url, headers=headers, json=payload)
-search_results = response.json()
-print(json.dumps(search_results, indent=2))
+)
 ```
 
 ## Next Steps

@@ -1,191 +1,120 @@
 ---
 title: "Introduction"
+description: "Learn how Mixpeek enables powerful multimodal search applications across different types of media"
 ---
 
-Mixpeek is a developer platform for building multimodal search applications, this enables natural language queries that can understand intention to retrieve results that span multiple types of media. With Mixpeek, you can:
+<Note>
+  Mixpeek is a developer platform for building multimodal search applications that understand user intention across multiple types of media.
+</Note>
 
-- Extract meaningful features from images, videos, and text
-- Build powerful search experiences across different content types
-- Create custom search experiences tailored to your use case
-- Deploy production-ready applications with scalable infrastructure
+<CardGroup cols={2}>
+  <Card title="Extract Features" icon="wand-magic-sparkles">
+    Extract meaningful features from images, videos, and text automatically
+  </Card>
+  
+  <Card title="Build Search" icon="magnifying-glass">
+    Create powerful search experiences across different content types
+  </Card>
+
+  <Card title="Customize" icon="sliders">
+    Build custom search experiences tailored to your specific use case
+  </Card>
+
+  <Card title="Scale" icon="rocket">
+    Deploy production-ready applications with scalable infrastructure
+  </Card>
+</CardGroup>
 
 ## How It Works
 
-1. **Index Your Content**: Upload your media (images, videos, text) to Mixpeek
-2. **Extract Features**: Mixpeek automatically processes your content to extract meaningful features
-3. **Search & Analyze**: Use our APIs to build search, recommendation, and analytics applications
+<Steps>
+  <Step title="Index Your Content">
+    Upload your media (images, videos, text) to Mixpeek
+  </Step>
+  <Step title="Extract Features">
+    Mixpeek automatically processes your content to extract meaningful features
+  </Step>
+  <Step title="Search & Analyze">
+    Use our APIs to build search, recommendation, and analytics applications
+  </Step>
+</Steps>
 
 ## Key Features
 
-### 🔍 Multimodal Search
+<AccordionGroup>
+  <Accordion title="🔍 Multimodal Search" icon="magnifying-glass">
+    Build sophisticated search experiences:
+    - Natural language queries across all media types
+    - Visual similarity search for images and videos
+    - Cross-modal search (find images with text, or vice versa)
+    - Semantic understanding of content
 
-Build sophisticated search experiences:
+    Learn more in our [Search API](/api-reference/features/search-features).
+  </Accordion>
 
-- Natural language queries across all media types
-- Visual similarity search for images and videos
-- Cross-modal search (find images with text, or vice versa)
-- Semantic understanding of content
+  <Accordion title="🎯 Feature Extraction" icon="gears">
+    Extract valuable insights automatically:
+    - Object and scene detection
+    - Text extraction from images and videos
+    - Face detection and recognition
+    - Custom extraction pipelines
 
-Learn more in our [Search documentation](/search/queries).
-
-### 🎯 Feature Extraction
-
-Extract valuable insights automatically:
-
-- Object and scene detection
-- Text extraction from images and videos
-- Face detection and recognition
-- Custom extraction pipelines
-
-Explore our [Features documentation](/concepts/features) to learn more.
-
-### 🏗️ Core Concepts
-
-- **[Namespaces](/concepts/namespaces)**: Isolated environments for your applications
-- **[Collections](/concepts/collections)**: Logical groupings of related content
-- **[Vector Indexes](/concepts/vector-indexes)**: Efficient similarity search infrastructure
-- **[Assets](/concepts/assets)**: Your indexed media content
-- **[Features](/concepts/features)**: Extracted data points from your content
-- **[Tasks](/concepts/tasks)**: Background processing jobs
-
-### Key Concepts
-
-- **Content Types**: Different types of media content
-- **Feature Extraction**: Automated processing and analysis
-- **Metadata**: Additional information about assets
-- **Lifecycle Management**: Asset creation to deletion
-
-#### How Everything Relates
-
-The Mixpeek system is organized hierarchically, with Organizations at the top level managing access and resources across the platform. Here's how the different components interact:
-
-```mermaid
-erDiagram
-    Organization ||--|{ User : has
-    Organization ||--|{ Namespace : owns
-    User }|--o{ Namespace : has_access_to
-    Namespace ||--|{ VectorIndex : contains
-    Namespace ||--|{ Collection : contains
-    Collection ||--|{ Asset : contains
-    Asset ||--|{ Feature : has
-    Feature }|--|| VectorIndex : stored_in
-
-    Organization {
-        string id PK
-        string name
-        datetime created_at
-    }
-
-    User {
-        string id PK
-        string email
-        string org_id FK
-        array roles
-    }
-
-    Namespace {
-        string id PK
-        string name
-        string org_id FK
-        datetime created_at
-    }
-
-    VectorIndex {
-        string id PK
-        string name
-        string namespace_id FK
-        string type
-        dict settings
-    }
-
-    Collection {
-        string id PK
-        string name
-        string namespace_id FK
-        datetime created_at
-    }
-
-    Asset {
-        string id PK
-        string collection_id FK
-        string namespace_id FK
-        string url
-        string type
-        dict metadata
-    }
-
-    Feature {
-        string id PK
-        string asset_id FK
-        string collection_id FK
-        string namespace_id FK
-        string vector_index_id FK
-        string type
-        dict value
-    }
-```
-
-#### Component Relationships
-
-1. **Organizations & Users**
-
-   - Organizations are the top-level entities that contain users and namespaces
-   - Users belong to organizations and can have access to multiple namespaces
-
-2. **Namespaces**
-
-   - Act as containers for collections and vector indexes
-   - Provide isolation and organization of resources
-   - Can be accessed by multiple users
-
-3. **Collections & Assets**
-
-   - Collections organize related assets
-   - Assets are stored within collections and can have multiple features
-
-4. **Features & Vector Indexes**
-   - Features are extracted from assets and stored in vector indexes
-   - Vector indexes enable efficient similarity search and retrieval
-   - Each feature is associated with a specific vector index type
-
-### 🔌 Existing Integrations
-
-Connect with your existing stack:
-
-- **Databases**: MongoDB, PostgreSQL, Supabase
-- **Vector Stores**: Pinecone, Weaviate, Qdrant
-- **Caching**: Redis integration for high performance
-
-View all [Integrations](/integrations).
+    Explore our [Features API](/concepts/features) to learn more.
+  </Accordion>
+</AccordionGroup>
 
 ## Common Use Cases
 
-- **[Video Alerting](/use-cases/video-alerting)**: Real-time monitoring and detection of objects, events, or anomalies in video streams.
+<CardGroup cols={2}>
+  <Card title="Video Alerting" icon="video">
+    Real-time monitoring and detection of objects, events, or anomalies in video streams
+  </Card>
+  
+  <Card title="Visual Discovery" icon="image">
+    Power visual search engines and recommendation systems
+  </Card>
 
-- **[Visual Discovery](/use-cases/visual-discovery)**: Power visual search engines and recommendation systems based on image similarity and style matching.
+  <Card title="Multimodal Search" icon="search">
+    Enable natural language search across all content types
+  </Card>
 
-- **[Multimodal Search](/use-cases/multimodal-search)**: Enable users to search across all content types using natural language or visual inputs.
+  <Card title="Content Recommendation" icon="rectangle-list">
+    Build personalized recommendation systems
+  </Card>
 
-- **[Content Recommendation](/use-cases/content-recommendation)**: Build personalized recommendation systems using visual and semantic understanding.
+  <Card title="Media Analytics" icon="chart-line">
+    Gain insights through automated content analysis
+  </Card>
 
-- **[Media Analytics](/use-cases/media-analytics)**: Gain insights through automated content analysis, object detection, and categorization.
-
-- **[Multimodal RAG](/use-cases/multimodal-rag)**: Create AI applications that can understand and process information across text, images, and videos.
-
-- **[Content Organization](/use-cases/content-organization)**: Automatically organize and tag media libraries using AI-powered content understanding.
+  <Card title="Multimodal RAG" icon="robot">
+    Create AI applications that process cross-modal information
+  </Card>
+</CardGroup>
 
 ## Getting Started
 
-1. **[Quickstart Guide](/overview/quickstart)**: Set up your first Mixpeek application
-2. **[Client Libraries](/overview/client-libraries)**: Integrate using our SDKs
-3. **[API Reference](/api-reference)**: Explore our REST API
-4. **[Studio](/studio/overview)**: Use our visual interface to manage content
+<CardGroup cols={2}>
+  <Card title="Quickstart Guide" icon="play">
+    Set up your first Mixpeek application
+    <Link href="/overview/quickstart">Get Started →</Link>
+  </Card>
+  
+  <Card title="Client Libraries" icon="code">
+    Integrate using our SDKs
+    <Link href="/overview/client-libraries">View SDKs →</Link>
+  </Card>
 
-## Resources
+  <Card title="API Reference" icon="book">
+    Explore our REST API
+    <Link href="/api-reference">View API →</Link>
+  </Card>
 
-- [Learning Center](https://mixpeek.com/learn)
-- [Release Notes](https://learn.mixpeek.com/release-notes/)
-- [Usage Limits](/overview/limits)
-- [Contact Support](https://mixpeek.com/contact)
+  <Card title="Studio" icon="desktop">
+    Use our visual interface
+    <Link href="/studio/overview">Open Studio →</Link>
+  </Card>
+</CardGroup>
 
-Ready to build? [Create your account](https://mixpeek.com/start) or check out our [Quickstart Guide](/overview/quickstart).
+<Note>
+  Ready to build? [Create your account](https://mixpeek.com/start) or check out our [Quickstart Guide](/overview/quickstart).
+</Note>

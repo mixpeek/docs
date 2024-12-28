@@ -1,158 +1,156 @@
 ---
 title: "Grouping"
+description: "Organize search results into logical clusters based on common fields"
 ---
 
-Grouping allows you to organize search results into logical clusters based on common fields, making it easier to analyze and present related content together.
+<Note>
+  Grouping allows you to cluster related search results together, making it easier to analyze and present content with shared characteristics.
+</Note>
 
-## Understanding Grouping
+## Group Types
 
-### Key Concepts
+<CardGroup cols={2}>
+  <Card title="Default Grouping" icon="layer-group">
+    - Asset ID grouping
+    - Metadata field grouping
+    - Feature type grouping
+    - Custom field grouping
+  </Card>
+  
+  <Card title="Group Properties" icon="sliders">
+    - Maximum features per group
+    - Internal group sorting
+    - Group metadata
+    - Group statistics
+  </Card>
+</CardGroup>
 
-1. **Group Fields**
+## Configuration
 
-   - Asset ID grouping (default)
-   - Metadata field grouping
-   - Feature type grouping
-   - Custom field grouping
-
-2. **Group Properties**
-   - Maximum features per group
-   - Internal group sorting
-   - Group metadata
-   - Group statistics
-
-## Group Configuration
-
-### Basic Structure
-
-```json
-{
-  "group_by": {
-    "field": "asset_id",
-    "max_features": 10,
-    "sort": {
-      "direction": "desc",
-      "field": "metadata.field_name"
+<CodeGroup>
+  ```json Basic Grouping
+  {
+    "group_by": {
+      "field": "asset_id",
+      "max_features": 10
     }
   }
-}
-```
+  ```
 
-### Configuration Options
+  ```json Advanced Grouping
+  {
+    "group_by": {
+      "field": "metadata.category",
+      "max_features": 20,
+      "sort": {
+        "direction": "desc",
+        "field": "confidence"
+      }
+    }
+  }
+  ```
+</CodeGroup>
 
-1. **Group Field Selection**
+## Configuration Options
 
-   - Must be an indexed field
-   - Supports dot notation for nested fields
-   - Limited to predefined grouping fields
-   - Contact support to add custom grouping fields
+<AccordionGroup>
+  <Accordion title="Group Field Selection">
+    | Option | Description | Default |
+    |--------|-------------|---------|
+    | `field` | Field to group by | `asset_id` |
+    | `max_features` | Features per group | 10 |
+    | `sort` | Internal group sorting | null |
+  </Accordion>
 
-2. **Group Size Control**
-
-   - Default: 10 features per group
-   - Maximum: 50 features per group
-   - Configurable via max_features
-   - Affects performance and memory usage
-
-3. **Group Sorting**
-   - Sort by any indexed field
-   - Ascending or descending order
-   - Supports metadata fields
-   - Maintains relevance within groups
+  <Accordion title="Supported Fields">
+    | Field Type | Examples | Notes |
+    |------------|----------|-------|
+    | Metadata | `category`, `author` | Must be indexed |
+    | System | `asset_id`, `feature_type` | Always available |
+    | Custom | Contact support | Additional setup required |
+  </Accordion>
+</AccordionGroup>
 
 ## Common Use Cases
 
-### Content Organization
+<Tabs>
+  <Tab title="Document Groups">
+    ```json
+    {
+      "group_by": {
+        "field": "document_id",
+        "max_features": 15,
+        "sort": {
+          "field": "page_number",
+          "direction": "asc"
+        }
+      }
+    }
+    ```
+  </Tab>
 
-1. **Document Groups**
+  <Tab title="Media Groups">
+    ```json
+    {
+      "group_by": {
+        "field": "event_id",
+        "max_features": 25,
+        "sort": {
+          "field": "timestamp",
+          "direction": "desc"
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
 
-   - Group pages from same document
-   - Group sections by topic
-   - Group by document type
-   - Group by author or source
+## Response Format
 
-2. **Media Groups**
-
-   - Group frames from same video
-   - Group images by event
-   - Group by visual similarity
-   - Group by timestamp
-
-3. **Feature Groups**
-   - Group by feature type
-   - Group by confidence score
-   - Group by extraction method
-   - Group by processing status
-
-## Limitations
-
-### Technical Constraints
-
-1. **Field Restrictions**
-
-   - Only predefined fields supported
-   - No dynamic field grouping
-   - No computed field grouping
-   - Limited nested field support
-
-2. **Size Limitations**
-
-   - Maximum groups per request
-   - Maximum features per group
-   - Memory usage constraints
-   - Response size limits
-
-3. **Functionality Restrictions**
-   - No cross-group operations
-   - No group aggregations
-   - No group-level filtering
-   - Not compatible with offset pagination
-
-### Performance Considerations
-
-1. **Resource Usage**
-
-   - Groups consume additional memory
-   - Sorting within groups adds overhead
-   - Large group sizes impact performance
-   - Complex group fields slow response time
-
-2. **Scaling Factors**
-   - Number of groups
-   - Features per group
-   - Group field complexity
-   - Sort field complexity
+<Frame>
+  ```json
+  {
+    "groups": [
+      {
+        "key": "document_123",
+        "total_features": 45,
+        "features": [...],
+        "metadata": {
+          "document_type": "pdf",
+          "total_pages": 12
+        }
+      }
+    ],
+    "total_groups": 5
+  }
+  ```
+</Frame>
 
 ## Best Practices
 
-### Optimization Tips
+<Steps>
+  <Step title="Choose Meaningful Groups">
+    Select grouping fields that create logical content clusters
+  </Step>
+  <Step title="Optimize Group Size">
+    Balance between completeness and performance
+  </Step>
+  <Step title="Use Efficient Sorting">
+    Sort groups internally using indexed fields
+  </Step>
+  <Step title="Handle Edge Cases">
+    Account for empty groups and varying group sizes
+  </Step>
+</Steps>
 
-1. **Group Selection**
+## Limitations
 
-   - Choose meaningful group fields
-   - Limit group sizes appropriately
-   - Use efficient sort fields
-   - Consider result set size
+<Warning>
+  Be aware of these technical constraints:
+  - Maximum 50 features per group
+  - Only predefined fields supported for grouping
+  - No cross-group operations
+  - Not compatible with offset pagination
+</Warning>
 
-2. **Performance Tuning**
-   - Monitor group counts
-   - Optimize max_features
-   - Use indexed sort fields
-   - Cache frequent group results
-
-### Common Patterns
-
-1. **Hierarchical Grouping**
-
-   - Primary grouping by asset
-   - Secondary sorting within groups
-   - Maintain relevance ordering
-   - Preserve feature relationships
-
-2. **Result Presentation**
-   - Display group summaries
-   - Show top features per group
-   - Enable group expansion
-   - Provide group navigation
-
-For implementation details and examples, see the [Search API Reference](/api-reference/search/overview).
+For detailed implementation examples, see the [Search API Reference](/api-reference/search/overview).

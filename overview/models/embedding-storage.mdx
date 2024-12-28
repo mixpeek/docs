@@ -1,5 +1,5 @@
 ---
-title: "Embedding Storage"
+title: "BYO Database"
 ---
 
 This guide walks you through the process of storing and retrieving embeddings using the Mixpeek API. Follow the steps below to get the full payload on a per feature basis, along with the corresponding named vectors.
@@ -12,7 +12,7 @@ First, index your video using the Mixpeek API. You can do this by sending a requ
 import requests
 import json
 
-url = "https://api.mixpeek.com/index/videos/url"
+url = "https://api.mixpeek.com/ingest/videos/url"
 
 payload = json.dumps({
   "url": "video.mp4",

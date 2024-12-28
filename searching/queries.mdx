@@ -1,96 +1,95 @@
 ---
 title: "Queries"
+description: "Build powerful multimodal search queries across text, images, and videos"
 ---
 
-Search queries in Mixpeek allow you to search across multiple modalities (text, images, videos) simultaneously using an array of query objects.
+<Note>
+  Search queries in Mixpeek allow you to search across multiple modalities simultaneously using an array of query objects.
+</Note>
 
-## Understanding Queries
+## Query Types
 
-### Query Types
+<CardGroup cols={2}>
+  <Card title="Text Queries" icon="font">
+    - Natural language text
+    - Keywords and phrases
+    - Semantic understanding
+    - Multi-language support
+  </Card>
+  
+  <Card title="URL Queries" icon="link">
+    - Image URLs
+    - Video URLs
+    - Document URLs
+    - Web content
+  </Card>
 
-1. **Text Queries**
-
-   - Natural language text
-   - Keywords and phrases
-   - Semantic understanding
-   - Language support
-
-2. **URL Queries**
-
-   - Image URLs
-   - Video URLs
-   - Document URLs
-   - Web content
-
-3. **Vector Indexes**
-   - `text`: Text embeddings
-   - `image`: Image embeddings
-   - `video`: Video embeddings
-   - `multimodal`: Cross-modal embeddings
+</CardGroup>
 
 ## Query Structure
 
-### Basic Query
+<CodeGroup>
+  ```json Basic Query
+  {
+    "queries": [
+      {
+        "type": "text",
+        "value": "red sports car",
+        "embedding_model": "text"
+      }
+    ]
+  }
+  ```
 
-```json
-{
-  "queries": [
-    {
-      "type": "text",
-      "value": "red sports car",
-      "vector_index": "text"
-    }
-  ]
-}
-```
-
-### Multi-Modal Query
-
-```json
-{
-  "queries": [
-    {
-      "type": "url",
-      "value": "https://example.com/dog.jpg",
-      "vector_index": "image"
-    },
-    {
-      "type": "text",
-      "value": "playful golden retriever",
-      "vector_index": "text"
-    }
-  ]
-}
-```
+  ```json Multi-Modal Query
+  {
+    "queries": [
+      {
+        "type": "url",
+        "value": "https://example.com/dog.jpg",
+        "embedding_model": "image"
+      },
+      {
+        "type": "text",
+        "value": "playful golden retriever",
+        "embedding_model": "text"
+      }
+    ]
+  }
+  ```
+</CodeGroup>
 
 ## Query Parameters
 
-### Required Fields
+<AccordionGroup>
+  <Accordion title="Required Fields">
+    | Field | Type | Description |
+    |-------|------|-------------|
+    | `type` | string | Query type ("text" or "url") |
+    | `value` | string | The query content |
+    | `embedding_model` | string | Embedding model to search against |
+  </Accordion>
 
-| Field          | Type   | Description                  |
-| -------------- | ------ | ---------------------------- |
-| `type`         | string | Query type ("text" or "url") |
-| `value`        | string | The query content            |
-| `vector_index` | string | Index to search against      |
-
-### Optional Fields
-
-| Field       | Type   | Description              |
-| ----------- | ------ | ------------------------ |
-| `settings`  | object | Query-specific settings  |
-| `weights`   | object | Importance of each query |
-| `threshold` | number | Minimum relevance score  |
+  <Accordion title="Optional Fields">
+    | Field | Type | Description |
+    |-------|------|-------------|
+    | `settings` | object | Query-specific settings |
+    | `weights` | object | Importance of each query |
+    | `threshold` | number | Minimum relevance score |
+  </Accordion>
+</AccordionGroup>
 
 ## Result Combination
 
-### Reciprocal Rank Fusion (RRF)
-
-When multiple queries are provided, results are combined using RRF:
-
-1. Each query runs independently
-2. Results are ranked within each query
-3. RRF score calculated for each item
-4. Final results ordered by combined RRF score
+<Frame>
+  ```mermaid
+  graph TD
+    A[Multiple Queries] --> B[Independent Processing]
+    B --> C[Rank Results]
+    C --> D[Calculate RRF Scores]
+    D --> E[Final Ranked Results]
+  ```
+</Frame>
 
 ### RRF Formula
 
@@ -101,127 +100,58 @@ where k = constant (default: 60)
 
 ## Common Use Cases
 
-### Visual Search
-
-1. **Similar Image Search**
-
-```json
-{
-  "queries": [
+<Tabs>
+  <Tab title="Visual Search">
+    ```json
     {
-      "type": "url",
-      "value": "https://example.com/product.jpg",
-      "vector_index": "image"
+      "queries": [
+        {
+          "type": "url",
+          "value": "https://example.com/product.jpg",
+          "vector_index": "image"
+        }
+      ]
     }
-  ]
-}
-```
+    ```
+  </Tab>
 
-### Hybrid Search
-
-1. **Image + Text**
-
-```json
-{
-  "queries": [
+  <Tab title="Hybrid Search">
+    ```json
     {
-      "type": "url",
-      "value": "https://example.com/scene.jpg",
-      "vector_index": "image"
-    },
-    {
-      "type": "text",
-      "value": "urban landscape at night",
-      "vector_index": "text"
+      "queries": [
+        {
+          "type": "url",
+          "value": "https://example.com/scene.jpg",
+          "vector_index": "image"
+        },
+        {
+          "type": "text",
+          "value": "urban landscape at night",
+          "vector_index": "text"
+        }
+      ]
     }
-  ]
-}
-```
-
-## Limitations
-
-### Technical Constraints
-
-1. **Query Limits**
-
-   - Maximum 5 queries per request
-   - URL size restrictions
-   - Text length limits
-   - Response time constraints
-
-2. **URL Requirements**
-
-   - Must be publicly accessible
-   - Supported formats only
-   - Size limitations
-   - Valid URL structure
-
-3. **Processing Limits**
-   - Timeout thresholds
-   - Resource constraints
-   - Rate limits
-   - Concurrent query limits
+    ```
+  </Tab>
+</Tabs>
 
 ## Best Practices
 
-### Query Optimization
+<Steps>
+  <Step title="Query Selection">
+    Choose appropriate query types and vector indexes for your use case
+  </Step>
+  <Step title="Performance Optimization">
+    Limit number of queries and optimize query content
+  </Step>
+  <Step title="Result Refinement">
+    Use specific queries and combine modalities effectively
+  </Step>
+  <Step title="Error Handling">
+    Implement proper validation and error handling
+  </Step>
+</Steps>
 
-1. **Query Selection**
-
-   - Choose appropriate types
-   - Use relevant vector indexes
-   - Balance query count
-   - Consider performance
-
-2. **Performance Tips**
-   - Limit number of queries
-   - Optimize query content
-   - Use appropriate indexes
-   - Monitor response times
-
-### Common Patterns
-
-1. **Progressive Enhancement**
-
-   - Start with single modality
-   - Add complementary queries
-   - Monitor result quality
-   - Adjust as needed
-
-2. **Result Refinement**
-   - Use specific queries
-   - Combine modalities effectively
-   - Apply appropriate weights
-   - Set relevant thresholds
-
-## Error Handling
-
-### Common Issues
-
-1. **Invalid Queries**
-
-   - Unsupported types
-   - Invalid URLs
-   - Missing fields
-   - Wrong index types
-
-2. **Performance Problems**
-   - Too many queries
-   - Large content size
-   - Slow processing
-   - Timeout issues
-
-### Resolution Steps
-
-1. **Query Validation**
-
-   - Check query types
-   - Validate URLs
-   - Verify indexes
-   - Test query combinations
-
-2. **Performance Optimization**
-   - Reduce query count
-   - Optimize content size
-   - Use appropriate indexes
-   - Monitor processing time
+<Warning>
+  Exceeding query limits or using invalid parameters may result in errors. See [Limits](/overview/limits) for more details.
+</Warning>
