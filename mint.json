@@ -49,13 +49,18 @@
     },
     {
       "name": "Engineering Blog",
-      "icon": "book-bookmark",
+      "icon": "book-open",
       "url": "https://mixpeek.com/blog"
     },
     {
       "name": "Multimodal University",
-      "icon": "book-bookmark",
+      "icon": "graduation-cap",
       "url": "https://mixpeek.com/learn"
+    },
+    {
+      "name": "Pricing Calculator",
+      "icon": "dollar-sign",
+      "url": "https://mixpeek.com/pricing"
     }
   ],
   "primaryTab": {
