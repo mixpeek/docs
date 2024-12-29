@@ -1,28 +1,123 @@
 ---
 title: "Fine-Tuning"
+description: "Customize Mixpeek's embedding models for your specific use case"
 ---
 
-<Warning>
-  Available to Enterprise customers only. To trial, email an engineer: info@mixpeek.com
-</Warning>
+<Note>
+  Fine-tuning allows you to optimize Mixpeek's embedding models for your specific content and search patterns, improving relevance and accuracy for your unique use case.
+</Note>
+
+## Why Fine-Tune?
+
+<CardGroup cols={2}>
+  <Card title="Domain Adaptation" icon="bullseye">
+    - Optimize for industry-specific terminology
+    - Better understand your content context
+    - Improve matching for technical/specialized content
+  </Card>
+  
+  <Card title="Search Quality" icon="arrow-up-right-dots">
+    - Boost relevance scores for important matches
+    - Reduce false positives
+    - Better handle edge cases
+  </Card>
+</CardGroup>
+
+## Use Cases
+
+<AccordionGroup>
+  <Accordion title="E-commerce">
+    Fine-tune product search to better understand:
+    - Product attributes and variations
+    - Brand-specific terminology
+    - Customer search patterns
+  </Accordion>
+
+  <Accordion title="Technical Documentation">
+    Improve matching for:
+    - API documentation
+    - Code snippets
+    - Technical specifications
+  </Accordion>
+
+  <Accordion title="Legal Documents">
+    Enhance understanding of:
+    - Legal terminology
+    - Contract clauses
+    - Regulatory requirements
+  </Accordion>
+</AccordionGroup>
+
+## Fine-Tuning Process
 
 <Steps>
   <Step title="Send Annotated Data">
-    Send your annotated data to an S3 bucket.
-    Ensure the data is well-organized and labeled according to the model's requirements
-    (we'll provide specs)
-  </Step>
-  <Step title="Initiate Fine-Tuning">
-    Use the Mixpeek Dashboard (and soon to be API) to schedule a fine-tuning job. Specify the base
-    `model_id`, the S3 bucket path, and `specs` that tell the fine-tuner how to run.
-
-    This will return a new model_id, for example: `model_1askdh2390`, which you'll then use in your methods like:
-
-  </Step>
-  <Step title="Version Control">
-    It's recommended to store the version_id of each model state as it is fine-tuned. 
+    Upload your training data to a designated S3 bucket. Data should include:
     
-    If you append a `model_version` in the metadata of the pipeline it'll automatically be added to your database so you can do query-time filtering.
+    - Positive examples (good matches)
+    - Negative examples (poor matches)
+    - Relevance scores
+    - Content pairs with similarity annotations
 
+    Our team will provide detailed specifications for your use case.
+  </Step>
+  
+  <Step title="Initiate Fine-Tuning">
+    Use the Mixpeek Dashboard to schedule a fine-tuning job:
+
+    ```json
+    {
+      "base_model_id": "multimodal",
+      "training_data": "s3://your-bucket/training-data",
+      "specs": {
+        "epochs": 10,
+        "batch_size": 32,
+        "learning_rate": 2e-5,
+        "loss_function": "contrastive"
+      }
+    }
+    ```
+
+    This returns a new `model_id` (e.g., `model_1askdh2390`) for use in your API calls.
+  </Step>
+
+  <Step title="Version Control">
+    Track model versions in your metadata for reproducibility:
+
+    ```json
+    {
+      "metadata": {
+        "model_version": "model_1askdh2390",
+        "base_model": "multimodal",
+        "training_date": "2024-03-15",
+        "description": "Optimized for technical documentation"
+      }
+    }
+    ```
   </Step>
 </Steps>
+
+## Performance Monitoring
+
+<CardGroup cols={2}>
+  <Card title="Metrics" icon="chart-line">
+    - Mean Average Precision (MAP)
+    - Recall
+    - Query latency
+  </Card>
+  
+  <Card title="Validation" icon="check-double">
+    - A/B testing support
+    - Automated regression testing
+    - Performance comparison with base model
+  </Card>
+</CardGroup>
+
+<Warning>
+  Available to Enterprise customers only. To trial fine-tuning capabilities, contact our team at info@mixpeek.com
+</Warning>
+
+<Note>
+  Fine-tuned models maintain the same API interface as base models, ensuring seamless integration with existing code.
+</Note>
+
