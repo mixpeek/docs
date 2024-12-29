@@ -3,7 +3,20 @@ title: "Product Updates"
 description: "New updates and improvements"
 mode: "wide"
 ---
-<Update label="December 2024">
+<Update label="12-28-2024" description="0.15.2">
+  ### Breaking Change: vector_index renamed to embedding_models
+
+  We've renamed the `vector_index` configuration parameter to `embedding_models` to better reflect its purpose and align with industry terminology. This change affects all API endpoints and configuration files that previously used `vector_index`.
+
+  ### What You Need To Do
+  * Update all references to `vector_index` in your configuration files to use `embedding_models`
+  * Review and update any API calls that included the `vector_index` parameter
+  * Check your integration tests and documentation for any mentions of the old parameter name
+
+  For a complete list of supported embedding models and migration guidance, please refer to our [available models documentation](/overview/models/available-models).
+</Update>
+
+<Update label="12-12-2024" description="0.15.0">
   ## Taxonomies and Clustering
 
   Introducing powerful taxonomies to organize and classify your content using multimodal AI. Create hierarchical categories that understand both text and images, enabling intelligent content organization at scale.
