@@ -103,132 +103,128 @@
     {
       "group": "Data Pipeline",
       "pages": [
-        {
-          "group": "Ingestion",
-          "pages": [
-            "ingestion/extractors",
-            "ingestion/entities/taxonomies",
-            "ingestion/entities/clusters"
-          ]
-        },
-        {
-          "group": "Models & Processing",
-          "pages": [
-            "overview/models/available-models",
-            "overview/models/embedding-storage",
-            "overview/models/fine-tuning"
-          ]
-        }
+        "ingestion/extractors",
+        "ingestion/entities/taxonomies",
       ]
     },
     {
-      "group": "Search & Retrieval",
+      "group": "Models & Processing",
       "pages": [
-        "searching/queries",
-        "searching/filters",
-        "searching/group",
-        "searching/rerank"
-      ]
-    },
-    {
-      "group": "Databases",
-      "pages": [
-        "integrations/databases/timescale",
-        "integrations/databases/mongodb",
-        "integrations/databases/supabase",
-        "integrations/databases/postgresql",
-        "integrations/databases/pinecone",
-        "integrations/databases/weaviate",
-        "integrations/databases/qdrant",
-        "integrations/databases/redis"
-      ]
-    },
-    {
-      "group": "Health",
-      "pages": [
-        "api-reference/health/healthcheck"
-      ]
-    },
-    {
-      "group": "Ingest",
-      "pages": [
-        "api-reference/ingest/ingest-text",
-        "api-reference/ingest/ingest-video-url",
-        "api-reference/ingest/ingest-image-url"
-      ]
-    },
-    {
-      "group": "Features",
-      "pages": [
-        "api-reference/features/search-features",
-        "api-reference/features/get-feature",
-        "api-reference/features/full-feature-update",
-        "api-reference/features/delete-feature",
-        "api-reference/features/list-features"
-      ]
-    },
-    {
-      "group": "Collections",
-      "pages": [
-        "api-reference/collections/list-collections",
-        "api-reference/collections/create-collection",
-        "api-reference/collections/update-collection",
-        "api-reference/collections/delete-collection"
-      ]
-    },
-    {
-      "group": "Namespaces",
-      "pages": [
-        "api-reference/namespaces/list-namespaces",
-        "api-reference/namespaces/create-namespace",
-        "api-reference/namespaces/get-namespace",
-        "api-reference/namespaces/update-namespace",
-        "api-reference/namespaces/delete-namespace",
-        "api-reference/namespaces/list-available-indexes"
-      ]
-    },
-    {
-      "group": "Assets",
-      "pages": [
-        "api-reference/assets/get-asset",
-        "api-reference/assets/full-asset-update",
-        "api-reference/assets/delete-asset",
-        "api-reference/assets/partial-asset-update",
-        "api-reference/assets/get-asset-with-features",
-        "api-reference/assets/list-assets",
-        "api-reference/assets/search-assets"
-      ]
-    },
-    {
-      "group": "Collections",
-      "pages": [
-        "api-reference/collections/list-collections",
-        "api-reference/collections/delete-collection"
-      ]
-    },
-    {
-      "group": "Tasks",
-      "pages": [
-        "api-reference/tasks/get-task",
-        "api-reference/tasks/kill-task"
-      ]
-    },
-    {
-      "group": "Feature Extractors",
-      "pages": [
-        "api-reference/feature-extractors/extract-embeddings"
-      ]
-    },
-    {
-      "group": "Changelog",
-      "pages": [
-        "changelog/overview"
+        "overview/models/available-models",
+        "overview/models/embedding-storage",
+        "overview/models/fine-tuning"
       ]
     }
-  ],
-  "footerSocials": {
-    "website": "https://mixpeek.com/",
-    "github": "https://github.com/mixpeek"
-  },
-  "backgroundImage": "/images/background.png"
+  ]
+},
+{
+  "group": "Search & Retrieval",
+  "pages": [
+    "searching/queries",
+    "searching/filters",
+    "searching/group",
+    "searching/rerank"
+  ]
+},
+{
+  "group": "Databases",
+  "pages": [
+    "integrations/databases/timescale",
+    "integrations/databases/mongodb",
+    "integrations/databases/supabase",
+    "integrations/databases/postgresql",
+    "integrations/databases/pinecone",
+    "integrations/databases/weaviate",
+    "integrations/databases/qdrant",
+    "integrations/databases/redis"
+  ]
+},
+{
+  "group": "Health",
+  "pages": [
+    "api-reference/health/healthcheck"
+  ]
+},
+{
+  "group": "Ingest",
+  "pages": [
+    "api-reference/ingest/ingest-text",
+    "api-reference/ingest/ingest-video-url",
+    "api-reference/ingest/ingest-image-url"
+  ]
+},
+{
+  "group": "Features",
+  "pages": [
+    "api-reference/features/search-features",
+    "api-reference/features/get-feature",
+    "api-reference/features/full-feature-update",
+    "api-reference/features/delete-feature",
+    "api-reference/features/list-features"
+  ]
+},
+{
+  "group": "Collections",
+  "pages": [
+    "api-reference/collections/list-collections",
+    "api-reference/collections/create-collection",
+    "api-reference/collections/update-collection",
+    "api-reference/collections/delete-collection"
+  ]
+},
+{
+  "group": "Namespaces",
+  "pages": [
+    "api-reference/namespaces/list-namespaces",
+    "api-reference/namespaces/create-namespace",
+    "api-reference/namespaces/get-namespace",
+    "api-reference/namespaces/update-namespace",
+    "api-reference/namespaces/delete-namespace",
+    "api-reference/namespaces/list-available-indexes"
+  ]
+},
+{
+  "group": "Assets",
+  "pages": [
+    "api-reference/assets/get-asset",
+    "api-reference/assets/full-asset-update",
+    "api-reference/assets/delete-asset",
+    "api-reference/assets/partial-asset-update",
+    "api-reference/assets/get-asset-with-features",
+    "api-reference/assets/list-assets",
+    "api-reference/assets/search-assets"
+  ]
+},
+{
+  "group": "Collections",
+  "pages": [
+    "api-reference/collections/list-collections",
+    "api-reference/collections/delete-collection"
+  ]
+},
+{
+  "group": "Tasks",
+  "pages": [
+    "api-reference/tasks/get-task",
+    "api-reference/tasks/kill-task"
+  ]
+},
+{
+  "group": "Feature Extractors",
+  "pages": [
+    "api-reference/feature-extractors/extract-embeddings"
+  ]
+},
+{
+  "group": "Changelog",
+  "pages": [
+    "changelog/overview"
+  ]
+}
+],
+"footerSocials": {
+"website": "https://mixpeek.com/",
+"github": "https://github.com/mixpeek"
+},
+"backgroundImage": "/images/background.png"
 }
