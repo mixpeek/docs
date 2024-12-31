@@ -82,43 +82,47 @@
   ],
   "navigation": [
     {
-      "group": "Overview",
+      "group": "Getting Started",
       "pages": [
         "overview/introduction",
         "overview/quickstart",
+        "overview/benefits",
+        "overview/limits"
+      ]
+    },
+    {
+      "group": "Core Concepts",
+      "pages": [
+        "concepts/overview",
+        "concepts/collections",
+        "concepts/namespaces",
+        "concepts/assets",
+        "concepts/tasks"
+      ]
+    },
+    {
+      "group": "Data Pipeline",
+      "pages": [
         {
-          "group": "Concepts",
+          "group": "Ingestion",
           "pages": [
-            "concepts/overview",
-            "concepts/assets",
-            "concepts/collections",
-            "concepts/namespaces",
-            "concepts/tasks"
+            "ingestion/extractors",
+            "ingestion/entities/taxonomies",
+            "ingestion/entities/clusters"
           ]
         },
-        "overview/benefits",
-        "overview/limits",
-        "overview/byo-cloud"
+        {
+          "group": "Models & Processing",
+          "pages": [
+            "overview/models/available-models",
+            "overview/models/embedding-storage",
+            "overview/models/fine-tuning"
+          ]
+        }
       ]
     },
     {
-      "group": "Ingestion",
-      "pages": [
-        "ingestion/extractors",
-        "ingestion/entities/taxonomies",
-        "ingestion/entities/clusters"
-      ]
-    },
-    {
-      "group": "Models",
-      "pages": [
-        "overview/models/available-models",
-        "overview/models/embedding-storage",
-        "overview/models/fine-tuning"
-      ]
-    },
-    {
-      "group": "Search",
+      "group": "Search & Retrieval",
       "pages": [
         "searching/queries",
         "searching/filters",

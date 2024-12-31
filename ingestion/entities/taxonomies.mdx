@@ -16,11 +16,11 @@ Taxonomies in Mixpeek provide a structured way to organize and classify multimod
 
 ```mermaid
 graph TD
-    A[Sports Content] --> B[Training Videos]
-    B --> C[Tennis Training]
-    B --> D[Golf Training]
-    D --> E[Golf Swing Analysis]
-    D --> F[Putting Technique]
+    B[sports_training_library]
+    B --> C[tennis_training]
+    B --> D[golf_training]
+    D --> E[golf_swing_analysis]
+    D --> F[putting_technique]
 ```
 
 ## Implementation
@@ -30,11 +30,11 @@ graph TD
     ```python
     POST /entities/taxonomies
     {
-      "taxonomy_name": "Sports Training Library",
+      "taxonomy_name": "sports_training_library",
       "description": "Hierarchical classification of sports training videos",
       "nodes": [
         {
-          "name": "Tennis Training",
+          "name": "tennis_training",
           "description": "Tennis instruction and training videos",
           "embedding_config": [
             {
@@ -50,8 +50,8 @@ graph TD
           ],
           "children": [
             {
-              "name": "Serve Technique",
-              "parent_node_name": "Tennis Training",
+              "name": "serve_technique",
+              "parent_node_name": "tennis_training",
               "embedding_config": [
                 {
                   "embedding_model": "vertex-multimodal",
@@ -66,8 +66,8 @@ graph TD
               ]
             },
             {
-              "name": "Return Practice",
-              "parent_node_name": "Tennis Training",
+              "name": "return_practice",
+              "parent_node_name": "tennis_training",
               "embedding_config": [
                 {
                   "embedding_model": "vertex-multimodal",
@@ -82,8 +82,8 @@ graph TD
               ],
               "children": [
                 {
-                  "name": "Backhand Returns",
-                  "parent_node_name": "Return Practice",
+                  "name": "backhand_returns",
+                  "parent_node_name": "return_practice",
                   "embedding_config": [
                     {
                       "embedding_model": "vertex-multimodal",
@@ -109,27 +109,27 @@ graph TD
   <Tab title="Response">
     ```python
     {
-      "taxonomy_name": "Sports Training Library",
+      "taxonomy_name": "sports_training_library",
       "description": "Hierarchical classification of sports training videos",
       "nodes": [
         {
-          "name": "Tennis Training",
+          "name": "tennis_training",
           "taxonomy_id": "tax_6cf982d452",
           "parent_id": null,
           "children": [
             {
-              "name": "Serve Technique",
+              "name": "serve_technique",
               "taxonomy_id": "tax_f7eb5a6491",
               "parent_id": "tax_6cf982d452",
               "children": null
             },
             {
-              "name": "Return Practice",
+              "name": "return_practice",
               "taxonomy_id": "tax_dfdf75f884",
               "parent_id": "tax_6cf982d452",
               "children": [
                 {
-                  "name": "Backhand Returns",
+                  "name": "backhand_returns",
                   "taxonomy_id": "tax_70986498b6",
                   "parent_id": "tax_dfdf75f884",
                   "children": null
@@ -201,21 +201,92 @@ graph TD
 
 ## Searching with Taxonomies
 
-```python
-POST /features/search
-{
-  "collections": ["training-videos"],
-  "filters": {
-    "AND": [
-      {
-        "key": "entities.taxonomy_classifications.node_ids",
-        "operator": "in",
-        "value": ["tax_6cf982d452"]  # Tennis Training videos
+<Tabs>
+  <Tab title="Basic Hierarchical Search">
+    ```python
+    POST /features/search
+    {
+      "collections": ["training-videos"],
+      "filters": {
+        "AND": [
+          {
+            "key": "entities.taxonomies.nodes",
+            "operator": "in",
+            "value": ["return_practice", "backhand_returns"]  # Will match content in both parent and child nodes
+          }
+        ]
       }
-    ]
-  }
-}
-```
+    }
+    ```
+  </Tab>
+
+  <Tab title="Complex Search">
+    ```python
+    POST /features/search
+    {
+      "collections": ["training-videos"],
+      "filters": {
+        "AND": [
+          {
+            "OR": [
+              {
+                "key": "entities.taxonomies.nodes",
+                "operator": "in",
+                "value": ["tennis_training"]  # Parent node
+              },
+              {
+                "key": "entities.taxonomies.nodes",
+                "operator": "in",
+                "value": ["serve_technique"]  # Child node
+              }
+            ]
+          },
+          {
+            "key": "metadata.difficulty_level",
+            "operator": "gte",
+            "value": "intermediate"
+          },
+          {
+            "key": "metadata.duration_seconds",
+            "operator": "between",
+            "value": [300, 900]  # Videos between 5-15 minutes
+          }
+        ]
+      },
+      "sort": [
+        {
+          "key": "metadata.view_count",
+          "order": "desc"
+        }
+      ],
+      "limit": 20
+    }
+    ```
+  </Tab>
+
+  <Tab title="Response">
+    ```python
+    {
+      "matches": [
+        {
+          "feature_id": "feat_789abc",
+          "score": 0.92,
+          "metadata": {
+            "title": "Advanced Tennis Returns",
+            "difficulty_level": "advanced",
+            "duration_seconds": 720,
+            "view_count": 1500
+          },
+          "taxonomy_nodes": ["tennis_training", "return_practice", "backhand_returns"]
+        }
+        // ... additional matches ...
+      ],
+      "total": 45,
+      "page": 1
+    }
+    ```
+  </Tab>
+</Tabs>
 
 ## Automatic Classification During Ingestion
 
