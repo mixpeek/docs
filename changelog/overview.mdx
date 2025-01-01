@@ -3,6 +3,88 @@ title: "Product Updates"
 description: "New updates and improvements"
 mode: "wide"
 ---
+
+<Update label="1-1-2025">
+
+### Feature: Averaged Multi-Input Embeddings
+
+Added support for averaging multiple embeddings when the same embedding model is used across different inputs. This allows for creating more representative embeddings by combining multiple perspectives or descriptions of the same content.
+
+#### Examples
+
+```python
+# Before: Later inputs would overwrite earlier ones
+settings = [
+    EmbeddingRequest(
+        type="text",
+        value="a dog running",
+        embedding_model="clip"
+    ),
+    EmbeddingRequest(
+        type="text",
+        value="canine in motion",
+        embedding_model="clip"
+    )
+]
+# Result:
+# {
+#     "vectors": {
+#         "clip": [0.2, 0.3, 0.5]  # Only keeps last embedding
+#     },
+#     "original_values": {
+#         "clip": "canine in motion"  # Only keeps last value
+#     }
+# }
+
+# After: Embeddings are averaged and all inputs are preserved
+settings = [
+    EmbeddingRequest(
+        type="text",
+        value="a dog running",
+        embedding_model="clip"
+    ),
+    EmbeddingRequest(
+        type="text",
+        value="canine in motion",
+        embedding_model="clip"
+    )
+]
+# Result:
+# {
+#     "vectors": {
+#         "clip": [0.25, 0.35, 0.45]  # Average of both embeddings
+#     },
+#     "original_values": {
+#         "clip": [
+#             {
+#                 "type": "text",
+#                 "value": "a dog running",
+#                 "embedding_model": "clip"
+#             },
+#             {
+#                 "type": "text",
+#                 "value": "canine in motion",
+#                 "embedding_model": "clip"
+#             }
+#         ]
+#     }
+# }
+```
+
+### Use Cases
+- Combine multiple text descriptions to create a more comprehensive embedding
+- Mix image and text embeddings in the same vector space
+- Preserve all original inputs for reference and debugging
+
+### Technical Details
+- Embeddings from the same model are averaged element-wise
+- All original `EmbeddingRequest` objects are stored in `original_values`
+- Works with both text and image inputs
+- Compatible with all supported embedding providers (Vertex, SageMaker)
+
+</Update>
+
+
 <Update label="12-28-2024" description="0.15.2">
   ### Breaking Change: vector_index renamed to embedding_models
 
