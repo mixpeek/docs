@@ -16,6 +16,12 @@
       "name": "Authorization"
     }
   },
+  "versions": [
+    {
+      "name": "v1",
+      "default": true
+    }
+  ],
   "colors": {
     "primary": "#FC5185",
     "light": "#FFA0BD",
