@@ -177,4 +177,81 @@ description: "Configure and customize multimodal feature extraction for differen
   - Rate limits apply to extraction requests
 </Warning>
 
+## Embedding Models
+
+Feature extractors support multiple embedding types and models for different content formats. You can generate embeddings from text, URLs, files, and base64-encoded content.
+
+### Supported Input Types
+
+<CardGroup cols={2}>
+  <Card title="Text & URLs" icon="font">
+    - Direct text input
+    - Web page content
+    - Remote file URLs
+    - Field-specific embeddings
+  </Card>
+  
+  <Card title="Files & Encoded" icon="file">
+    - Local file processing
+    - Base64 encoded content
+    - Multi-modal inputs
+    - Batch processing
+  </Card>
+</CardGroup>
+
+### Embedding Configuration
+
+<CodeGroup>
+  ```json Basic Text Embedding
+  {
+    "feature_extractors": [
+      {
+        "embed": [
+          {
+            "type": "text",
+            "value": "Sample text to embed",
+            "embedding_model": "text"
+          }
+        ]
+      }
+    ]
+  }
+  ```
+
+  ```json Multi-Modal Embedding
+  {
+    "feature_extractors": [
+      {
+        "embed": [
+          {
+            "type": "url",
+            "embedding_model": "image",
+          },
+          {
+            "type": "text",
+            "value": "A detailed description",
+            "embedding_model": "text",
+          }
+        ]
+      }
+    ]
+  }
+  ```
+</CodeGroup>
+
+### Output Formats
+
+<Accordion title="Embedding Response Types">
+| Format | Structure | Use Case |
+|--------|-----------|----------|
+| Dense | `{"vector": [float]}` | Standard vector embeddings |
+| Sparse | `{"indices": [int], "values": [float]}` | Efficient high-dimensional data |
+</Accordion>
+
+<Note>
+When multiple embedding requests use the same model:
+- Embeddings are generated in the same vector space
+- Final embeddings are averaged across inputs
+</Note>
+
 For detailed implementation examples, see the [Feature Extraction API Reference](/api-reference/features/get-feature). 
