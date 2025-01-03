@@ -64,9 +64,9 @@
       "url": "https://mixpeek.com/learn"
     },
     {
-      "name": "Pricing Calculator",
-      "icon": "dollar-sign",
-      "url": "https://mixpeek.com/pricing"
+      "name": "Community",
+      "icon": "users",
+      "url": "https://mixpeek.com/community"
     }
   ],
   "primaryTab": {
