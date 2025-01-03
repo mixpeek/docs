@@ -6,23 +6,6 @@ mode: "wide"
 
 <Update label="1-1-2025">
 
-### Enhancement: Read-Only API Keys
-
-You can now create API keys with granular permissions: read-only, write-only, or read-write access. This enables building secure client-side applications by restricting access to sensitive operations.
-
-#### Permission Levels
-- **Read-only**: Allows access to GET endpoints only (e.g., `/api/v1/search`, `/api/v1/items/{id}`)
-- **Write-only**: Enables POST, PUT, DELETE operations (e.g., `/api/v1/items`, `/api/v1/batch`)
-- **Read-write**: Full access to all endpoints
-
-For a complete list of endpoints and their required permissions, see our [API Reference](/api-reference).
-
-#### How to Configure
-1. Navigate to Settings > API Keys in the studio portal
-2. Create a new key or edit an existing one
-3. Select the desired permission level
-4. Save changes
-
 ### Feature: Averaged Multi-Input Embeddings
 
 Added support for averaging multiple embeddings when the same embedding model is used across different inputs. This allows for creating more representative embeddings by combining multiple perspectives or descriptions of the same content.
@@ -99,6 +82,25 @@ settings = [
 - Works with both text and image inputs
 - Compatible with all supported embedding providers (Vertex, SageMaker)
 
+</Update>
+
+<Update label="12-29-2024">
+### Enhancement: Read-Only API Keys
+
+You can now create API keys with granular permissions: read-only, write-only, or read-write access. This enables building secure client-side applications by restricting access to sensitive operations.
+
+#### Permission Levels
+- **Read-only**: Allows access to GET endpoints only (e.g., `/api/v1/search`, `/api/v1/items/{id}`)
+- **Write-only**: Enables POST, PUT, DELETE operations (e.g., `/api/v1/items`, `/api/v1/batch`)
+- **Read-write**: Full access to all endpoints
+
+For a complete list of endpoints and their required permissions, see our [API Reference](/api-reference).
+
+#### How to Configure
+1. Navigate to Settings > API Keys in the studio portal
+2. Create a new key or edit an existing one
+3. Select the desired permission level
+4. Save changes
 </Update>
 
 
