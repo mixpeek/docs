@@ -5,6 +5,21 @@ description: "Create and manage hierarchical classifications for multimodal obje
 
 Taxonomies in Mixpeek provide a structured way to organize and classify multimodal content using customizable hierarchical categories. Each node can use multiple embedding models to capture both visual and semantic aspects of content.
 
+## Quick Start Video
+Watch this 5-minute live walkthrough to see taxonomies in action. The video covers creating, managing, and implementing taxonomies for multimodal content classification.
+
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/e8ClUdAnrCs"
+  title="YouTube video player"
+  frameborder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowfullscreen
+></iframe>
+
+---
+
 <Accordion title="Why Use Taxonomies?">
   - **Automated Tagging**: ML-powered categorization
   - **Access Control**: Define granular permissions based on taxonomy nodes
@@ -168,33 +183,30 @@ graph TD
   <Tab title="Testing Classifications">
     ```python
     # Test taxonomy classification
-    POST /entities/taxonomies/{taxonomy_id}/discover
+    POST /entities/taxonomies/{taxonomy}/features/classify
     {
       "collections": ["training-videos-sample"],
       "filters": {},
       "confidence_threshold": 0.8,
-      "assign": false,
       "sample_size": 100
     }
 
-    # Check classification results
-    GET /entities/taxonomies/history/{task_id}
+    # List classification results
+    POST /entities/taxonomies/{taxonomy}/classifications
     ```
   </Tab>
 
-  <Tab title="Manual Classification">
+  <Tab title="Assign Classifications">
     ```python
-    POST /entities/taxonomies/{taxonomy_id}/classify
+    POST /entities/taxonomies/{taxonomy}/features/classify
     {
-      "classifications": [
-        {
-          "feature_id": "feat_789",
-          "node_ids": ["tax_6cf982d452"],  # Tennis Training node
-          "metadata": {
-            "classified_by": "coach@example.com"
-          }
-        }
-      ]
+      "collections": ["training-videos-sample"],
+      "filters": {},
+      "confidence_threshold": 0.8,
+      "assignment": {
+          "enabled": true, # assign classifications to features
+      },
+      "sample_size": 100
     }
     ```
   </Tab>
@@ -207,16 +219,23 @@ graph TD
     ```python
     POST /features/search
     {
-      "collections": ["training-videos"],
-      "filters": {
-        "AND": [
-          {
-            "key": "entities.taxonomies.nodes",
-            "operator": "in",
-            "value": ["return_practice", "backhand_returns"]  # Will match content in both parent and child nodes
-          }
+        "collections": ["training-videos-sample"],
+        "filters": {
+            "AND": [
+                {
+                    "key": "node_classifications[].node",
+                    "operator": "in",
+                    "value": ["serve_technique"]
+                }
+            ]
+        },
+        "queries": [
+            {
+                "embedding_model": "vertex-multimodal",
+                "value": "boy outside",
+                "type": "text"
+            }
         ]
-      }
     }
     ```
   </Tab>
@@ -231,12 +250,12 @@ graph TD
           {
             "OR": [
               {
-                "key": "entities.taxonomies.nodes",
+                "key": "node_classifications[].node",
                 "operator": "in",
                 "value": ["tennis_training"]  # Parent node
               },
               {
-                "key": "entities.taxonomies.nodes",
+                "key": "node_classifications[].node",
                 "operator": "in",
                 "value": ["serve_technique"]  # Child node
               }
@@ -305,7 +324,7 @@ POST /ingest/videos/url
         }
       ],
       "entities": {
-        "taxonomy_ids": ["tax_6cf982d452"],
+        "taxonomies": ["sports_training_library"],
         "confidence_threshold": 0.8
       }
     }]
