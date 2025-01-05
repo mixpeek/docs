@@ -287,7 +287,7 @@ graph TD
   <Tab title="Response">
     ```python
     {
-      "matches": [
+      "results": [
         {
           "feature_id": "feat_789abc",
           "score": 0.92,
@@ -297,8 +297,13 @@ graph TD
             "duration_seconds": 720,
             "view_count": 1500
           },
-          "taxonomy_nodes": ["tennis_training", "return_practice", "backhand_returns"]
-        }
+            "node_classifications": [
+                {
+                    "node_id": "node_a1fb7b9c4abb68",
+                    "score": 0.27338412
+                }
+            ],
+          }
         // ... additional matches ...
       ],
       "total": 45,
