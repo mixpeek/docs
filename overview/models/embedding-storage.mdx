@@ -6,7 +6,7 @@ This guide walks you through the process of storing and retrieving embeddings us
 
 ### Step 1: Index
 
-First, index your video using the Mixpeek API. You can do this by sending a request to the [Index Video URL](/api-reference/index/index-video-url) endpoint.
+First, index your video using the Mixpeek API. You can do this by sending a request to the [Index Video URL](/api-reference/ingest/ingest-video-url) endpoint.
 
 ```python
 import requests
@@ -16,7 +16,7 @@ url = "https://api.mixpeek.com/ingest/videos/url"
 
 payload = json.dumps({
   "url": "video.mp4",
-  "collection_id": "example"
+  "collection": "example"
 })
 headers = {
   'Authorization': 'Bearer API_KEY',
