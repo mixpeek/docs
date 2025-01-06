@@ -110,7 +110,7 @@
       "group": "Data Pipeline",
       "pages": [
         "ingestion/extractors",
-        "ingestion/entities/taxonomies"
+        "entities/taxonomies"
       ]
     },
     {
@@ -230,5 +230,11 @@
     "website": "https://mixpeek.com/",
     "github": "https://github.com/mixpeek"
   },
-  "backgroundImage": "/images/background.png"
+  "backgroundImage": "/images/background.png",
+  "redirects": [
+    {
+      "source": "/ingestion/entities/taxonomies",
+      "destination": "/entities/taxonomies"
+    }
+  ]
 }
