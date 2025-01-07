@@ -328,15 +328,15 @@ Features store taxonomy classifications with hierarchical information in a simpl
 
 ```json
 {
-  "node_classifications": [
+  "entities": [
     {
-      "id": "tax_tennis_training",
+      "node_id": "tax_tennis_training",
       "depth": 0,
       "score": 0.82,
       "order": [0]
     },
     {
-      "id": "tax_return_practice",
+      "node_id": "tax_return_practice",
       "depth": 1,
       "score": 0.91,
       "order": [0, 1]
@@ -346,7 +346,7 @@ Features store taxonomy classifications with hierarchical information in a simpl
 ```
 
 Each classification contains:
-- `id`: Unique node identifier
+- `node_id`: Unique node identifier
 - `depth`: Level in the taxonomy tree (0 = root)
 - `score`: Classification confidence score
 - `order`: Array representing path in tree
@@ -362,7 +362,7 @@ This structure enables several filtering patterns:
       "filters": {
         "AND": [
           {
-            "key": "node_classifications[].depth",
+            "key": "entities[].depth",
             "operator": "eq",
             "value": 0
           }
