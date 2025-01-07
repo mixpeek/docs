@@ -67,10 +67,17 @@ erDiagram
     Feature {
         string feature_id
         string asset_id
+        string collection_id
+        string modality
         object metadata
-        string url
-        string preview_url
-        string duplicate_of
+        object file_data
+        array embedding_configs
+        string type
+        string internal_id
+        datetime created_at
+        datetime updated_at
+        array node_classifications
+        array entities
     }
     Collection {
         string collection_id
@@ -105,4 +112,11 @@ erDiagram
         array vector_indexes
         array payload_indexes
     }
+    Feature_NodeClassification {
+        string node_id
+        float score
+        integer depth
+        array order
+    }
+    Feature ||--|{ Feature_NodeClassification : contains
 ```
