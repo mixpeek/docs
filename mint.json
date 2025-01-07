@@ -16,12 +16,6 @@
       "name": "Authorization"
     }
   },
-  "versions": [
-    {
-      "name": "v1",
-      "default": true
-    }
-  ],
   "colors": {
     "primary": "#FC5185",
     "light": "#FFA0BD",
@@ -150,17 +144,9 @@
       ]
     },
     {
-      "group": "Ingest",
-      "pages": [
-        "api-reference/ingest/ingest-text",
-        "api-reference/ingest/ingest-video-url",
-        "api-reference/ingest/ingest-image-url"
-      ]
-    },
-    {
       "group": "Features",
       "pages": [
-        "api-reference/features/search-features",
+        "api-reference/feature-search/search-features",
         "api-reference/features/get-feature",
         "api-reference/features/full-feature-update",
         "api-reference/features/delete-feature",
@@ -168,23 +154,31 @@
       ]
     },
     {
-      "group": "Collections",
+      "group": "Ingest Assets",
       "pages": [
-        "api-reference/collections/list-collections",
-        "api-reference/collections/create-collection",
-        "api-reference/collections/update-collection",
-        "api-reference/collections/delete-collection"
+        "api-reference/ingest-assets/ingest-text",
+        "api-reference/ingest-assets/ingest-video-url",
+        "api-reference/ingest-assets/ingest-image-url"
       ]
     },
     {
-      "group": "Namespaces",
+      "group": "Entities",
       "pages": [
-        "api-reference/namespaces/list-namespaces",
-        "api-reference/namespaces/create-namespace",
-        "api-reference/namespaces/get-namespace",
-        "api-reference/namespaces/update-namespace",
-        "api-reference/namespaces/delete-namespace",
-        "api-reference/namespaces/list-available-indexes"
+        {
+          "group": "Taxonomy",
+          "pages": [
+            "api-reference/taxonomy-entities/list-taxonomies",
+            "api-reference/taxonomy-entities/create-taxonomy",
+            "api-reference/taxonomy-entities/get-taxonomy",
+            "api-reference/taxonomy-entities/delete-taxonomy",
+            "api-reference/taxonomy-entities/update-taxonomy",
+            "api-reference/taxonomy-entities/get-taxonomy-node",
+            "api-reference/taxonomy-entities/update-node",
+            "api-reference/taxonomy-entities/classify-features-against-taxonomy",
+            "api-reference/taxonomy-entities/list-taxonomy-classifications",
+            "api-reference/taxonomy-entities/delete-classifications"
+          ]
+        }
       ]
     },
     {
@@ -203,20 +197,34 @@
       "group": "Collections",
       "pages": [
         "api-reference/collections/list-collections",
+        "api-reference/collections/create-collection",
+        "api-reference/collections/get-collection",
+        "api-reference/collections/update-collection",
         "api-reference/collections/delete-collection"
       ]
     },
     {
-      "group": "Tasks",
+      "group": "Namespaces",
       "pages": [
-        "api-reference/tasks/get-task",
-        "api-reference/tasks/kill-task"
+        "api-reference/namespaces/list-namespaces",
+        "api-reference/namespaces/create-namespace",
+        "api-reference/namespaces/get-namespace",
+        "api-reference/namespaces/update-namespace",
+        "api-reference/namespaces/delete-namespace",
+        "api-reference/namespaces/list-available-models"
       ]
     },
     {
       "group": "Feature Extractors",
       "pages": [
         "api-reference/feature-extractors/extract-embeddings"
+      ]
+    },
+    {
+      "group": "Tasks",
+      "pages": [
+        "api-reference/tasks/get-task-information",
+        "api-reference/tasks/kill-task"
       ]
     },
     {
