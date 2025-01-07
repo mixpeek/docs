@@ -215,7 +215,7 @@ graph TD
 ## Searching with Taxonomies
 
 <Tabs>
-  <Tab title="Basic Hierarchical Search">
+  <Tab title="Basic Node Search">
     ```python
     POST /features/search
     {
@@ -223,19 +223,30 @@ graph TD
         "filters": {
             "AND": [
                 {
-                    "key": "node_classifications[].node",
+                    "key": "entities[].node",
                     "operator": "in",
-                    "value": ["serve_technique"]
+                    "value": ["serve_technique"]  # Can use node name
                 }
             ]
-        },
-        "queries": [
-            {
-                "embedding_model": "vertex-multimodal",
-                "value": "boy outside",
-                "type": "text"
-            }
-        ]
+        }
+    }
+    ```
+  </Tab>
+
+  <Tab title="Node ID Search">
+    ```python
+    POST /features/search
+    {
+        "collections": ["training-videos-sample"],
+        "filters": {
+            "AND": [
+                {
+                    "key": "entities[].node",
+                    "operator": "in",
+                    "value": ["node_abc123"]  # Can use node ID
+                }
+            ]
+        }
     }
     ```
   </Tab>
@@ -250,64 +261,154 @@ graph TD
           {
             "OR": [
               {
-                "key": "node_classifications[].node",
+                "key": "entities[].node",
                 "operator": "in",
-                "value": ["tennis_training"]  # Parent node
-              },
-              {
-                "key": "node_classifications[].node",
-                "operator": "in",
-                "value": ["serve_technique"]  # Child node
+                "value": ["tennis_training", "node_xyz789"]  # Mix of names and IDs
               }
             ]
           },
           {
-            "key": "metadata.difficulty_level",
+            "key": "entities[].score",
             "operator": "gte",
-            "value": "intermediate"
-          },
-          {
-            "key": "metadata.duration_seconds",
-            "operator": "between",
-            "value": [300, 900]  # Videos between 5-15 minutes
+            "value": 0.8
           }
         ]
-      },
-      "sort": [
-        {
-          "key": "metadata.view_count",
-          "order": "desc"
-        }
-      ],
-      "limit": 20
+      }
     }
     ```
   </Tab>
 
-  <Tab title="Response">
+  <Tab title="Hierarchical Path Search">
     ```python
+    POST /features/search
     {
-      "results": [
-        {
-          "feature_id": "feat_789abc",
-          "score": 0.92,
-          "metadata": {
-            "title": "Advanced Tennis Returns",
-            "difficulty_level": "advanced",
-            "duration_seconds": 720,
-            "view_count": 1500
+      "collections": ["training-videos"],
+      "filters": {
+        "AND": [
+          {
+            // Match root node
+            {
+              "key": "entities[].node",
+              "operator": "eq",
+              "value": "tennis_training"
+            },
+            {
+              "key": "entities[].order",
+              "operator": "eq",
+              "value": [0]
+            }
           },
-            "node_classifications": [
-                {
-                    "node_id": "node_a1fb7b9c4abb68",
-                    "score": 0.27338412
-                }
-            ],
+          {
+            // Match specific child node
+            {
+              "key": "entities[].node",
+              "operator": "eq",
+              "value": "return_practice"
+            },
+            {
+              "key": "entities[].order",
+              "operator": "eq",
+              "value": [0, 1]
+            }
           }
-        // ... additional matches ...
-      ],
-      "total": 45,
-      "page": 1
+        ]
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+  When filtering by `entities[].node`, you can use either the node's name (e.g., "serve_technique") or its ID (e.g., "node_abc123"). The system will automatically match either format.
+</Note>
+
+## Internal Taxonomy Structure
+
+Features store taxonomy classifications with hierarchical information in a simplified array structure:
+
+```json
+{
+  "node_classifications": [
+    {
+      "id": "tax_tennis_training",
+      "depth": 0,
+      "score": 0.82,
+      "order": [0]
+    },
+    {
+      "id": "tax_return_practice",
+      "depth": 1,
+      "score": 0.91,
+      "order": [0, 1]
+    }
+  ]
+}
+```
+
+Each classification contains:
+- `id`: Unique node identifier
+- `depth`: Level in the taxonomy tree (0 = root)
+- `score`: Classification confidence score
+- `order`: Array representing path in tree
+
+This structure enables several filtering patterns:
+
+<Tabs>
+  <Tab title="Filter by Depth">
+    ```python
+    # Find only root-level classifications
+    POST /features/search
+    {
+      "filters": {
+        "AND": [
+          {
+            "key": "node_classifications[].depth",
+            "operator": "eq",
+            "value": 0
+          }
+        ]
+      }
+    }
+    ```
+  </Tab>
+
+  <Tab title="Filter by Path">
+    ```python
+    # Find features that follow specific path
+    POST /features/search
+    {
+      "filters": {
+        "AND": [
+          {
+            "key": "node_classifications[].id",
+            "operator": "eq",
+            "value": "tax_tennis_training"
+          },
+          {
+            "key": "node_classifications[].order",
+            "operator": "eq",
+            "value": [0]
+          }
+        ]
+      }
+    }
+    ```
+  </Tab>
+
+  <Tab title="Filter by Confidence">
+    ```python
+    # Find high-confidence classifications
+    POST /features/search
+    {
+      "filters": {
+        "AND": [
+          {
+            "key": "node_classifications[].score",
+            "operator": "gte",
+            "value": 0.9
+          }
+        ]
+      }
     }
     ```
   </Tab>

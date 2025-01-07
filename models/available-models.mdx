@@ -30,12 +30,14 @@ Example usage:
 
 For more control, you can specify exact model implementations:
 
-| Model ID | Modalities | Vector Size | Type | Provider |
-|----------|------------|-------------|------|----------|
-| `baai-bge-m3` | Text | 1024 | Dense | BAAI |
-| `openai-clip-vit-base-patch32` | Image, Text | 512 | Dense | OpenAI |
-| `naver-splade-v3` | Text | Sparse | Sparse | Naver |
-| `vertex-multimodal` | Image, Video, Text | 1408 | Dense | Google |
+| Model ID | Modalities | Vector Size | Link |
+|----------|------------|-------------|------|
+| `baai-bge-m3` | Text | 1024 | [View Model](https://huggingface.co/BAAI/bge-m3) |
+| `openai-clip-vit-base-patch32` | Image, Text | 512 | [View Model](https://huggingface.co/openai/clip-vit-base-patch32) |
+| `naver-splade-v3` | Text | Sparse | [View Model](https://huggingface.co/naver/splade-cocondenser-ensembledistil) |
+| `vertex-multimodal` | Image, Video, Text | 1408 | N/A |
+| `modernbert-base` | Text | 768 | [View Model](https://huggingface.co/blog/modernbert) |
+| `vuse-generic-v1` | Image, Video, Text | 768 | [View Model](https://blog.mixpeek.com/vuse-v1-release/) |
 
 Example usage:
 ```python
@@ -91,5 +93,7 @@ Each model in the registry includes:
 - Supported modalities
 - Vector type (dense or sparse)
 - Output dimensions
+- Hosting location and provider
+- Performance metrics
 - Hosting location and provider
 - Performance metrics

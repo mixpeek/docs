@@ -116,18 +116,18 @@
     {
       "group": "Models & Processing",
       "pages": [
-        "overview/models/available-models",
-        "overview/models/embedding-storage",
-        "overview/models/fine-tuning"
+        "models/available-models",
+        "models/embedding-storage",
+        "models/fine-tuning"
       ]
     },
     {
       "group": "Search & Retrieval",
       "pages": [
-        "searching/queries",
-        "searching/filters",
-        "searching/group",
-        "searching/rerank"
+        "search/queries",
+        "search/filters",
+        "search/group",
+        "search/rerank"
       ]
     },
     {
