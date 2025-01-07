@@ -66,6 +66,12 @@
   "primaryTab": {
     "name": "Documentation"
   },
+  "versions": [
+    {
+      "name": "v1",
+      "default": true
+    }
+  ],
   "tabs": [
     {
       "name": "API Reference",
