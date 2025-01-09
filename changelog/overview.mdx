@@ -4,6 +4,30 @@ description: "New updates and improvements"
 mode: "wide"
 ---
 
+<Update label="1-08-2025">
+### Breaking Change: Added "/v1" Prefix to All API Endpoints
+
+We've standardized our API routing by adding a "/v1" prefix to all API endpoints. This change improves API versioning and follows REST API best practices.
+
+#### Required Changes
+- Update all API endpoint calls to include the "/v1" prefix
+- Before: `https://api.mixpeek.com/assets`
+- After: `https://api.mixpeek.com/v1/assets`
+
+#### Affected Endpoints
+All API endpoints are affected. Common examples include:
+- `/features/search` → `/v1/features/search`
+- `/ingest/videos/url` → `/v1/ingest/videos/url`
+- `/collections` → `/v1/collections`
+
+#### Migration Guide
+1. Audit your API calls
+2. Update endpoint URLs to include the "/v1" prefix
+3. Test your integration with the new endpoints
+
+</Update>
+
+
 <Update label="1-1-2025">
 
 ### Feature: Averaged Multi-Input Embeddings
