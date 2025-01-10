@@ -118,5 +118,19 @@ erDiagram
         integer depth
         array order
     }
+    Feature_Face {
+        string face_id
+        float confidence
+        object bbox
+        array embeddings
+    }
+    Feature_Cluster {
+        string cluster_id
+        float similarity
+        integer size
+        array members
+    }
     Feature ||--|{ Feature_NodeClassification : contains
+    Feature ||--|{ Feature_Face : contains
+    Feature ||--|{ Feature_Cluster : contains
 ```
