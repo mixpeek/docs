@@ -110,8 +110,7 @@
       "group": "Data Pipeline",
       "pages": [
         "ingestion/extractors",
-        "entities/taxonomies",
-        "entities/clusters"
+        "entities/taxonomies"
       ]
     },
     {
