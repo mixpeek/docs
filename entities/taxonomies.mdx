@@ -121,36 +121,37 @@ graph TD
     }
     ```
   </Tab>
-  
-  <Tab title="Response">
+
+
+  <Tab title="Assign Classifications">
     ```python
+    POST /entities/taxonomies/{taxonomy}/features/classify
     {
-      "taxonomy_name": "sports_training_library",
-      "description": "Hierarchical classification of sports training videos",
-      "nodes": [
+      "collections": ["training-videos-sample"],
+      "filters": {},
+      "confidence_threshold": 0.8,
+      "assignment": {
+          "enabled": true, # assign classifications to features
+      },
+      "sample_size": 100
+    }
+    ```
+  </Tab>
+
+  <Tab title="List Classifications">
+    ```python
+    POST /entities/taxonomies/{taxonomy}/classifications
+    {
+      "classifications": [
         {
-          "name": "tennis_training",
-          "taxonomy_id": "tax_6cf982d452",
-          "parent_id": null,
-          "children": [
+          "feature_id": "feat_abc123",
+          "classification_id": "cls_xyz789",
+          "matches": [
             {
-              "name": "serve_technique",
-              "taxonomy_id": "tax_f7eb5a6491",
-              "parent_id": "tax_6cf982d452",
-              "children": null
-            },
-            {
-              "name": "return_practice",
-              "taxonomy_id": "tax_dfdf75f884",
-              "parent_id": "tax_6cf982d452",
-              "children": [
-                {
-                  "name": "backhand_returns",
-                  "taxonomy_id": "tax_70986498b6",
-                  "parent_id": "tax_dfdf75f884",
-                  "children": null
-                }
-              ]
+              "node_id": "node_abc123",
+              "score": 0.92,
+              "depth": 0,
+              "order": [0]
             }
           ]
         }

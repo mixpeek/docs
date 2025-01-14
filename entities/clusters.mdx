@@ -3,6 +3,10 @@ title: "Clusters"
 description: "Discover, organize, and search multimodal features using automatic and manual clustering"
 ---
 
+<Warning>
+Clustering is only available for enterprise customers, email info@mixpeek.com for a demo. 
+</Warning>
+
 Clusters in Mixpeek are groups of similar features automatically discovered or manually defined. They enable efficient organization, search, and analysis of your multimodal features.
 
 <Accordion title="Why Use Clusters?">
@@ -20,14 +24,10 @@ Clusters in Mixpeek are groups of similar features automatically discovered or m
     - Dimensionality reduction (UMAP) 
     - Hierarchical methods (BIRCH)
   </Accordion>
-
-  <Accordion title="Manual Clustering">
-    Define your own clusters using: 
-    - Custom taxonomies 
-    - Business rules 
-    - Domain expertise
-  </Accordion>
 </AccordionGroup>
+
+<Note>Need to cluster manually against business rules, domain expertise or existing hierarchies? Use [Taxonomies](/entities/taxonomies)</Note>
+
 
 ## How Clustering Works
 
@@ -91,137 +91,175 @@ Clusters in Mixpeek are groups of similar features automatically discovered or m
 ## Implementation
 
 <Tabs>
-  <Tab title="Automatic Discovery">
-    ```python
-    # Discover clusters automatically
-    POST /entities/cluster/discover
+  <Tab title="Development Setup">
+    ```bash
+    # Create development namespace
+    POST /namespaces
     {
-      "collection_name": "video_features",
-      "method": "dbscan",
-      "settings": {
-        "sample_size": 1000,
-        "neighbor_limit": 20
-      }
+      "namespace": "content_clusters_dev",
+      "embedding_modeles": ["text", "image", "multimodal"]
+    }
+
+    # Create collections
+    POST /collections # with X-Namespace: content_clusters_dev
+    {
+      "collection": "sample"
     }
     ```
   </Tab>
-  
-  <Tab title="Manual Definition">
+
+  <Tab title="Cluster Discovery">
     ```python
-    # Define clusters manually
-    POST /entities/taxonomy/assign
+    POST /entities/clusters/discover
     {
-      "collection_name": "video_features",
-      "terms": {
-        "sports_training": [
-          "tennis serve",
-          "tennis drills"
-        ]
-      }
+      "collections": ["sample"],
+      "method": "hdbscan",
+      "embedding_model": "text",
+      "params": {
+        "min_cluster_size": 3,
+        "min_samples": 3,
+        "umap_neighbors": 15
+      },
+      "naming": {
+        "enabled": true, # if enabled, this automatically generates a name for the cluster
+        "generative_model": "gpt-4o",
+        "method": "centroid",
+        "num_nearest": 3 # Use N nearest features from centroid to generate name
+      },
+      "assign": true,
+      "sample_size": 1000
     }
     ```
   </Tab>
-  
-  <Tab title="Search">
+
+  <Tab title="List Clusters">
     ```python
-    # Search within clusters
-    POST /features/search
+    GET /entities/clusters
     {
-      "query": "tennis serve",
-      "cluster_ids": [1, 2],
-      "limit": 10
+      "clusters": [
+        {
+          "cluster_id": "clu_123",
+          "cluster_name": "Athletic Footwear Ads",
+          "centroid": [...],
+          "nearest_centroids": [
+            {"id": "feat_123", "distance": 0.1},
+            {"id": "feat_456", "distance": 0.15},
+            {"id": "feat_789", "distance": 0.2}
+          ],
+          "size": 45,
+          "confidence": 0.95,
+          "coordinates": {
+            "x": -0.45,
+            "y": 0.78
+          }
+        }
+      ]
     }
     ```
   </Tab>
 </Tabs>
 
-## Architecture
 
-```mermaid
-  graph TD
-    A[Video Features] --> B[Feature Vectors]
-    B --> C[Distance Matrix]
-    C --> D[Cluster Discovery]
-    D --> E[Cluster Assignment]
-    E --> F[Search Index]
-    G[User Taxonomies] --> H[Manual Clusters]
-```
+## Internal Cluster Structure
 
-## Performance Considerations
-
-<Note>
-  Clustering large feature sets can be computationally intensive. Mixpeek uses
-  Qdrant's optimized distance matrix calculations and supports sample-based
-  clustering for better performance.
-</Note>
-
-<Warning>
-  When using manual clusters, ensure your taxonomy terms are specific enough to
-  avoid overlapping clusters that could impact search precision.
-</Warning>
-
-## Advanced Features
-
-
-### Hierarchical Organization
-
-Features can belong to multiple clusters and cluster hierarchies:
+Features store cluster assignments in a simplified array structure:
 
 ```json
 {
-  "clusters": [
+  "entities": [
     {
-      "cluster_id": "clu_123",
-      "path": "sports/tennis/serve",
-      "confidence": 0.95
-    },
-    {
-      "cluster_id": "clu_123",
-      "path": "training/technique",
-      "confidence": 0.88
+      "id": "clu_123",
+      "name": "Athletic Footwear Ads",
+      "coordinates": {
+        "x": -0.45,
+        "y": 0.78
+      },
+      "score": 0.95
     }
   ]
 }
 ```
 
-<Tip>
-  Use cluster hierarchies to create intuitive navigation structures for your
-  content.
-</Tip>
+## Searching with Clusters
 
-## Best Practices
+<Tabs>
+  <Tab title="Basic Cluster Search">
+    ```python
+    POST /features/search
+    {
+      "collections": ["sample"],
+      "filters": {
+        "AND": [
+          {
+            "key": "entities[].cluster",
+            "operator": "eq",
+            "value": "Athletic Footwear Ads" # can use cluster name
+          }
+        ]
+      }
+    }
+    ```
+  </Tab>
+
+  <Tab title="Cluster ID Search">
+    ```python
+    POST /features/search
+    {
+      "collections": ["ad-creatives"],
+      "filters": {
+        "AND": [
+          {
+            "key": "entities[].cluster",
+            "operator": "eq",
+            "value": "clu_123" # can use cluster_id
+          }
+        ]
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Best Practices for Video Clustering
 
 <Steps>
-  <Step title="Preparation">
-    - Clean and normalize your feature data 
-    - Choose appropriate clustering parameters 
-    - Define clear taxonomy rules
+  <Step title="Preprocessing">
+    - Extract features at appropriate intervals (10-15 seconds recommended)
+    - Use the scene detection parameter to identify natural segment boundaries
+    - Consider both visual and audio features for complete context
+    - Normalize video resolution and quality for consistent processing
   </Step>
 
-<Step title="Implementation">
-  - Start with sample-based clustering 
-  - Validate cluster quality 
-  - Monitor cluster distributions
-</Step>
+  <Step title="Model Selection">
+    - Use multimodal embeddings for combined visual-semantic understanding
+    - Consider any of our specialized models for specific content types (sports, ads, etc.)
+    - Balance model complexity with processing requirements
+    - Test different embedding combinations for optimal results
+  </Step>
 
-  <Step title="Optimization">
-    - Adjust parameters based on results 
-    - Refine taxonomy terms 
-    - Balance cluster sizes
+  <Step title="Cluster Configuration">
+    - Start with conservative clustering parameters (higher min_cluster_size)
+    - Adjust confidence thresholds based on content similarity requirements
+    - Use appropriate sample sizes for initial cluster discovery
+    - Enable automatic naming for better cluster interpretability
+  </Step>
+
+  <Step title="Performance Optimization">
+    - Batch process similar video content together
+    - Cache frequently accessed cluster assignments
+    - Use appropriate indexing strategies for faster lookups
+    - Monitor and adjust resource utilization
   </Step>
 </Steps>
 
-## Updates and Maintenance
-
-<Accordion title="Cluster Maintenance">
-  Regular maintenance tasks include: 
-  - Recomputing clusters for new content 
-  - Adjusting cluster parameters 
-  - Updating taxonomies 
-  - Merging similar clusters
-  - Splitting large clusters
-</Accordion>
+<Warning>
+  Video clustering can be resource-intensive. Consider these limitations:
+  - Maximum video duration: 4 hours
+  - Maximum file size: 2GB
+  - Processing timeout: 30 minutes
+  - Rate limits apply to clustering requests
+</Warning>
 
 <Note>
-  Keep your clusters up to date by periodically running the clustering process on new content. Mixpeek handles incremental updates efficiently.
+  For optimal results, combine clustering with taxonomies when dealing with domain-specific video content. This provides both automated discovery and structured organization.
 </Note>
