@@ -107,20 +107,20 @@
       ]
     },
     {
-      "group": "Data Pipeline",
-      "pages": [
-        "ingestion/extractors",
-        "entities/taxonomies",
-        "entities/clusters",
-        "entities/relationships"
-      ]
-    },
-    {
       "group": "Models & Processing",
       "pages": [
+        "ingestion/extractors",
         "models/available-models",
         "models/embedding-storage",
         "models/fine-tuning"
+      ]
+    },
+    {
+      "group": "Entities & Enrichment",
+      "pages": [
+        "entities/taxonomies",
+        "entities/clusters",
+        "entities/relationships"
       ]
     },
     {
