@@ -111,7 +111,6 @@
       "pages": [
         "ingestion/extractors",
         "models/available-models",
-        "models/embedding-storage",
         "models/fine-tuning"
       ]
     },
@@ -135,6 +134,7 @@
     {
       "group": "Databases",
       "pages": [
+        "models/embedding-storage",
         "integrations/databases/timescale",
         "integrations/databases/mongodb",
         "integrations/databases/supabase",
