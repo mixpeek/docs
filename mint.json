@@ -111,7 +111,8 @@
       "pages": [
         "ingestion/extractors",
         "entities/taxonomies",
-        "entities/clusters"
+        "entities/clusters",
+        "entities/relationships"
       ]
     },
     {
