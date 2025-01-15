@@ -134,7 +134,7 @@
     {
       "group": "Databases",
       "pages": [
-        "models/embedding-storage",
+        "integrations/embedding-storage",
         "integrations/databases/timescale",
         "integrations/databases/mongodb",
         "integrations/databases/supabase",
