@@ -3,13 +3,13 @@ title: "Reranking"
 description: "Adjust search result order using feedback signals and popularity metrics"
 ---
 
-<Note>
-  Reranking improves search relevance by incorporating user feedback, popularity metrics, and custom weights to dynamically adjust result ordering.
-</Note>
+<Warning>
+Reranking is only available for enterprise customers, email info@mixpeek.com for a demo. 
+</Warning>
 
 ## Ranking Types
 
-<CardGroup cols={2}>
+<CardGroup cols={3}>
   <Card title="Feedback Signals" icon="thumbs-up">
     - Click interactions
     - View duration
@@ -23,6 +23,13 @@ description: "Adjust search result order using feedback signals and popularity m
     - Time decay
     - Confidence scores
   </Card>
+
+  <Card title="Collaborative Filtering" icon="users">
+    - User similarities
+    - Item-based patterns
+    - Personalized scores
+    - Interaction history
+  </Card>
 </CardGroup>
 
 ## Configuration
@@ -32,8 +39,9 @@ description: "Adjust search result order using feedback signals and popularity m
   {
     "reranking_options": {
       "weights": {
-        "feedback": 0.7,
-        "popularity": 0.3
+        "feedback": 0.4,
+        "popularity": 0.3,
+        "collaborative": 0.3
       },
       "enable_reranking": true
     }
@@ -43,14 +51,18 @@ description: "Adjust search result order using feedback signals and popularity m
   ```json Advanced Reranking
   {
     "reranking_options": {
+      "collaborative_filtering": {
+        "method": "item_based",
+        "min_interactions": 5,
+        "window_days": 30
+      },
       "interaction_weights": {
         "recent": 0.6,
         "historical": 0.4
       },
       "time_decay": {
         "half_life_days": 7
-      },
-      "min_interaction_threshold": 5
+      }
     }
   }
   ```
@@ -79,36 +91,32 @@ description: "Adjust search result order using feedback signals and popularity m
 ## Common Use Cases
 
 <Tabs>
-  <Tab title="Click Tracking">
-    ```javascript
-    await mixpeek.trackInteraction({
-      feature_id: "prod_123",
-      interaction_type: "click",
-      position: 2,
-      metadata: {
-        device: "mobile",
-        duration_ms: 45000
+  <Tab title="Basic Reranking">
+    ```json
+    {
+      "query": "search term",
+      "reranking": {
+        "enable": true,
+        "weights": {
+          "feedback": 0.4,
+          "popularity": 0.3,
+          "collaborative": 0.3
+        }
       }
-    });
+    }
     ```
   </Tab>
 
-  <Tab title="Batch Processing">
-    ```python
-    interactions = [
-      {
-        "feature_id": "prod_123",
-        "interaction_type": "click",
-        "position": 2
-      },
-      {
-        "feature_id": "prod_456",
-        "interaction_type": "skip",
-        "position": 1
+  <Tab title="Personalized Search">
+    ```json
+    {
+      "query": "search term",
+      "reranking": {
+        "enable": true,
+        "user_id": "user_123",
+        "collaborative_method": "item_based"
       }
-    ]
-
-    await mixpeek.bulk_track_interactions(interactions)
+    }
     ```
   </Tab>
 </Tabs>
@@ -130,28 +138,28 @@ description: "Adjust search result order using feedback signals and popularity m
 ## Best Practices
 
 <Steps>
+  <Step title="Choose Ranking Method">
+    Start with basic feedback-based ranking before enabling collaborative filtering
+  </Step>
   <Step title="Configure Weights">
-    Start with balanced weights and adjust based on data
+    Balance between immediate feedback and collaborative patterns
   </Step>
-  <Step title="Monitor Quality">
-    Filter spam and validate interaction data
+  <Step title="Handle Cold Start">
+    Fallback to popularity metrics for new users/items
   </Step>
-  <Step title="Handle Edge Cases">
-    Account for new items and missing signals
-  </Step>
-  <Step title="Test Changes">
-    A/B test different reranking configurations
+  <Step title="Monitor Performance">
+    Track relevance metrics and adjust weights accordingly
   </Step>
 </Steps>
 
 ## Limitations
 
 <Warning>
-  Be aware of these technical constraints:
-  - Minimum interaction threshold required
-  - Historical data retention limits
-  - Processing delay for new signals
-  - Resource impact of complex configurations
+  Consider these constraints:
+  - Collaborative filtering requires sufficient interaction data
+  - Cold-start challenges for new users/items
+  - Processing overhead for large interaction datasets
+  - Memory requirements for similarity matrices
 </Warning>
 
 For detailed implementation examples, see the [Interactions API Reference](/api-reference/search-interactions/create-interaction).

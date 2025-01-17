@@ -3,9 +3,9 @@ title: "Fine-Tuning"
 description: "Customize Mixpeek's embedding models for your specific use case"
 ---
 
-<Note>
-  Fine-tuning allows you to optimize Mixpeek's embedding models for your specific content and search patterns, improving relevance and accuracy for your unique use case.
-</Note>
+<Warning>
+  Available to Enterprise customers only. To trial fine-tuning capabilities, contact our team at info@mixpeek.com
+</Warning>
 
 ## Why Fine-Tune?
 
@@ -113,11 +113,49 @@ description: "Customize Mixpeek's embedding models for your specific use case"
   </Card>
 </CardGroup>
 
-<Warning>
-  Available to Enterprise customers only. To trial fine-tuning capabilities, contact our team at info@mixpeek.com
-</Warning>
+## Technical Challenges & Solutions
 
-<Note>
-  Fine-tuned models maintain the same API interface as base models, ensuring seamless integration with existing code.
-</Note>
+<Tabs>
+  <Tab title="Data Collection">
+    - **Data Quality Control**: Automated validation pipelines detect inconsistencies, duplicates, and annotation errors
+    - **Format Standardization**: Handles diverse input formats (CSV, JSON, XML) and normalizes to training-ready structure
+    - **Scale Management**: Distributed processing for large datasets (100M+ entries)
+    - **Privacy & Security**: Automated PII detection and redaction before training
+  </Tab>
+
+  <Tab title="Training">
+    - **Resource Optimization**: Dynamic allocation of GPU clusters based on dataset size
+    - **Checkpoint Management**: Automated model checkpointing and recovery
+    - **Distributed Training**: Handles multi-GPU and multi-node training scenarios
+    - **Cost Control**: Smart batching and training termination based on convergence metrics
+  </Tab>
+
+  <Tab title="Re-embedding">
+    - **Incremental Processing**: Smart detection of content requiring re-embedding
+    - **Parallel Processing**: Distributed re-embedding across worker pools
+    - **Progress Tracking**: Real-time monitoring of re-embedding progress
+    - **Resource Management**: Rate limiting and backpressure handling
+  </Tab>
+
+  <Tab title="A/B Testing">
+    - **Traffic Splitting**: Configurable traffic allocation between model versions
+    - **Metrics Collection**: Real-time performance monitoring and statistical analysis
+    - **User Segmentation**: Support for cohort-based testing
+    - **Automated Decisions**: Statistical significance calculations and recommendation engine
+  </Tab>
+
+  <Tab title="Zero-Downtime">
+    - **Shadow Deployment**: New model versions run alongside production
+    - **Gradual Rollout**: Configurable traffic shifting patterns
+    - **Health Monitoring**: Automated performance and error rate monitoring
+    - **Instant Fallback**: Sub-second model version switching
+  </Tab>
+
+  <Tab title="Rollback">
+    - **Version Control**: Complete model lineage tracking
+    - **State Management**: Preservation of embedding states across versions
+    - **Automated Triggers**: Performance-based rollback triggers
+    - **Audit Trail**: Comprehensive logging of all deployment events
+  </Tab>
+</Tabs>
 

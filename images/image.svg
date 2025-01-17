@@ -1,0 +1,135 @@
+<svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 566 730" width="566" height="730">
+	<title>image</title>
+	<defs>
+		<linearGradient id="g1" x2="1" gradientUnits="userSpaceOnUse" gradientTransform="matrix(500,180,-113.614,315.594,37,168)">
+			<stop offset="0" stop-color="#fc5185" stop-opacity=".2"/>
+			<stop offset="1" stop-color="#fc5185" stop-opacity=".1"/>
+		</linearGradient>
+		<linearGradient id="g2" x2="1" gradientUnits="userSpaceOnUse" gradientTransform="matrix(500,180,-113.614,315.594,37,388)">
+			<stop offset="0" stop-color="#364f6b" stop-opacity=".2"/>
+			<stop offset="1" stop-color="#364f6b" stop-opacity=".1"/>
+		</linearGradient>
+	</defs>
+	<style>
+		tspan { white-space:pre } 
+		.s0 { fill: #ffffff } 
+		.t1 { font-size: 16px;fill: #18283a;font-family: "Arial" } 
+		.s2 { fill: #fafafa;stroke: #e1e4e8 } 
+		.t3 { font-size: 13px;fill: #18283a;font-family: "Arial" } 
+		.s4 { fill: url(#g1);stroke: #fc5185 } 
+		.t5 { font-size: 16px;fill: #fc5185;font-family: "Arial" } 
+		.s6 { fill: url(#g2);stroke: #364f6b } 
+		.t7 { font-size: 16px;fill: #364f6b;font-family: "Arial" } 
+		.s8 { fill: #000000;stroke: #e1e4e8;stroke-width: 2;stroke-dasharray: 6,4 } 
+	</style>
+	<g>
+		<path fill-rule="evenodd" class="s0" d="m53 8h468c8.8 0 16 7.2 16 16v88c0 8.8-7.2 16-16 16h-468c-8.8 0-16-7.2-16-16v-88c0-8.8 7.2-16 16-16z"/>
+		<text id="Input Assets" style="transform: matrix(1,0,0,1,286,31)" >
+			<tspan x="-49.3" y="0" class="t1">Input Assets
+</tspan>
+		</text>
+		<g>
+			<g>
+				<path fill-rule="evenodd" class="s2" d="m75 53h74c4.4 0 8 3.6 8 8v29c0 4.4-3.6 8-8 8h-74c-4.4 0-8-3.6-8-8v-29c0-4.4 3.6-8 8-8z"/>
+				<text id="Video" style="transform: matrix(1,0,0,1,112,81)" >
+					<tspan x="-18.2" y="0" class="t3">Video
+</tspan>
+				</text>
+			</g>
+			<g>
+				<path fill-rule="evenodd" class="s2" d="m185 53h74c4.4 0 8 3.6 8 8v29c0 4.4-3.6 8-8 8h-74c-4.4 0-8-3.6-8-8v-29c0-4.4 3.6-8 8-8z"/>
+				<text id="Images" style="transform: matrix(1,0,0,1,222,81)" >
+					<tspan x="-23.7" y="0" class="t3">Images
+</tspan>
+				</text>
+			</g>
+			<g>
+				<path fill-rule="evenodd" class="s2" d="m295 53h74c4.4 0 8 3.6 8 8v29c0 4.4-3.6 8-8 8h-74c-4.4 0-8-3.6-8-8v-29c0-4.4 3.6-8 8-8z"/>
+				<text id="Text" style="transform: matrix(1,0,0,1,332,81)" >
+					<tspan x="-13.1" y="0" class="t3">Text
+</tspan>
+				</text>
+			</g>
+			<g>
+				<path fill-rule="evenodd" class="s2" d="m405 53h74c4.4 0 8 3.6 8 8v29c0 4.4-3.6 8-8 8h-74c-4.4 0-8-3.6-8-8v-29c0-4.4 3.6-8 8-8z"/>
+				<text id="Audio" style="transform: matrix(1,0,0,1,442,81)" >
+					<tspan x="-18.5" y="0" class="t3">Audio
+</tspan>
+				</text>
+			</g>
+		</g>
+	</g>
+	<g>
+		<path fill-rule="evenodd" class="s4" d="m53 168h468c8.8 0 16 7.2 16 16v148c0 8.8-7.2 16-16 16h-468c-8.8 0-16-7.2-16-16v-148c0-8.8 7.2-16 16-16z"/>
+		<text id="Feature Extraction" style="transform: matrix(1,0,0,1,287,208)" >
+			<tspan x="-73.6" y="0" class="t5">Feature Extraction
+</tspan>
+		</text>
+		<g>
+			<path fill-rule="evenodd" class="s0" d="m75 228h114c4.4 0 8 3.6 8 8v54c0 4.4-3.6 8-8 8h-114c-4.4 0-8-3.6-8-8v-54c0-4.4 3.6-8 8-8z"/>
+			<text id="OSS Models" style="transform: matrix(1,0,0,1,132,268)" >
+				<tspan x="-38.3" y="0" class="t3">OSS Models
+</tspan>
+			</text>
+		</g>
+		<g>
+			<path fill-rule="evenodd" class="s0" d="m230 228h114c4.4 0 8 3.6 8 8v54c0 4.4-3.6 8-8 8h-114c-4.4 0-8-3.6-8-8v-54c0-4.4 3.6-8 8-8z"/>
+			<text id="BYO Models" style="transform: matrix(1,0,0,1,287,268)" >
+				<tspan x="-37.8" y="0" class="t3">BYO Models
+</tspan>
+			</text>
+		</g>
+		<g>
+			<path fill-rule="evenodd" class="s0" d="m385 228h114c4.4 0 8 3.6 8 8v54c0 4.4-3.6 8-8 8h-114c-4.4 0-8-3.6-8-8v-54c0-4.4 3.6-8 8-8z"/>
+			<text id="Mixpeek Models" style="transform: matrix(1,0,0,1,442,268)" >
+				<tspan x="-52.1" y="0" class="t3">Mixpeek Models
+</tspan>
+			</text>
+		</g>
+	</g>
+	<g>
+		<path fill-rule="evenodd" class="s6" d="m53 388h468c8.8 0 16 7.2 16 16v148c0 8.8-7.2 16-16 16h-468c-8.8 0-16-7.2-16-16v-148c0-8.8 7.2-16 16-16z"/>
+		<text id="Enrichment" style="transform: matrix(1,0,0,1,287,428)" >
+			<tspan x="-46" y="0" class="t7">Enrichment
+</tspan>
+		</text>
+		<g>
+			<path fill-rule="evenodd" class="s0" d="m75 448h114c4.4 0 8 3.6 8 8v54c0 4.4-3.6 8-8 8h-114c-4.4 0-8-3.6-8-8v-54c0-4.4 3.6-8 8-8z"/>
+			<text id="Taxonomies" style="transform: matrix(1,0,0,1,132,488)" >
+				<tspan x="-38.1" y="0" class="t3">Taxonomies
+</tspan>
+			</text>
+		</g>
+		<g>
+			<path fill-rule="evenodd" class="s0" d="m230 448h114c4.4 0 8 3.6 8 8v54c0 4.4-3.6 8-8 8h-114c-4.4 0-8-3.6-8-8v-54c0-4.4 3.6-8 8-8z"/>
+			<text id="Clusters" style="transform: matrix(1,0,0,1,287,488)" >
+				<tspan x="-26.5" y="0" class="t3">Clusters
+</tspan>
+			</text>
+		</g>
+		<g>
+			<path fill-rule="evenodd" class="s0" d="m385 448h114c4.4 0 8 3.6 8 8v54c0 4.4-3.6 8-8 8h-114c-4.4 0-8-3.6-8-8v-54c0-4.4 3.6-8 8-8z"/>
+			<text id="Relationships" style="transform: matrix(1,0,0,1,442,488)" >
+				<tspan x="-43.3" y="0" class="t3">Relationships
+</tspan>
+			</text>
+		</g>
+	</g>
+	<g>
+		<path fill-rule="evenodd" class="s0" d="m53 599h468c8.8 0 16 7.2 16 16v88c0 8.8-7.2 16-16 16h-468c-8.8 0-16-7.2-16-16v-88c0-8.8 7.2-16 16-16z"/>
+		<text id="Search &amp; Discovery" style="transform: matrix(1,0,0,1,287,626)" >
+			<tspan x="-78.3" y="0" class="t1">Search &amp; Discovery
+</tspan>
+		</text>
+		<path fill-rule="evenodd" class="s2" d="m75 638h424c4.4 0 8 3.6 8 8v44c0 4.4-3.6 8-8 8h-424c-4.4 0-8-3.6-8-8v-44c0-4.4 3.6-8 8-8z"/>
+		<text id="Vector Search • Filtering • Grouping • Learning to Rank" style="transform: matrix(1,0,0,1,287,673)" >
+			<tspan x="-180.1" y="0" class="t3">Vector Search • Filtering • Grouping • Learning to Rank
+</tspan>
+		</text>
+	</g>
+	<g>
+		<path class="s8" d="m287 128v40"/>
+		<path class="s8" d="m287 348v40"/>
+		<path class="s8" d="m287 568v40"/>
+	</g>
+</svg>
