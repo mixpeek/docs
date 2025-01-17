@@ -47,6 +47,71 @@ Features are the core primitive in Mixpeek. They represent extracted information
   ]
 }
 ```
+
+```json Image Feature Extraction
+{
+  "feature_extractors": {
+    "embed": [
+      {
+        "embedding_model": "multimodal",
+        "type": "url"  // Generate embeddings for visual similarity search
+      },
+      {
+        "embedding_model": "image",
+        "type": "url"  // Specialized image embedding model
+      }
+    ],
+    "describe": {
+      "enabled": true,  // Generate natural language description
+      "max_length": 1000
+    },
+    "detect": {
+      "faces": {
+        "enabled": true,  // Detect and analyze faces
+        "confidence_threshold": 0.8
+      }
+    },
+    "json_output": {
+      "response_shape": {
+        "colors": ["str"],  // Extract dominant colors
+        "objects": ["str"]  // Detect objects in image
+      }
+    }
+  }
+}
+```
+
+```json Text Feature Extraction
+{
+  "feature_extractors": {
+    "embed": [
+      {
+        "embedding_model": "multimodal",
+        "type": "text",  // Generate embeddings for semantic search
+        "value": "content"
+      },
+      {
+        "embedding_model": "keyword",  // Keyword-focused embedding
+        "type": "text",
+        "value": "content"
+      }
+    ],
+    "json_output": {
+      "response_shape": {
+        "key_phrases": ["str"],  // Extract important phrases
+        "sentiment": "str"  // Analyze sentiment
+      }
+    },
+    "entities": {
+      "taxonomy_extraction": {
+        "taxonomy_ids": ["tax_123"],  // Classify content using taxonomies
+        "confidence_threshold": 0.8,
+        "embedding_models": ["multimodal", "text"]
+      }
+    }
+  }
+}
+```
 </CodeGroup>
 
 [Learn more about Feature Extraction →](/ingestion/extractors)
@@ -74,20 +139,6 @@ Once features are extracted, they can be enriched with domain knowledge through 
     [Learn More →](/entities/relationships)
   </Card>
 </CardGroup>
-
-### Domain Knowledge Integration
-
-```mermaid
-graph LR
-    A[Raw Features] --> B[Enrichment Layer]
-    B --> C[Enhanced Features]
-    
-    subgraph "Enrichment Layer"
-    D[Taxonomies] --> F[Domain Knowledge]
-    E[Clusters] --> F
-    F --> G[Relationships]
-    end
-```
 
 ## 3. Search & Discovery
 
