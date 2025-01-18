@@ -233,7 +233,8 @@
       "group": "Tasks",
       "pages": [
         "api-reference/tasks/get-task-information",
-        "api-reference/tasks/kill-task"
+        "api-reference/tasks/kill-task",
+        "api-reference/tasks/list-active-tasks"
       ]
     },
     {
