@@ -4,6 +4,42 @@ description: "New updates and improvements"
 mode: "wide"
 ---
 
+<Update label="1-15-2025">
+### Active Tasks Listing & Enhanced Taxonomy Classifications
+
+We've added the ability to list active processing tasks and enhanced our taxonomy classification system with new assignment modes.
+
+#### Active Tasks
+You can now monitor all active processing tasks across your collections, providing better visibility into ongoing operations.
+
+#### Enhanced Taxonomy Classifications
+The taxonomy classification system now supports two assignment modes:
+- **Threshold Mode**: Assigns categories based on a confidence threshold
+- **Nearest Mode**: Assigns to the nearest matching category regardless of confidence
+
+```json
+{
+  "collections": ["string"],
+  "filters": {},
+  "assignment": {
+    "enabled": false,
+    "mode": "threshold",  // or "nearest"
+    "append": false,
+    "confidence_threshold": 0.8
+  },
+  "limit": 1000
+}
+```
+
+#### Key Updates
+- Monitor active tasks with status, progress, and estimated completion time
+- Choose between threshold-based or nearest-neighbor taxonomy assignments
+- Control whether new classifications append to or replace existing ones
+- Set confidence thresholds for more precise category matching
+
+For detailed implementation guidelines, see our [Taxonomy Classification Guide](/ingestion/entities/taxonomies).
+</Update>
+
 <Update label="1-08-2025">
 ### Breaking Change: Added "/v1" Prefix to All API Endpoints
 
