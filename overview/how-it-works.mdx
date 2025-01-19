@@ -13,7 +13,30 @@ Mixpeek provides infrastructure that allows developers to construct their own se
 
 Features are the core primitive in Mixpeek. They represent extracted information from any content type using state-of-the-art AI models.
 
-### Example: Video Processing
+```mermaid
+graph LR
+    A[Video Input] --> B[Feature Extractors]
+    
+    subgraph Feature Extractors
+        B --> C[Scene Understanding]
+        B --> D[Transcription]
+        B --> E[Face Detection]
+        B --> F[Description]
+    end
+    
+    C --> G[Feature Payload]
+    D --> G
+    E --> G
+    F --> G
+    
+    subgraph Feature Payload
+        G --> H[Embeddings]
+        G --> I[Metadata]
+        G --> J[Extracted Features]
+    end
+```
+
+### Asset Processing Examples
 
 <CodeGroup>
 ```json Video Feature Extraction
@@ -140,6 +163,27 @@ Once features are extracted, they can be enriched with domain knowledge through 
   </Card>
 </CardGroup>
 
+```mermaid
+graph LR
+    A[Feature Payload] --> B[Enrichment Layer]
+    
+    subgraph Enrichment Layer
+        B --> C[Taxonomies]
+        B --> D[Clusters]
+        B --> E[Relationships]
+    end
+    
+    C --> F[Enriched Feature]
+    D --> F
+    E --> F
+    
+    subgraph Enriched Feature
+        F --> G[Manual Classifications]
+        F --> H[Automatic Groups]
+        F --> I[Content Connections]
+    end
+```
+
 ## 3. Search & Discovery
 
 Enriched features enable powerful search capabilities:
@@ -163,6 +207,31 @@ Enriched features enable powerful search capabilities:
     [Learn More →](/search/rerank)
   </Accordion>
 </AccordionGroup>
+
+
+```mermaid
+graph LR
+    A[Search Query] --> B[Search Engine]
+    
+    subgraph Search Engine
+        B --> C[Vector Search]
+        B --> D[Filters]
+        B --> E[Groups]
+        
+        C & D & E --> F[Learning to Rank]
+    end
+    
+    F --> G[Ranked Results]
+    
+    subgraph Result Set
+        G --> H[Relevance Score]
+        G --> I[Feature Groups]
+        G --> J[Metadata]
+    end
+    
+    G --> K[Search Analytics]
+    K --> |Feedback Loop| B
+```
 
 ### Search Configuration Example
 
@@ -192,6 +261,7 @@ Enriched features enable powerful search capabilities:
 }
 ```
 </CodeGroup>
+
 
 [Learn about Filtering →](/search/filters)
 
