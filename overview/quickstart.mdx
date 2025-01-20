@@ -19,19 +19,22 @@ title: "Quickstart"
 
 ## Getting Started
 
-First, install the required libraries:
+You can choose to use the python client directly, but we'll be using the requests library.
 
 `pip install mixpeek`
 
 https://pypi.org/project/mixpeek
 
-Initialize the Mixpeek client:
-
 ```python
 import os
-from mixpeek import Mixpeek
+import requests
 
-client = Mixpeek(token="MIXPEEK_API_KEY")
+api_key = "YOUR_API_KEY"
+
+headers = {
+  'Authorization': f'Bearer {api_key}',
+  'Content-Type': 'application/json'
+}
 ```
 
 ## Indexing Content
@@ -42,110 +45,109 @@ You can index various types of content including images, videos, and text:
 
 ```python
 # Index an image from URL
-response = client.ingest.image_url(
-    url="https://example.com/sample-image.jpg",
-    collection="quickstart",
-    metadata={
-        "title": "Sample Image",
-        "category": "demo"
-    },
-    feature_extractors=client.ImageSettings(
-        embed=[
-            {
-                "type": client.InputType.URL,
-                "embedding_model": client.EmbeddingModel.IMAGE
-            }
-        ],
-        describe={
-            "enabled": True
-        }
-    )
-)
+import requests
+import json
+
+url = "https://api.mixpeek.com/v1/ingest/images/url"
+
+payload = json.dumps({
+  "url": "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/aussie_jumping.jpg",
+  "collection": "test",
+  "feature_extractors": {
+    "embed": [
+      {
+        "embedding_model": "multimodal",
+        "type": "url"
+      }
+    ]
+  }
+})
+response = requests.request("POST", url, headers=headers, data=payload)
 ```
+
+[Ingest Image API](/api-reference/ingest-assets/ingest-image-url)
 
 ### Video Indexing
 
 ```python
 # Index a video from URL
-response = client.ingest.video_from_url(
-    url="https://example.com/sample-video.mp4",
-    collection="quickstart",
-    metadata={
-        "title": "Sample Video",
-        "category": "demo"
-    },
-    feature_extractors=[
-        client.VideoSettings(
-            interval_sec=15,
-            embed=[
-                {
-                    "type": client.InputType.URL,
-                    "embedding_model": client.EmbeddingModel.MULTIMODAL
-                }
-            ],
-            transcribe={"enabled": True},
-            describe={"enabled": True}
-        )
-    ]
-)
+url = "https://api.mixpeek.com/v1/ingest/videos/url"
+
+payload = json.dumps({
+  "url": "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/jurassic_bunny.mp4",
+  "collection": "test",
+  "feature_extractors": [
+    {
+      "interval_sec": 30,
+      "transcribe": {
+        "enabled": True,
+        "embedding_model": "text"
+      },
+      "embed": [
+        {
+          "type": "url",
+          "embedding_model": "multimodal"
+        }
+      ]
+    }
+  ]
+})
+
+response = requests.request("POST", url, headers=headers, data=payload)
 ```
+
+[Ingest Video API](/api-reference/ingest-assets/ingest-video-url)
+
 
 ### Text Indexing
 
 ```python
-# Index text content
-response = client.ingest.text(
-    collection="quickstart",
-    metadata={
-        "title": "Sample Text",
-        "category": "demo"
-    },
-    feature_extractors={
-        "embed": [
-            {
-                "type": client.InputType.TEXT,
-                "embedding_model": client.EmbeddingModel.TEXT,
-                "value": "Your text content here"
-            }
-        ]
-    }
-)
+url = "https://api.mixpeek.com/v1/ingest/text"
+
+payload = json.dumps({
+  "collection": "test",
+  "feature_extractors": {
+    "embed": [
+      {
+        "type": "text",
+        "value": "Lorem ipsum ... ",
+        "embedding_model": "text"
+      }
+    ]
+  }
+})
+
+response = requests.request("POST", url, headers=headers, data=payload)
 ```
+
+[Ingest Text API](/api-reference/ingest-assets/ingest-text)
+
 
 ## Searching Content
 
 Now you can perform both text and vector searches across your collections:
 
 ```python
-response = mixpeek.features.search(
-    queries=[
-        # Text vector search
-        {
-            "embedding_model": "text",
-            "value": "dog jumping in the park",
-            "type": "text",
-        },
-        # Image vector search
-        {
-            "embedding_model": "image",
-            "value": "https://example.com/sample-image.jpg",
-            "type": "url"
-        }
-    ],
-    collections=["quickstart"],
-    page_size=10,
-    filters={
-        "case_sensitive": True,
-        "and_": [
-            {
-                "key": "metadata.category",
-                "value": "demo",
-                "operator": "eq"
-            }
-        ]
+url = "https://api.mixpeek.com/v1/features/search"
+
+payload = json.dumps({
+  "collections": [
+    "test"
+  ],
+  "queries": [
+    {
+      "embedding_model": "multimodal",
+      "value": "dog outside",
+      "type": "text"
     }
-)
+  ]
+})
+
+response = requests.request("POST", url, headers=headers, data=payload)
+
 ```
+
+[Feature Search](/api-reference/feature-search/search-features)
 
 ## Next Steps
 
