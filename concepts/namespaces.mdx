@@ -38,7 +38,30 @@ Watch this 5-minute live walkthrough to see namespaces in action. The video cove
     - Search capabilities
     - Data organization
   </Card>
+
+  <Card title="Vector Versioning" icon="code-branch">
+    Seamlessly manage embedding model transitions:
+    - A/B test different embedding models
+    - Batch re-embed existing data
+    - Zero-downtime production cutover
+  </Card>
 </CardGroup>
+
+## Common Challenges We Solve
+
+### Embedding Model Evolution
+Managing embedding model transitions can be complex. For example, when upgrading from OpenAI's `clip-vit-base-patch32` to Nomic AI's `nomic-embed-vision-v1.5`, you face several challenges:
+
+- Re-embedding millions of existing images
+- Testing retrieval quality across different models
+- Maintaining service continuity during transitions
+- Managing multiple embedding versions simultaneously
+
+Namespaces provide a elegant solution by:
+- Creating isolated environments for different embedding models
+- Enabling side-by-side quality comparisons
+- Supporting seamless production cutover
+- Switching between versions with a simple `X-Namespace` header
 
 ## Vector Indexes and Embedding Models
 
