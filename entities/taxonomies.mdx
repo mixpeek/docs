@@ -229,7 +229,7 @@ graph TD
         "filters": {
             "AND": [
                 {
-                    "key": "entities[].node",
+                    "key": "taxonomy_nodes[].node",
                     "operator": "in",
                     "value": ["serve_technique"]  # Can use node name
                 }
@@ -247,7 +247,7 @@ graph TD
         "filters": {
             "AND": [
                 {
-                    "key": "entities[].node",
+                    "key": "taxonomy_nodes[].node",
                     "operator": "in",
                     "value": ["node_abc123"]  # Can use node ID
                 }
@@ -267,14 +267,14 @@ graph TD
           {
             "OR": [
               {
-                "key": "entities[].node",
+                "key": "taxonomy_nodes[].node",
                 "operator": "in",
                 "value": ["tennis_training", "node_xyz789"]  # Mix of names and IDs
               }
             ]
           },
           {
-            "key": "entities[].score",
+            "key": "taxonomy_nodes[].score",
             "operator": "gte",
             "value": 0.8
           }
@@ -294,12 +294,12 @@ graph TD
           {
             // Match root node
             {
-              "key": "entities[].node",
+              "key": "taxonomy_nodes[].node",
               "operator": "eq",
               "value": "tennis_training"
             },
             {
-              "key": "entities[].order",
+              "key": "taxonomy_nodes[].order",
               "operator": "eq",
               "value": [0]
             }
@@ -307,12 +307,12 @@ graph TD
           {
             // Match specific child node
             {
-              "key": "entities[].node",
+              "key": "taxonomy_nodes[].node",
               "operator": "eq",
               "value": "return_practice"
             },
             {
-              "key": "entities[].order",
+              "key": "taxonomy_nodes[].order",
               "operator": "eq",
               "value": [0, 1]
             }
@@ -325,7 +325,7 @@ graph TD
 </Tabs>
 
 <Note>
-  When filtering by `entities[].node`, you can use either the node's name (e.g., "serve_technique") or its ID (e.g., "node_abc123"). The system will automatically match either format.
+  When filtering by `taxonomy_nodes[].node`, you can use either the node's name (e.g., "serve_technique") or its ID (e.g., "node_abc123"). The system will automatically match either format.
 </Note>
 
 ## Internal Taxonomy Structure
@@ -334,15 +334,15 @@ Features store taxonomy classifications with hierarchical information in a simpl
 
 ```json
 {
-  "entities": [
+  "taxonomy_nodes": [
     {
-      "node_id": "tax_tennis_training",
+      "node_id": "node_123",
       "depth": 0,
       "score": 0.82,
       "order": [0]
     },
     {
-      "node_id": "tax_return_practice",
+      "node_id": "node_3212",
       "depth": 1,
       "score": 0.91,
       "order": [0, 1]
@@ -368,7 +368,7 @@ This structure enables several filtering patterns:
       "filters": {
         "AND": [
           {
-            "key": "entities[].depth",
+            "key": "taxonomy_nodes[].depth",
             "operator": "eq",
             "value": 0
           }
@@ -386,12 +386,12 @@ This structure enables several filtering patterns:
       "filters": {
         "AND": [
           {
-            "key": "node_classifications[].id",
+            "key": "taxonomy_nodes[].id",
             "operator": "eq",
             "value": "tax_tennis_training"
           },
           {
-            "key": "node_classifications[].order",
+            "key": "taxonomy_nodes[].order",
             "operator": "eq",
             "value": [0]
           }
@@ -409,7 +409,7 @@ This structure enables several filtering patterns:
       "filters": {
         "AND": [
           {
-            "key": "node_classifications[].score",
+            "key": "taxonomy_nodes[].score",
             "operator": "gte",
             "value": 0.9
           }
