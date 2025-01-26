@@ -483,3 +483,23 @@ POST /ingest/videos/url
   - Cache frequently accessed classifications
   - Batch process similar video content
 </Accordion>
+
+## Feature Storage Format
+
+Features store taxonomy classifications in the `taxonomy_nodes` array. Each classification includes:
+
+```json
+{
+    "taxonomy_nodes": [
+        {
+            "taxonomy_id": "tax_38c33e0d8f",     // Unique identifier for the taxonomy
+            "node_id": "node_9761ac566c6e11",    // Unique identifier for the node
+            "score": 0.5,                        // Classification confidence (0-1)
+            "depth": 0,                          // Level in hierarchy (0 = root)
+            "order": [0]                         // Path representation in the tree
+        }
+    ]
+}
+```
+
+Multiple classifications can be stored for a single feature, allowing content to be categorized under multiple nodes or taxonomies.
