@@ -7,6 +7,11 @@ description: "Store and organize raw multimodal data objects for processing"
   Buckets are the foundation of Mixpeek's storage architecture. They serve as containers for raw objects and their associated files before processing. They are your entry point for all multimodal processing, search and analysis.
 </Note>
 
+## Overview
+
+Buckets accept objects which are composed of blobs (collections of related files or json-types) before they're processed by collections into documents.
+
+
 <iframe
   width="600"
   height="310"
@@ -19,10 +24,6 @@ description: "Store and organize raw multimodal data objects for processing"
   muted
 ></iframe>
 
-## What are Buckets?
-
-Buckets in Mixpeek are specialized storage containers designed for efficiently managing and organizing your raw multimodal content. They hold blobs (collections of related files or json-types) before they're processed by pipelines.
-
 <CardGroup cols={2}>
   <Card title="Storage Containers" icon="bucket">
     Securely store raw objects and their associated files in logically grouped containers
@@ -33,116 +34,82 @@ Buckets in Mixpeek are specialized storage containers designed for efficiently m
   </Card>
 </CardGroup>
 
-## Key Concepts
+### Key Concepts
 
 <AccordionGroup>
-  <Accordion title="Namespace Association" icon="link">
-    Each bucket belongs to a specific namespace, inheriting its configuration and security settings. Buckets cannot span multiple namespaces.
+  <Accordion title="Schema Validation" icon="brackets-curly">
+    When creating your bucket, you specify the schema that all objects must adhere to. This is strictly enforced. Objects that fail this schema validation will not be processed. 
   </Accordion>
 
-  <Accordion title="Object Storage" icon="box-archive">
-    Buckets store objects, which are collections of related files representing a single entity (e.g., a product with images, specs, and descriptions).
-  </Accordion>
-
-  <Accordion title="Collection Integration" icon="gears">
-    Buckets serve as input sources for collections, which extract features from the objects and create structured documents.
-  </Accordion>
-
-  <Accordion title="Prefixes" icon="lock">
-    Buckets inherit the access controls of their parent namespace but can also have prefixes that are used when searching.
+  <Accordion title="Object Prefixes" icon="lock">
+    When uploading an object you can choose to include a prefix which is used as a path. Additionally, individual blobs in the object can maintain their own prefix. 
   </Accordion>
 </AccordionGroup>
 
-## Creating a Bucket
+### Creating a Bucket
 
-<CodeGroup>
-  ```python Python
-  from mixpeek import Mixpeek
-  
-  mp = Mixpeek(api_key="YOUR_API_KEY")
-  
-  # Create a bucket
-  bucket = mp.buckets.create(
-      namespace_id="ns_abc123",
-      name="product-images",
-      description="Product images for e-commerce catalog"
-  )
-  
-  bucket_id = bucket["bucket_id"]
-  print(f"Created bucket: {bucket_id}")
-  ```
+```python Python
+from mixpeek import Mixpeek
 
-  ```javascript JavaScript
-  import { Mixpeek } from '@mixpeek/sdk';
-  
-  const mp = new Mixpeek({ apiKey: 'YOUR_API_KEY' });
-  
-  // Create a bucket
-  const bucket = await mp.buckets.create({
-    namespace_id: "ns_abc123",
-    name: "product-images",
-    description: "Product images for e-commerce catalog"
-  });
-  
-  const bucketId = bucket.bucket_id;
-  console.log(`Created bucket: ${bucketId}`);
-  ```
+mp = Mixpeek(api_key="YOUR_API_KEY")
 
-  ```bash cURL
-  curl -X POST "https://api.mixpeek.com/v1/buckets" \
-    -H "Authorization: Bearer YOUR_API_KEY" \
-    -H "Content-Type: application/json" \
-    -d '{
-      "namespace_id": "ns_abc123",
-      "name": "product-images",
-      "description": "Product images for e-commerce catalog"
-    }'
-  ```
-</CodeGroup>
+# Create a bucket
+bucket = mp.buckets.create(
+    namespace="ns_abc123",
+    bucket_name="product-images",
+    description="Product images for e-commerce catalog",
+    schema={
+      "type": "object",
+      "properties": {
+        "video_1": {
+          "type": "video"
+        },
+        "pdf_1": {
+          "type": "pdf"
+        }
+      }
+    }
+)
+
+bucket_id = bucket["bucket_id"]
+print(f"Created bucket: {bucket_id}")
+```
 
 ## Objects
 
 Once you've created a bucket, you can add objects to it. Objects are collections of related blobs that represent a single entity in your domain.
 
-<Steps>
-  <Step title="Create an Object">
-    Create an object in your bucket. Each object can contain multiple related files.
-    
-    ```python
-    # Create an object with multiple files
-    object = mp.objects.create(
-        bucket_id=bucket_id,
-        name="red-sneaker-product",
-        blobs=[
-            {
-                "url": "https://example.com/images/red-sneaker-front.jpg",
-                "mimetype": "image/jpeg"
-            },
-            {
-                "url": "https://example.com/images/red-sneaker-side.jpg",
-                "mimetype": "image/jpeg"
-            },
-            {
-                "url": "https://example.com/data/red-sneaker-specs.txt",
-                "mimetype": "text/plain"
-            }
-        ]
-    )
-    ```
-  </Step>
+Create an object in your bucket. Each object can contain multiple related files.
 
-  <Step title="Track Processing Status">
-    Monitor the status of the processing task.
+![Bucket Details](https://d8ts56gtwtyh1.cloudfront.net/docs/warehouse/images/object_upload.jpg)
     
-    ```python
-    # Check task status
-    status = mp.tasks.get(task_id=task_id)
-    print(f"Task status: {status['status']}")
-    ```
-  </Step>
-</Steps>
+```python
+# Create an object with multiple files
+mp.objects.create(
+  bucket=bucket_id,
+  prefix="/files",
+  # the metadata is passed down each document
+  metadata={
+    "name": "red-sneaker-product" 
+  }
+  blobs=[
+      {
+          "url": "https://example.com/images/red-sneaker-front.jpg",
+          "mimetype": "image/jpeg"
+      },
+      {
+          "url": "https://example.com/images/red-sneaker-side.jpg",
+          "mimetype": "image/jpeg"
+      },
+      {
+          "url": "https://example.com/data/red-sneaker-specs.txt",
+          "mimetype": "text/plain"
+      }
+  ]
+)
+```
 
-## Best Practices
+### Best Practices
 
 <CardGroup cols={2}>
   <Card title="Logical Grouping" icon="boxes-stacked">
@@ -154,7 +121,7 @@ Once you've created a bucket, you can add objects to it. Objects are collections
   </Card>
 
   <Card title="Metadata Usage" icon="route">
-    Align bucket structure with your processing pipelines for more efficient workflow organization
+    Metadata from your objects is passed down to all associated documents in your destination collections.
   </Card>
   
   <Card title="Resource Optimization" icon="gauge-high">
@@ -162,10 +129,10 @@ Once you've created a bucket, you can add objects to it. Objects are collections
   </Card>
 </CardGroup>
 
-## Common Use Cases
+### Common Use Cases
 
 <CardGroup cols={3}>
-  <Card title="E-commerce Products" icon="shopping-cart">
+  <Card title="E-commerce Products" icon="cart-shopping">
     Store product images, videos, specs, and descriptions for catalog processing
   </Card>
   
@@ -181,8 +148,13 @@ Once you've created a bucket, you can add objects to it. Objects are collections
 ## Blobs
 
 <Note>
-  Blobs represent individual files within Objects. While Objects group related files together, Blobs are the actual raw file content that gets processed by feature extractors.
+  Blobs represent individual files within Objects. While Objects group related files together, Blobs are the actual raw file content or JSON types that gets processed by feature extractors.
 </Note>
+
+Once your blobs are processing into objects, they maintain the prefix structure you assigned on upload. They can be treated as a standard file system.
+
+![Bucket Details](https://d8ts56gtwtyh1.cloudfront.net/docs/warehouse/images/blob_fs.jpg)
+
 
 ### Supported File Types
 
@@ -259,11 +231,7 @@ Once you've created a bucket, you can add objects to it. Objects are collections
     Compress large files when possible to improve upload and processing speed
   </Card>
   
-  <Card title="Format Selection" icon="file-type">
+  <Card title="Format Selection" icon="arrow-pointer">
     Use recommended formats for each content type to ensure optimal processing
   </Card>
 </CardGroup>
-
-## API Reference
-
-For complete details on working with buckets, see our [Buckets API Reference](/api-reference/buckets/create-bucket). 

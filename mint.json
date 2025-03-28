@@ -86,8 +86,9 @@
         {
           "group": "Feature Extractors",
           "pages": [
-            "extraction/overview",
-            "extraction/extractors/scene-splitting"
+            "extraction/scene-splitting",
+            "extraction/video_embedding",
+            "extraction/face_detection"
           ]
         },
         "processing/model-tuning",
@@ -97,11 +98,20 @@
     {
       "group": "Search & Retrieval",
       "pages": [
-        "search/retrievers",
-        "search/stages",
-        "search/filters",
-        "search/interactions",
-        "search/research"
+        "retrieval/retrievers",
+        {
+          "group": "Stages",
+          "pages": [
+            "stages/knn_search",
+            "stages/hybrid_search",
+            "stages/llm_generation",
+            "stages/reranking",
+            "stages/face_search"
+          ]
+        },
+        "retrieval/filters",
+        "retrieval/interactions",
+        "retrieval/research"
       ]
     },
     {

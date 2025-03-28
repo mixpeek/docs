@@ -7,6 +7,10 @@ description: "Organize processed documents with consistent schemas for efficient
   Collections store processed documents with a consistent schema. They are the primary containers for structured data that has been extracted from raw objects.
 </Note>
 
+## Overview
+
+When raw objects are processed by feature extractors, the resulting structured data is stored in collections as documents.
+
 <iframe
   width="600"
   height="310"
@@ -19,167 +23,53 @@ description: "Organize processed documents with consistent schemas for efficient
   muted
 ></iframe>
 
-## What are Collections?
+When defining a collection's source they can use buckets or existing collections for downstream feature extraction.
 
-Collections in Mixpeek are specialized containers that store processed documents with a consistent schema. When raw objects are processed by pipelines, the resulting structured data is stored in collections, ready for efficient retrieval and search.
+![Bucket Details](https://d8ts56gtwtyh1.cloudfront.net/docs/warehouse/images/collection_sources.jpg)
 
-<CardGroup cols={2}>
-  <Card title="Document Storage" icon="layer-group">
-    Organized storage for processed documents with consistent structure and schema
-  </Card>
-  
-  <Card title="Retrieval Source" icon="magnifying-glass">
-    Collections serve as the primary source for search and retrieval operations
-  </Card>
-</CardGroup>
-
-## Key Concepts
+### Key Concepts
 
 <AccordionGroup>
   <Accordion title="Schema Consistency" icon="table-columns">
-    All documents in a collection share the same schema, ensuring consistent structure for efficient querying and retrieval.
+    All documents in a collection share the same schema. Schemas are immutable, and are defined based on the feature extractors used. 
   </Accordion>
 
-  <Accordion title="Namespace Association" icon="folder-tree">
-    Collections belong to a specific namespace, inheriting its configuration and access controls.
-  </Accordion>
+  <Accordion title="Source Configuration" icon="database">
+    Collections can use buckets or other collections as their source. The source you select makes various properties (blobs if a bucket or documents if a collection) available that can optionally get passed into feature extractors. 
 
-  <Accordion title="Pipeline Output" icon="conveyor-belt">
-    Collections serve as the output destination for processing pipelines, storing the structured documents created from raw objects.
-  </Accordion>
-
-  <Accordion title="Feature Store Linkage" icon="database">
-    Collections are associated with feature stores that index their documents for efficient search.
   </Accordion>
 </AccordionGroup>
 
-## Creating Collections
 
-<CodeGroup>
-  ```python Python
-  from mixpeek import Mixpeek
-  
-  mp = Mixpeek(api_key="YOUR_API_KEY")
-  
-  # Create a collection
-  collection = mp.collections.create(
-      namespace_id="ns_abc123",
-      name="product-catalog",
-      description="Processed product information for e-commerce search"
-  )
-  
-  collection_id = collection["collection_id"]
-  print(f"Created collection: {collection_id}")
-  ```
-
-  ```javascript JavaScript
-  import { Mixpeek } from '@mixpeek/sdk';
-  
-  const mp = new Mixpeek({ apiKey: 'YOUR_API_KEY' });
-  
-  // Create a collection
-  const collection = await mp.collections.create({
-    namespace_id: "ns_abc123",
-    name: "product-catalog",
-    description: "Processed product information for e-commerce search"
-  });
-  
-  const collectionId = collection.collection_id;
-  console.log(`Created collection: ${collectionId}`);
-  ```
-
-  ```bash cURL
-  curl -X POST "https://api.mixpeek.com/v1/collections" \
-    -H "Authorization: Bearer YOUR_API_KEY" \
-    -H "Content-Type: application/json" \
-    -d '{
-      "namespace_id": "ns_abc123",
-      "name": "product-catalog",
-      "description": "Processed product information for e-commerce search"
-    }'
-  ```
-</CodeGroup>
-
-## Managing Collections
-
-<CodeGroup>
-  ```python Python
-  # List all collections in a namespace
-  collections = mp.collections.list(namespace_id="ns_abc123")
-  
-  for col in collections["collections"]:
-      print(f"Collection: {col['name']} (ID: {col['collection_id']})")
-  
-  # Get details about a specific collection
-  collection = mp.collections.get(collection_id="col_mno345")
-  
-  print(f"Collection name: {collection['name']}")
-  print(f"Document count: {collection['document_count']}")
-  ```
-
-  ```javascript JavaScript
-  // List all collections in a namespace
-  const collections = await mp.collections.list({
-    namespace_id: "ns_abc123"
-  });
-  
-  for (const col of collections.collections) {
-    console.log(`Collection: ${col.name} (ID: ${col.collection_id})`);
-  }
-  
-  // Get details about a specific collection
-  const collection = await mp.collections.get({
-    collection_id: "col_mno345"
-  });
-  
-  console.log(`Collection name: ${collection.name}`);
-  console.log(`Document count: ${collection.document_count}`);
-  ```
-
-  ```bash cURL
-  # List all collections in a namespace
-  curl -X GET "https://api.mixpeek.com/v1/collections?namespace_id=ns_abc123" \
-    -H "Authorization: Bearer YOUR_API_KEY" \
-    -H "Content-Type: application/json"
-    
-  # Get details about a specific collection
-  curl -X GET "https://api.mixpeek.com/v1/collections/col_mno345" \
-    -H "Authorization: Bearer YOUR_API_KEY" \
-    -H "Content-Type: application/json"
-  ```
-</CodeGroup>
-
-## Collection Schema and Documents
+### Collection Schema
 
 Collections maintain schema consistency across all their documents. This schema is determined by the pipeline that processes objects and writes to the collection.
 
-<Frame>
-  ```json
-  // Example document in a collection
-  {
-    "document_id": "doc_pqr678",
-    "collection_id": "col_mno345",
-    "source_object_id": "obj_ghi789",
-    
-    // System metadata fields
-    "__fully_enriched": true,
-    "__missing_features": [],
-    "__pipeline_version": 1,
-    
-    // Document content (determined by pipeline)
-    "title": "Red Running Shoes",
-    "description": "Lightweight running shoes with cushioned soles for maximum comfort...",
-    "detected_objects": ["shoe", "footwear", "red", "sports equipment"],
-    "product_category": "footwear",
-    "price": 89.99,
-    "brand": "SportStep",
-    
-    // Timestamps
-    "created_at": "2023-05-10T14:22:00Z",
-    "updated_at": "2023-05-10T14:22:00Z"
-  }
-  ```
-</Frame>
+```json
+// Example document in a collection
+{
+  "document_id": "doc_pqr678",
+  "collection_id": "col_mno345",
+  "source_object_id": "obj_ghi789",
+  
+  // System metadata fields
+  "__fully_enriched": true,
+  "__missing_features": [],
+  "__pipeline_version": 1,
+  
+  // Document content (determined by pipeline)
+  "title": "Red Running Shoes",
+  "description": "Lightweight running shoes with cushioned soles for maximum comfort...",
+  "detected_objects": ["shoe", "footwear", "red", "sports equipment"],
+  "product_category": "footwear",
+  "price": 89.99,
+  "brand": "SportStep",
+  
+  // Timestamps
+  "created_at": "2023-05-10T14:22:00Z",
+  "updated_at": "2023-05-10T14:22:00Z"
+}
+```
 
 ### System Metadata Fields
 
@@ -192,207 +82,18 @@ All documents in collections include these standard system metadata fields:
 | `__pipeline_version` | integer | Version of the pipeline that processed this document |
 | `source_object_id` | string | Reference to the source object in a bucket |
 
-## Populating Collections
+### Populating Collections
 
-Collections are populated by running pipelines that process objects and output structured documents:
+Collections are populated by running feature extractors that process objects and output structured documents.
 
-<Steps>
-  <Step title="Create a Pipeline">
-    Define a pipeline that specifies the collection as its output destination.
-    
-    ```python
-    # Create a processing pipeline
-    pipeline = mp.pipelines.create(
-        namespace_id="ns_abc123",
-        name="product-processing",
-        description="Extract features from product objects",
-        input_bucket_id="bkt_def456",
-        output_collection_ids=["col_mno345"],
-        feature_extractors=[
-            {
-                "embed": [
-                    {
-                        "type": "url",
-                        "embedding_model": "multimodal"
-                    }
-                ],
-                "detect": {
-                    "objects": {"enabled": True}
-                },
-                "describe": {"enabled": True}
-            }
-        ]
-    )
-    
-    pipeline_id = pipeline["pipeline_id"]
-    ```
-  </Step>
-  
-  <Step title="Process Objects">
-    Run the pipeline on objects to populate the collection with documents.
-    
-    ```python
-    # Process an object with the pipeline
-    task = mp.pipelines.run(
-        pipeline_id=pipeline_id,
-        object_id="obj_ghi789"
-    )
-    
-    task_id = task["task_id"]
-    ```
-  </Step>
-  
-  <Step title="Verify Processing">
-    Check the task status and confirm documents were added to the collection.
-    
-    ```python
-    # Check task status
-    import time
-    time.sleep(10)  # Wait for processing
-    
-    status = mp.tasks.get(task_id=task_id)
-    print(f"Task status: {status['status']}")
-    
-    # Verify documents in collection
-    collection = mp.collections.get(collection_id="col_mno345")
-    print(f"Document count: {collection['document_count']}")
-    ```
-  </Step>
-</Steps>
+Once you upload an object, the connected downstream collection(s) will invoke their feature extractor processes. This sequence of actions continues until they all succeed or fail. 
 
-## Querying Documents in Collections
+![Bucket Details](https://d8ts56gtwtyh1.cloudfront.net/docs/warehouse/images/collection_processing.jpg)
 
-You can directly query documents within a collection:
 
-<CodeGroup>
-  ```python Python
-  # Query documents in a collection
-  documents = mp.documents.list(
-      collection_id="col_mno345",
-      filter={
-          "product_category": "footwear",
-          "price": {"$lt": 100}
-      },
-      limit=10
-  )
-  
-  for doc in documents["documents"]:
-      print(f"Document: {doc['title']} (ID: {doc['document_id']})")
-      print(f"Price: ${doc['price']}")
-  ```
+## Documents
 
-  ```javascript JavaScript
-  // Query documents in a collection
-  const documents = await mp.documents.list({
-    collection_id: "col_mno345",
-    filter: {
-      product_category: "footwear",
-      price: {$lt: 100}
-    },
-    limit: 10
-  });
-  
-  for (const doc of documents.documents) {
-    console.log(`Document: ${doc.title} (ID: ${doc.document_id})`);
-    console.log(`Price: $${doc.price}`);
-  }
-  ```
+Documents are the structured outputs stored in collections after processing objects through pipelines. Each document maintains a reference to its source object and contains extracted features and metadata.
 
-  ```bash cURL
-  curl -X POST "https://api.mixpeek.com/v1/documents/list" \
-    -H "Authorization: Bearer YOUR_API_KEY" \
-    -H "Content-Type: application/json" \
-    -d '{
-      "collection_id": "col_mno345",
-      "filter": {
-        "product_category": "footwear",
-        "price": {"$lt": 100}
-      },
-      "limit": 10
-    }'
-  ```
-</CodeGroup>
+![Bucket Details](https://d8ts56gtwtyh1.cloudfront.net/docs/warehouse/images/document_list.jpg)
 
-## Searching Across Collections
-
-For more sophisticated search capabilities, you'll typically use retrievers that can search across multiple collections and use feature stores for vector search:
-
-```python
-# Create a retriever for searching collections
-retriever = mp.retrievers.create(
-    namespace_id="ns_abc123",
-    name="product-search",
-    description="Search across product catalog",
-    stages=[
-        {
-            "name": "vector_search",
-            "type": "vector",
-            "collection_id": "col_mno345",
-            "index": "multimodal",
-            "limit": 50
-        },
-        {
-            "name": "filters",
-            "type": "filter",
-            "input": "vector_search.results",
-            "filter": {
-                "product_category": "footwear"
-            },
-            "limit": 20
-        }
-    ]
-)
-
-retriever_id = retriever["retriever_id"]
-
-# Search using the retriever
-results = mp.retrievers.search(
-    retriever_id=retriever_id,
-    query={
-        "text": "red running shoes"
-    }
-)
-
-for result in results["results"]:
-    print(f"Found: {result['title']} (Score: {result['score']})")
-```
-
-## Best Practices
-
-<CardGroup cols={2}>
-  <Card title="Logical Organization" icon="folder-tree">
-    Organize collections based on document type, use case, or application domain for better management
-  </Card>
-  
-  <Card title="Schema Design" icon="table-columns">
-    Plan your document schema carefully to ensure it supports your retrieval needs
-  </Card>
-
-  <Card title="Index Optimization" icon="database">
-    Configure the right feature stores and indexes for efficient search
-  </Card>
-  
-  <Card title="Pipeline Association" icon="link">
-    Associate collections with specific pipelines to maintain schema consistency
-  </Card>
-</CardGroup>
-
-### Collection Use Cases
-
-<CardGroup cols={3}>
-  <Card title="Product Catalogs" icon="shopping-cart">
-    Store processed product information with features for e-commerce search
-  </Card>
-  
-  <Card title="Content Libraries" icon="books">
-    Organize processed media assets with extracted features for content discovery
-  </Card>
-
-  <Card title="Knowledge Bases" icon="brain">
-    Structure processed documents for knowledge retrieval and question answering
-  </Card>
-</CardGroup>
-
-## API Reference
-
-For complete details on working with collections, see our [Collections API Reference](/api-reference/collections/create-collection). 

@@ -6,8 +6,6 @@ title: "Concepts"
   This page covers the key concepts and terminology used throughout the Mixpeek platform. Understanding these concepts will help you utilize the platform's offerings.
 </Note>
 
-## Data Architecture
-
 Mixpeek organizes data in a structured hierarchy designed for flexibility and performance of multimodal content processing and retrieval.
 
 
@@ -129,8 +127,8 @@ Mixpeek provides specialized components that function as multimodal analogs to t
   <Step title="Storage Layer (Buckets)">
     Raw objects and their associated files are stored in buckets. Objects represent collections of related files (e.g., a marketing campaign with video, script, and legal documents).
   </Step>
-  <Step title="Processing Flow (Ingestion Pipelines)">
-    Objects from buckets are processed through ingestion pipelines. Feature extractors extract various features from the object's files, which are then organized into documents stored in collections.
+  <Step title="Processing Flow (Feature Extrctors)">
+    Objects from buckets are processed through feature extractors. Feature extractors extract various features from the object's files, which are then organized into documents stored in collections.
   </Step>
   <Step title="Feature Storage">
     Extracted features are stored in specialized feature stores. Each feature maintains a reference to its parent document, and each document maintains a reference to its source object.

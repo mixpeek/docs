@@ -2,15 +2,131 @@
 title: "Clusters"
 ---
 
+<Note>
+  Clustering in Mixpeek serves as the multimodal equivalent of SQL GROUP BY operations, allowing you to group similar documents together based on feature similarity rather than exact field matches.
+</Note>
+
+## Overview
+
+Clustering enables you to organize and group documents based on their feature similarity. Unlike traditional SQL GROUP BY operations that group rows based on exact field matches, clustering uses similarity metrics to group documents that share similar characteristics.
 
 <iframe
   width="600"
   height="310"
   src="https://d8ts56gtwtyh1.cloudfront.net/docs/warehouse/clusters.mp4"
-  title="YouTube video player"
+  title="Clustering Demo"
   frameborder="0"
   allow="accelerometer; autoplay; muted"
   allowfullscreen
   autoplay
   muted
 ></iframe>
+
+## Clustering Types
+
+Mixpeek supports various clustering approaches through the Grouper interface:
+
+<CardGroup cols={2}>
+  <Card title="Vector Clustering" icon="vector-square">
+    Groups documents based on embedding similarity using algorithms like K-means or DBSCAN. Perfect for finding visually or semantically similar content.
+  </Card>
+
+  <Card title="Time-based Clustering" icon="clock">
+    Groups documents based on temporal proximity, such as grouping video scenes by time ranges or documents by creation date.
+  </Card>
+
+  <Card title="Categorical Clustering" icon="tags">
+    Groups documents based on detected categories, objects, or topics. Useful for organizing content by subject matter.
+  </Card>
+
+  <Card title="Custom Clustering" icon="code">
+    Supports custom grouping criteria through the Grouper interface for domain-specific clustering needs.
+  </Card>
+</CardGroup>
+
+## Implementation Details
+
+### Grouper Interface
+
+The Grouper interface provides a standardized way to implement different clustering algorithms:
+
+```typescript
+interface Grouper {
+  // Group documents based on specified criteria
+  group(documents: Document[], options: GroupingOptions): Cluster[];
+  
+  // Get cluster metadata and statistics
+  getClusterInfo(cluster: Cluster): ClusterInfo;
+}
+```
+
+### Clustering Process
+
+<Steps>
+  <Step title="Feature Selection">
+    Choose which features to use for clustering (e.g., embeddings, timestamps, categories)
+  </Step>
+  <Step title="Algorithm Configuration">
+    Configure clustering parameters (e.g., number of clusters, similarity thresholds)
+  </Step>
+  <Step title="Grouping Execution">
+    Apply the clustering algorithm to group similar documents
+  </Step>
+  <Step title="Result Storage">
+    Store cluster assignments and metadata for future retrieval
+  </Step>
+</Steps>
+
+## Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Content Organization" icon="folder-tree">
+    Automatically organize large collections of documents into logical groups
+  </Card>
+
+  <Card title="Similar Content Discovery" icon="magnifying-glass">
+    Find related content by exploring documents within the same cluster
+  </Card>
+
+  <Card title="Batch Processing" icon="layer-group">
+    Process similar documents together for efficiency
+  </Card>
+
+  <Card title="Analytics" icon="chart-bar">
+    Analyze patterns and trends within document clusters
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Feature Selection" icon="check">
+    Choose features that best represent the similarity you want to capture. For example:
+    - Use embeddings for semantic similarity
+    - Use timestamps for temporal grouping
+    - Use categorical features for topic-based grouping
+  </Accordion>
+
+  <Accordion title="Algorithm Choice" icon="microchip">
+    Select clustering algorithms based on your needs:
+    - K-means for well-defined, spherical clusters
+    - DBSCAN for density-based clustering
+    - Custom algorithms for specialized grouping criteria
+  </Accordion>
+
+  <Accordion title="Performance Considerations" icon="gauge-high">
+    Consider the computational complexity of your chosen algorithm and the size of your document collection when planning clustering operations.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="API Reference" icon="code" href="/api/clusters">
+    Learn how to use the clustering API
+  </Card>
+  
+  <Card title="Examples" icon="book" href="/examples/clustering">
+    See clustering in action with real-world examples
+  </Card>
+</CardGroup>

@@ -3,9 +3,15 @@ title: "Introduction"
 description: "The Multimodal Data Warehouse"
 ---
 
-Mixpeek is a multimodal data processing and retrieval platform designed for developers and data teams.
+<Note>
+  Welcome to the Mixpeek documentation! We're happy to empower you to build multimodal understanding applications.
+</Note>
 
-Within the platform, you have access to pre-built feature extraction and retrieval pipelines that enables ad-hoc search and discovery across diverse media types including text, images, videos, audio, and PDFs, specifically tailored to your use cases. 
+Before we dive in, let's quickly define what a **Multimodal Warehouse** is:
+
+> Multimodal Warehouse: A specialized data platform that ingests, processes, and enables retrieval across diverse media types (text, images, videos, audio, PDFs) by extracting features and storing them in optimized collections and feature stores. It serves as the foundation for building AI-powered search and analysis applications that can work seamlessly across different content types.
+
+Within Mixpeek, developers have access to pre-built feature extraction and retrieval stages that enables ad-hoc search and discovery across any file type.
 
 
 <CardGroup cols={2}>
@@ -26,22 +32,6 @@ Within the platform, you have access to pre-built feature extraction and retriev
   </Card>
 </CardGroup>
 
-
-## Always State-of-the-Art
-
-<CardGroup cols={2}>
-  <Card title="Continuous Improvement" icon="arrows-rotate">
-    Mixpeek manages all feature extractors and retriever stages, continuously updating them to incorporate the latest advancements in AI and ML.
-  </Card>
-  
-  <Card title="Tightly Coupled Ecosystem" icon="link">
-    Our extractors and retrievers are designed as an integrated system. This tight coupling enables advanced techniques like late interaction models (e.g., <a href="https://github.com/stanford-futuredata/ColBERT">ColBERT</a>).
-  </Card>
-</CardGroup>
-
-<Warning>
-  Unlike traditional solutions that require rebuilding your entire index when upgrading to new models, Mixpeek performs upgrades seamlessly behind the scenes—keeping you on the cutting edge without disruption.
-</Warning>
 
 ## Key Benefits
 
@@ -65,19 +55,35 @@ Within the platform, you have access to pre-built feature extraction and retriev
   </Accordion>
 </AccordionGroup>
 
+### Always State-of-the-Art
+
+<CardGroup cols={2}>
+  <Card title="Continuous Improvement" icon="arrows-rotate">
+    Mixpeek manages all feature extractors and retriever stages, continuously updating them to incorporate the latest advancements in AI and ML.
+  </Card>
+  
+  <Card title="Tightly Coupled" icon="link">
+    Our extractors and retrievers are designed as an integrated system. This tight coupling enables advanced techniques like late interaction models (e.g., <a href="https://github.com/stanford-futuredata/ColBERT">ColBERT</a>).
+  </Card>
+</CardGroup>
+
+<Warning>
+  Unlike traditional solutions that require rebuilding your entire index when upgrading to new models, Mixpeek performs upgrades seamlessly behind the scenes—keeping you on the cutting edge without disruption.
+</Warning>
+
 ## How It Works
 
 <Steps>
-  <Step title="Ingest">
+  <Step title="Upload Objects">
     Upload and store your multimodal data in buckets, organizing related files as objects
   </Step>
-  <Step title="Process">
+  <Step title="Extract Features">
     Extract features using custom pipelines with specialized extractors for different content types
   </Step>
-  <Step title="Organize">
+  <Step title="Enrich Documents">
     Apply taxonomies (joins) and clustering (groups) to categorize and group related content
   </Step>
-  <Step title="Retrieve">
+  <Step title="Retrieve & Analyze">
     Search and retrieve content using advanced multimodal search capabilities
   </Step>
 </Steps>
@@ -100,51 +106,107 @@ For a deeper understanding of how Mixpeek works, check out our [Core Concepts](/
   ```
 </Frame>
 
-## Use Cases
 
-<CardGroup cols={2}>
-  <Card title="AdTech & Brand Safety" icon="bullseye-pointer">
-    Process and analyze ad placements across modalities:
-    - Scene-level brand safety detection
-    - Cross-modal contextual targeting
-    - Real-time performance analytics
-  </Card>
-  
-  <Card title="E-commerce Discovery" icon="cart-shopping">
-    Power product discovery across catalogs:
-    - Visual similarity search
-    - Cross-modal query understanding
-    - Behavioral recommendation engines
-  </Card>
+## Common Use Cases
 
-  <Card title="Media & Entertainment" icon="film">
-    Organize and monetize content libraries:
-    - Automated content tagging
-    - Scene-level search
-    - Cross-modal recommendations
-  </Card>
+<Tabs>
+  <Tab title="Multimodal Search">
+    ### Cross-Modal Search Operations
+    
+    Organize and store content to enable efficient search across different modalities:
 
-  <Card title="Content Moderation" icon="shield-check">
-    Automate content safety at scale:
-    - Multi-modal policy enforcement
-    - Real-time violation detection
-    - Cross-format consistency checks
-  </Card>
+    **Storage Pattern**
+    - Group related images, videos, and text documents in single objects
+    - Store raw files alongside their extracted features
+    - Maintain indexes for cross-modal querying
 
-  <Card title="Document Intelligence" icon="file-magnifying-glass">
-    Extract insights from document collections:
-    - Visual-textual document parsing
-    - Cross-reference analysis
-    - Automated knowledge graphs
-  </Card>
+    **Example Object Structure**
+    ```json
+    {
+      "product_id": "shoe_123",
+      "blobs": [
+        {"type": "image", "url": "front_view.jpg"},
+        {"type": "image", "url": "side_view.jpg"},
+        {"type": "text", "url": "description.txt"},
+        {"type": "video", "url": "rotation.mp4"}
+      ]
+    }
+    ```
+  </Tab>
 
-  <Card title="Research & Analysis" icon="microscope">
-    Discover patterns across data types:
-    - Multi-modal trend analysis
-    - Cross-format citations
-    - Semantic relationship mapping
-  </Card>
-</CardGroup>
+  <Tab title="Content Analytics">
+    ### Automated Analysis Workflows
+    
+    Structure content to support comprehensive analytics processing:
+
+    **Storage Pattern**
+    - Raw media files paired with extracted metadata
+    - Processing state tracking for each stage
+    - Version control for processed outputs
+
+    **Example Object Structure**
+    ```json
+    {
+      "video_id": "stream_456",
+      "blobs": [
+        {"type": "video", "url": "source.mp4"},
+        {"type": "json", "url": "scene_metadata.json"},
+        {"type": "text", "url": "transcript.txt"},
+        {"type": "json", "url": "analytics_results.json"}
+      ]
+    }
+    ```
+  </Tab>
+
+  <Tab title="Training Data">
+    ### ML Training Data Management
+    
+    Organize datasets for machine learning model training:
+
+    **Storage Pattern**
+    - Paired multimodal training examples
+    - Ground truth data alongside source files
+    - Version control for dataset iterations
+
+    **Example Object Structure**
+    ```json
+    {
+      "training_pair_id": "train_789",
+      "blobs": [
+        {"type": "image", "url": "input.jpg"},
+        {"type": "json", "url": "labels.json"},
+        {"type": "text", "url": "annotations.txt"},
+        {"type": "json", "url": "metadata.json"}
+      ]
+    }
+    ```
+  </Tab>
+
+  <Tab title="Processing Pipelines">
+    ### Content Processing Workflows
+    
+    Manage data through multi-stage processing pipelines:
+
+    **Storage Pattern**
+    - Source files organized for parallel processing
+    - Intermediate results stored with clear lineage
+    - Output files linked to source data
+
+    **Example Object Structure**
+    ```json
+    {
+      "batch_id": "process_101",
+      "blobs": [
+        {"type": "video", "url": "raw_footage.mp4"},
+        {"type": "json", "url": "processing_state.json"},
+        {"type": "json", "url": "extracted_features.json"},
+        {"type": "text", "url": "processing_logs.txt"}
+      ]
+    }
+    ```
+  </Tab>
+</Tabs>
+
 
 <Note>
   Each use case leverages Mixpeek's ability to process and understand relationships across different content types - from text and images to video and audio - providing a unified view of your data.
