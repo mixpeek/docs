@@ -4,12 +4,24 @@ description: "Store and organize raw multimodal data objects for processing"
 ---
 
 <Note>
-  Buckets are the foundation of Mixpeek's storage architecture. They serve as containers for raw objects and their associated files before processing.
+  Buckets are the foundation of Mixpeek's storage architecture. They serve as containers for raw objects and their associated files before processing. They are your entry point for all multimodal processing, search and analysis.
 </Note>
+
+<iframe
+  width="600"
+  height="310"
+  src="https://d8ts56gtwtyh1.cloudfront.net/docs/warehouse/buckets.mp4"
+  title="YouTube video player"
+  frameborder="0"
+  allow="accelerometer; autoplay; muted"
+  allowfullscreen
+  autoplay
+  muted
+></iframe>
 
 ## What are Buckets?
 
-Buckets in Mixpeek are specialized storage containers designed for efficiently managing and organizing your raw multimodal content. They hold objects (collections of related files) before they're processed by pipelines.
+Buckets in Mixpeek are specialized storage containers designed for efficiently managing and organizing your raw multimodal content. They hold blobs (collections of related files or json-types) before they're processed by pipelines.
 
 <CardGroup cols={2}>
   <Card title="Storage Containers" icon="bucket">
@@ -32,12 +44,12 @@ Buckets in Mixpeek are specialized storage containers designed for efficiently m
     Buckets store objects, which are collections of related files representing a single entity (e.g., a product with images, specs, and descriptions).
   </Accordion>
 
-  <Accordion title="Pipeline Integration" icon="gears">
-    Buckets serve as input sources for processing pipelines, which extract features from the objects and create structured documents.
+  <Accordion title="Collection Integration" icon="gears">
+    Buckets serve as input sources for collections, which extract features from the objects and create structured documents.
   </Accordion>
 
-  <Accordion title="Access Control" icon="lock">
-    Buckets inherit the access controls of their parent namespace but can also have bucket-specific access policies.
+  <Accordion title="Prefixes" icon="lock">
+    Buckets inherit the access controls of their parent namespace but can also have prefixes that are used when searching.
   </Accordion>
 </AccordionGroup>
 
@@ -88,38 +100,9 @@ Buckets in Mixpeek are specialized storage containers designed for efficiently m
   ```
 </CodeGroup>
 
-## Listing Buckets
+## Objects
 
-<CodeGroup>
-  ```python Python
-  # List all buckets in a namespace
-  buckets = mp.buckets.list(namespace_id="ns_abc123")
-  
-  for bucket in buckets["buckets"]:
-      print(f"Bucket: {bucket['name']} (ID: {bucket['bucket_id']})")
-  ```
-
-  ```javascript JavaScript
-  // List all buckets in a namespace
-  const buckets = await mp.buckets.list({
-    namespace_id: "ns_abc123"
-  });
-  
-  for (const bucket of buckets.buckets) {
-    console.log(`Bucket: ${bucket.name} (ID: ${bucket.bucket_id})`);
-  }
-  ```
-
-  ```bash cURL
-  curl -X GET "https://api.mixpeek.com/v1/buckets?namespace_id=ns_abc123" \
-    -H "Authorization: Bearer YOUR_API_KEY" \
-    -H "Content-Type: application/json"
-  ```
-</CodeGroup>
-
-## Managing Objects in Buckets
-
-Once you've created a bucket, you can add objects to it. Objects are collections of related files that represent a single entity in your domain.
+Once you've created a bucket, you can add objects to it. Objects are collections of related blobs that represent a single entity in your domain.
 
 <Steps>
   <Step title="Create an Object">
@@ -130,7 +113,7 @@ Once you've created a bucket, you can add objects to it. Objects are collections
     object = mp.objects.create(
         bucket_id=bucket_id,
         name="red-sneaker-product",
-        files=[
+        blobs=[
             {
                 "url": "https://example.com/images/red-sneaker-front.jpg",
                 "mimetype": "image/jpeg"
@@ -145,25 +128,9 @@ Once you've created a bucket, you can add objects to it. Objects are collections
             }
         ]
     )
-    
-    object_id = object["object_id"]
     ```
   </Step>
-  
-  <Step title="Process the Object">
-    Process the object using a pipeline to extract features.
-    
-    ```python
-    # Process the object with a pipeline
-    task = mp.pipelines.run(
-        pipeline_id="pl_xyz789",
-        object_id=object_id
-    )
-    
-    task_id = task["task_id"]
-    ```
-  </Step>
-  
+
   <Step title="Track Processing Status">
     Monitor the status of the processing task.
     
@@ -186,7 +153,7 @@ Once you've created a bucket, you can add objects to it. Objects are collections
     Use consistent naming patterns for buckets to make them easily identifiable and manageable
   </Card>
 
-  <Card title="Pipeline Alignment" icon="route">
+  <Card title="Metadata Usage" icon="route">
     Align bucket structure with your processing pipelines for more efficient workflow organization
   </Card>
   
@@ -194,24 +161,6 @@ Once you've created a bucket, you can add objects to it. Objects are collections
     Monitor bucket usage and distribute objects across multiple buckets if needed for performance optimization
   </Card>
 </CardGroup>
-
-### Effective Bucket Organization
-
-<Frame>
-  ```mermaid
-  graph TD
-    A[Namespace: E-commerce] --> B[Bucket: Products]
-    A --> C[Bucket: Marketing]
-    A --> D[Bucket: User-Generated]
-    B --> E[Object: Product 1]
-    B --> F[Object: Product 2]
-    C --> G[Object: Campaign 1]
-    D --> H[Object: Review 1]
-    E --> I[Files: Images, Specs, Descriptions]
-    style A fill:#FC5185,stroke:#333
-    style I fill:#FC5185,stroke:#333
-  ```
-</Frame>
 
 ## Common Use Cases
 
@@ -226,6 +175,92 @@ Once you've created a bucket, you can add objects to it. Objects are collections
 
   <Card title="Documentation" icon="file-lines">
     Manage PDFs, technical documents, and related assets
+  </Card>
+</CardGroup>
+
+## Blobs
+
+<Note>
+  Blobs represent individual files within Objects. While Objects group related files together, Blobs are the actual raw file content that gets processed by feature extractors.
+</Note>
+
+### Supported File Types
+
+<AccordionGroup>
+  <Accordion title="Images">
+    | Format | MIME Type | Max Size | Notes |
+    |--------|-----------|----------|-------|
+    | JPEG | image/jpeg | 50MB | RGB color space |
+    | PNG | image/png | 50MB | Transparency supported |
+    | WebP | image/webp | 50MB | Modern format |
+    | GIF | image/gif | 50MB | Animated GIFs supported |
+  </Accordion>
+  
+  <Accordion title="Videos">
+    | Format | MIME Type | Max Size | Notes |
+    |--------|-----------|----------|-------|
+    | MP4 | video/mp4 | 2GB | H.264 codec recommended |
+    | WebM | video/webm | 1GB | VP9 codec supported |
+    | MOV | video/quicktime | 2GB | Apple QuickTime format |
+  </Accordion>
+  
+  <Accordion title="Documents">
+    | Format | MIME Type | Max Size | Notes |
+    |--------|-----------|----------|-------|
+    | PDF | application/pdf | 250MB | Text and images extracted |
+    | DOCX | application/vnd.openxmlformats-officedocument.wordprocessingml.document | 100MB | Microsoft Word |
+    | PPTX | application/vnd.openxmlformats-officedocument.presentationml.presentation | 100MB | Microsoft PowerPoint |
+  </Accordion>
+  
+  <Accordion title="Audio">
+    | Format | MIME Type | Max Size | Notes |
+    |--------|-----------|----------|-------|
+    | MP3 | audio/mpeg | 500MB | Compressed audio |
+    | WAV | audio/wav | 1GB | Uncompressed audio |
+    | M4A | audio/mp4 | 500MB | AAC audio |
+  </Accordion>
+  
+  <Accordion title="JSON Data">
+    | Format | MIME Type | Max Size | Notes |
+    |--------|-----------|----------|-------|
+    | JSON | application/json | 100MB | Standard JSON data |
+    | JSONL | application/x-ndjson | 500MB | Newline-delimited JSON |
+    | GeoJSON | application/geo+json | 100MB | Geographic data format |
+    
+    Supported JSON value types:
+    - `string`: Text values
+    - `number`: Integer or floating-point numbers
+    - `boolean`: true/false values
+    - `null`: Null values
+    - `array`: Ordered lists of values
+    - `object`: Key-value pairs
+  </Accordion>
+</AccordionGroup>
+
+### Blob Limitations
+
+- Maximum blob size varies by file type (see Supported File Types above)
+- Maximum number of blobs per object: 10
+- Supported MIME types are limited to those listed above
+- Blob content is immutable once uploaded
+
+### Best Practices for Blob Management
+
+<CardGroup cols={2}>
+  <Card title="File Organization" icon="folder-tree">
+    Group related blobs into objects for better organization and processing efficiency
+  </Card>
+  
+  <Card title="Metadata Usage" icon="tags">
+    Add descriptive metadata to blobs to improve searchability and organization
+  </Card>
+  
+  <Card title="Size Optimization" icon="compress">
+    Compress large files when possible to improve upload and processing speed
+  </Card>
+  
+  <Card title="Format Selection" icon="file-type">
+    Use recommended formats for each content type to ensure optimal processing
   </Card>
 </CardGroup>
 

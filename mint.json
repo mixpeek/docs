@@ -76,10 +76,7 @@
       "pages": [
         "management/namespaces",
         "management/buckets",
-        "management/objects",
-        "management/blobs",
         "management/collections",
-        "management/documents",
         "management/features"
       ]
     },

@@ -7,8 +7,8 @@ description: "Isolated environments for organizing and managing your Mixpeek res
 </Note>
 
 <iframe
-  width="700"
-  height="358"
+  width="600"
+  height="310"
   src="https://d8ts56gtwtyh1.cloudfront.net/docs/warehouse/namespace.mp4"
   title="YouTube video player"
   frameborder="0"
@@ -28,9 +28,9 @@ Namespaces are logical containers that help organize and isolate your Mixpeek re
 - Retrievers and Pipelines
 - Taxonomies
 
-When you create a namespace, you select the features you want to make available across the namespace. This is important to select up-front because the features map to index definitions and are immutable. The features you select here limit the feature extractors you select when you create collections. 
+When you create a namespace, you select the features you want to make available across the namespace. This is important to select up-front because the features map to index definitions and are immutable. The features you select here limit the feature extractors you have available when you create collections. 
 
-Payload indexes are however mutable, they can be modified whenever. They are important to specify in order to ensure your queries are performant. 
+Payload indexes are however mutable, they can be modified whenever. Payload indexes are important to specify in order to ensure your queries remain performant as the contents of your namespace scales. 
 
 
 ## Common Use Cases
