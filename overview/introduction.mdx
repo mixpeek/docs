@@ -1,120 +1,153 @@
 ---
 title: "Introduction"
-description: "Learn how Mixpeek enables powerful multimodal search applications across different types of media"
+description: "The Multimodal Data Warehouse"
 ---
 
-<Note>
-  Mixpeek is a developer platform for building multimodal search applications that understand user intention across multiple types of media.
-</Note>
+Mixpeek is a multimodal data processing and retrieval platform designed for developers and data teams.
+
+Within the platform, you have access to pre-built feature extraction and retrieval pipelines that enables ad-hoc search and discovery across diverse media types including text, images, videos, audio, and PDFs, specifically tailored to your use cases. 
+
 
 <CardGroup cols={2}>
-  <Card title="Extract Features" icon="wand-magic-sparkles">
-    Extract meaningful features from images, videos, and text automatically
+  <Card title="Multimodal Processing" icon="gears">
+    Extract features from any file type with customizable processing pipelines
   </Card>
   
-  <Card title="Build Search" icon="magnifying-glass">
-    Create powerful search experiences across different content types
+  <Card title="Intelligent Retrieval" icon="magnifying-glass">
+    Search and retrieve data across modalities with advanced vector and metadata filtering
   </Card>
 
-  <Card title="Customize" icon="sliders">
-    Build custom search experiences tailored to your specific use case
+  <Card title="Data Enrichment" icon="layer-group">
+    Apply taxonomies and clustering to organize and categorize your multimodal content
   </Card>
 
-  <Card title="Scale" icon="rocket">
-    Deploy production-ready applications with scalable infrastructure
+  <Card title="Scalable Architecture" icon="server">
+    Built for performance with a flexible, component-based architecture
   </Card>
 </CardGroup>
+
+
+## Always State-of-the-Art
+
+<CardGroup cols={2}>
+  <Card title="Continuous Improvement" icon="arrows-rotate">
+    Mixpeek manages all feature extractors and retriever stages, continuously updating them to incorporate the latest advancements in AI and ML.
+  </Card>
+  
+  <Card title="Tightly Coupled Ecosystem" icon="link">
+    Our extractors and retrievers are designed as an integrated system. This tight coupling enables advanced techniques like late interaction models (e.g., <a href="https://github.com/stanford-futuredata/ColBERT">ColBERT</a>).
+  </Card>
+</CardGroup>
+
+<Warning>
+  Unlike traditional solutions that require rebuilding your entire index when upgrading to new models, Mixpeek performs upgrades seamlessly behind the scenes—keeping you on the cutting edge without disruption.
+</Warning>
+
+## Key Benefits
+
+<AccordionGroup>
+  <Accordion title="Unified Multimodal Platform">
+    Process and analyze any content type with a single platform, eliminating the need for separate systems for different media types.
+
+    In practice, this enables use cases that span multiple modalities like "unique faces in **videos** that mentions topics present in my **pdfs**". 
+  </Accordion>
+
+  <Accordion title="Custom Processing Pipelines">
+    Define exactly how your content is processed with customizable feature extraction pipelines tailored to your specific needs.
+  </Accordion>
+
+  <Accordion title="Advanced Retrieval">
+    Combine vector similarity, metadata filtering, and semantic understanding for powerful multimodal search capabilities.
+  </Accordion>
+
+  <Accordion title="Data Organization">
+    Apply taxonomies and clustering to bring structure to unstructured content, making it easier to organize and discover.
+  </Accordion>
+</AccordionGroup>
 
 ## How It Works
 
 <Steps>
-  <Step title="Index Your Content">
-    Upload your media (images, videos, text) to Mixpeek
+  <Step title="Ingest">
+    Upload and store your multimodal data in buckets, organizing related files as objects
   </Step>
-  <Step title="Extract Features">
-    Mixpeek automatically processes your content to extract meaningful features
+  <Step title="Process">
+    Extract features using custom pipelines with specialized extractors for different content types
   </Step>
-  <Step title="Search & Analyze">
-    Use our APIs to build search, recommendation, and analytics applications
+  <Step title="Organize">
+    Apply taxonomies (joins) and clustering (groups) to categorize and group related content
+  </Step>
+  <Step title="Retrieve">
+    Search and retrieve content using advanced multimodal search capabilities
   </Step>
 </Steps>
 
-## Key Features
-
-<AccordionGroup>
-  <Accordion title="🔍 Multimodal Search" icon="magnifying-glass">
-    Build sophisticated search experiences:
-    - Natural language queries across all media types
-    - Visual similarity search for images and videos
-    - Cross-modal search (find images with text, or vice versa)
-    - Semantic understanding of content
-
-    Learn more in our [Search API](/api-reference/features/search-features).
-  </Accordion>
-
-  <Accordion title="🎯 Feature Extraction" icon="gears">
-    Extract valuable insights automatically:
-    - Object and scene detection
-    - Text extraction from images and videos
-    - Face detection and recognition
-    - Custom extraction pipelines
-
-    Explore our [Features API](/concepts/features) to learn more.
-  </Accordion>
-</AccordionGroup>
-
-## Common Use Cases
-
-<CardGroup cols={2}>
-  <Card title="Video Alerting" icon="video">
-    Real-time monitoring and detection of objects, events, or anomalies in video streams
-  </Card>
-  
-  <Card title="Visual Discovery" icon="image">
-    Power visual search engines and recommendation systems
-  </Card>
-
-  <Card title="Multimodal Search" icon="search">
-    Enable natural language search across all content types
-  </Card>
-
-  <Card title="Content Recommendation" icon="rectangle-list">
-    Build personalized recommendation systems
-  </Card>
-
-  <Card title="Media Analytics" icon="chart-line">
-    Gain insights through automated content analysis
-  </Card>
-
-  <Card title="Multimodal RAG" icon="robot">
-    Create AI applications that process cross-modal information
-  </Card>
-</CardGroup>
-
 ## Getting Started
 
+The fastest way to start using Mixpeek is to follow our [Quickstart Guide](/overview/quickstart) which will walk you through setting up your first project.
+
+For a deeper understanding of how Mixpeek works, check out our [Core Concepts](/overview/concepts) page.
+
+<Frame>
+  ```mermaid
+  graph TD
+    A[Upload Content] --> B[Process & Extract Features]
+    B --> C[Store in Collections]
+    C --> D[Apply Taxonomies & Clustering]
+    D --> E[Search & Retrieve]
+    style A fill:#FC5185,stroke:#333
+    style E fill:#FC5185,stroke:#333
+  ```
+</Frame>
+
+## Use Cases
+
 <CardGroup cols={2}>
-  <Card title="Quickstart Guide" icon="play">
-    Set up your first Mixpeek application
-    <Link href="/overview/quickstart">Get Started →</Link>
+  <Card title="AdTech & Brand Safety" icon="bullseye-pointer">
+    Process and analyze ad placements across modalities:
+    - Scene-level brand safety detection
+    - Cross-modal contextual targeting
+    - Real-time performance analytics
   </Card>
   
-  <Card title="Client Libraries" icon="code">
-    Integrate using our SDKs
-    <Link href="/overview/client-libraries">View SDKs →</Link>
+  <Card title="E-commerce Discovery" icon="cart-shopping">
+    Power product discovery across catalogs:
+    - Visual similarity search
+    - Cross-modal query understanding
+    - Behavioral recommendation engines
   </Card>
 
-  <Card title="API Reference" icon="book">
-    Explore our REST API
-    <Link href="/api-reference">View API →</Link>
+  <Card title="Media & Entertainment" icon="film">
+    Organize and monetize content libraries:
+    - Automated content tagging
+    - Scene-level search
+    - Cross-modal recommendations
   </Card>
 
-  <Card title="Studio" icon="desktop">
-    Use our visual interface
-    <Link href="/studio/overview">Open Studio →</Link>
+  <Card title="Content Moderation" icon="shield-check">
+    Automate content safety at scale:
+    - Multi-modal policy enforcement
+    - Real-time violation detection
+    - Cross-format consistency checks
+  </Card>
+
+  <Card title="Document Intelligence" icon="file-magnifying-glass">
+    Extract insights from document collections:
+    - Visual-textual document parsing
+    - Cross-reference analysis
+    - Automated knowledge graphs
+  </Card>
+
+  <Card title="Research & Analysis" icon="microscope">
+    Discover patterns across data types:
+    - Multi-modal trend analysis
+    - Cross-format citations
+    - Semantic relationship mapping
   </Card>
 </CardGroup>
 
 <Note>
-  Ready to build? [Create your account](https://mixpeek.com/start) or check out our [Quickstart Guide](/overview/quickstart).
+  Each use case leverages Mixpeek's ability to process and understand relationships across different content types - from text and images to video and audio - providing a unified view of your data.
 </Note>
+
+Ready to get started? [Create your first project →](/overview/quickstart) 

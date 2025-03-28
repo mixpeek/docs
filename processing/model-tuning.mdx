@@ -1,0 +1,388 @@
+---
+title: "Model Tuning"
+description: "Customize and fine-tune machine learning models for your specific use cases"
+---
+
+<Note>
+  Model tuning allows you to adapt Mixpeek's underlying machine learning models to your specific domain, improving performance on specialized tasks and content types.
+</Note>
+
+## What is Model Tuning?
+
+Model tuning in Mixpeek lets you customize and fine-tune machine learning models to better match your specific use cases, data, and domain. By providing examples and feedback, you can improve model performance on specialized tasks without having to build models from scratch.
+
+<CardGroup cols={2}>
+  <Card title="Domain Adaptation" icon="bullseye">
+    Adapt general-purpose models to your specific industry, content types, or terminology
+  </Card>
+  
+  <Card title="Task Optimization" icon="sliders">
+    Fine-tune models for specific tasks like classification, extraction, or similarity matching
+  </Card>
+</CardGroup>
+
+## Available Tuning Approaches
+
+<AccordionGroup>
+  <Accordion title="Classification Tuning" icon="tags">
+    Train the platform to better classify content into your custom categories by providing labeled examples.
+    
+    **Supported Models:** Topic classifier, sentiment analyzer, content categorizer
+  </Accordion>
+
+  <Accordion title="Embedding Adaptation" icon="network-wired">
+    Adjust embedding models to better represent the semantic relationships specific to your domain.
+    
+    **Supported Models:** Text embeddings, multimodal embeddings
+  </Accordion>
+
+  <Accordion title="Extraction Refinement" icon="filter">
+    Improve extraction of specific entities, attributes, or patterns from your content.
+    
+    **Supported Models:** Named entity recognition, attribute extraction, relationship extraction
+  </Accordion>
+
+  <Accordion title="Similarity Calibration" icon="arrows-left-right">
+    Refine how similarity is measured between items in your specific domain context.
+    
+    **Supported Models:** All vector search models
+  </Accordion>
+</AccordionGroup>
+
+## How Model Tuning Works
+
+<Steps>
+  <Step title="Collect Examples">
+    Gather a set of representative examples and annotations that demonstrate the desired behavior
+  </Step>
+  <Step title="Create Tuning Set">
+    Upload your examples to create a tuning dataset in Mixpeek
+  </Step>
+  <Step title="Configure Tuning Job">
+    Specify which model to tune and set the tuning parameters
+  </Step>
+  <Step title="Launch Tuning Process">
+    Start the tuning job and monitor progress
+  </Step>
+  <Step title="Evaluate Results">
+    Compare performance metrics between the original and tuned models
+  </Step>
+  <Step title="Deploy Tuned Model">
+    Apply the tuned model to your pipelines for improved performance
+  </Step>
+</Steps>
+
+## Classification Tuning Example
+
+<CodeGroup>
+  ```python Python
+  from mixpeek import Mixpeek
+  
+  mp = Mixpeek(api_key="YOUR_API_KEY")
+  
+  # Create a classification tuning set
+  tuning_set = mp.tuning.create_set(
+      namespace_id="ns_abc123",
+      name="product-category-classifier",
+      description="Custom product category classification",
+      tuning_type="classification",
+      target_model="topic_classifier"
+  )
+  
+  tuning_set_id = tuning_set["tuning_set_id"]
+  
+  # Add examples to the tuning set
+  examples = [
+      {
+          "text": "14-inch ultra-slim laptop with 16GB RAM and 512GB SSD",
+          "labels": ["electronics", "computers", "laptops"]
+      },
+      {
+          "text": "Ergonomic wireless mouse with customizable buttons",
+          "labels": ["electronics", "computer accessories", "input devices"]
+      },
+      {
+          "text": "Cotton t-shirt with graphic print, available in multiple colors",
+          "labels": ["apparel", "tops", "casual wear"]
+      },
+      # Add more examples...
+  ]
+  
+  for example in examples:
+      mp.tuning.add_example(
+          tuning_set_id=tuning_set_id,
+          content=example["text"],
+          labels=example["labels"]
+      )
+  
+  # Launch tuning job
+  job = mp.tuning.start_job(
+      tuning_set_id=tuning_set_id,
+      parameters={
+          "epochs": 5,
+          "learning_rate": 2e-5,
+          "validation_split": 0.2
+      }
+  )
+  
+  job_id = job["job_id"]
+  print(f"Started tuning job: {job_id}")
+  ```
+
+  ```javascript JavaScript
+  import { Mixpeek } from '@mixpeek/sdk';
+  
+  const mp = new Mixpeek({ apiKey: 'YOUR_API_KEY' });
+  
+  // Create a classification tuning set
+  const tuningSet = await mp.tuning.createSet({
+    namespace_id: "ns_abc123",
+    name: "product-category-classifier",
+    description: "Custom product category classification",
+    tuning_type: "classification",
+    target_model: "topic_classifier"
+  });
+  
+  const tuningSetId = tuningSet.tuning_set_id;
+  
+  // Add examples to the tuning set
+  const examples = [
+    {
+      text: "14-inch ultra-slim laptop with 16GB RAM and 512GB SSD",
+      labels: ["electronics", "computers", "laptops"]
+    },
+    {
+      text: "Ergonomic wireless mouse with customizable buttons",
+      labels: ["electronics", "computer accessories", "input devices"]
+    },
+    {
+      text: "Cotton t-shirt with graphic print, available in multiple colors",
+      labels: ["apparel", "tops", "casual wear"]
+    },
+    // Add more examples...
+  ];
+  
+  for (const example of examples) {
+    await mp.tuning.addExample({
+      tuning_set_id: tuningSetId,
+      content: example.text,
+      labels: example.labels
+    });
+  }
+  
+  // Launch tuning job
+  const job = await mp.tuning.startJob({
+    tuning_set_id: tuningSetId,
+    parameters: {
+      epochs: 5,
+      learning_rate: 2e-5,
+      validation_split: 0.2
+    }
+  });
+  
+  const jobId = job.job_id;
+  console.log(`Started tuning job: ${jobId}`);
+  ```
+</CodeGroup>
+
+## Embedding Tuning Example
+
+Tune embedding models to better represent similarity in your domain:
+
+```python
+# Create an embedding tuning set
+tuning_set = mp.tuning.create_set(
+    namespace_id="ns_abc123",
+    name="product-similarity-tuning",
+    description="Custom product similarity preferences",
+    tuning_type="embedding",
+    target_model="text"
+)
+
+tuning_set_id = tuning_set["tuning_set_id"]
+
+# Add similarity examples (pairs that should be close or far)
+similarity_examples = [
+    {
+        "item1": "red cotton t-shirt with crew neck",
+        "item2": "blue cotton t-shirt with v-neck",
+        "similarity": 0.9  # Very similar
+    },
+    {
+        "item1": "smartphone with 6-inch display and 128GB storage",
+        "item2": "protective case for 6-inch smartphones",
+        "similarity": 0.6  # Moderately similar
+    },
+    {
+        "item1": "wireless over-ear headphones with noise cancellation",
+        "item2": "ergonomic computer mouse with adjustable DPI",
+        "similarity": 0.1  # Not similar
+    },
+    # Add more examples...
+]
+
+for example in similarity_examples:
+    mp.tuning.add_similarity_pair(
+        tuning_set_id=tuning_set_id,
+        item1=example["item1"],
+        item2=example["item2"],
+        similarity_score=example["similarity"]
+    )
+
+# Launch embedding tuning job
+job = mp.tuning.start_job(
+    tuning_set_id=tuning_set_id,
+    parameters={
+        "training_strategy": "contrastive",
+        "epochs": 10,
+        "learning_rate": 1e-5
+    }
+)
+
+job_id = job["job_id"]
+```
+
+## Using Tuned Models
+
+Once your model is tuned, you can reference it in your pipelines:
+
+```python
+# Create a pipeline that uses your tuned model
+pipeline = mp.pipelines.create(
+    namespace_id="ns_abc123",
+    name="custom-classification-pipeline",
+    description="Pipeline using custom-tuned classifier",
+    input_bucket_id="bkt_def456",
+    output_collection_ids=["col_mno345"],
+    feature_extractors=[
+        {
+            "read": {"enabled": True},
+            "classify": {
+                "topics": {
+                    "enabled": True,
+                    "model_id": "tm_pqr678"  # Your tuned model ID
+                }
+            },
+            "embed": [
+                {
+                    "type": "text",
+                    "embedding_model": "text",
+                    "model_id": "tm_stu901"  # Your tuned embedding model ID
+                }
+            ]
+        }
+    ]
+)
+```
+
+## Model Evaluation
+
+After tuning, you can evaluate the performance of your model against a test set:
+
+<Frame>
+  ```python
+  # Create a test set for evaluation
+  test_set = mp.tuning.create_test_set(
+      namespace_id="ns_abc123",
+      name="product-classifier-test",
+      tuning_set_id=tuning_set_id,  # Reference the original tuning set
+      split_ratio=0.2  # Use 20% of examples for testing
+  )
+  
+  test_set_id = test_set["test_set_id"]
+  
+  # Run evaluation on the test set
+  evaluation = mp.tuning.evaluate(
+      test_set_id=test_set_id,
+      model_id="tm_pqr678"  # Your tuned model ID
+  )
+  
+  # View evaluation metrics
+  print(f"Accuracy: {evaluation['metrics']['accuracy']}")
+  print(f"Precision: {evaluation['metrics']['precision']}")
+  print(f"Recall: {evaluation['metrics']['recall']}")
+  print(f"F1 Score: {evaluation['metrics']['f1_score']}")
+  
+  # Compare with base model performance
+  base_evaluation = mp.tuning.evaluate(
+      test_set_id=test_set_id,
+      model_id="base_topic_classifier"  # Base model
+  )
+  
+  print(f"Base Model Accuracy: {base_evaluation['metrics']['accuracy']}")
+  print(f"Improvement: {evaluation['metrics']['accuracy'] - base_evaluation['metrics']['accuracy']}")
+  ```
+</Frame>
+
+## Tunable Parameters
+
+Different model types support different tuning parameters:
+
+<Tabs>
+  <Tab title="Classification Models">
+    | Parameter | Type | Default | Description |
+    |-----------|------|---------|-------------|
+    | `epochs` | integer | `3` | Number of training iterations |
+    | `learning_rate` | float | `3e-5` | Learning rate for model updates |
+    | `batch_size` | integer | `16` | Number of examples per batch |
+    | `validation_split` | float | `0.1` | Fraction of data used for validation |
+    | `class_weights` | object | `null` | Weights for handling class imbalance |
+  </Tab>
+  
+  <Tab title="Embedding Models">
+    | Parameter | Type | Default | Description |
+    |-----------|------|---------|-------------|
+    | `training_strategy` | string | `"contrastive"` | Training approach: "contrastive", "triplet", or "supervised" |
+    | `margin` | float | `0.2` | Margin for contrastive or triplet loss |
+    | `temperature` | float | `0.07` | Temperature for softmax-based losses |
+    | `negative_examples` | integer | `5` | Number of negative examples per positive pair |
+    | `learning_rate` | float | `1e-5` | Learning rate for model updates |
+  </Tab>
+  
+  <Tab title="Extraction Models">
+    | Parameter | Type | Default | Description |
+    |-----------|------|---------|-------------|
+    | `epochs` | integer | `5` | Number of training iterations |
+    | `learning_rate` | float | `2e-5` | Learning rate for model updates |
+    | `max_seq_length` | integer | `512` | Maximum sequence length for processing |
+    | `overlap_strategy` | string | `"sliding"` | How to handle long texts: "sliding", "truncate", or "chunk" |
+    | `entity_dropout` | float | `0.2` | Dropout rate for entity representations |
+  </Tab>
+</Tabs>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Data Quality" icon="database">
+    Focus on high-quality, diverse examples that represent the full range of cases in your domain
+  </Card>
+  
+  <Card title="Sample Size" icon="chart-simple">
+    For best results, provide at least 50-100 examples per class or task, with more for complex domains
+  </Card>
+
+  <Card title="Balanced Classes" icon="scale-balanced">
+    Try to provide roughly equal numbers of examples for each class or category
+  </Card>
+  
+  <Card title="Iterative Approach" icon="rotate">
+    Tune models iteratively, evaluating performance and adding examples for challenging cases
+  </Card>
+</CardGroup>
+
+<Warning>
+  Very small tuning sets (fewer than 20 examples) may not provide significant improvements and could lead to overfitting. For best results, provide diverse, high-quality examples.
+</Warning>
+
+## Limitations
+
+- Model tuning preserves the general capabilities of the base models while adapting them to your domain
+- Complete retraining from scratch is not supported
+- Some advanced model architectures may have limited tuning capabilities
+- Tuning jobs may take anywhere from a few minutes to several hours depending on dataset size and complexity
+- Maximum number of examples per tuning set is 10,000
+- For very specialized domains, custom model building (available through our Professional Services) may be more appropriate
+
+## API Reference
+
+For complete details on model tuning, see our [Tuning API Reference](/api-reference/tuning/create-tuning-set). 

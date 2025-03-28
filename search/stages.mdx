@@ -1,0 +1,710 @@
+---
+title: "Stages"
+description: "Configure and combine different search stages to build powerful retrieval pipelines"
+---
+
+<Note>
+  Stages are the building blocks of retrieval pipelines in Mixpeek. Each stage performs a specific search or processing operation, and stages can be combined to create sophisticated search experiences.
+</Note>
+
+## What are Stages?
+
+Stages in Mixpeek are the individual components that make up a retrieval pipeline. Each stage performs a specific operation, such as vector search, filtering, ranking, or result processing. By combining different stages in a pipeline, you can create highly customized search experiences tailored to your specific use cases.
+
+<CardGroup cols={2}>
+  <Card title="Modular Architecture" icon="puzzle-piece">
+    Mix and match different stage types to build custom search pipelines
+  </Card>
+  
+  <Card title="Data Flow" icon="arrow-right-arrow-left">
+    Pass data between stages to create sophisticated retrieval flows
+  </Card>
+</CardGroup>
+
+## Stage Types
+
+Mixpeek supports several types of stages that can be combined to create powerful retrieval pipelines:
+
+<AccordionGroup>
+  <Accordion title="Vector Search Stage" icon="network-wired">
+    The vector search stage performs semantic search using vector embeddings. It's the core stage for finding content based on meaning rather than exact keyword matches.
+    
+    **Key capabilities:**
+    - Semantic similarity search
+    - Multimodal content matching
+    - Threshold-based filtering
+  </Accordion>
+
+  <Accordion title="Filter Stage" icon="filter">
+    The filter stage applies metadata filters to refine search results based on document properties.
+    
+    **Key capabilities:**
+    - Metadata-based filtering
+    - Complex logical conditions
+    - Array and text operations
+  </Accordion>
+
+  <Accordion title="Rank Stage" icon="arrow-up-wide-short">
+    The rank stage reorders search results based on custom ranking criteria.
+    
+    **Key capabilities:**
+    - Multi-factor ranking
+    - Custom scoring functions
+    - Weighted attribute combination
+  </Accordion>
+
+  <Accordion title="Rewrite Stage" icon="pen-to-square">
+    The rewrite stage modifies or enhances query terms to improve search quality.
+    
+    **Key capabilities:**
+    - Query expansion
+    - Query correction
+    - Query clarification
+  </Accordion>
+
+  <Accordion title="Merge Stage" icon="layer-group">
+    The merge stage combines results from multiple preceding stages.
+    
+    **Key capabilities:**
+    - Result concatenation
+    - Result interleaving
+    - Result deduplication
+  </Accordion>
+</AccordionGroup>
+
+## Vector Search Stage
+
+The vector search stage is the foundation of semantic search in Mixpeek. It uses vector embeddings to find documents that are semantically similar to the query.
+
+### Configuration
+
+<CodeGroup>
+  ```json Basic Vector Search
+  {
+    "name": "text_search",
+    "type": "vector",
+    "collection_id": "col_abc123",
+    "index": "text",
+    "limit": 20
+  }
+  ```
+
+  ```json Advanced Vector Search
+  {
+    "name": "multimodal_search",
+    "type": "vector",
+    "collection_id": "col_abc123",
+    "index": "multimodal",
+    "query_field": "text",        // Which query field to use
+    "vector_field": "embedding",  // Which document field to search in
+    "threshold": 0.75,            // Minimum similarity threshold
+    "boost": 1.5,                 // Result score multiplier
+    "limit": 50
+  }
+  ```
+</CodeGroup>
+
+### Parameters
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `name` | string | Yes | - | Unique identifier for the stage |
+| `type` | string | Yes | - | Must be "vector" for vector search stages |
+| `collection_id` | string | Yes | - | ID of the collection to search |
+| `index` | string | Yes | - | Vector index to use: "text", "image", "multimodal", etc. |
+| `query_field` | string | No | Based on index | Which query field to use for embeddings |
+| `vector_field` | string | No | Based on index | Which document field to search in |
+| `threshold` | float | No | 0.0 | Minimum similarity threshold (0-1) |
+| `boost` | float | No | 1.0 | Score multiplier for results from this stage |
+| `limit` | integer | No | 20 | Maximum number of results to return |
+
+### Example
+
+```python
+# Create a retriever with a vector search stage
+retriever = mp.retrievers.create(
+    namespace_id="ns_def456",
+    name="content-search",
+    description="Semantic search for articles",
+    stages=[
+        {
+            "name": "article_search",
+            "type": "vector",
+            "collection_id": "col_articles",
+            "index": "text",
+            "limit": 20
+        }
+    ]
+)
+```
+
+## Filter Stage
+
+The filter stage applies metadata filters to refine search results based on document properties.
+
+### Configuration
+
+<CodeGroup>
+  ```json Basic Filter
+  {
+    "name": "category_filter",
+    "type": "filter",
+    "input": "article_search.results",
+    "filter": {
+      "category": "technology"
+    },
+    "limit": 10
+  }
+  ```
+
+  ```json Advanced Filter
+  {
+    "name": "complex_filter",
+    "type": "filter",
+    "input": "article_search.results",
+    "filter": {
+      "$and": [
+        {
+          "publish_date": {
+            "$gte": "2023-01-01T00:00:00Z"
+          }
+        },
+        {
+          "$or": [
+            {
+              "category": "technology"
+            },
+            {
+              "tags": {
+                "$contains": "AI"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "limit": 10
+  }
+  ```
+</CodeGroup>
+
+### Parameters
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `name` | string | Yes | - | Unique identifier for the stage |
+| `type` | string | Yes | - | Must be "filter" for filter stages |
+| `input` | string | Yes | - | Input from previous stage (format: "stage_name.results") |
+| `filter` | object | Yes | - | Filter criteria to apply |
+| `limit` | integer | No | 20 | Maximum number of results to return |
+
+### Filter Operators
+
+<Tabs>
+  <Tab title="Comparison">
+    | Operator | Description | Example |
+    |----------|-------------|---------|
+    | `$eq` | Equals | `{"field": {"$eq": value}}` |
+    | `$ne` | Not equals | `{"field": {"$ne": value}}` |
+    | `$gt` | Greater than | `{"field": {"$gt": value}}` |
+    | `$gte` | Greater than or equal | `{"field": {"$gte": value}}` |
+    | `$lt` | Less than | `{"field": {"$lt": value}}` |
+    | `$lte` | Less than or equal | `{"field": {"$lte": value}}` |
+  </Tab>
+  
+  <Tab title="Logical">
+    | Operator | Description | Example |
+    |----------|-------------|---------|
+    | `$and` | Logical AND | `{"$and": [{...}, {...}]}` |
+    | `$or` | Logical OR | `{"$or": [{...}, {...}]}` |
+    | `$not` | Logical NOT | `{"$not": {...}}` |
+  </Tab>
+  
+  <Tab title="Array">
+    | Operator | Description | Example |
+    |----------|-------------|---------|
+    | `$in` | In array | `{"field": {"$in": [value1, value2]}}` |
+    | `$nin` | Not in array | `{"field": {"$nin": [value1, value2]}}` |
+    | `$all` | Contains all | `{"field": {"$all": [value1, value2]}}` |
+    | `$contains` | Contains element | `{"field": {"$contains": value}}` |
+  </Tab>
+  
+  <Tab title="Text">
+    | Operator | Description | Example |
+    |----------|-------------|---------|
+    | `$text` | Full-text search | `{"field": {"$text": "search terms"}}` |
+    | `$regex` | Regular expression | `{"field": {"$regex": "pattern"}}` |
+  </Tab>
+</Tabs>
+
+### Example
+
+```python
+# Create a retriever with vector search and filter stages
+retriever = mp.retrievers.create(
+    namespace_id="ns_def456",
+    name="filtered-search",
+    description="Filtered search for recent articles",
+    stages=[
+        {
+            "name": "article_search",
+            "type": "vector",
+            "collection_id": "col_articles",
+            "index": "text",
+            "limit": 50
+        },
+        {
+            "name": "date_filter",
+            "type": "filter",
+            "input": "article_search.results",
+            "filter": {
+                "publish_date": {"$gte": "2023-01-01T00:00:00Z"}
+            },
+            "limit": 20
+        }
+    ]
+)
+```
+
+## Rank Stage
+
+The rank stage reorders search results based on custom ranking criteria.
+
+### Configuration
+
+<CodeGroup>
+  ```json Basic Ranking
+  {
+    "name": "popularity_rank",
+    "type": "rank",
+    "input": "date_filter.results",
+    "weights": {
+      "vector_score": 0.7,
+      "popularity": 0.3
+    },
+    "limit": 10
+  }
+  ```
+
+  ```json Advanced Ranking
+  {
+    "name": "custom_rank",
+    "type": "rank",
+    "input": "date_filter.results",
+    "weights": {
+      "vector_score": 0.5,
+      "recency": 0.2,
+      "popularity": 0.2,
+      "user_relevance": 0.1
+    },
+    "ranking_function": "weighted_sum",
+    "limit": 10
+  }
+  ```
+</CodeGroup>
+
+### Parameters
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `name` | string | Yes | - | Unique identifier for the stage |
+| `type` | string | Yes | - | Must be "rank" for rank stages |
+| `input` | string | Yes | - | Input from previous stage (format: "stage_name.results") |
+| `weights` | object | Yes | - | Weights for different ranking factors |
+| `ranking_function` | string | No | "weighted_sum" | Ranking algorithm to use |
+| `limit` | integer | No | 20 | Maximum number of results to return |
+
+### Ranking Functions
+
+- **weighted_sum**: Linear combination of weighted factors
+- **bm25**: BM25 relevance scoring algorithm for text matching
+- **reciprocal_rank_fusion**: Combines multiple result sets by their reciprocal ranks
+- **custom**: User-defined ranking function (requires additional configuration)
+
+### Example
+
+```python
+# Create a retriever with vector search, filter, and ranking stages
+retriever = mp.retrievers.create(
+    namespace_id="ns_def456",
+    name="ranked-search",
+    description="Ranked search for articles",
+    stages=[
+        {
+            "name": "article_search",
+            "type": "vector",
+            "collection_id": "col_articles",
+            "index": "text",
+            "limit": 50
+        },
+        {
+            "name": "date_filter",
+            "type": "filter",
+            "input": "article_search.results",
+            "filter": {
+                "publish_date": {"$gte": "2023-01-01T00:00:00Z"}
+            },
+            "limit": 30
+        },
+        {
+            "name": "personalized_rank",
+            "type": "rank",
+            "input": "date_filter.results",
+            "weights": {
+                "vector_score": 0.6,
+                "user_interests": 0.2,
+                "recency": 0.2
+            },
+            "limit": 10
+        }
+    ]
+)
+```
+
+## Rewrite Stage
+
+The rewrite stage modifies or enhances query terms to improve search quality.
+
+### Configuration
+
+<CodeGroup>
+  ```json Query Expansion
+  {
+    "name": "query_expand",
+    "type": "rewrite",
+    "model": "text",
+    "strategy": "expansion",
+    "limit": 1
+  }
+  ```
+
+  ```json Query Correction
+  {
+    "name": "query_correct",
+    "type": "rewrite",
+    "model": "text",
+    "strategy": "correction",
+    "parameters": {
+      "max_edits": 2,
+      "confidence_threshold": 0.8
+    },
+    "limit": 1
+  }
+  ```
+</CodeGroup>
+
+### Parameters
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `name` | string | Yes | - | Unique identifier for the stage |
+| `type` | string | Yes | - | Must be "rewrite" for rewrite stages |
+| `model` | string | Yes | - | Model to use for rewriting |
+| `strategy` | string | Yes | - | Rewriting strategy: "expansion", "correction", "clarification" |
+| `parameters` | object | No | {} | Additional parameters for the rewrite strategy |
+| `limit` | integer | No | 1 | Number of rewrite variants to generate |
+
+### Rewrite Strategies
+
+- **expansion**: Add related terms to expand query coverage
+- **correction**: Fix spelling and grammar issues in queries
+- **clarification**: Add context to disambiguate ambiguous queries
+
+### Example
+
+```python
+# Create a retriever with query rewriting and vector search
+retriever = mp.retrievers.create(
+    namespace_id="ns_def456",
+    name="expanded-search",
+    description="Search with query expansion",
+    stages=[
+        {
+            "name": "query_expansion",
+            "type": "rewrite",
+            "model": "text",
+            "strategy": "expansion",
+            "limit": 1
+        },
+        {
+            "name": "article_search",
+            "type": "vector",
+            "collection_id": "col_articles",
+            "index": "text",
+            "input": "query_expansion.results",
+            "limit": 20
+        }
+    ]
+)
+```
+
+## Merge Stage
+
+The merge stage combines results from multiple preceding stages.
+
+### Configuration
+
+<CodeGroup>
+  ```json Basic Merge
+  {
+    "name": "combined_results",
+    "type": "merge",
+    "inputs": ["text_search.results", "image_search.results"],
+    "strategy": "interleave",
+    "limit": 20
+  }
+  ```
+
+  ```json Advanced Merge
+  {
+    "name": "complex_merge",
+    "type": "merge",
+    "inputs": ["text_search.results", "image_search.results"],
+    "strategy": "weighted",
+    "weights": {
+      "text_search.results": 0.7,
+      "image_search.results": 0.3
+    },
+    "deduplication": true,
+    "limit": 20
+  }
+  ```
+</CodeGroup>
+
+### Parameters
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `name` | string | Yes | - | Unique identifier for the stage |
+| `type` | string | Yes | - | Must be "merge" for merge stages |
+| `inputs` | array | Yes | - | Array of inputs from previous stages |
+| `strategy` | string | No | "append" | Merge strategy: "append", "interleave", "weighted" |
+| `weights` | object | No | {} | Weights for each input (required for "weighted" strategy) |
+| `deduplication` | boolean | No | false | Whether to remove duplicate results |
+| `limit` | integer | No | 20 | Maximum number of results to return |
+
+### Merge Strategies
+
+- **append**: Concatenate results from all inputs
+- **interleave**: Alternately pick results from each input
+- **weighted**: Score-weighted combination of results
+
+### Example
+
+```python
+# Create a retriever with parallel search stages and result merging
+retriever = mp.retrievers.create(
+    namespace_id="ns_def456",
+    name="hybrid-search",
+    description="Combined text and image search",
+    stages=[
+        {
+            "name": "text_search",
+            "type": "vector",
+            "collection_id": "col_articles",
+            "index": "text",
+            "query_field": "text",
+            "limit": 20
+        },
+        {
+            "name": "image_search",
+            "type": "vector",
+            "collection_id": "col_articles",
+            "index": "image",
+            "query_field": "image_url",
+            "limit": 20
+        },
+        {
+            "name": "combined_results",
+            "type": "merge",
+            "inputs": ["text_search.results", "image_search.results"],
+            "strategy": "weighted",
+            "weights": {
+                "text_search.results": 0.6,
+                "image_search.results": 0.4
+            },
+            "deduplication": true,
+            "limit": 10
+        }
+    ]
+)
+```
+
+## Stage Input/Output Flow
+
+<Frame>
+  ```mermaid
+  graph TD
+    A[User Query] --> B[query_rewrite]
+    B --> C[vector_search]
+    C --> D[pre_filter]
+    C --> E[parallel_filter]
+    D --> F[ranking]
+    E --> G[specialized_ranking]
+    F --> H[result_merge]
+    G --> H
+    H --> I[Final Results]
+    style A fill:#FC5185,stroke:#333
+    style I fill:#FC5185,stroke:#333
+  ```
+</Frame>
+
+Stages pass data to each other using a simple dot notation reference:
+
+```
+stage_name.results
+```
+
+For example, to use the results from a stage named "vector_search" as input to a filter stage:
+
+```json
+{
+  "name": "filter_stage",
+  "type": "filter",
+  "input": "vector_search.results",
+  "filter": {...}
+}
+```
+
+## Common Stage Patterns
+
+<CardGroup cols={2}>
+  <Card title="Basic Vector Search" icon="magnifying-glass">
+    Simple semantic search with a single vector search stage.
+    
+    ```json
+    [
+      {
+        "name": "vector_search",
+        "type": "vector",
+        "collection_id": "col_abc123",
+        "index": "text",
+        "limit": 20
+      }
+    ]
+    ```
+  </Card>
+  
+  <Card title="Search with Filtering" icon="filter">
+    Semantic search followed by metadata filtering.
+    
+    ```json
+    [
+      {
+        "name": "vector_search",
+        "type": "vector",
+        "collection_id": "col_abc123",
+        "index": "text",
+        "limit": 50
+      },
+      {
+        "name": "filter_stage",
+        "type": "filter",
+        "input": "vector_search.results",
+        "filter": {...},
+        "limit": 20
+      }
+    ]
+    ```
+  </Card>
+
+  <Card title="Query Rewriting" icon="pen-to-square">
+    Enhance query before search to improve results.
+    
+    ```json
+    [
+      {
+        "name": "query_rewrite",
+        "type": "rewrite",
+        "model": "text",
+        "strategy": "expansion"
+      },
+      {
+        "name": "vector_search",
+        "type": "vector",
+        "collection_id": "col_abc123",
+        "index": "text",
+        "input": "query_rewrite.results",
+        "limit": 20
+      }
+    ]
+    ```
+  </Card>
+  
+  <Card title="Hybrid Search" icon="layer-group">
+    Combine results from different search strategies.
+    
+    ```json
+    [
+      {
+        "name": "text_search",
+        "type": "vector",
+        "collection_id": "col_abc123",
+        "index": "text",
+        "query_field": "text",
+        "limit": 20
+      },
+      {
+        "name": "image_search",
+        "type": "vector",
+        "collection_id": "col_abc123",
+        "index": "image",
+        "query_field": "image_url",
+        "limit": 20
+      },
+      {
+        "name": "combined_results",
+        "type": "merge",
+        "inputs": ["text_search.results", "image_search.results"],
+        "strategy": "interleave",
+        "limit": 20
+      }
+    ]
+    ```
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+<Steps>
+  <Step title="Start with the Right First Stage">
+    Begin with the stage that will do the heaviest filtering. Usually, this is a vector search stage for semantic search or a rewrite stage for query enhancement.
+  </Step>
+  <Step title="Decrease Limits as You Go">
+    Start with larger limits in early stages and progressively decrease them in later stages to optimize performance.
+  </Step>
+  <Step title="Use Clear Stage Names">
+    Give your stages descriptive names that reflect their purpose to make your retriever configuration more readable and maintainable.
+  </Step>
+  <Step title="Consider Pipeline Branching">
+    For complex search experiences, consider branching your pipeline into parallel paths and then merging the results at the end.
+  </Step>
+</Steps>
+
+<Warning>
+  Complex pipelines with many stages can impact search latency. Opt for simpler pipelines when possible, and consider the trade-offs between search sophistication and performance.
+</Warning>
+
+## Performance Considerations
+
+<CardGroup cols={2}>
+  <Card title="Stage Ordering" icon="sort">
+    Place stages that can eliminate the most results earliest in the pipeline to reduce downstream processing. For example, use a filter stage early if it can significantly reduce the result set.
+  </Card>
+  
+  <Card title="Limit Settings" icon="stopwatch">
+    Carefully tune limit values to balance result quality and performance. Remember that larger limits in early stages mean more processing in later stages.
+  </Card>
+
+  <Card title="Strategic Filtering" icon="sliders">
+    Use filter stages strategically to narrow down the results before applying computationally expensive ranking operations.
+  </Card>
+  
+  <Card title="Pipeline Complexity" icon="network-wired">
+    Consider the complexity of your pipeline. Each additional stage adds some processing overhead, so ensure that each stage provides meaningful value.
+  </Card>
+</CardGroup>
+
+## API Reference
+
+For complete details on stage configuration and retriever creation, see our [Retrievers API Reference](/api-reference/retrievers/create-retriever). 

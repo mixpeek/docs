@@ -1,0 +1,78 @@
+---
+title: "Namespaces"
+description: "Isolated environments for organizing and managing your Mixpeek resources"
+---
+<Note>
+  Namespaces act as query boundaries in Mixpeek. They provide isolation between different environments, projects, or clients, ensuring that queries and operations are contained within their intended scope.
+</Note>
+
+<iframe
+  width="700"
+  height="358"
+  src="https://d8ts56gtwtyh1.cloudfront.net/docs/warehouse/namespace.mp4"
+  title="YouTube video player"
+  frameborder="0"
+  allow="accelerometer; autoplay; muted"
+  allowfullscreen
+  autoplay
+  muted
+></iframe>
+
+## What are Namespaces?
+
+Namespaces are logical containers that help organize and isolate your Mixpeek resources. They serve as the highest-level organizational unit, similar to databases in traditional systems. Each namespace maintains its own:
+
+- Buckets and Objects
+- Collections and Documents
+- Feature Stores
+- Retrievers and Pipelines
+- Taxonomies
+
+When you create a namespace, you select the features you want to make available across the namespace. This is important to select up-front because the features map to index definitions and are immutable. The features you select here limit the feature extractors you select when you create collections. 
+
+Payload indexes are however mutable, they can be modified whenever. They are important to specify in order to ensure your queries are performant. 
+
+
+## Common Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Environment Separation" icon="layer-group">
+    Isolate development, staging, and production environments
+  </Card>
+  
+  <Card title="Client Isolation" icon="users">
+    Separate resources for different clients or projects
+  </Card>
+  
+  <Card title="Data Segregation" icon="database">
+    Keep different data domains separate (e.g., marketing vs. product content)
+  </Card>
+  
+  <Card title="Access Control" icon="lock">
+    Manage permissions and access at a high level
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+### Namespace Organization
+
+- Use clear, consistent naming conventions
+- Create separate namespaces for different environments
+- Consider data isolation requirements when planning namespace structure
+- Document namespace purpose and contents
+
+### Resource Management
+
+- Regularly audit namespace contents
+- Clean up unused resources within namespaces
+- Monitor namespace usage and quotas
+- Implement proper access controls
+
+## Limitations
+
+- Maximum number of namespaces per account: 100
+- Namespace names must be unique within your account
+- Namespace names can only contain lowercase letters, numbers, and hyphens
+- Resources cannot be moved between namespaces
+- Cross-namespace queries are not supported

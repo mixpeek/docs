@@ -1,153 +1,671 @@
 ---
 title: "Quickstart"
+description: "Get up and running with Mixpeek in minutes"
 ---
 
-<a href="https://app.getpostman.com/run-collection/32693262-6a661bb8-eed3-4066-9faa-423ab21dbeab?action=collection%2Ffork&source=rip_markdown&collection-url=entityId%3D32693262-6a661bb8-eed3-4066-9faa-423ab21dbeab%26entityType%3Dcollection%26workspaceId%3Da7b77c3c-100a-414b-95ef-64425338281e#?env%5BProduction%5D=W3sia2V5IjoidG9rZW4iLCJ2YWx1ZSI6IkFQSV9LRVlfSEVSRSIsImVuYWJsZWQiOnRydWUsInR5cGUiOiJkZWZhdWx0Iiwic2Vzc2lvblZhbHVlIjoiQVBJX0tFWV9IRVJFIiwiY29tcGxldGVTZXNzaW9uVmFsdWUiOiJBUElfS0VZX0hFUkUiLCJzZXNzaW9uSW5kZXgiOjB9LHsia2V5IjoibmFtZXNwYWNlIiwidmFsdWUiOiJOQU1FU1BBQ0VfSEVSRSIsImVuYWJsZWQiOnRydWUsInR5cGUiOiJkZWZhdWx0Iiwic2Vzc2lvblZhbHVlIjoiTkFNRVNQQUNFX0hFUkUiLCJjb21wbGV0ZVNlc3Npb25WYWx1ZSI6Ik5BTUVTUEFDRV9IRVJFIiwic2Vzc2lvbkluZGV4IjoxfV0=" target="_blank">
-  <img height="200" noZoom src="https://run.pstmn.io/button.svg" />
-</a>
+<Note>
+  This quickstart guide will walk you through creating a simple multimodal search application with Mixpeek. You'll learn how to ingest content, extract features, and build a search endpoint.
+</Note>
 
+## Prerequisites
 
-<iframe
-  width="560"
-  height="315"
-  src="https://www.youtube.com/embed/jkIXzfKBvM0"
-  title="YouTube video player"
-  frameborder="0"
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-  allowfullscreen
-></iframe>
+Before you begin, make sure you have:
 
-## Getting Started
+- A Mixpeek account (sign up at [mixpeek.com/start](https://mixpeek.com/start))
+- Your API key (found in your dashboard)
+- Basic familiarity with REST APIs
 
-We'll be using the requests library.
+## Step 1: Set Up Your Environment
 
+<Tabs>
+  <Tab title="Python">
+    ```python
+    pip install mixpeek
+    ```
 
-```python
-import os
-import requests
+    ```python
+    from mixpeek import Mixpeek
 
-api_key = "YOUR_API_KEY"
+    # Initialize the client
+    mp = Mixpeek(api_key="YOUR_API_KEY")
+    ```
+  </Tab>
+  <Tab title="JavaScript">
+    ```bash
+    npm install @mixpeek/sdk
+    ```
 
-headers = {
-  'Authorization': f'Bearer {api_key}',
-  'Content-Type': 'application/json'
-}
-```
+    ```javascript
+    import { Mixpeek } from '@mixpeek/sdk';
 
-## Indexing Content
+    // Initialize the client
+    const mp = new Mixpeek({
+      apiKey: 'YOUR_API_KEY'
+    });
+    ```
+  </Tab>
+  <Tab title="REST API">
+    ```bash
+    # Set your API key as an environment variable for examples
+    export MIXPEEK_API_KEY="YOUR_API_KEY"
+    ```
 
-You can index various types of content including images, videos, and text:
+    ```bash
+    # Make a test API call
+    curl -X GET "https://api.mixpeek.com/v1/namespaces" \
+      -H "Authorization: Bearer $MIXPEEK_API_KEY" \
+      -H "Content-Type: application/json"
+    ```
+  </Tab>
+</Tabs>
 
-### Image Indexing
+## Step 2: Create a Namespace
 
-```python
-# Index an image from URL
-import requests
-import json
+A namespace is an isolated environment for your data. Let's create one:
 
-url = "https://api.mixpeek.com/v1/ingest/images/url"
+<CodeGroup>
+  ```python Python
+  # Create a namespace
+  namespace = mp.namespaces.create(
+      name="quickstart",
+      description="My first Mixpeek project"
+  )
+  
+  namespace_id = namespace["namespace_id"]
+  print(f"Created namespace: {namespace_id}")
+  ```
 
-payload = json.dumps({
-  "url": "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/aussie_jumping.jpg",
-  "collection": "test",
-  "feature_extractors": {
-    "embed": [
+  ```javascript JavaScript
+  // Create a namespace
+  const namespace = await mp.namespaces.create({
+    name: "quickstart",
+    description: "My first Mixpeek project"
+  });
+  
+  const namespaceId = namespace.namespace_id;
+  console.log(`Created namespace: ${namespaceId}`);
+  ```
+
+  ```bash cURL
+  curl -X POST "https://api.mixpeek.com/v1/namespaces" \
+    -H "Authorization: Bearer $MIXPEEK_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "name": "quickstart",
+      "description": "My first Mixpeek project"
+    }'
+  ```
+</CodeGroup>
+
+## Step 3: Create a Bucket
+
+Now, let's create a bucket to store our raw objects:
+
+<CodeGroup>
+  ```python Python
+  # Create a bucket in our namespace
+  bucket = mp.buckets.create(
+      namespace_id=namespace_id,
+      name="content-bucket",
+      description="Storage for our content"
+  )
+  
+  bucket_id = bucket["bucket_id"]
+  print(f"Created bucket: {bucket_id}")
+  ```
+
+  ```javascript JavaScript
+  // Create a bucket in our namespace
+  const bucket = await mp.buckets.create({
+    namespace_id: namespaceId,
+    name: "content-bucket",
+    description: "Storage for our content"
+  });
+  
+  const bucketId = bucket.bucket_id;
+  console.log(`Created bucket: ${bucketId}`);
+  ```
+
+  ```bash cURL
+  curl -X POST "https://api.mixpeek.com/v1/buckets" \
+    -H "Authorization: Bearer $MIXPEEK_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "namespace_id": "YOUR_NAMESPACE_ID",
+      "name": "content-bucket",
+      "description": "Storage for our content"
+    }'
+  ```
+</CodeGroup>
+
+## Step 4: Create a Feature Extraction Pipeline
+
+Let's define a pipeline that will extract features from our content:
+
+<CodeGroup>
+  ```python Python
+  # Create a collection to store processed documents
+  collection = mp.collections.create(
+      namespace_id=namespace_id,
+      name="content-collection",
+      description="Processed content documents"
+  )
+  
+  collection_id = collection["collection_id"]
+  
+  # Define a feature extraction pipeline
+  pipeline = mp.pipelines.create(
+      namespace_id=namespace_id,
+      name="content-pipeline",
+      description="Extract features from content",
+      input_bucket_id=bucket_id,
+      output_collection_ids=[collection_id],
+      feature_extractors=[
+          {
+              "embed": [
+                  {
+                      "type": "url",
+                      "embedding_model": "multimodal"
+                  },
+                  {
+                      "type": "text",
+                      "value": "describe this content",
+                      "embedding_model": "text"
+                  }
+              ],
+              "detect": {
+                  "faces": {"enabled": True},
+                  "objects": {"enabled": True}
+              },
+              "transcribe": {"enabled": True}
+          }
+      ]
+  )
+  
+  pipeline_id = pipeline["pipeline_id"]
+  print(f"Created pipeline: {pipeline_id}")
+  ```
+
+  ```javascript JavaScript
+  // Create a collection to store processed documents
+  const collection = await mp.collections.create({
+    namespace_id: namespaceId,
+    name: "content-collection",
+    description: "Processed content documents"
+  });
+  
+  const collectionId = collection.collection_id;
+  
+  // Define a feature extraction pipeline
+  const pipeline = await mp.pipelines.create({
+    namespace_id: namespaceId,
+    name: "content-pipeline",
+    description: "Extract features from content",
+    input_bucket_id: bucketId,
+    output_collection_ids: [collectionId],
+    feature_extractors: [
       {
-        "embedding_model": "multimodal",
-        "type": "url"
+        embed: [
+          {
+            type: "url",
+            embedding_model: "multimodal"
+          },
+          {
+            type: "text",
+            value: "describe this content",
+            embedding_model: "text"
+          }
+        ],
+        detect: {
+          faces: {enabled: true},
+          objects: {enabled: true}
+        },
+        transcribe: {enabled: true}
       }
     ]
-  }
-})
-response = requests.request("POST", url, headers=headers, data=payload)
-```
+  });
+  
+  const pipelineId = pipeline.pipeline_id;
+  console.log(`Created pipeline: ${pipelineId}`);
+  ```
 
-[Ingest Image API](/api-reference/ingest-assets/ingest-image-url)
-
-### Video Indexing
-
-```python
-# Index a video from URL
-url = "https://api.mixpeek.com/v1/ingest/videos/url"
-
-payload = json.dumps({
-  "url": "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/jurassic_bunny.mp4",
-  "collection": "test",
-  "feature_extractors": [
-    {
-      "interval_sec": 30,
-      "transcribe": {
-        "enabled": True,
-        "embedding_model": "text"
-      },
-      "embed": [
+  ```bash cURL
+  # First create a collection
+  curl -X POST "https://api.mixpeek.com/v1/collections" \
+    -H "Authorization: Bearer $MIXPEEK_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "namespace_id": "YOUR_NAMESPACE_ID",
+      "name": "content-collection",
+      "description": "Processed content documents"
+    }'
+    
+  # Then create a pipeline
+  curl -X POST "https://api.mixpeek.com/v1/pipelines" \
+    -H "Authorization: Bearer $MIXPEEK_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "namespace_id": "YOUR_NAMESPACE_ID",
+      "name": "content-pipeline",
+      "description": "Extract features from content",
+      "input_bucket_id": "YOUR_BUCKET_ID",
+      "output_collection_ids": ["YOUR_COLLECTION_ID"],
+      "feature_extractors": [
         {
-          "type": "url",
-          "embedding_model": "multimodal"
+          "embed": [
+            {
+              "type": "url",
+              "embedding_model": "multimodal"
+            },
+            {
+              "type": "text",
+              "value": "describe this content",
+              "embedding_model": "text"
+            }
+          ],
+          "detect": {
+            "faces": {"enabled": true},
+            "objects": {"enabled": true}
+          },
+          "transcribe": {"enabled": true}
         }
       ]
-    }
-  ]
-})
+    }'
+  ```
+</CodeGroup>
 
-response = requests.request("POST", url, headers=headers, data=payload)
-```
+## Step 5: Upload and Process Content
 
-[Ingest Video API](/api-reference/ingest-assets/ingest-video-url)
+Now, let's upload some content and trigger the processing pipeline:
 
+<CodeGroup>
+  ```python Python
+  # Upload an object to the bucket
+  object = mp.objects.create(
+      bucket_id=bucket_id,
+      name="sample-content",
+      files=[
+          {
+              "url": "https://example.com/sample-image.jpg",
+              "mimetype": "image/jpeg"
+          },
+          {
+              "url": "https://example.com/sample-text.txt",
+              "mimetype": "text/plain"
+          }
+      ]
+  )
+  
+  object_id = object["object_id"]
+  print(f"Uploaded object: {object_id}")
+  
+  # Process the object with our pipeline
+  task = mp.pipelines.run(
+      pipeline_id=pipeline_id,
+      object_id=object_id
+  )
+  
+  task_id = task["task_id"]
+  print(f"Processing task started: {task_id}")
+  ```
 
-### Text Indexing
-
-```python
-url = "https://api.mixpeek.com/v1/ingest/text"
-
-payload = json.dumps({
-  "collection": "test",
-  "feature_extractors": {
-    "embed": [
+  ```javascript JavaScript
+  // Upload an object to the bucket
+  const object = await mp.objects.create({
+    bucket_id: bucketId,
+    name: "sample-content",
+    files: [
       {
-        "type": "text",
-        "value": "Lorem ipsum ... ",
-        "embedding_model": "text"
+        url: "https://example.com/sample-image.jpg",
+        mimetype: "image/jpeg"
+      },
+      {
+        url: "https://example.com/sample-text.txt",
+        mimetype: "text/plain"
       }
     ]
+  });
+  
+  const objectId = object.object_id;
+  console.log(`Uploaded object: ${objectId}`);
+  
+  // Process the object with our pipeline
+  const task = await mp.pipelines.run({
+    pipeline_id: pipelineId,
+    object_id: objectId
+  });
+  
+  const taskId = task.task_id;
+  console.log(`Processing task started: ${taskId}`);
+  ```
+
+  ```bash cURL
+  # Upload an object to the bucket
+  curl -X POST "https://api.mixpeek.com/v1/objects" \
+    -H "Authorization: Bearer $MIXPEEK_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "bucket_id": "YOUR_BUCKET_ID",
+      "name": "sample-content",
+      "files": [
+        {
+          "url": "https://example.com/sample-image.jpg",
+          "mimetype": "image/jpeg"
+        },
+        {
+          "url": "https://example.com/sample-text.txt",
+          "mimetype": "text/plain"
+        }
+      ]
+    }'
+    
+  # Process the object with our pipeline
+  curl -X POST "https://api.mixpeek.com/v1/pipelines/YOUR_PIPELINE_ID/run" \
+    -H "Authorization: Bearer $MIXPEEK_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "object_id": "YOUR_OBJECT_ID"
+    }'
+  ```
+</CodeGroup>
+
+## Step 6: Create a Search Retriever
+
+Now, let's set up a search retriever to query our processed data:
+
+<CodeGroup>
+  ```python Python
+  # Create a retriever for multimodal search
+  retriever = mp.retrievers.create(
+      namespace_id=namespace_id,
+      name="content-retriever",
+      description="Search across processed content",
+      stages=[
+          {
+              "name": "embedding_search",
+              "type": "vector",
+              "collection_id": collection_id,
+              "index": "multimodal",
+              "limit": 20
+          },
+          {
+              "name": "filters",
+              "type": "filter",
+              "input": "embedding_search.results",
+              "limit": 10
+          }
+      ]
+  )
+  
+  retriever_id = retriever["retriever_id"]
+  print(f"Created retriever: {retriever_id}")
+  ```
+
+  ```javascript JavaScript
+  // Create a retriever for multimodal search
+  const retriever = await mp.retrievers.create({
+    namespace_id: namespaceId,
+    name: "content-retriever",
+    description: "Search across processed content",
+    stages: [
+      {
+        name: "embedding_search",
+        type: "vector",
+        collection_id: collectionId,
+        index: "multimodal",
+        limit: 20
+      },
+      {
+        name: "filters",
+        type: "filter",
+        input: "embedding_search.results",
+        limit: 10
+      }
+    ]
+  });
+  
+  const retrieverId = retriever.retriever_id;
+  console.log(`Created retriever: ${retrieverId}`);
+  ```
+
+  ```bash cURL
+  curl -X POST "https://api.mixpeek.com/v1/retrievers" \
+    -H "Authorization: Bearer $MIXPEEK_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "namespace_id": "YOUR_NAMESPACE_ID",
+      "name": "content-retriever",
+      "description": "Search across processed content",
+      "stages": [
+        {
+          "name": "embedding_search",
+          "type": "vector",
+          "collection_id": "YOUR_COLLECTION_ID",
+          "index": "multimodal",
+          "limit": 20
+        },
+        {
+          "name": "filters",
+          "type": "filter",
+          "input": "embedding_search.results",
+          "limit": 10
+        }
+      ]
+    }'
+  ```
+</CodeGroup>
+
+## Step 7: Search for Content
+
+Now that everything is set up, let's search for content:
+
+<CodeGroup>
+  ```python Python
+  # Wait for processing to complete
+  import time
+  time.sleep(30)  # Wait 30 seconds for processing (adjust as needed)
+  
+  # Search for content by text query
+  results = mp.retrievers.search(
+      retriever_id=retriever_id,
+      query={
+          "text": "show me images with people"
+      },
+      filters={
+          "detected_objects": {
+              "$contains": "person"
+          }
+      }
+  )
+  
+  # Print the results
+  for result in results["results"]:
+      print(f"Found document: {result['document_id']}, Score: {result['score']}")
+      print(f"Content: {result['content']}")
+  ```
+
+  ```javascript JavaScript
+  // Wait for processing to complete
+  await new Promise(resolve => setTimeout(resolve, 30000)); // Wait 30 seconds (adjust as needed)
+  
+  // Search for content by text query
+  const results = await mp.retrievers.search({
+    retriever_id: retrieverId,
+    query: {
+      text: "show me images with people"
+    },
+    filters: {
+      detected_objects: {
+        $contains: "person"
+      }
+    }
+  });
+  
+  // Print the results
+  for (const result of results.results) {
+    console.log(`Found document: ${result.document_id}, Score: ${result.score}`);
+    console.log(`Content: ${result.content}`);
   }
-})
+  ```
 
-response = requests.request("POST", url, headers=headers, data=payload)
-```
+  ```bash cURL
+  curl -X POST "https://api.mixpeek.com/v1/retrievers/YOUR_RETRIEVER_ID/search" \
+    -H "Authorization: Bearer $MIXPEEK_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "query": {
+        "text": "show me images with people"
+      },
+      "filters": {
+        "detected_objects": {
+          "$contains": "person"
+        }
+      }
+    }'
+  ```
+</CodeGroup>
 
-[Ingest Text API](/api-reference/ingest-assets/ingest-text)
+## Complete Example
 
-
-## Searching Content
-
-Now you can perform both text and vector searches across your collections:
+Here's a complete Python script that ties everything together:
 
 ```python
-url = "https://api.mixpeek.com/v1/features/search"
+from mixpeek import Mixpeek
+import time
 
-payload = json.dumps({
-  "collections": [
-    "test"
-  ],
-  "queries": [
-    {
-      "embedding_model": "multimodal",
-      "value": "dog outside",
-      "type": "text"
+# Initialize the Mixpeek client
+mp = Mixpeek(api_key="YOUR_API_KEY")
+
+# Create a namespace
+namespace = mp.namespaces.create(
+    name="quickstart",
+    description="My first Mixpeek project"
+)
+namespace_id = namespace["namespace_id"]
+
+# Create a bucket
+bucket = mp.buckets.create(
+    namespace_id=namespace_id,
+    name="content-bucket",
+    description="Storage for our content"
+)
+bucket_id = bucket["bucket_id"]
+
+# Create a collection
+collection = mp.collections.create(
+    namespace_id=namespace_id,
+    name="content-collection",
+    description="Processed content documents"
+)
+collection_id = collection["collection_id"]
+
+# Create a pipeline
+pipeline = mp.pipelines.create(
+    namespace_id=namespace_id,
+    name="content-pipeline",
+    description="Extract features from content",
+    input_bucket_id=bucket_id,
+    output_collection_ids=[collection_id],
+    feature_extractors=[
+        {
+            "embed": [
+                {
+                    "type": "url",
+                    "embedding_model": "multimodal"
+                },
+                {
+                    "type": "text",
+                    "value": "describe this content",
+                    "embedding_model": "text"
+                }
+            ],
+            "detect": {
+                "faces": {"enabled": True},
+                "objects": {"enabled": True}
+            },
+            "transcribe": {"enabled": True}
+        }
+    ]
+)
+pipeline_id = pipeline["pipeline_id"]
+
+# Upload an object
+object = mp.objects.create(
+    bucket_id=bucket_id,
+    name="sample-content",
+    files=[
+        {
+            "url": "https://example.com/sample-image.jpg",
+            "mimetype": "image/jpeg"
+        }
+    ]
+)
+object_id = object["object_id"]
+
+# Process the object
+task = mp.pipelines.run(
+    pipeline_id=pipeline_id,
+    object_id=object_id
+)
+
+# Wait for processing to complete
+print("Processing content, please wait...")
+time.sleep(30)  # Adjust based on content size
+
+# Create a retriever
+retriever = mp.retrievers.create(
+    namespace_id=namespace_id,
+    name="content-retriever",
+    description="Search across processed content",
+    stages=[
+        {
+            "name": "embedding_search",
+            "type": "vector",
+            "collection_id": collection_id,
+            "index": "multimodal",
+            "limit": 20
+        },
+        {
+            "name": "filters",
+            "type": "filter",
+            "input": "embedding_search.results",
+            "limit": 10
+        }
+    ]
+)
+retriever_id = retriever["retriever_id"]
+
+# Search for content
+results = mp.retrievers.search(
+    retriever_id=retriever_id,
+    query={
+        "text": "show me images with people"
     }
-  ]
-})
+)
 
-response = requests.request("POST", url, headers=headers, data=payload)
-
+# Display results
+print("\nSearch Results:")
+for result in results["results"]:
+    print(f"Document ID: {result['document_id']}")
+    print(f"Score: {result['score']}")
+    print(f"Content: {result['content']}")
+    print("---")
 ```
-
-[Feature Search](/api-reference/feature-search/search-features)
 
 ## Next Steps
 
-- Explore more advanced indexing options in the [API documentation](/api-documentation)
-- Learn about [file storage integrations](/integrations) for various cloud providers
-- Discover [exciting use cases](/use-cases) like Real-Time Video Alerting and Visual Discovery
+Congratulations! You've just built a simple multimodal search application with Mixpeek. To continue your journey:
+
+<CardGroup cols={3}>
+  <Card title="Learn about Namespaces" icon="folder-tree" href="/management/namespaces">
+    Organize your data into isolated environments
+  </Card>
+  
+  <Card title="Explore Feature Extractors" icon="microchip" href="/processing/feature-extractors">
+    Discover advanced extraction capabilities
+  </Card>
+
+  <Card title="Build Powerful Retrievers" icon="magnifying-glass" href="/search/retrievers">
+    Create sophisticated search experiences
+  </Card>
+</CardGroup> 

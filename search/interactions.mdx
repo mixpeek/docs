@@ -1,0 +1,524 @@
+---
+title: "Interactions"
+description: "Track and leverage user interactions to improve search relevance"
+---
+
+<Note>
+  Interaction tracking allows you to record how users engage with search results, enabling personalized ranking, relevance improvement, and usage analytics.
+</Note>
+
+## What are Interactions?
+
+In Mixpeek, interactions represent how users engage with search results. By tracking these interactions, you can gather valuable data to improve search relevance, personalize results, and gain insights into user behavior and content performance.
+
+<CardGroup cols={2}>
+  <Card title="User Engagement Data" icon="hand-pointer">
+    Record how users interact with search results, including clicks, views, and conversions
+  </Card>
+  
+  <Card title="Relevance Signals" icon="chart-line">
+    Use interaction data as signals to improve search relevance and personalization
+  </Card>
+</CardGroup>
+
+## Types of Interactions
+
+Mixpeek supports several types of user interactions that you can track:
+
+<AccordionGroup>
+  <Accordion title="Click Interactions" icon="mouse-pointer">
+    Track when users click on or select search results.
+    
+    **Use cases:**
+    - Determine which results users find most relevant
+    - Calculate click-through rates (CTR)
+    - Build personalized result rankings
+  </Accordion>
+
+  <Accordion title="View Interactions" icon="eye">
+    Track when users view or engage with content after clicking.
+    
+    **Use cases:**
+    - Measure content engagement depth
+    - Identify abandoned content
+    - Evaluate post-click relevance
+  </Accordion>
+
+  <Accordion title="Conversion Interactions" icon="shopping-cart">
+    Track when users take valuable actions like purchases, signups, or downloads.
+    
+    **Use cases:**
+    - Understand which content drives business outcomes
+    - Optimize for conversion-driving content
+    - Calculate conversion rates by result position
+  </Accordion>
+
+  <Accordion title="Custom Interactions" icon="sliders">
+    Define and track interactions specific to your application.
+    
+    **Use cases:**
+    - Track domain-specific engagement metrics
+    - Collect specialized feedback signals
+    - Measure application-specific user behaviors
+  </Accordion>
+</AccordionGroup>
+
+## Recording Interactions
+
+You can record interactions using the Mixpeek API:
+
+<CodeGroup>
+  ```python Python
+  from mixpeek import Mixpeek
+  
+  mp = Mixpeek(api_key="YOUR_API_KEY")
+  
+  # Record a click interaction
+  interaction = mp.interactions.create(
+      namespace_id="ns_abc123",
+      type="click",
+      document_id="doc_def456",
+      user_id="user_ghi789",
+      session_id="session_jkl012",
+      search_id="search_mno345",
+      position=3,
+      metadata={
+          "query": "wireless headphones",
+          "device": "mobile",
+          "page": "search_results"
+      }
+  )
+  
+  print(f"Recorded interaction: {interaction['interaction_id']}")
+  ```
+
+  ```javascript JavaScript
+  import { Mixpeek } from '@mixpeek/sdk';
+  
+  const mp = new Mixpeek({ apiKey: 'YOUR_API_KEY' });
+  
+  // Record a click interaction
+  const interaction = await mp.interactions.create({
+    namespace_id: "ns_abc123",
+    type: "click",
+    document_id: "doc_def456",
+    user_id: "user_ghi789",
+    session_id: "session_jkl012",
+    search_id: "search_mno345",
+    position: 3,
+    metadata: {
+      query: "wireless headphones",
+      device: "mobile",
+      page: "search_results"
+    }
+  });
+  
+  console.log(`Recorded interaction: ${interaction.interaction_id}`);
+  ```
+
+  ```bash cURL
+  curl -X POST "https://api.mixpeek.com/v1/interactions" \
+    -H "Authorization: Bearer YOUR_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "namespace_id": "ns_abc123",
+      "type": "click",
+      "document_id": "doc_def456",
+      "user_id": "user_ghi789",
+      "session_id": "session_jkl012",
+      "search_id": "search_mno345",
+      "position": 3,
+      "metadata": {
+        "query": "wireless headphones",
+        "device": "mobile",
+        "page": "search_results"
+      }
+    }'
+  ```
+</CodeGroup>
+
+### Interaction Parameters
+
+<Tabs>
+  <Tab title="Required Parameters">
+    | Parameter | Type | Description |
+    |-----------|------|-------------|
+    | `namespace_id` | string | ID of the namespace containing the document |
+    | `type` | string | Interaction type: "click", "view", "conversion", or custom |
+    | `document_id` | string | ID of the document the user interacted with |
+  </Tab>
+  
+  <Tab title="Recommended Parameters">
+    | Parameter | Type | Description |
+    |-----------|------|-------------|
+    | `user_id` | string | Identifier for the user performing the interaction |
+    | `session_id` | string | Identifier for the user's session |
+    | `search_id` | string | Identifier for the search query that produced the result |
+    | `position` | integer | Position of the document in the search results (1-based) |
+  </Tab>
+  
+  <Tab title="Optional Parameters">
+    | Parameter | Type | Description |
+    |-----------|------|-------------|
+    | `timestamp` | string | ISO 8601 timestamp for when the interaction occurred |
+    | `value` | number | Numeric value associated with the interaction (e.g., purchase amount) |
+    | `duration` | number | Duration of the interaction in seconds |
+    | `metadata` | object | Additional contextual data about the interaction |
+  </Tab>
+</Tabs>
+
+## Tracking Different Interaction Types
+
+### Click Interactions
+
+```python
+# Record a click interaction
+click = mp.interactions.create(
+    namespace_id="ns_abc123",
+    type="click",
+    document_id="doc_def456",
+    user_id="user_ghi789",
+    session_id="session_jkl012",
+    search_id="search_mno345",
+    position=3
+)
+```
+
+### View Interactions
+
+```python
+# Record a view interaction
+view = mp.interactions.create(
+    namespace_id="ns_abc123",
+    type="view",
+    document_id="doc_def456",
+    user_id="user_ghi789",
+    session_id="session_jkl012",
+    search_id="search_mno345",
+    duration=45,  # User viewed the content for 45 seconds
+    metadata={
+        "scroll_depth": 0.8,  # User scrolled through 80% of the content
+        "view_complete": True
+    }
+)
+```
+
+### Conversion Interactions
+
+```python
+# Record a conversion interaction
+conversion = mp.interactions.create(
+    namespace_id="ns_abc123",
+    type="conversion",
+    document_id="doc_def456",
+    user_id="user_ghi789",
+    session_id="session_jkl012",
+    search_id="search_mno345",
+    value=99.99,  # Purchase value
+    metadata={
+        "conversion_type": "purchase",
+        "product_id": "prod_xyz789",
+        "quantity": 1
+    }
+)
+```
+
+### Custom Interactions
+
+```python
+# Record a custom interaction type
+bookmark = mp.interactions.create(
+    namespace_id="ns_abc123",
+    type="bookmark",  # Custom interaction type
+    document_id="doc_def456",
+    user_id="user_ghi789",
+    session_id="session_jkl012",
+    metadata={
+        "collection_id": "col_favorites",
+        "added_from": "search_results"
+    }
+)
+```
+
+## Retrieving Interactions
+
+You can retrieve interaction data for analysis or use in your application:
+
+<CodeGroup>
+  ```python Python
+  # Get a specific interaction
+  interaction = mp.interactions.get(
+      interaction_id="int_pqr678"
+  )
+  
+  print(f"Interaction type: {interaction['type']}")
+  print(f"Document ID: {interaction['document_id']}")
+  print(f"Timestamp: {interaction['timestamp']}")
+  
+  # List interactions with filtering
+  interactions = mp.interactions.list(
+      namespace_id="ns_abc123",
+      user_id="user_ghi789",
+      type="click",
+      document_id="doc_def456",
+      start_time="2023-01-01T00:00:00Z",
+      end_time="2023-01-31T23:59:59Z",
+      limit=100
+  )
+  
+  print(f"Found {len(interactions['interactions'])} interactions")
+  ```
+
+  ```javascript JavaScript
+  // Get a specific interaction
+  const interaction = await mp.interactions.get({
+    interaction_id: "int_pqr678"
+  });
+  
+  console.log(`Interaction type: ${interaction.type}`);
+  console.log(`Document ID: ${interaction.document_id}`);
+  console.log(`Timestamp: ${interaction.timestamp}`);
+  
+  // List interactions with filtering
+  const interactions = await mp.interactions.list({
+    namespace_id: "ns_abc123",
+    user_id: "user_ghi789",
+    type: "click",
+    document_id: "doc_def456",
+    start_time: "2023-01-01T00:00:00Z",
+    end_time: "2023-01-31T23:59:59Z",
+    limit: 100
+  });
+  
+  console.log(`Found ${interactions.interactions.length} interactions`);
+  ```
+</CodeGroup>
+
+## Using Interactions in Search
+
+Interactions can be used to personalize and improve search results:
+
+### Personalized Retriever
+
+<Frame>
+  ```json
+  {
+    "stages": [
+      {
+        "name": "vector_search",
+        "type": "vector",
+        "collection_id": "col_products",
+        "index": "multimodal",
+        "limit": 50
+      },
+      {
+        "name": "personalized_rank",
+        "type": "rank",
+        "input": "vector_search.results",
+        "weights": {
+          "vector_score": 0.6,
+          "user_interactions": 0.4
+        },
+        "parameters": {
+          "user_id": "{user_id}",
+          "interaction_types": ["click", "conversion"],
+          "recency_decay": 0.1
+        },
+        "limit": 20
+      }
+    ]
+  }
+  ```
+</Frame>
+
+### User-Based Filtering
+
+```python
+# Search with user-based filtering
+results = mp.retrievers.search(
+    retriever_id="ret_tuv901",
+    query={
+        "text": "running shoes"
+    },
+    user_context={
+        "user_id": "user_ghi789",
+        "use_interaction_history": True,
+        "interaction_types": ["click", "view", "conversion"],
+        "exclude_previously_interacted": False,
+        "interaction_recency_weight": 0.2
+    }
+)
+```
+
+## Tracking Interactions Client-Side
+
+For web applications, you can use the Mixpeek JavaScript SDK to track interactions:
+
+```javascript
+// Initialize the SDK with your API key
+const mp = new Mixpeek({
+  apiKey: 'YOUR_API_KEY',
+  namespace: 'ns_abc123'
+});
+
+// Get search results
+const results = await mp.retrievers.search({
+  retriever_id: "ret_def456",
+  query: {
+    text: "wireless headphones"
+  }
+});
+
+// Store the search ID for tracking interactions
+const searchId = results.search_id;
+
+// Add click event listeners to search results
+document.querySelectorAll('.search-result').forEach((element, index) => {
+  element.addEventListener('click', async () => {
+    const documentId = element.getAttribute('data-document-id');
+    
+    // Record click interaction
+    await mp.interactions.create({
+      type: "click",
+      document_id: documentId,
+      search_id: searchId,
+      position: index + 1,
+      user_id: getCurrentUserId(), // Your function to get the user ID
+      session_id: getSessionId(),  // Your function to get the session ID
+      metadata: {
+        query: "wireless headphones",
+        device: getDeviceType(),  // Your function to detect device type
+        page: "search_results"
+      }
+    });
+    
+    // Navigate to the result page
+    window.location.href = element.getAttribute('href');
+  });
+});
+```
+
+## Analytics and Reporting
+
+Interaction data can be used for analytics and reporting to understand user behavior and content performance:
+
+<CardGroup cols={2}>
+  <Card title="Click-Through Rate (CTR)" icon="chart-line">
+    ```python
+    # Calculate CTR for specific documents
+    def calculate_ctr(namespace_id, document_ids):
+        results = {}
+        
+        for doc_id in document_ids:
+            # Get impression count
+            impressions = mp.interactions.list(
+                namespace_id=namespace_id,
+                document_id=doc_id,
+                type="impression",
+                limit=0,  # Only get count
+                count=True
+            )
+            
+            # Get click count
+            clicks = mp.interactions.list(
+                namespace_id=namespace_id,
+                document_id=doc_id,
+                type="click",
+                limit=0,  # Only get count
+                count=True
+            )
+            
+            if impressions["count"] > 0:
+                ctr = (clicks["count"] / impressions["count"]) * 100
+                results[doc_id] = ctr
+            else:
+                results[doc_id] = 0
+        
+        return results
+    ```
+  </Card>
+  
+  <Card title="Position Analysis" icon="trophy">
+    ```python
+    # Analyze clicks by result position
+    def analyze_position_performance(namespace_id, start_time, end_time):
+        # Get clicks with position data
+        clicks = mp.interactions.list(
+            namespace_id=namespace_id,
+            type="click",
+            start_time=start_time,
+            end_time=end_time,
+            limit=10000
+        )
+        
+        # Group clicks by position
+        position_counts = {}
+        for click in clicks["interactions"]:
+            position = click.get("position")
+            if position:
+                position_counts[position] = position_counts.get(position, 0) + 1
+        
+        # Sort by position
+        sorted_positions = sorted(position_counts.items())
+        
+        return sorted_positions
+    ```
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+<Steps>
+  <Step title="Track Consistently">
+    Implement interaction tracking consistently across your application to collect comprehensive data.
+  </Step>
+  <Step title="Include Context">
+    Capture relevant contextual information in the metadata field to make interactions more valuable for analysis.
+  </Step>
+  <Step title="Balance Privacy">
+    Respect user privacy by anonymizing user identifiers where appropriate and complying with relevant regulations.
+  </Step>
+  <Step title="Optimize Volume">
+    For high-traffic applications, consider batching interaction records or sampling to manage data volume.
+  </Step>
+</Steps>
+
+<Warning>
+  Interaction data can grow rapidly in high-traffic applications. Consider implementing data retention policies and monitoring storage usage.
+</Warning>
+
+## Implementation Strategies
+
+<CardGroup cols={2}>
+  <Card title="Basic Implementation" icon="baby">
+    - Track clicks on search results
+    - Use document position data
+    - Include user and session IDs
+    - Store basic query information
+  </Card>
+  
+  <Card title="Intermediate Implementation" icon="person-walking">
+    - Track clicks, views, and conversions
+    - Measure view duration and engagement depth
+    - Include device and page context
+    - Implement client-side tracking with JS SDK
+  </Card>
+
+  <Card title="Advanced Implementation" icon="person-running">
+    - Track custom interaction types
+    - Implement personalized ranking based on history
+    - Use interaction data for A/B testing
+    - Analyze interaction patterns for recommendations
+  </Card>
+  
+  <Card title="Enterprise Implementation" icon="building">
+    - Integrate with data warehouses
+    - Implement comprehensive reporting
+    - Use interaction data for model training
+    - Create personalized content recommendations
+  </Card>
+</CardGroup>
+
+## API Reference
+
+For complete details on working with interactions, see our [Interactions API Reference](/api-reference/interactions/create-interaction). 

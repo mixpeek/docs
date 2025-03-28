@@ -1,0 +1,234 @@
+---
+title: "Buckets"
+description: "Store and organize raw multimodal data objects for processing"
+---
+
+<Note>
+  Buckets are the foundation of Mixpeek's storage architecture. They serve as containers for raw objects and their associated files before processing.
+</Note>
+
+## What are Buckets?
+
+Buckets in Mixpeek are specialized storage containers designed for efficiently managing and organizing your raw multimodal content. They hold objects (collections of related files) before they're processed by pipelines.
+
+<CardGroup cols={2}>
+  <Card title="Storage Containers" icon="bucket">
+    Securely store raw objects and their associated files in logically grouped containers
+  </Card>
+  
+  <Card title="Object Organization" icon="folder-tree">
+    Organize objects based on use case, content type, or processing requirements
+  </Card>
+</CardGroup>
+
+## Key Concepts
+
+<AccordionGroup>
+  <Accordion title="Namespace Association" icon="link">
+    Each bucket belongs to a specific namespace, inheriting its configuration and security settings. Buckets cannot span multiple namespaces.
+  </Accordion>
+
+  <Accordion title="Object Storage" icon="box-archive">
+    Buckets store objects, which are collections of related files representing a single entity (e.g., a product with images, specs, and descriptions).
+  </Accordion>
+
+  <Accordion title="Pipeline Integration" icon="gears">
+    Buckets serve as input sources for processing pipelines, which extract features from the objects and create structured documents.
+  </Accordion>
+
+  <Accordion title="Access Control" icon="lock">
+    Buckets inherit the access controls of their parent namespace but can also have bucket-specific access policies.
+  </Accordion>
+</AccordionGroup>
+
+## Creating a Bucket
+
+<CodeGroup>
+  ```python Python
+  from mixpeek import Mixpeek
+  
+  mp = Mixpeek(api_key="YOUR_API_KEY")
+  
+  # Create a bucket
+  bucket = mp.buckets.create(
+      namespace_id="ns_abc123",
+      name="product-images",
+      description="Product images for e-commerce catalog"
+  )
+  
+  bucket_id = bucket["bucket_id"]
+  print(f"Created bucket: {bucket_id}")
+  ```
+
+  ```javascript JavaScript
+  import { Mixpeek } from '@mixpeek/sdk';
+  
+  const mp = new Mixpeek({ apiKey: 'YOUR_API_KEY' });
+  
+  // Create a bucket
+  const bucket = await mp.buckets.create({
+    namespace_id: "ns_abc123",
+    name: "product-images",
+    description: "Product images for e-commerce catalog"
+  });
+  
+  const bucketId = bucket.bucket_id;
+  console.log(`Created bucket: ${bucketId}`);
+  ```
+
+  ```bash cURL
+  curl -X POST "https://api.mixpeek.com/v1/buckets" \
+    -H "Authorization: Bearer YOUR_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "namespace_id": "ns_abc123",
+      "name": "product-images",
+      "description": "Product images for e-commerce catalog"
+    }'
+  ```
+</CodeGroup>
+
+## Listing Buckets
+
+<CodeGroup>
+  ```python Python
+  # List all buckets in a namespace
+  buckets = mp.buckets.list(namespace_id="ns_abc123")
+  
+  for bucket in buckets["buckets"]:
+      print(f"Bucket: {bucket['name']} (ID: {bucket['bucket_id']})")
+  ```
+
+  ```javascript JavaScript
+  // List all buckets in a namespace
+  const buckets = await mp.buckets.list({
+    namespace_id: "ns_abc123"
+  });
+  
+  for (const bucket of buckets.buckets) {
+    console.log(`Bucket: ${bucket.name} (ID: ${bucket.bucket_id})`);
+  }
+  ```
+
+  ```bash cURL
+  curl -X GET "https://api.mixpeek.com/v1/buckets?namespace_id=ns_abc123" \
+    -H "Authorization: Bearer YOUR_API_KEY" \
+    -H "Content-Type: application/json"
+  ```
+</CodeGroup>
+
+## Managing Objects in Buckets
+
+Once you've created a bucket, you can add objects to it. Objects are collections of related files that represent a single entity in your domain.
+
+<Steps>
+  <Step title="Create an Object">
+    Create an object in your bucket. Each object can contain multiple related files.
+    
+    ```python
+    # Create an object with multiple files
+    object = mp.objects.create(
+        bucket_id=bucket_id,
+        name="red-sneaker-product",
+        files=[
+            {
+                "url": "https://example.com/images/red-sneaker-front.jpg",
+                "mimetype": "image/jpeg"
+            },
+            {
+                "url": "https://example.com/images/red-sneaker-side.jpg",
+                "mimetype": "image/jpeg"
+            },
+            {
+                "url": "https://example.com/data/red-sneaker-specs.txt",
+                "mimetype": "text/plain"
+            }
+        ]
+    )
+    
+    object_id = object["object_id"]
+    ```
+  </Step>
+  
+  <Step title="Process the Object">
+    Process the object using a pipeline to extract features.
+    
+    ```python
+    # Process the object with a pipeline
+    task = mp.pipelines.run(
+        pipeline_id="pl_xyz789",
+        object_id=object_id
+    )
+    
+    task_id = task["task_id"]
+    ```
+  </Step>
+  
+  <Step title="Track Processing Status">
+    Monitor the status of the processing task.
+    
+    ```python
+    # Check task status
+    status = mp.tasks.get(task_id=task_id)
+    print(f"Task status: {status['status']}")
+    ```
+  </Step>
+</Steps>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Logical Grouping" icon="boxes-stacked">
+    Group objects in buckets based on logical collections, such as product categories, content types, or processing requirements
+  </Card>
+  
+  <Card title="Naming Conventions" icon="tag">
+    Use consistent naming patterns for buckets to make them easily identifiable and manageable
+  </Card>
+
+  <Card title="Pipeline Alignment" icon="route">
+    Align bucket structure with your processing pipelines for more efficient workflow organization
+  </Card>
+  
+  <Card title="Resource Optimization" icon="gauge-high">
+    Monitor bucket usage and distribute objects across multiple buckets if needed for performance optimization
+  </Card>
+</CardGroup>
+
+### Effective Bucket Organization
+
+<Frame>
+  ```mermaid
+  graph TD
+    A[Namespace: E-commerce] --> B[Bucket: Products]
+    A --> C[Bucket: Marketing]
+    A --> D[Bucket: User-Generated]
+    B --> E[Object: Product 1]
+    B --> F[Object: Product 2]
+    C --> G[Object: Campaign 1]
+    D --> H[Object: Review 1]
+    E --> I[Files: Images, Specs, Descriptions]
+    style A fill:#FC5185,stroke:#333
+    style I fill:#FC5185,stroke:#333
+  ```
+</Frame>
+
+## Common Use Cases
+
+<CardGroup cols={3}>
+  <Card title="E-commerce Products" icon="shopping-cart">
+    Store product images, videos, specs, and descriptions for catalog processing
+  </Card>
+  
+  <Card title="Media Assets" icon="photo-film">
+    Organize images, videos, and audio files for media libraries
+  </Card>
+
+  <Card title="Documentation" icon="file-lines">
+    Manage PDFs, technical documents, and related assets
+  </Card>
+</CardGroup>
+
+## API Reference
+
+For complete details on working with buckets, see our [Buckets API Reference](/api-reference/buckets/create-bucket). 

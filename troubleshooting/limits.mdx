@@ -1,0 +1,245 @@
+---
+title: "Limits"
+---
+
+<Note>
+  This page outlines the technical limitations and supported formats in the Mixpeek platform. Understanding these constraints will help you optimize your implementation and plan resource usage effectively.
+</Note>
+
+## Supported File Types
+
+Mixpeek supports a wide range of file formats across different media types for both object storage and query inputs.
+
+<Tabs>
+  <Tab title="Text">
+    | Format | Extensions | Max Size | Notes |
+    |--------|------------|----------|-------|
+    | Plain Text | .txt, .md, .csv | 100MB | UTF-8 encoding recommended |
+    | Rich Text | .rtf, .docx, .odt | 100MB | Formatting is preserved during processing |
+    | Markup | .html, .xml, .json | 50MB | Structure is parsed and indexed |
+    | Code | .py, .js, .java, etc. | 25MB | Language-specific tokenization is applied |
+  </Tab>
+  
+  <Tab title="Images">
+    | Format | Extensions | Max Size | Notes |
+    |--------|------------|----------|-------|
+    | Raster | .jpg, .png, .webp | 50MB | RGB and RGBA color spaces |
+    | Vector | .svg | 20MB | Converted to raster during processing |
+    | Raw | .raw, .cr2, .arw | 100MB | Automatically converted to standard formats |
+    | Layered | .psd, .xcf | 100MB | Layers are flattened during processing |
+  </Tab>
+
+  <Tab title="Video">
+    | Format | Extensions | Max Size | Max Duration | Notes |
+    |--------|------------|----------|--------------|-------|
+    | Common | .mp4, .mov, .avi | 2GB | 60 minutes | H.264 codec recommended |
+    | Web | .webm | 1GB | 60 minutes | VP9 codec supported |
+    | High-Quality | .mkv | 5GB | 120 minutes | Higher processing time |
+  </Tab>
+
+  <Tab title="Audio">
+    | Format | Extensions | Max Size | Max Duration | Notes |
+    |--------|------------|----------|--------------|-------|
+    | Compressed | .mp3, .aac, .ogg | 500MB | 180 minutes | Standard quality audio |
+    | Uncompressed | .wav, .flac | 1GB | 120 minutes | Higher quality audio |
+    | Voice | .m4a | 200MB | 180 minutes | Optimized for speech recognition |
+  </Tab>
+
+  <Tab title="Documents">
+    | Format | Extensions | Max Size | Max Pages | Notes |
+    |--------|------------|----------|-----------|-------|
+    | PDF | .pdf | 250MB | 1000 | Text, images, and structure are extracted |
+    | Presentation | .pptx, .key | 100MB | 200 | Slides are processed individually |
+    | Spreadsheet | .xlsx, .csv | 100MB | 10000 rows | Tables are parsed and indexed |
+    | E-book | .epub, .mobi | 50MB | N/A | Converted to text during processing |
+  </Tab>
+</Tabs>
+
+## Rate Limits
+
+API rate limits are in place to ensure fair usage and system stability. Different tiers provide varying levels of access.
+
+<CardGroup cols={3}>
+  <Card title="Free Tier" icon="traffic-light">
+    <p>500 requests per day</p>
+    <p>100 requests per hour</p>
+    <p>5 concurrent requests</p>
+  </Card>
+
+  
+  <Card title="Business Tier" icon="car">
+    <p>50,000 requests per day</p>
+    <p>5,000 requests per hour</p>
+    <p>100 concurrent requests</p>
+  </Card>
+  
+  <Card title="Enterprise Tier" icon="rocket">
+    <p>Custom limits</p>
+    <p>Priority processing</p>
+    <p>Dedicated resources</p>
+  </Card>
+</CardGroup>
+
+<AccordionGroup>
+  <Accordion title="Rate Limit Headers">
+    All API responses include rate limit information in the headers:
+    
+    ```
+    X-RateLimit-Limit: 100
+    X-RateLimit-Remaining: 75
+    X-RateLimit-Reset: 1616979600
+    ```
+    
+    The `X-RateLimit-Reset` value is a Unix timestamp indicating when the rate limit window resets.
+  </Accordion>
+  
+  <Accordion title="Rate Limit By Endpoint">
+    Some endpoints have specific rate limits:
+    
+    | Endpoint | Max Requests (Free) | Max Requests (Developer) | Max Requests (Business) |
+    |----------|---------------------|--------------------------|-------------------------|
+    | `/search` | 100/hour | 500/hour | 2,500/hour |
+    | `/upload` | 50/hour | 250/hour | 1,000/hour |
+    | `/processing` | 20/hour | 100/hour | 500/hour |
+  </Accordion>
+  
+  <Accordion title="Rate Limit Exceeded">
+    When rate limits are exceeded, the API returns a `429 Too Many Requests` response with a `Retry-After` header indicating the number of seconds to wait before retrying.
+    
+    ```json
+    {
+      "error": {
+        "code": "rate_limit_exceeded",
+        "message": "Rate limit exceeded. Please retry after 35 seconds.",
+        "retry_after": 35
+      }
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Size Limits
+
+<CardGroup cols={2}>
+  <Card title="Storage Limits" icon="database">
+    <p><strong>Free Tier:</strong> 5GB storage</p>
+    <p><strong>Developer Tier:</strong> 100GB storage</p>
+    <p><strong>Business Tier:</strong> 1TB storage</p>
+    <p><strong>Enterprise Tier:</strong> Custom storage limits</p>
+  </Card>
+  
+  <Card title="Processing Limits" icon="gears">
+    <p><strong>Maximum batch size:</strong> 100 objects</p>
+    <p><strong>Maximum pipeline complexity:</strong> 10 extractors</p>
+    <p><strong>Maximum processing time:</strong> 30 minutes per object</p>
+  </Card>
+</CardGroup>
+
+### Namespace & Collection Limits
+
+<Table>
+  <Thead>
+    <Tr>
+      <Th>Resource</Th>
+      <Th>Free Tier</Th>
+      <Th>Developer Tier</Th>
+      <Th>Business Tier</Th>
+      <Th>Enterprise Tier</Th>
+    </Tr>
+  </Thead>
+  <Tbody>
+    <Tr>
+      <Td>Namespaces</Td>
+      <Td>3</Td>
+      <Td>10</Td>
+      <Td>50</Td>
+      <Td>Unlimited</Td>
+    </Tr>
+    <Tr>
+      <Td>Buckets per Namespace</Td>
+      <Td>5</Td>
+      <Td>20</Td>
+      <Td>100</Td>
+      <Td>Unlimited</Td>
+    </Tr>
+    <Tr>
+      <Td>Collections per Namespace</Td>
+      <Td>5</Td>
+      <Td>20</Td>
+      <Td>100</Td>
+      <Td>Unlimited</Td>
+    </Tr>
+    <Tr>
+      <Td>Objects per Bucket</Td>
+      <Td>1,000</Td>
+      <Td>10,000</Td>
+      <Td>100,000</Td>
+      <Td>Unlimited</Td>
+    </Tr>
+    <Tr>
+      <Td>Documents per Collection</Td>
+      <Td>10,000</Td>
+      <Td>100,000</Td>
+      <Td>1,000,000</Td>
+      <Td>Unlimited</Td>
+    </Tr>
+  </Tbody>
+</Table>
+
+## Query Limits
+
+<AccordionGroup>
+  <Accordion title="Search Query Limits">
+    | Parameter | Free Tier | Developer Tier | Business Tier | Enterprise Tier |
+    |-----------|-----------|----------------|---------------|-----------------|
+    | Max query length | 256 chars | 1,024 chars | 4,096 chars | 8,192 chars |
+    | Max results per query | 100 | 500 | 1,000 | 5,000 |
+    | Max filter complexity | 3 conditions | 10 conditions | 25 conditions | 50 conditions |
+  </Accordion>
+  
+  <Accordion title="Batch Processing Limits">
+    | Operation | Free Tier | Developer Tier | Business Tier | Enterprise Tier |
+    |-----------|-----------|----------------|---------------|-----------------|
+    | Max batch upload size | 10 objects | 50 objects | 100 objects | 500 objects |
+    | Max batch processing | 5 objects | 25 objects | 100 objects | Custom |
+    | Max parallel pipelines | 2 | 5 | 10 | Custom |
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Optimize File Sizes" icon="file-zipper">
+    Compress files when possible before uploading to reduce storage usage and processing time.
+  </Card>
+  
+  <Card title="Batch Operations" icon="layer-group">
+    Use batch operations whenever possible to minimize API calls and stay within rate limits.
+  </Card>
+
+  <Card title="Implement Retry Logic" icon="arrow-rotate-right">
+    Add exponential backoff retry logic to handle rate limit errors gracefully.
+  </Card>
+  
+  <Card title="Monitor Usage" icon="chart-line">
+    Regularly check your usage metrics to avoid hitting limits unexpectedly.
+  </Card>
+</CardGroup>
+
+<Warning>
+  Exceeding storage or rate limits may result in temporary service restrictions. If you anticipate higher usage, consider upgrading your plan or contacting support for temporary limit increases.
+</Warning>
+
+## Need Higher Limits?
+
+If your use case requires higher limits than what's available in the standard tiers, contact our sales team to discuss custom enterprise solutions.
+
+<CardGroup cols={2}>
+  <Card title="Contact Sales" icon="phone" href="https://mixpeek.com/contact">
+    Discuss custom pricing and limits with our team
+  </Card>
+  
+  <Card title="Usage Dashboard" icon="gauge" href="https://mixpeek.com/dashboard">
+    Monitor your current usage and limits in real-time
+  </Card>
+</CardGroup> 

@@ -1,0 +1,478 @@
+---
+title: "Tasks"
+description: "Monitor and manage processing tasks for tracking pipeline execution"
+---
+
+<Note>
+  Tasks represent processing jobs in Mixpeek. They allow you to track the status, progress, and results of pipeline executions and other asynchronous operations.
+</Note>
+
+## What are Tasks?
+
+In Mixpeek, tasks represent processing jobs that are executed asynchronously. When you trigger a pipeline to process an object or run any other long-running operation, a task is created to track its execution status, progress, and results.
+
+<CardGroup cols={2}>
+  <Card title="Asynchronous Processing" icon="hourglass">
+    Tasks allow you to submit processing jobs and check their status later, without having to wait for completion
+  </Card>
+  
+  <Card title="Execution Tracking" icon="chart-line">
+    Monitor the progress and status of your processing operations in real-time
+  </Card>
+</CardGroup>
+
+## Task Lifecycle
+
+<Steps>
+  <Step title="Creation">
+    A task is created when you trigger a processing operation, such as running a pipeline on an object
+  </Step>
+  <Step title="Queuing">
+    The task enters a queue and waits to be picked up by a worker
+  </Step>
+  <Step title="Processing">
+    The task begins execution, processing the requested operation
+  </Step>
+  <Step title="Completion">
+    The task finishes successfully, producing the desired results
+  </Step>
+</Steps>
+
+During this lifecycle, a task can also encounter errors or be cancelled:
+
+<Frame>
+  ```mermaid
+  graph TD
+    A[Created] --> B[Queued]
+    B --> C[Processing]
+    C --> D[Completed]
+    C --> E[Failed]
+    B --> F[Cancelled]
+    C --> F
+    style A fill:#FC5185,stroke:#333
+    style D fill:#4CAF50,stroke:#333
+    style E fill:#F44336,stroke:#333
+    style F fill:#9E9E9E,stroke:#333
+  ```
+</Frame>
+
+## Task Statuses
+
+<AccordionGroup>
+  <Accordion title="created" icon="circle-plus">
+    The task has been created but not yet queued for processing.
+  </Accordion>
+
+  <Accordion title="queued" icon="clock">
+    The task is in the processing queue, waiting to be picked up by a worker.
+  </Accordion>
+
+  <Accordion title="processing" icon="gear-spin">
+    The task is currently being executed.
+  </Accordion>
+
+  <Accordion title="completed" icon="check-circle">
+    The task has been successfully completed, and the results are available.
+  </Accordion>
+
+  <Accordion title="failed" icon="circle-xmark">
+    The task encountered an error during execution and could not be completed.
+  </Accordion>
+
+  <Accordion title="cancelled" icon="ban">
+    The task was manually cancelled before completion.
+  </Accordion>
+</AccordionGroup>
+
+## Creating Tasks
+
+Tasks are typically created indirectly by triggering other operations. The most common way to create a task is by running a pipeline on an object:
+
+<CodeGroup>
+  ```python Python
+  from mixpeek import Mixpeek
+  
+  mp = Mixpeek(api_key="YOUR_API_KEY")
+  
+  # Run a pipeline on an object, creating a task
+  task = mp.pipelines.run(
+      pipeline_id="pl_abc123",
+      object_id="obj_def456"
+  )
+  
+  task_id = task["task_id"]
+  print(f"Created task: {task_id}")
+  print(f"Initial status: {task['status']}")
+  ```
+
+  ```javascript JavaScript
+  import { Mixpeek } from '@mixpeek/sdk';
+  
+  const mp = new Mixpeek({ apiKey: 'YOUR_API_KEY' });
+  
+  // Run a pipeline on an object, creating a task
+  const task = await mp.pipelines.run({
+    pipeline_id: "pl_abc123",
+    object_id: "obj_def456"
+  });
+  
+  const taskId = task.task_id;
+  console.log(`Created task: ${taskId}`);
+  console.log(`Initial status: ${task.status}`);
+  ```
+
+  ```bash cURL
+  curl -X POST "https://api.mixpeek.com/v1/pipelines/pl_abc123/run" \
+    -H "Authorization: Bearer YOUR_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "object_id": "obj_def456"
+    }'
+  ```
+</CodeGroup>
+
+## Checking Task Status
+
+You can check the status of a task to monitor its progress:
+
+<CodeGroup>
+  ```python Python
+  # Get task status
+  task_status = mp.tasks.get(task_id=task_id)
+  
+  print(f"Task status: {task_status['status']}")
+  print(f"Progress: {task_status['progress']}%")
+  
+  if task_status['status'] == 'completed':
+      print("Task completed successfully!")
+      print(f"Result: {task_status['result']}")
+  elif task_status['status'] == 'failed':
+      print("Task failed.")
+      print(f"Error: {task_status['error']}")
+  ```
+
+  ```javascript JavaScript
+  // Get task status
+  const taskStatus = await mp.tasks.get({
+    task_id: taskId
+  });
+  
+  console.log(`Task status: ${taskStatus.status}`);
+  console.log(`Progress: ${taskStatus.progress}%`);
+  
+  if (taskStatus.status === 'completed') {
+    console.log("Task completed successfully!");
+    console.log(`Result: ${taskStatus.result}`);
+  } else if (taskStatus.status === 'failed') {
+    console.log("Task failed.");
+    console.log(`Error: ${taskStatus.error}`);
+  }
+  ```
+
+  ```bash cURL
+  curl -X GET "https://api.mixpeek.com/v1/tasks/TASK_ID" \
+    -H "Authorization: Bearer YOUR_API_KEY" \
+    -H "Content-Type: application/json"
+  ```
+</CodeGroup>
+
+## Waiting for Task Completion
+
+You can poll the task status to wait for completion:
+
+```python
+import time
+
+# Wait for task completion with polling
+def wait_for_task(task_id, polling_interval=5, timeout=300):
+    """Wait for a task to complete, with timeout."""
+    start_time = time.time()
+    
+    while time.time() - start_time < timeout:
+        task_status = mp.tasks.get(task_id=task_id)
+        
+        if task_status['status'] in ['completed', 'failed', 'cancelled']:
+            return task_status
+            
+        print(f"Task is {task_status['status']} ({task_status['progress']}% complete). Waiting...")
+        time.sleep(polling_interval)
+    
+    raise TimeoutError(f"Task did not complete within {timeout} seconds")
+
+# Use the function to wait for task completion
+try:
+    final_status = wait_for_task(task_id)
+    
+    if final_status['status'] == 'completed':
+        print("Task completed successfully!")
+        # Access results or perform follow-up operations
+    else:
+        print(f"Task ended with status: {final_status['status']}")
+        if 'error' in final_status:
+            print(f"Error: {final_status['error']}")
+            
+except TimeoutError as e:
+    print(e)
+```
+
+## Listing Tasks
+
+You can list all tasks for a namespace or filter by specific criteria:
+
+<CodeGroup>
+  ```python Python
+  # List all tasks in a namespace
+  tasks = mp.tasks.list(
+      namespace_id="ns_ghi789",
+      limit=10
+  )
+  
+  for task in tasks["tasks"]:
+      print(f"Task {task['task_id']}: {task['status']}")
+      
+  # Filter tasks by status
+  processing_tasks = mp.tasks.list(
+      namespace_id="ns_ghi789",
+      status="processing",
+      limit=10
+  )
+  
+  print(f"Found {len(processing_tasks['tasks'])} tasks in processing status")
+  
+  # Filter tasks by pipeline
+  pipeline_tasks = mp.tasks.list(
+      namespace_id="ns_ghi789",
+      pipeline_id="pl_abc123",
+      limit=10
+  )
+  
+  print(f"Found {len(pipeline_tasks['tasks'])} tasks for pipeline pl_abc123")
+  ```
+
+  ```javascript JavaScript
+  // List all tasks in a namespace
+  const tasks = await mp.tasks.list({
+    namespace_id: "ns_ghi789",
+    limit: 10
+  });
+  
+  for (const task of tasks.tasks) {
+    console.log(`Task ${task.task_id}: ${task.status}`);
+  }
+      
+  // Filter tasks by status
+  const processingTasks = await mp.tasks.list({
+    namespace_id: "ns_ghi789",
+    status: "processing",
+    limit: 10
+  });
+  
+  console.log(`Found ${processingTasks.tasks.length} tasks in processing status`);
+  
+  // Filter tasks by pipeline
+  const pipelineTasks = await mp.tasks.list({
+    namespace_id: "ns_ghi789",
+    pipeline_id: "pl_abc123",
+    limit: 10
+  });
+  
+  console.log(`Found ${pipelineTasks.tasks.length} tasks for pipeline pl_abc123`);
+  ```
+
+  ```bash cURL
+  # List all tasks in a namespace
+  curl -X GET "https://api.mixpeek.com/v1/tasks?namespace_id=ns_ghi789&limit=10" \
+    -H "Authorization: Bearer YOUR_API_KEY" \
+    -H "Content-Type: application/json"
+    
+  # Filter tasks by status
+  curl -X GET "https://api.mixpeek.com/v1/tasks?namespace_id=ns_ghi789&status=processing&limit=10" \
+    -H "Authorization: Bearer YOUR_API_KEY" \
+    -H "Content-Type: application/json"
+    
+  # Filter tasks by pipeline
+  curl -X GET "https://api.mixpeek.com/v1/tasks?namespace_id=ns_ghi789&pipeline_id=pl_abc123&limit=10" \
+    -H "Authorization: Bearer YOUR_API_KEY" \
+    -H "Content-Type: application/json"
+  ```
+</CodeGroup>
+
+## Cancelling Tasks
+
+You can cancel a task that is queued or in progress:
+
+<CodeGroup>
+  ```python Python
+  # Cancel a task
+  cancelled_task = mp.tasks.cancel(task_id=task_id)
+  
+  print(f"Task {cancelled_task['task_id']} status: {cancelled_task['status']}")
+  ```
+
+  ```javascript JavaScript
+  // Cancel a task
+  const cancelledTask = await mp.tasks.cancel({
+    task_id: taskId
+  });
+  
+  console.log(`Task ${cancelledTask.task_id} status: ${cancelledTask.status}`);
+  ```
+
+  ```bash cURL
+  curl -X POST "https://api.mixpeek.com/v1/tasks/TASK_ID/cancel" \
+    -H "Authorization: Bearer YOUR_API_KEY" \
+    -H "Content-Type: application/json"
+  ```
+</CodeGroup>
+
+## Task Webhook Notifications
+
+You can configure webhooks to receive notifications when task statuses change:
+
+```python
+# Register a webhook for task notifications
+webhook = mp.webhooks.create(
+    namespace_id="ns_ghi789",
+    url="https://your-server.com/webhooks/mixpeek",
+    events=["task.completed", "task.failed"],
+    description="Notify when tasks complete or fail"
+)
+
+webhook_id = webhook["webhook_id"]
+print(f"Registered webhook: {webhook_id}")
+```
+
+The webhook will receive a POST request with a payload like:
+
+```json
+{
+  "event": "task.completed",
+  "task_id": "task_jkl012",
+  "status": "completed",
+  "pipeline_id": "pl_abc123",
+  "object_id": "obj_def456",
+  "namespace_id": "ns_ghi789",
+  "created_at": "2023-08-15T10:30:00Z",
+  "completed_at": "2023-08-15T10:35:22Z",
+  "result": {
+    "document_ids": ["doc_mno345"]
+  }
+}
+```
+
+## Task Structure
+
+A task object contains the following fields:
+
+<Frame>
+  ```json
+  {
+    "task_id": "task_jkl012",
+    "namespace_id": "ns_ghi789",
+    "type": "pipeline_run",
+    "status": "completed",
+    "progress": 100,
+    "created_at": "2023-08-15T10:30:00Z",
+    "updated_at": "2023-08-15T10:35:22Z",
+    "completed_at": "2023-08-15T10:35:22Z",
+    "params": {
+      "pipeline_id": "pl_abc123",
+      "object_id": "obj_def456"
+    },
+    "result": {
+      "document_ids": ["doc_mno345"],
+      "collection_ids": ["col_pqr678"]
+    },
+    "error": null,
+    "logs": [
+      {"timestamp": "2023-08-15T10:30:05Z", "level": "info", "message": "Started processing object obj_def456"},
+      {"timestamp": "2023-08-15T10:35:20Z", "level": "info", "message": "Created document doc_mno345"}
+    ]
+  }
+  ```
+</Frame>
+
+## Error Handling
+
+When a task fails, the error field will contain information about the failure:
+
+```json
+{
+  "task_id": "task_stu901",
+  "status": "failed",
+  "progress": 45,
+  "error": {
+    "code": "processing_error",
+    "message": "Failed to process file: Invalid file format",
+    "details": {
+      "file_id": "file_vwx234",
+      "mimetype": "application/octet-stream"
+    }
+  },
+  "logs": [
+    {"timestamp": "2023-08-15T11:20:05Z", "level": "info", "message": "Started processing object obj_yz789"},
+    {"timestamp": "2023-08-15T11:20:15Z", "level": "error", "message": "Failed to process file: Invalid file format"}
+  ]
+}
+```
+
+## Common Task Types
+
+<CardGroup cols={2}>
+  <Card title="pipeline_run" icon="conveyor-belt">
+    Processing an object with a pipeline
+  </Card>
+  
+  <Card title="model_tuning" icon="sliders">
+    Tuning a machine learning model with custom data
+  </Card>
+
+  <Card title="batch_import" icon="file-import">
+    Importing multiple objects in a batch
+  </Card>
+  
+  <Card title="taxonomy_apply" icon="sitemap">
+    Applying a taxonomy to a collection
+  </Card>
+  
+  <Card title="clustering" icon="object-group">
+    Running clustering algorithms on a collection
+  </Card>
+  
+  <Card title="index_rebuild" icon="database">
+    Rebuilding feature store indexes
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use Task IDs" icon="id-badge">
+    Always store task IDs when triggering operations to allow status checking later
+  </Card>
+  
+  <Card title="Implement Timeouts" icon="stopwatch">
+    Add reasonable timeouts when waiting for tasks to complete to avoid blocking indefinitely
+  </Card>
+
+  <Card title="Handle Failures" icon="triangle-exclamation">
+    Implement proper error handling to address failed tasks and understand the cause
+  </Card>
+  
+  <Card title="Use Webhooks" icon="bell">
+    Set up webhooks for task notifications rather than continuous polling for better performance
+  </Card>
+</CardGroup>
+
+## Limitations
+
+<Warning>
+  - Tasks time out after 30 minutes of processing
+  - Task logs are retained for 7 days
+  - Completed task records are retained for 30 days
+  - Maximum of 100 concurrent tasks per namespace
+</Warning>
+
+## API Reference
+
+For complete details on working with tasks, see our [Tasks API Reference](/api-reference/tasks/get-task). 

@@ -1,0 +1,602 @@
+---
+title: "Retrievers"
+description: "Configure and use retrieval pipelines for powerful multimodal search"
+---
+
+<Note>
+  Retrievers are the core search components of Mixpeek, providing flexible and powerful ways to search across your multimodal content with customizable pipelines.
+</Note>
+
+## What are Retrievers?
+
+Retrievers in Mixpeek are configurable search pipelines that allow you to search across your processed content using a combination of vector similarity, metadata filtering, and other search techniques. They provide a flexible way to build sophisticated search experiences tailored to your specific use cases.
+
+<CardGroup cols={2}>
+  <Card title="Search Pipelines" icon="magnifying-glass">
+    Create multi-stage search pipelines that combine different search techniques
+  </Card>
+  
+  <Card title="Multimodal Retrieval" icon="photo-film">
+    Search across text, images, videos, and other content types seamlessly
+  </Card>
+</CardGroup>
+
+## Key Concepts
+
+<AccordionGroup>
+  <Accordion title="Pipeline Stages" icon="layer-group">
+    Retrievers are composed of stages that define how the search is performed. Each stage performs a specific search operation and passes its results to the next stage.
+  </Accordion>
+
+  <Accordion title="Stage Types" icon="boxes-stacked">
+    Different stage types support different search capabilities, such as vector search, filtering, ranking, and rewriting.
+  </Accordion>
+
+  <Accordion title="Input/Output Flow" icon="arrow-right-arrow-left">
+    Each stage can take input from previous stages and provide output to subsequent stages, creating a flexible data flow.
+  </Accordion>
+
+  <Accordion title="Query Parameters" icon="sliders">
+    Retrievers accept query parameters that control how the search is performed, such as text queries, vector embeddings, and filter conditions.
+  </Accordion>
+</AccordionGroup>
+
+## Retriever Architecture
+
+<Frame>
+  ```mermaid
+  graph TD
+    A[User Query] --> B[Retriever Pipeline]
+    B --> C[Stage 1: Vector Search]
+    C --> D[Stage 2: Filtering]
+    D --> E[Stage 3: Ranking]
+    E --> F[Stage 4: Post-Processing]
+    F --> G[Search Results]
+    style A fill:#FC5185,stroke:#333
+    style G fill:#FC5185,stroke:#333
+  ```
+</Frame>
+
+## Creating a Basic Retriever
+
+<CodeGroup>
+  ```python Python
+  from mixpeek import Mixpeek
+  
+  mp = Mixpeek(api_key="YOUR_API_KEY")
+  
+  # Create a basic retriever with a single vector search stage
+  retriever = mp.retrievers.create(
+      namespace_id="ns_abc123",
+      name="simple-search",
+      description="Basic text search across documents",
+      stages=[
+          {
+              "name": "vector_search",
+              "type": "vector",
+              "collection_id": "col_def456",
+              "index": "text",
+              "limit": 20
+          }
+      ]
+  )
+  
+  retriever_id = retriever["retriever_id"]
+  print(f"Created retriever: {retriever_id}")
+  ```
+
+  ```javascript JavaScript
+  import { Mixpeek } from '@mixpeek/sdk';
+  
+  const mp = new Mixpeek({ apiKey: 'YOUR_API_KEY' });
+  
+  // Create a basic retriever with a single vector search stage
+  const retriever = await mp.retrievers.create({
+    namespace_id: "ns_abc123",
+    name: "simple-search",
+    description: "Basic text search across documents",
+    stages: [
+      {
+        name: "vector_search",
+        type: "vector",
+        collection_id: "col_def456",
+        index: "text",
+        limit: 20
+      }
+    ]
+  });
+  
+  const retrieverId = retriever.retriever_id;
+  console.log(`Created retriever: ${retrieverId}`);
+  ```
+
+  ```bash cURL
+  curl -X POST "https://api.mixpeek.com/v1/retrievers" \
+    -H "Authorization: Bearer YOUR_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "namespace_id": "ns_abc123",
+      "name": "simple-search",
+      "description": "Basic text search across documents",
+      "stages": [
+        {
+          "name": "vector_search",
+          "type": "vector",
+          "collection_id": "col_def456",
+          "index": "text",
+          "limit": 20
+        }
+      ]
+    }'
+  ```
+</CodeGroup>
+
+## Searching with a Retriever
+
+Once you've created a retriever, you can use it to search your content:
+
+<CodeGroup>
+  ```python Python
+  # Search using a text query
+  results = mp.retrievers.search(
+      retriever_id=retriever_id,
+      query={
+          "text": "machine learning algorithms for image classification"
+      }
+  )
+  
+  # Display results
+  for result in results["results"]:
+      print(f"Document: {result['document_id']}")
+      print(f"Score: {result['score']}")
+      print(f"Content: {result.get('title', 'N/A')}")
+      print("---")
+  ```
+
+  ```javascript JavaScript
+  // Search using a text query
+  const results = await mp.retrievers.search({
+    retriever_id: retrieverId,
+    query: {
+      text: "machine learning algorithms for image classification"
+    }
+  });
+  
+  // Display results
+  for (const result of results.results) {
+    console.log(`Document: ${result.document_id}`);
+    console.log(`Score: ${result.score}`);
+    console.log(`Content: ${result.title || 'N/A'}`);
+    console.log("---");
+  }
+  ```
+
+  ```bash cURL
+  curl -X POST "https://api.mixpeek.com/v1/retrievers/RETRIEVER_ID/search" \
+    -H "Authorization: Bearer YOUR_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "query": {
+        "text": "machine learning algorithms for image classification"
+      }
+    }'
+  ```
+</CodeGroup>
+
+## Advanced Multi-Stage Retriever
+
+For more sophisticated search experiences, you can create retrievers with multiple stages:
+
+```python
+# Create an advanced retriever with multiple stages
+advanced_retriever = mp.retrievers.create(
+    namespace_id="ns_abc123",
+    name="advanced-search",
+    description="Advanced search with multiple stages",
+    stages=[
+        {
+            "name": "vector_search",
+            "type": "vector",
+            "collection_id": "col_def456",
+            "index": "multimodal",
+            "limit": 100
+        },
+        {
+            "name": "pre_filter",
+            "type": "filter",
+            "input": "vector_search.results",
+            "filter": {
+                "document_type": "article",
+                "publish_date": {"$gte": "2022-01-01T00:00:00Z"}
+            },
+            "limit": 50
+        },
+        {
+            "name": "hybrid_rank",
+            "type": "rank",
+            "input": "pre_filter.results",
+            "weights": {
+                "vector_score": 0.7,
+                "recency": 0.3
+            },
+            "limit": 20
+        }
+    ]
+)
+
+# Search with the advanced retriever
+results = mp.retrievers.search(
+    retriever_id=advanced_retriever["retriever_id"],
+    query={
+        "text": "latest advancements in artificial intelligence",
+        "image_url": "https://example.com/ai-conference.jpg"
+    }
+)
+```
+
+## Stage Types
+
+<Tabs>
+  <Tab title="Vector Search">
+    ```json
+    {
+      "name": "vector_search",
+      "type": "vector",
+      "collection_id": "col_def456",
+      "index": "text",        // Which vector index to use: "text", "image", "multimodal"
+      "limit": 50,            // Maximum number of results
+      "query_field": "text",  // Which query field to use for embeddings
+      "threshold": 0.7        // Optional similarity threshold (0-1)
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Filter">
+    ```json
+    {
+      "name": "filter_stage",
+      "type": "filter",
+      "input": "vector_search.results",  // Input from previous stage
+      "filter": {
+        "category": {"$in": ["technology", "science"]},
+        "rating": {"$gte": 4.0},
+        "tags": {"$contains": "AI"}
+      },
+      "limit": 20
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Rank">
+    ```json
+    {
+      "name": "ranking_stage",
+      "type": "rank",
+      "input": "filter_stage.results",
+      "weights": {
+        "vector_score": 0.6,
+        "recency": 0.2,
+        "popularity": 0.2
+      },
+      "ranking_function": "weighted_sum",  // or "bm25", "custom"
+      "limit": 10
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Rewrite">
+    ```json
+    {
+      "name": "query_rewrite",
+      "type": "rewrite",
+      "model": "text",
+      "strategy": "expansion",  // or "clarification", "correction"
+      "limit": 1
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Stage Input/Output Flow
+
+Stages in a retriever pipeline pass data to each other using a simple dot notation:
+
+```
+stage_name.results
+```
+
+For example, a filter stage can take input from a vector search stage:
+
+```json
+{
+  "name": "filter_stage",
+  "type": "filter",
+  "input": "vector_search.results",
+  "filter": {...}
+}
+```
+
+This allows for flexible pipelines where stages can be chained together in various ways:
+
+<Frame>
+  ```mermaid
+  graph TD
+    A[User Query] --> B[vector_search]
+    B --> C[filter_stage]
+    B --> D[alternative_filter]
+    C --> E[ranking_stage]
+    D --> F[secondary_ranking]
+    E --> G[final_results]
+    F --> G
+    style A fill:#FC5185,stroke:#333
+    style G fill:#FC5185,stroke:#333
+  ```
+</Frame>
+
+## Query Parameters
+
+Different retriever stages can utilize different query parameters:
+
+<AccordionGroup>
+  <Accordion title="Text Queries" icon="font">
+    ```json
+    {
+      "text": "machine learning algorithms"
+    }
+    ```
+    
+    Text queries are automatically converted to embeddings for vector search.
+  </Accordion>
+
+  <Accordion title="Image Queries" icon="image">
+    ```json
+    {
+      "image_url": "https://example.com/image.jpg"
+    }
+    ```
+    
+    Image URLs are processed to extract visual embeddings.
+  </Accordion>
+
+  <Accordion title="Hybrid Queries" icon="object-group">
+    ```json
+    {
+      "text": "red dress with floral pattern",
+      "image_url": "https://example.com/dress-example.jpg"
+    }
+    ```
+    
+    Combining text and image for multimodal search.
+  </Accordion>
+
+  <Accordion title="Vector Queries" icon="network-wired">
+    ```json
+    {
+      "vector": [0.1, 0.2, 0.3, ...],
+      "index": "text"
+    }
+    ```
+    
+    Directly provide vector embeddings for search.
+  </Accordion>
+</AccordionGroup>
+
+## Retriever Use Cases
+
+<CardGroup cols={2}>
+  <Card title="E-commerce Product Search" icon="shopping-cart">
+    ```json
+    {
+      "stages": [
+        {
+          "name": "vector_search",
+          "type": "vector",
+          "collection_id": "col_products",
+          "index": "multimodal"
+        },
+        {
+          "name": "category_filter",
+          "type": "filter",
+          "input": "vector_search.results",
+          "filter": {
+            "category": {"$in": ["clothing", "accessories"]}
+          }
+        },
+        {
+          "name": "price_filter",
+          "type": "filter",
+          "input": "category_filter.results",
+          "filter": {
+            "price": {"$lte": 100}
+          }
+        }
+      ]
+    }
+    ```
+  </Card>
+  
+  <Card title="Content Recommendation" icon="newspaper">
+    ```json
+    {
+      "stages": [
+        {
+          "name": "content_search",
+          "type": "vector",
+          "collection_id": "col_articles",
+          "index": "text"
+        },
+        {
+          "name": "recency_filter",
+          "type": "filter",
+          "input": "content_search.results",
+          "filter": {
+            "publish_date": {"$gte": "2023-01-01T00:00:00Z"}
+          }
+        },
+        {
+          "name": "personalization",
+          "type": "rank",
+          "input": "recency_filter.results",
+          "weights": {
+            "vector_score": 0.6,
+            "user_interests": 0.3,
+            "recency": 0.1
+          }
+        }
+      ]
+    }
+    ```
+  </Card>
+</CardGroup>
+
+<CardGroup cols={2}>
+  <Card title="Video Scene Search" icon="video">
+    ```json
+    {
+      "stages": [
+        {
+          "name": "scene_search",
+          "type": "vector",
+          "collection_id": "col_video_scenes",
+          "index": "multimodal"
+        },
+        {
+          "name": "content_filter",
+          "type": "filter",
+          "input": "scene_search.results",
+          "filter": {
+            "detected_objects": {"$contains": "person"}
+          }
+        },
+        {
+          "name": "transcript_search",
+          "type": "vector",
+          "collection_id": "col_video_scenes",
+          "index": "text",
+          "query_field": "text"
+        },
+        {
+          "name": "combined_results",
+          "type": "merge",
+          "inputs": ["content_filter.results", "transcript_search.results"],
+          "strategy": "interleave"
+        }
+      ]
+    }
+    ```
+  </Card>
+  
+  <Card title="Document Search" icon="file-lines">
+    ```json
+    {
+      "stages": [
+        {
+          "name": "query_expansion",
+          "type": "rewrite",
+          "strategy": "expansion"
+        },
+        {
+          "name": "document_search",
+          "type": "vector",
+          "collection_id": "col_documents",
+          "index": "text",
+          "input": "query_expansion.results"
+        },
+        {
+          "name": "metadata_filter",
+          "type": "filter",
+          "input": "document_search.results",
+          "filter": {
+            "document_type": {"$in": ["report", "whitepaper"]},
+            "access_level": {"$lte": 2}
+          }
+        }
+      ]
+    }
+    ```
+  </Card>
+</CardGroup>
+
+## Filters and Query Operators
+
+Mixpeek supports a rich set of filter operators for retriever stages:
+
+<AccordionGroup>
+  <Accordion title="Comparison Operators" icon="greater-than">
+    | Operator | Description | Example |
+    |----------|-------------|---------|
+    | `$eq` | Equals | `{"field": {"$eq": value}}` |
+    | `$ne` | Not equals | `{"field": {"$ne": value}}` |
+    | `$gt` | Greater than | `{"field": {"$gt": value}}` |
+    | `$gte` | Greater than or equal | `{"field": {"$gte": value}}` |
+    | `$lt` | Less than | `{"field": {"$lt": value}}` |
+    | `$lte` | Less than or equal | `{"field": {"$lte": value}}` |
+  </Accordion>
+
+  <Accordion title="Logical Operators" icon="code-branch">
+    | Operator | Description | Example |
+    |----------|-------------|---------|
+    | `$and` | Logical AND | `{"$and": [{...}, {...}]}` |
+    | `$or` | Logical OR | `{"$or": [{...}, {...}]}` |
+    | `$not` | Logical NOT | `{"$not": {...}}` |
+  </Accordion>
+
+  <Accordion title="Array Operators" icon="list">
+    | Operator | Description | Example |
+    |----------|-------------|---------|
+    | `$in` | In array | `{"field": {"$in": [value1, value2]}}` |
+    | `$nin` | Not in array | `{"field": {"$nin": [value1, value2]}}` |
+    | `$all` | Contains all | `{"field": {"$all": [value1, value2]}}` |
+    | `$contains` | Contains element | `{"field": {"$contains": value}}` |
+  </Accordion>
+
+  <Accordion title="Text Search Operators" icon="font">
+    | Operator | Description | Example |
+    |----------|-------------|---------|
+    | `$text` | Full-text search | `{"field": {"$text": "search terms"}}` |
+    | `$regex` | Regular expression | `{"field": {"$regex": "pattern"}}` |
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<Steps>
+  <Step title="Start Simple">
+    Begin with a simple retriever design and add complexity as needed. Often a basic vector search with filtering is sufficient.
+  </Step>
+  <Step title="Use Appropriate Indexes">
+    Choose the right vector indexes for your content type. Use "text" for text-heavy content, "multimodal" for mixed content, and "image" for visual search.
+  </Step>
+  <Step title="Pre-filter When Possible">
+    Apply metadata filters early in the pipeline to reduce the number of documents that need vector similarity calculation.
+  </Step>
+  <Step title="Mind Your Limits">
+    Set appropriate limits at each stage. Start with larger limits in early stages and narrow down in later stages.
+  </Step>
+</Steps>
+
+<Warning>
+  Complex retrievers with many stages can impact search latency. Start with a simple design and add complexity only when needed for your use case.
+</Warning>
+
+## Retrievers vs Direct Document Queries
+
+<CardGroup cols={2}>
+  <Card title="When to Use Retrievers" icon="magnifying-glass">
+    - Semantic search based on meaning
+    - Multimodal search across different content types
+    - Complex search pipelines with multiple stages
+    - When relevance ranking is important
+  </Card>
+  
+  <Card title="When to Use Document Queries" icon="filter">
+    - Simple metadata filtering
+    - Exact match requirements
+    - When performance is critical for simple queries
+    - For administrative operations
+  </Card>
+</CardGroup>
+
+## API Reference
+
+For complete details on working with retrievers, see our [Retrievers API Reference](/api-reference/retrievers/create-retriever). 

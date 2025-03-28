@@ -1,0 +1,237 @@
+---
+title: "Features"
+description: "Understanding features and feature extraction in Mixpeek"
+---
+
+<Note>
+  Features are the extracted data elements that represent the content and characteristics of your documents. They are the building blocks that enable advanced search and retrieval capabilities.
+</Note>
+
+## What are Features?
+
+Features in Mixpeek are structured data elements extracted from your content during processing. They represent specific aspects of your data such as:
+
+- Text embeddings
+- Image descriptors
+- Audio transcriptions
+- Video scene information
+- PDF content structures
+- Detected entities and concepts
+
+<Frame>
+  ```mermaid
+  graph TD
+    A[Raw Content] --> B[Feature Extractors]
+    B --> C[Features]
+    C --> D[Feature Store]
+    D --> E[Retrieval System]
+    
+    style B fill:#FC5185,stroke:#333
+    style C fill:#FC5185,stroke:#333
+    style D fill:#FC5185,stroke:#333
+  ```
+</Frame>
+
+## Types of Features
+
+<CardGroup cols={2}>
+  <Card title="Vector Embeddings" icon="brain">
+    High-dimensional numerical representations of content that capture semantic meaning
+  </Card>
+  
+  <Card title="Metadata Features" icon="tags">
+    Structured data fields such as categories, timestamps, and attributes
+  </Card>
+  
+  <Card title="Media-Specific Features" icon="photo-film">
+    Specialized features like image scene classifications, video timestamps, or audio speaker identification
+  </Card>
+  
+  <Card title="Relational Features" icon="diagram-project">
+    Features that establish connections between different content items
+  </Card>
+</CardGroup>
+
+## Feature Storage
+
+Features are stored in specialized feature stores optimized for efficient retrieval. Unlike traditional database columns, feature stores are designed to handle:
+
+- High-dimensional vector data
+- Efficient similarity searching
+- Specialized indexes for multimodal content
+- Rapid retrieval of specific feature types
+
+```python
+# Example: Retrieving specific features from a document
+from mixpeek import Client
+
+client = Client("YOUR_API_KEY")
+
+# Get embeddings feature from a document
+embedding = client.documents.get_feature(
+    document_id="doc_12345",
+    feature_name="text_embedding"
+)
+
+# Use the embedding for custom operations
+similar_docs = client.collections.search(
+    collection_name="my_collection",
+    vector=embedding,
+    limit=10
+)
+```
+
+<Tabs>
+  <Tab title="Python">
+    ```python
+    # Accessing multiple features from a document
+    features = client.documents.get_features(
+        document_id="doc_12345",
+        feature_names=["text_embedding", "image_objects", "sentiment"]
+    )
+    
+    # Features are returned as a dictionary
+    text_embedding = features["text_embedding"]
+    detected_objects = features["image_objects"]
+    sentiment_score = features["sentiment"]
+    
+    print(f"Document contains {len(detected_objects)} detected objects")
+    print(f"Sentiment score: {sentiment_score}")
+    ```
+  </Tab>
+  
+  <Tab title="JavaScript">
+    ```javascript
+    // Accessing multiple features from a document
+    const features = await client.documents.getFeatures({
+      documentId: "doc_12345",
+      featureNames: ["text_embedding", "image_objects", "sentiment"]
+    });
+    
+    // Features are returned as an object
+    const textEmbedding = features.text_embedding;
+    const detectedObjects = features.image_objects;
+    const sentimentScore = features.sentiment;
+    
+    console.log(`Document contains ${detectedObjects.length} detected objects`);
+    console.log(`Sentiment score: ${sentimentScore}`);
+    ```
+  </Tab>
+  
+  <Tab title="cURL">
+    ```bash
+    curl -X GET "https://api.mixpeek.com/v1/documents/doc_12345/features" \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "feature_names": ["text_embedding", "image_objects", "sentiment"]
+      }'
+    ```
+  </Tab>
+</Tabs>
+
+## Feature Extraction Process
+
+Features are created through feature extractors as part of processing pipelines. This happens in several stages:
+
+<Steps>
+  <Step title="Raw Content Analysis">
+    Content is analyzed based on its type (text, image, video, etc.)
+  </Step>
+  <Step title="Feature Extraction">
+    Specialized extractors process the content to generate features
+  </Step>
+  <Step title="Feature Normalization">
+    Features are normalized into consistent formats
+  </Step>
+  <Step title="Storage">
+    Processed features are stored in optimized feature stores
+  </Step>
+</Steps>
+
+## Common Feature Use Cases
+
+<AccordionGroup>
+  <Accordion title="Semantic Search">
+    Vector embeddings enable semantic similarity search across your content.
+    
+    ```python
+    # Search using semantic similarity
+    results = client.collections.search(
+        collection_name="articles",
+        query="climate change impacts",
+        search_type="semantic",
+        limit=10
+    )
+    ```
+  </Accordion>
+  
+  <Accordion title="Content Filtering">
+    Use extracted metadata features to filter search results.
+    
+    ```python
+    # Filter by specific features
+    filtered_results = client.collections.search(
+        collection_name="product_catalog",
+        query="laptop",
+        filters={
+            "price": {"lte": 1000},
+            "in_stock": True,
+            "categories": {"contains": "electronics"}
+        }
+    )
+    ```
+  </Accordion>
+  
+  <Accordion title="Content Recommendation">
+    Use feature similarity to recommend related content.
+    
+    ```python
+    # Get similar documents based on features
+    similar_products = client.documents.get_similar(
+        document_id="product_123",
+        collection_name="products",
+        feature_name="product_embedding",
+        limit=5
+    )
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Understand Feature Types" icon="lightbulb">
+    Different content requires different feature types. Text works well with embeddings, while images need visual descriptors.
+  </Card>
+  
+  <Card title="Feature Composition" icon="layer-group">
+    Combine multiple features for more accurate retrieval. Text + image features provide better results than either alone.
+  </Card>
+  
+  <Card title="Dimension Management" icon="ruler">
+    Higher dimensions aren't always better. Balance precision against performance based on your use case.
+  </Card>
+  
+  <Card title="Regular Updates" icon="arrows-rotate">
+    As your content evolves, consider reprocessing to generate updated features with the latest extractors.
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+Now that you understand features in Mixpeek, you can:
+
+<CardGroup cols={2}>
+  <Card title="Explore Feature Extractors" icon="microchip" href="/extraction/overview">
+    Learn about the different feature extractors available
+  </Card>
+  
+  <Card title="Configure Processing Pipelines" icon="gears">
+    Set up custom processing pipelines for your content
+  </Card>
+  
+  <Card title="Implement Advanced Search" icon="magnifying-glass" href="/search/retrievers">
+    Use features to power sophisticated search capabilities
+  </Card>
+</CardGroup>

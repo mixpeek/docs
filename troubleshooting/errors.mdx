@@ -1,0 +1,592 @@
+---
+title: "Errors"
+---
+
+<Note>
+  This page documents the various error types you may encounter when working with the Mixpeek API, and provides guidance on how to handle and resolve them.
+</Note>
+
+## Error Response Format
+
+All Mixpeek API errors follow a consistent JSON response format:
+
+```json
+{
+  "success": false,
+  "status": 400,
+  "error": {
+    "message": "The error message with details",
+    "type": "ErrorType",
+    "details": {
+      // Additional error-specific information (optional)
+    }
+  }
+}
+```
+
+<AccordionGroup>
+  <Accordion title="Response Fields">
+    | Field | Description |
+    |-------|-------------|
+    | `success` | Always `false` for error responses |
+    | `status` | HTTP status code |
+    | `error.message` | Human-readable error description |
+    | `error.type` | Error type identifier |
+    | `error.details` | Additional information about the error (optional) |
+  </Accordion>
+
+  <Accordion title="Status Codes">
+    | Status Code | Description |
+    |-------------|-------------|
+    | 400 | Bad Request - The request was malformed or invalid |
+    | 401 | Unauthorized - Authentication is required or failed |
+    | 403 | Forbidden - You don't have permission to access the resource |
+    | 404 | Not Found - The requested resource doesn't exist |
+    | 409 | Conflict - The request conflicts with the current state |
+    | 422 | Validation Error - The request contained invalid data |
+    | 429 | Too Many Requests - Rate limit exceeded |
+    | 500 | Internal Server Error - Server-side error |
+    | 503 | Service Unavailable - The service is temporarily unavailable |
+  </Accordion>
+</AccordionGroup>
+
+## HTTP Errors
+
+These errors represent standard HTTP status code errors.
+
+<Tabs>
+  <Tab title="400 Bad Request">
+    ```json
+    {
+      "success": false,
+      "status": 400,
+      "error": {
+        "message": "Invalid request parameters",
+        "type": "BadRequestError"
+      }
+    }
+    ```
+
+    **Common Causes:**
+    - Missing required fields
+    - Invalid parameter formats
+    - Logical errors in the request
+
+    **Resolution:**
+    - Check your request payload against the API documentation
+    - Ensure all required fields are included
+    - Verify parameter formats (IDs, dates, etc.)
+  </Tab>
+
+  <Tab title="404 Not Found">
+    ```json
+    {
+      "success": false,
+      "status": 404,
+      "error": {
+        "message": "Resource not found",
+        "type": "NotFoundError",
+        "details": {
+          "resource_type": "Document",
+          "resource_id": "doc_12345"
+        }
+      }
+    }
+    ```
+
+    **Common Causes:**
+    - Incorrect ID or resource identifier
+    - Resource has been deleted
+    - Resource exists in a different namespace
+
+    **Resolution:**
+    - Verify the resource ID exists
+    - Check namespace and context
+    - Ensure the resource hasn't been deleted
+  </Tab>
+
+  <Tab title="409 Conflict">
+    ```json
+    {
+      "success": false,
+      "status": 409,
+      "error": {
+        "message": "Resource already exists",
+        "type": "AlreadyExistsError",
+        "details": {
+          "resource_type": "Collection",
+          "resource_id": "collection_12345"
+        }
+      }
+    }
+    ```
+
+    **Common Causes:**
+    - Attempting to create a resource with a name/ID that already exists
+    - Race conditions when creating resources
+    
+    **Resolution:**
+    - Use unique identifiers for new resources
+    - Implement idempotent creation methods
+    - Check if the resource exists before creating it
+  </Tab>
+
+  <Tab title="429 Too Many Requests">
+    ```json
+    {
+      "success": false,
+      "status": 429,
+      "error": {
+        "message": "Rate limit exceeded. Please retry after 35 seconds.",
+        "type": "TooManyRequestsError",
+        "details": {
+          "retry_after": 35
+        }
+      }
+    }
+    ```
+
+    **Common Causes:**
+    - Exceeding API rate limits
+    - Too many concurrent requests
+    
+    **Resolution:**
+    - Implement exponential backoff
+    - Check the `retry_after` value in the response
+    - Consider upgrading your plan for higher limits
+  </Tab>
+</Tabs>
+
+## Processing Errors
+
+Errors that occur during the content processing pipeline.
+
+<CardGroup cols={2}>
+  <Card title="ProcessingError" icon="triangle-exclamation">
+    General processing error that occurs during content processing.
+    
+    ```json
+    {
+      "success": false,
+      "status": 500,
+      "error": {
+        "message": "Error processing document",
+        "type": "ProcessingError"
+      }
+    }
+    ```
+  </Card>
+  
+  <Card title="FeatureExtractionError" icon="microchip">
+    Error during feature extraction phase of processing.
+    
+    ```json
+    {
+      "success": false,
+      "status": 500,
+      "error": {
+        "message": "Failed to extract image features",
+        "type": "FeatureExtractionError",
+        "details": {
+          "extractor": "image_embeddings"
+        }
+      }
+    }
+    ```
+  </Card>
+
+  <Card title="SchemaValidationError" icon="file-contract">
+    Invalid schema or data format during processing.
+    
+    ```json
+    {
+      "success": false,
+      "status": 400,
+      "error": {
+        "message": "Schema validation failed",
+        "type": "SchemaValidationError",
+        "details": {
+          "field": "metadata.dimensions",
+          "error": "Expected array, got string"
+        }
+      }
+    }
+    ```
+  </Card>
+
+  <Card title="ParallelExecutionError" icon="network-wired">
+    Error in parallel processing of content.
+    
+    ```json
+    {
+      "success": false,
+      "status": 500,
+      "error": {
+        "message": "Parallel execution failed",
+        "type": "ParallelExecutionError"
+      }
+    }
+    ```
+  </Card>
+</CardGroup>
+
+### Handling Processing Errors
+
+Processing errors often involve large files or complex operations. Follow these guidelines:
+
+<Steps>
+  <Step title="Check File Formats">
+    Ensure your files meet the requirements specified in the [Supported Formats](/overview/limits) documentation.
+  </Step>
+  <Step title="Review Task Status">
+    For long-running operations, check the task status endpoint to get detailed progress information.
+  </Step>
+  <Step title="Process in Smaller Batches">
+    If processing large collections, try breaking them into smaller batches to identify problematic content.
+  </Step>
+  <Step title="Check Logs">
+    If you're on the Business or Enterprise tier, contact support to review processing logs for your specific errors.
+  </Step>
+</Steps>
+
+## Storage Errors
+
+Errors related to object storage and data persistence.
+
+<AccordionGroup>
+  <Accordion title="StorageError">
+    Base storage error that indicates problems with the storage subsystem.
+    
+    ```json
+    {
+      "success": false,
+      "status": 500,
+      "error": {
+        "message": "Failed to store object",
+        "type": "StorageError"
+      }
+    }
+    ```
+    
+    **Resolution:**
+    - Check file permissions
+    - Verify storage quota hasn't been exceeded
+    - Ensure file paths are valid
+  </Accordion>
+  
+  <Accordion title="S3StorageError">
+    Specific to S3 object storage issues.
+    
+    ```json
+    {
+      "success": false,
+      "status": 500,
+      "error": {
+        "message": "Failed to upload to S3",
+        "type": "S3StorageError"
+      }
+    }
+    ```
+    
+    **Resolution:**
+    - Verify network connectivity
+    - Check if the file size exceeds S3 limits
+    - Ensure proper permissions are set
+  </Accordion>
+
+  <Accordion title="MimeTypeError">
+    Indicates an unsupported file type was provided.
+    
+    ```json
+    {
+      "success": false,
+      "status": 400,
+      "error": {
+        "message": "Unsupported MIME type: application/octet-stream",
+        "type": "MimeTypeError",
+        "details": {
+          "provided_mime": "application/octet-stream",
+          "supported_mimes": ["image/jpeg", "image/png", "application/pdf"]
+        }
+      }
+    }
+    ```
+    
+    **Resolution:**
+    - Convert the file to a supported format
+    - Check the [Supported Formats](/overview/limits) documentation
+    - Ensure proper file extensions are used
+  </Accordion>
+</AccordionGroup>
+
+## Database Errors
+
+Errors related to database operations.
+
+<CardGroup cols={2}>
+  <Card title="QdrantError" icon="database">
+    Vector database operations error.
+    
+    ```json
+    {
+      "success": false,
+      "status": 500,
+      "error": {
+        "message": "Vector database operation failed",
+        "type": "QdrantDatabaseError"
+      }
+    }
+    ```
+  </Card>
+  
+  <Card title="MongoDBError" icon="database">
+    Document database operations error.
+    
+    ```json
+    {
+      "success": false,
+      "status": 500,
+      "error": {
+        "message": "Failed to query MongoDB",
+        "type": "DatabaseError"
+      }
+    }
+    ```
+  </Card>
+
+  <Card title="DBWriterError" icon="pen-to-square">
+    Error during database write operations.
+    
+    ```json
+    {
+      "success": false,
+      "status": 500,
+      "error": {
+        "message": "Failed to write document to database",
+        "type": "DBWriterError"
+      }
+    }
+    ```
+  </Card>
+</CardGroup>
+
+## Workflow Errors
+
+Errors related to workflow orchestration and pipeline execution.
+
+<AccordionGroup>
+  <Accordion title="PipelineError">
+    General pipeline processing error.
+    
+    ```json
+    {
+      "success": false,
+      "status": 500,
+      "error": {
+        "message": "Pipeline processing error",
+        "type": "PipelineError",
+        "details": {
+          "pipeline_id": "pipeline_12345"
+        }
+      }
+    }
+    ```
+    
+    **Resolution:**
+    - Check pipeline configuration
+    - Review task logs for specific failure points
+    - Verify input data meets pipeline requirements
+  </Accordion>
+  
+  <Accordion title="PrefectError">
+    Workflow orchestration error.
+    
+    ```json
+    {
+      "success": false,
+      "status": 500,
+      "error": {
+        "message": "Workflow orchestration error",
+        "type": "PrefectError",
+        "details": {
+          "flow_id": "flow_12345"
+        }
+      }
+    }
+    ```
+    
+    **Resolution:**
+    - Check for service disruptions
+    - Verify workflow configuration
+    - Review task dependencies
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices for Error Handling
+
+<CardGroup cols={2}>
+  <Card title="Implement Retry Logic" icon="rotate">
+    Use exponential backoff for retriable errors (429, 503).
+    
+    ```javascript
+    async function fetchWithRetry(url, options, maxRetries = 3) {
+      let retries = 0;
+      while (retries < maxRetries) {
+        try {
+          const response = await fetch(url, options);
+          if (response.status === 429) {
+            const data = await response.json();
+            const retryAfter = data.error.details?.retry_after || 1;
+            await new Promise(r => setTimeout(r, retryAfter * 1000));
+            retries++;
+            continue;
+          }
+          return response;
+        } catch (err) {
+          if (retries === maxRetries - 1) throw err;
+          retries++;
+          await new Promise(r => setTimeout(r, 2 ** retries * 1000));
+        }
+      }
+    }
+    ```
+  </Card>
+  
+  <Card title="Check Task Status" icon="clipboard-check">
+    For long-running operations, poll the task status endpoint.
+    
+    ```javascript
+    async function checkTaskCompletion(taskId) {
+      let completed = false;
+      while (!completed) {
+        const response = await fetch(`/api/tasks/${taskId}`);
+        const data = await response.json();
+        
+        if (data.status === 'completed') {
+          return data.result;
+        } else if (data.status === 'failed') {
+          throw new Error(data.error.message);
+        }
+        
+        // Wait 2 seconds before polling again
+        await new Promise(r => setTimeout(r, 2000));
+      }
+    }
+    ```
+  </Card>
+
+  <Card title="Validate Before Submitting" icon="check-double">
+    Perform client-side validation to catch errors early.
+    
+    ```javascript
+    function validateDocument(doc) {
+      const errors = [];
+      
+      if (!doc.title) errors.push('Title is required');
+      if (doc.metadata && typeof doc.metadata !== 'object') {
+        errors.push('Metadata must be an object');
+      }
+      
+      return errors.length ? errors : null;
+    }
+    ```
+  </Card>
+
+  <Card title="Log Error Responses" icon="file-lines">
+    Log complete error responses for troubleshooting.
+    
+    ```javascript
+    async function apiCall(endpoint, options) {
+      try {
+        const response = await fetch(endpoint, options);
+        const data = await response.json();
+        
+        if (!data.success) {
+          console.error('API Error:', {
+            endpoint,
+            status: data.status,
+            error: data.error
+          });
+          throw new Error(data.error.message);
+        }
+        
+        return data;
+      } catch (err) {
+        // Re-throw to handle in calling code
+        throw err;
+      }
+    }
+    ```
+  </Card>
+</CardGroup>
+
+## Common Errors and Solutions
+
+<Table>
+  <Thead>
+    <Tr>
+      <Th>Error Type</Th>
+      <Th>Common Cause</Th>
+      <Th>Solution</Th>
+    </Tr>
+  </Thead>
+  <Tbody>
+    <Tr>
+      <Td>NotFoundError</Td>
+      <Td>Resource ID doesn't exist or was deleted</Td>
+      <Td>Verify IDs and check if the resource was deleted</Td>
+    </Tr>
+    <Tr>
+      <Td>ValidationError</Td>
+      <Td>Invalid data format or missing required fields</Td>
+      <Td>Check the API documentation for required fields and formats</Td>
+    </Tr>
+    <Tr>
+      <Td>TooManyRequestsError</Td>
+      <Td>Rate limit exceeded</Td>
+      <Td>Implement backoff with the provided retry_after value</Td>
+    </Tr>
+    <Tr>
+      <Td>FeatureExtractionError</Td>
+      <Td>Content format issue or corrupted file</Td>
+      <Td>Verify file integrity and ensure it matches supported formats</Td>
+    </Tr>
+    <Tr>
+      <Td>MimeTypeError</Td>
+      <Td>Unsupported file type</Td>
+      <Td>Convert to a supported format listed in the docs</Td>
+    </Tr>
+    <Tr>
+      <Td>S3StorageError</Td>
+      <Td>Network issues or file size too large</Td>
+      <Td>Check network connection and file size limits</Td>
+    </Tr>
+    <Tr>
+      <Td>TimeoutError</Td>
+      <Td>Operation took too long to complete</Td>
+      <Td>Break large operations into smaller batches</Td>
+    </Tr>
+  </Tbody>
+</Table>
+
+## Contacting Support
+
+If you encounter persistent errors or need help troubleshooting specific issues, contact our support team with the following information:
+
+<CheckboxGroup>
+  <Checkbox>Error message and type from the API response</Checkbox>
+  <Checkbox>Request details (endpoint, method, parameters)</Checkbox>
+  <Checkbox>Timestamp of when the error occurred</Checkbox>
+  <Checkbox>Any steps you've already taken to resolve the issue</Checkbox>
+  <Checkbox>Your account ID or namespace</Checkbox>
+</CheckboxGroup>
+
+<CardGroup cols={2}>
+  <Card title="Email Support" icon="envelope" href="mailto:support@mixpeek.com">
+    Send details to support@mixpeek.com
+  </Card>
+  
+  <Card title="Developer Community" icon="users" href="https://community.mixpeek.com">
+    Ask questions in our community forum
+  </Card>
+</CardGroup> 

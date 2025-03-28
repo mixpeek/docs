@@ -51,16 +51,6 @@
       "name": "Engineering Blog",
       "icon": "book-open",
       "url": "https://mixpeek.com/blog"
-    },
-    {
-      "name": "Multimodal University",
-      "icon": "graduation-cap",
-      "url": "https://mixpeek.com/learn"
-    },
-    {
-      "name": "Community",
-      "icon": "users",
-      "url": "https://mixpeek.com/community"
     }
   ],
   "primaryTab": {
@@ -72,175 +62,63 @@
       "default": true
     }
   ],
-  "tabs": [
-    {
-      "name": "API Reference",
-      "url": "api-reference"
-    },
-    {
-      "name": "Integrations",
-      "url": "integrations"
-    },
-    {
-      "name": "Changelog",
-      "url": "changelog"
-    }
-  ],
   "navigation": [
     {
-      "group": "Getting Started",
+      "group": "Overview",
       "pages": [
         "overview/introduction",
-        "overview/quickstart",
-        "overview/how-it-works",
-        "overview/benefits",
-        "overview/limits"
+        "overview/concepts",
+        "overview/quickstart"
       ]
     },
     {
-      "group": "Core Concepts",
+      "group": "Data Management",
       "pages": [
-        "concepts/overview",
-        "concepts/collections",
-        "concepts/namespaces",
-        "concepts/assets",
-        "concepts/tasks"
+        "management/namespaces",
+        "management/buckets",
+        "management/objects",
+        "management/blobs",
+        "management/collections",
+        "management/documents",
+        "management/features"
       ]
     },
     {
-      "group": "Models & Processing",
+      "group": "Data Processing",
       "pages": [
-        "ingestion/extractors",
-        "models/available-models",
-        "models/fine-tuning"
-      ]
-    },
-    {
-      "group": "Entities & Enrichment",
-      "pages": [
-        "entities/taxonomies",
-        "entities/clusters",
-        "entities/relationships"
+        {
+          "group": "Feature Extractors",
+          "pages": [
+            "extraction/overview",
+            "extraction/extractors/scene-splitting"
+          ]
+        },
+        "processing/model-tuning",
+        "processing/tasks"
       ]
     },
     {
       "group": "Search & Retrieval",
       "pages": [
-        "search/queries",
+        "search/retrievers",
+        "search/stages",
         "search/filters",
-        "search/group",
-        "search/rerank"
+        "search/interactions",
+        "search/research"
       ]
     },
     {
-      "group": "Databases",
+      "group": "Data Enrichment",
       "pages": [
-        "integrations/embedding-storage",
-        "integrations/databases/timescale",
-        "integrations/databases/mongodb",
-        "integrations/databases/supabase",
-        "integrations/databases/postgresql",
-        "integrations/databases/pinecone",
-        "integrations/databases/weaviate",
-        "integrations/databases/qdrant",
-        "integrations/databases/redis"
+        "enrichment/taxonomies",
+        "enrichment/clusters"
       ]
     },
     {
-      "group": "Health",
+      "group": "Troubleshooting",
       "pages": [
-        "api-reference/health/healthcheck"
-      ]
-    },
-    {
-      "group": "Features",
-      "pages": [
-        "api-reference/feature-search/search-features",
-        "api-reference/features/get-feature",
-        "api-reference/features/full-feature-update",
-        "api-reference/features/delete-feature",
-        "api-reference/features/list-features"
-      ]
-    },
-    {
-      "group": "Ingest Assets",
-      "pages": [
-        "api-reference/ingest-assets/ingest-text",
-        "api-reference/ingest-assets/ingest-video-url",
-        "api-reference/ingest-assets/ingest-image-url"
-      ]
-    },
-    {
-      "group": "Entities",
-      "pages": [
-        {
-          "group": "Taxonomy",
-          "pages": [
-            "api-reference/taxonomy-entities/list-taxonomies",
-            "api-reference/taxonomy-entities/create-taxonomy",
-            "api-reference/taxonomy-entities/get-taxonomy",
-            "api-reference/taxonomy-entities/delete-taxonomy",
-            "api-reference/taxonomy-entities/update-taxonomy",
-            "api-reference/taxonomy-entities/get-taxonomy-node",
-            "api-reference/taxonomy-entities/update-node",
-            "api-reference/taxonomy-entities/classify-features-against-taxonomy",
-            "api-reference/taxonomy-entities/list-taxonomy-classifications",
-            "api-reference/taxonomy-entities/delete-classifications"
-          ]
-        }
-      ]
-    },
-    {
-      "group": "Assets",
-      "pages": [
-        "api-reference/assets/get-asset",
-        "api-reference/assets/full-asset-update",
-        "api-reference/assets/delete-asset",
-        "api-reference/assets/partial-asset-update",
-        "api-reference/assets/get-asset-with-features",
-        "api-reference/assets/list-assets",
-        "api-reference/assets/search-assets"
-      ]
-    },
-    {
-      "group": "Collections",
-      "pages": [
-        "api-reference/collections/list-collections",
-        "api-reference/collections/create-collection",
-        "api-reference/collections/get-collection",
-        "api-reference/collections/update-collection",
-        "api-reference/collections/delete-collection"
-      ]
-    },
-    {
-      "group": "Namespaces",
-      "pages": [
-        "api-reference/namespaces/list-namespaces",
-        "api-reference/namespaces/create-namespace",
-        "api-reference/namespaces/get-namespace",
-        "api-reference/namespaces/update-namespace",
-        "api-reference/namespaces/delete-namespace",
-        "api-reference/namespaces/list-available-models"
-      ]
-    },
-    {
-      "group": "Feature Extractors",
-      "pages": [
-        "api-reference/feature-extractors/extract-embeddings"
-      ]
-    },
-    {
-      "group": "Tasks",
-      "pages": [
-        "api-reference/tasks/get-task-information",
-        "api-reference/tasks/kill-task",
-        "api-reference/tasks/list-active-tasks"
-      ]
-    },
-    {
-      "group": "Changelog",
-      "pages": [
-        "changelog/overview"
+        "troubleshooting/errors",
+        "troubleshooting/limits"
       ]
     }
   ],
