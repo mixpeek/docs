@@ -1,7 +1,7 @@
 ---
 description: 
 globs: 
-alwaysApply: true
+alwaysApply: false
 ---
 # Mixpeek Multimodal Pipeline & Retrieval Platform - User Requirements Document
 

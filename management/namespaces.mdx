@@ -8,7 +8,7 @@ description: "Isolated environments for organizing and managing your Mixpeek res
 
 ## Overview
 
-Namespaces are logical containers that help organize and isolate your Mixpeek resources. They serve as the highest-level organizational unit, similar to databases in traditional systems. Each namespace maintains its own:
+They serve as the highest-level organizational unit, similar to databases in traditional systems. Each namespace maintains its own:
 
 - Buckets and Objects
 - Collections and Documents
@@ -23,7 +23,7 @@ Namespaces are logical containers that help organize and isolate your Mixpeek re
   src="https://d8ts56gtwtyh1.cloudfront.net/docs/warehouse/namespace.mp4"
   title="YouTube video player"
   frameborder="0"
-  allow="accelerometer; autoplay; muted"
+  allow="autoplay; muted"
   allowfullscreen
   autoplay
   muted
@@ -34,8 +34,24 @@ When you create a namespace, you select the features you want to make available 
 
 Payload indexes are however mutable, they can be modified whenever. Payload indexes are important to specify in order to ensure your queries remain performant as the contents of your namespace scales. 
 
-![Namespace Settings](https://d8ts56gtwtyh1.cloudfront.net/docs/warehouse/images/namespace_settings.jpg)
 
+## Usage
+
+```python
+# Create a namespace
+namespace = mp.namespaces.create(
+    name="quickstart",
+    description="My first Mixpeek project",
+    feature_extractors: [
+    {
+      "feature_extractor_name": "text-extractor",
+    }
+  ]
+)
+namespace_id = namespace["namespace_id"]
+```
+
+![Namespace Settings](https://d8ts56gtwtyh1.cloudfront.net/docs/warehouse/images/namespace_settings.jpg)
 
 ### Common Use Cases
 
@@ -57,43 +73,48 @@ Payload indexes are however mutable, they can be modified whenever. Payload inde
   </Card>
 </CardGroup>
 
-### Best Practices
+## Best Practices
 
-#### Namespace Organization
+### Namespace Organization
 
 - Use clear, consistent naming conventions
 - Create separate namespaces for different environments
 - Consider data isolation requirements when planning namespace structure
 - Document namespace purpose and contents
 
-#### Resource Management
+### Resource Management
 
 - Regularly audit namespace contents
 - Clean up unused resources within namespaces
 - Monitor namespace usage and quotas
 - Implement proper access controls
 
-## Vector Indexes
+### Index Mutability
 
-Vector indexes are immutable configurations that define how feature vectors (like embeddings) are stored and searched within your namespace. They are:
-- Set during namespace creation
-- Cannot be modified after namespace creation
-- Determine which feature extractors are available
-- Optimize vector similarity search performance
+<Tabs>
+  <Tab title="Vector Indexes">
+    Vector indexes are immutable configurations that define how feature vectors (like embeddings) are stored and searched within your namespace. They are:
 
-## Payload Indexes
+    - Set during namespace creation
+    - Cannot be modified after namespace creation
+    - Determine which feature extractors are available
+    - Optimize vector similarity search performance
+  </Tab>
+  
+  <Tab title="Payload Indexes">
+    Payload indexes are mutable configurations that optimize queries on document fields within your namespace. They:
 
-Payload indexes are mutable configurations that optimize queries on document fields within your namespace. They:
-- Can be modified at any time
-- Help maintain query performance as your data scales
-- Support efficient filtering and sorting operations
-- Are recommended for frequently queried fields
-
+    - Can be modified at any time
+    - Help maintain query performance as your data scales
+    - Support efficient filtering and sorting operations
+    - Are recommended for frequently queried fields
+  </Tab>
+</Tabs>
 
 ## Limitations
 
-- Maximum number of namespaces per account: 100
-- Namespace names must be unique within your account
-- Namespace names can only contain lowercase letters, numbers, and hyphens
-- Resources cannot be moved between namespaces
-- Cross-namespace queries are not supported
+- **Maximum Namespace Count:** Maximum number of namespaces per account: 100
+- **Namespace Uniqueness:** Namespace names must be unique within your account
+- **Naming Constraints:** Namespace names can only contain lowercase letters, numbers, and hyphens
+- **Resource Isolation:** Resources cannot be moved between namespaces
+- **Query Boundaries:** Cross-namespace queries are not supported

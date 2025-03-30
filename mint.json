@@ -62,6 +62,16 @@
       "default": true
     }
   ],
+  "tabs": [
+    {
+      "name": "API Reference",
+      "url": "api-reference"
+    },
+    {
+      "name": "Studio",
+      "url": "studio"
+    }
+  ],
   "navigation": [
     {
       "group": "Overview",
@@ -126,6 +136,18 @@
       "pages": [
         "troubleshooting/errors",
         "troubleshooting/limits"
+      ]
+    },
+    {
+      "group": "Pages",
+      "pages": [
+        "studio/overview"
+      ]
+    },
+    {
+      "group": "Health",
+      "pages": [
+        "api-reference/health/healthcheck"
       ]
     }
   ],

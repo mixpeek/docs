@@ -158,41 +158,41 @@ Once your blobs are processing into objects, they maintain the prefix structure 
 
 ### Supported File Types
 
-<AccordionGroup>
-  <Accordion title="Images">
+<Tabs>
+  <Tab title="Images">
     | Format | MIME Type | Max Size | Notes |
     |--------|-----------|----------|-------|
     | JPEG | image/jpeg | 50MB | RGB color space |
     | PNG | image/png | 50MB | Transparency supported |
     | WebP | image/webp | 50MB | Modern format |
     | GIF | image/gif | 50MB | Animated GIFs supported |
-  </Accordion>
+  </Tab>
   
-  <Accordion title="Videos">
+  <Tab title="Videos">
     | Format | MIME Type | Max Size | Notes |
     |--------|-----------|----------|-------|
     | MP4 | video/mp4 | 2GB | H.264 codec recommended |
     | WebM | video/webm | 1GB | VP9 codec supported |
     | MOV | video/quicktime | 2GB | Apple QuickTime format |
-  </Accordion>
+  </Tab>
   
-  <Accordion title="Documents">
+  <Tab title="Documents">
     | Format | MIME Type | Max Size | Notes |
     |--------|-----------|----------|-------|
     | PDF | application/pdf | 250MB | Text and images extracted |
     | DOCX | application/vnd.openxmlformats-officedocument.wordprocessingml.document | 100MB | Microsoft Word |
     | PPTX | application/vnd.openxmlformats-officedocument.presentationml.presentation | 100MB | Microsoft PowerPoint |
-  </Accordion>
+  </Tab>
   
-  <Accordion title="Audio">
+  <Tab title="Audio">
     | Format | MIME Type | Max Size | Notes |
     |--------|-----------|----------|-------|
     | MP3 | audio/mpeg | 500MB | Compressed audio |
     | WAV | audio/wav | 1GB | Uncompressed audio |
     | M4A | audio/mp4 | 500MB | AAC audio |
-  </Accordion>
+  </Tab>
   
-  <Accordion title="JSON Data">
+  <Tab title="JSON Data">
     | Format | MIME Type | Max Size | Notes |
     |--------|-----------|----------|-------|
     | JSON | application/json | 100MB | Standard JSON data |
@@ -206,15 +206,9 @@ Once your blobs are processing into objects, they maintain the prefix structure 
     - `null`: Null values
     - `array`: Ordered lists of values
     - `object`: Key-value pairs
-  </Accordion>
-</AccordionGroup>
+  </Tab>
+</Tabs>
 
-### Blob Limitations
-
-- Maximum blob size varies by file type (see Supported File Types above)
-- Maximum number of blobs per object: 10
-- Supported MIME types are limited to those listed above
-- Blob content is immutable once uploaded
 
 ### Best Practices for Blob Management
 
@@ -235,3 +229,25 @@ Once your blobs are processing into objects, they maintain the prefix structure 
     Use recommended formats for each content type to ensure optimal processing
   </Card>
 </CardGroup>
+
+## Limitations
+
+### Bucket Limitations
+- **Storage Quotas:** Each namespace has limits on total bucket storage capacity based on your plan
+- **Bucket Naming:** Bucket names must be unique within a namespace and follow naming conventions
+- **Rate Limits:** API operations on buckets are subject to rate limiting based on your account tier
+- **Schema Changes:** Bucket schemas cannot be modified after creation; a new bucket must be created
+
+### Object Limitations
+- **Size Restrictions:** Objects have a maximum combined blob size of 10GB per object
+- **Metadata Size:** Object metadata is limited to 100KB in size
+- **Immutability:** Object structure cannot be modified after creation (blobs cannot be added or removed)
+- **Prefix Depth:** Object prefixes are limited to a maximum of 20 levels of nesting
+
+### Blob Limitations
+- **Size Constraints:** Maximum blob size varies by file type (see Supported File Types above)
+- **Quantity Limits:** Maximum number of blobs per object: 10
+- **Format Restrictions:** Supported MIME types are limited to those listed above
+- **Content Immutability:** Blob content is immutable once uploaded
+
+

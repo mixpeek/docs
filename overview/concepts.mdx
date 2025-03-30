@@ -1,9 +1,10 @@
 ---
 title: "Concepts"
+description: "Key concepts for using a Multimodal Data Warehouse"
 ---
 
 <Note>
-  This page covers the key concepts and terminology used throughout the Mixpeek platform. Understanding these concepts will help you utilize the platform's offerings.
+  Understanding these concepts will help you utilize the Mixpeek Multimodal Warehouse offerings.
 </Note>
 
 Mixpeek organizes data in a structured hierarchy designed for flexibility and performance of multimodal content processing and retrieval.
@@ -19,7 +20,7 @@ Mixpeek organizes data in a structured hierarchy designed for flexibility and pe
 | [Document](/management/collections#documents) | Structured outputs from feature extractors | Row |
 | [Feature Extractor](/extraction/overview) | Specialized components that process inputs to extract specific features | ETL Process/Transformation |
 | [Feature](/management/features) | Extracted data elements stored in feature stores | Column/Field |
-| Feature Store | Specialized storage for extracted features optimized for efficient retrieval | Indexed Columns/Materialized Views |
+| [Feature Store](/management/features#feature-storage) | Specialized storage for extracted features optimized for efficient retrieval | Indexed Columns/Materialized Views |
 | [Retriever](/search/retrievers) | Query engines that search feature stores to find relevant documents | SQL Query Engine |
 | [Retriever Stage](/search/stages) | Components of search pipelines that perform specific operations in the retrieval process | Query Execution Plan Step |
 | [Taxonomy](/enrichment/taxonomies) | Multimodal equivalent of SQL JOIN operations | JOIN Operation |
@@ -48,6 +49,8 @@ The different components in Mixpeek relate to each other in specific ways:
     style F fill:#FC5185,stroke:#333
   ```
 </Frame>
+
+### Understanding the Relationships
 
 <AccordionGroup>
   <Accordion title="Bucket → Object Relationship" icon="arrow-right">

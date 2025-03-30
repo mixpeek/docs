@@ -47,7 +47,12 @@ namespace_id = namespace["namespace_id"]
 bucket = mp.buckets.create(
     namespace_id=namespace_id,
     name="content-bucket",
-    description="Storage for our content"
+    description="Storage for our content",
+    schema={
+      "my_img": {
+        "type" : "image"
+      }
+    }
 )
 bucket_id = bucket["bucket_id"]
 
@@ -68,21 +73,14 @@ collection_id = collection["collection_id"]
 # Upload an object
 object = mp.objects.create(
     bucket_id=bucket_id,
-    name="sample-content",
+    name="content-bucket",
     files=[
         {
-            "url": "https://example.com/sample-image.jpg",
-            "mimetype": "image/jpeg"
+            "my_img": "https://example.com/sample-image.jpg"
         }
     ]
 )
 object_id = object["object_id"]
-
-# Process the object
-task = mp.pipelines.run(
-    pipeline_id=pipeline_id,
-    object_id=object_id
-)
 
 # Wait for processing to complete
 print("Processing content, please wait...")
@@ -100,19 +98,13 @@ retriever = mp.retrievers.create(
             "collection_id": collection_id,
             "index": "multimodal",
             "limit": 20
-        },
-        {
-            "name": "filters",
-            "type": "filter",
-            "input": "embedding_search.results",
-            "limit": 10
         }
     ]
 )
 retriever_id = retriever["retriever_id"]
 
 # Search for content
-results = mp.retrievers.search(
+results = mp.retrievers.execute(
     retriever_id=retriever_id,
     query={
         "text": "show me images with people"
