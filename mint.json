@@ -68,7 +68,7 @@
       "url": "api-reference"
     },
     {
-      "name": "Studio",
+      "name": "Studio Walkthrough",
       "url": "studio"
     }
   ],
@@ -140,7 +140,14 @@
     {
       "group": "Pages",
       "pages": [
-        "studio/overview"
+        "studio/quickstart",
+        "studio/namespaces",
+        "studio/buckets",
+        "studio/collections",
+        "studio/taxonomies",
+        "studio/clusters",
+        "studio/retrievers",
+        "studio/research"
       ]
     },
     {
