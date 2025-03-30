@@ -1,0 +1,693 @@
+---
+title: "Filters"
+description: "Refine search results with powerful metadata filtering capabilities"
+---
+
+<Note>
+  Filters allow you to narrow down search results based on document metadata, enhancing search precision by combining semantic search with exact metadata matching.
+</Note>
+
+## Overview
+
+Filters in Mixpeek enable you to refine search results by applying conditions to document metadata fields. They complement semantic vector search by allowing precise matching on structured data, such as dates, categories, numerical values, and tags.
+
+<CardGroup cols={2}>
+  <Card title="Metadata Filtering" icon="filter">
+    Apply conditions to document metadata fields to narrow down search results
+  </Card>
+  
+  <Card title="Hybrid Search" icon="layer-group">
+    Combine semantic similarity with metadata filtering for precise retrieval
+  </Card>
+</CardGroup>
+
+## Filter Usage
+
+Filters can be used in two main contexts within Mixpeek:
+
+<AccordionGroup>
+  <Accordion title="Filter Stages in Retrievers" icon="layer-group">
+    Filters can be applied as dedicated stages within retriever pipelines, allowing you to refine results from previous stages based on metadata criteria.
+    
+    ```json
+    {
+      "name": "category_filter",
+      "type": "filter",
+      "input": "vector_search.results",
+      "filter": {
+        "category": "technology",
+        "publish_date": {"$gte": "2023-01-01T00:00:00Z"}
+      },
+      "limit": 10
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Search Query Filters" icon="magnifying-glass">
+    Filters can be applied directly in search queries to filter results at query time.
+    
+    ```json
+    {
+      "query": {
+        "text": "machine learning tutorial"
+      },
+      "filters": {
+        "difficulty_level": "beginner",
+        "duration_minutes": {"$lte": 30}
+      }
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Filter Operators
+
+Mixpeek supports a comprehensive set of filter operators for different data types:
+
+<Tabs>
+  <Tab title="Comparison">
+    | Operator | Description | Example |
+    |----------|-------------|---------|
+    | `$eq` | Equals | `{"field": {"$eq": value}}` |
+    | `$ne` | Not equals | `{"field": {"$ne": value}}` |
+    | `$gt` | Greater than | `{"field": {"$gt": value}}` |
+    | `$gte` | Greater than or equal | `{"field": {"$gte": value}}` |
+    | `$lt` | Less than | `{"field": {"$lt": value}}` |
+    | `$lte` | Less than or equal | `{"field": {"$lte": value}}` |
+  </Tab>
+  
+  <Tab title="Logical">
+    | Operator | Description | Example |
+    |----------|-------------|---------|
+    | `$and` | Logical AND | `{"$and": [{...}, {...}]}` |
+    | `$or` | Logical OR | `{"$or": [{...}, {...}]}` |
+    | `$not` | Logical NOT | `{"$not": {...}}` |
+  </Tab>
+  
+  <Tab title="Array">
+    | Operator | Description | Example |
+    |----------|-------------|---------|
+    | `$in` | In array | `{"field": {"$in": [value1, value2]}}` |
+    | `$nin` | Not in array | `{"field": {"$nin": [value1, value2]}}` |
+    | `$all` | Contains all | `{"field": {"$all": [value1, value2]}}` |
+    | `$contains` | Contains element | `{"field": {"$contains": value}}` |
+    | `$size` | Array size | `{"field": {"$size": 3}}` |
+  </Tab>
+  
+  <Tab title="Text">
+    | Operator | Description | Example |
+    |----------|-------------|---------|
+    | `$text` | Full-text search | `{"field": {"$text": "search terms"}}` |
+    | `$regex` | Regular expression | `{"field": {"$regex": "pattern"}}` |
+    | `$startsWith` | Starts with | `{"field": {"$startsWith": "prefix"}}` |
+    | `$endsWith` | Ends with | `{"field": {"$endsWith": "suffix"}}` |
+  </Tab>
+</Tabs>
+
+## Basic Filter Examples
+
+### Simple Equality Filter
+
+<CodeGroup>
+  ```json JSON
+  {
+    "category": "technology"
+  }
+  ```
+
+  ```python Python
+  # Simple equality filter in Python
+  filters = {
+      "category": "technology"
+  }
+  
+  # Equivalent explicit form
+  filters = {
+      "category": {"$eq": "technology"}
+  }
+  ```
+
+  ```javascript JavaScript
+  // Simple equality filter in JavaScript
+  const filters = {
+    category: "technology"
+  };
+  
+  // Equivalent explicit form
+  const filters = {
+    category: {$eq: "technology"}
+  };
+  ```
+</CodeGroup>
+
+### Numeric Range Filter
+
+<CodeGroup>
+  ```json JSON
+  {
+    "price": {"$gte": 10, "$lte": 50},
+    "rating": {"$gt": 4.0}
+  }
+  ```
+
+  ```python Python
+  # Numeric range filter
+  filters = {
+      "price": {"$gte": 10, "$lte": 50},
+      "rating": {"$gt": 4.0}
+  }
+  ```
+
+  ```javascript JavaScript
+  // Numeric range filter
+  const filters = {
+    price: {$gte: 10, $lte: 50},
+    rating: {$gt: 4.0}
+  };
+  ```
+</CodeGroup>
+
+### Date Range Filter
+
+<CodeGroup>
+  ```json JSON
+  {
+    "publish_date": {"$gte": "2023-01-01T00:00:00Z", "$lt": "2024-01-01T00:00:00Z"}
+  }
+  ```
+
+  ```python Python
+  # Date range filter
+  filters = {
+      "publish_date": {
+          "$gte": "2023-01-01T00:00:00Z", 
+          "$lt": "2024-01-01T00:00:00Z"
+      }
+  }
+  ```
+
+  ```javascript JavaScript
+  // Date range filter
+  const filters = {
+    publish_date: {
+      $gte: "2023-01-01T00:00:00Z", 
+      $lt: "2024-01-01T00:00:00Z"
+    }
+  };
+  ```
+</CodeGroup>
+
+### Array Contains Filter
+
+<CodeGroup>
+  ```json JSON
+  {
+    "tags": {"$contains": "machine-learning"}
+  }
+  ```
+
+  ```python Python
+  # Array contains filter
+  filters = {
+      "tags": {"$contains": "machine-learning"}
+  }
+  ```
+
+  ```javascript JavaScript
+  // Array contains filter
+  const filters = {
+    tags: {$contains: "machine-learning"}
+  };
+  ```
+</CodeGroup>
+
+## Advanced Filter Examples
+
+### Logical Combinations
+
+<CodeGroup>
+  ```json JSON
+  {
+    "$and": [
+      {
+        "category": "electronics"
+      },
+      {
+        "$or": [
+          {
+            "price": {"$lte": 100}
+          },
+          {
+            "on_sale": true
+          }
+        ]
+      }
+    ]
+  }
+  ```
+
+  ```python Python
+  # Logical combinations
+  filters = {
+      "$and": [
+          {
+              "category": "electronics"
+          },
+          {
+              "$or": [
+                  {
+                      "price": {"$lte": 100}
+                  },
+                  {
+                      "on_sale": True
+                  }
+              ]
+          }
+      ]
+  }
+  ```
+
+  ```javascript JavaScript
+  // Logical combinations
+  const filters = {
+    $and: [
+      {
+        category: "electronics"
+      },
+      {
+        $or: [
+          {
+            price: {$lte: 100}
+          },
+          {
+            on_sale: true
+          }
+        ]
+      }
+    ]
+  };
+  ```
+</CodeGroup>
+
+### Negation
+
+<CodeGroup>
+  ```json JSON
+  {
+    "$not": {
+      "status": "out_of_stock"
+    }
+  }
+  ```
+
+  ```python Python
+  # Negation filter
+  filters = {
+      "$not": {
+          "status": "out_of_stock"
+      }
+  }
+  ```
+
+  ```javascript JavaScript
+  // Negation filter
+  const filters = {
+    $not: {
+      status: "out_of_stock"
+    }
+  };
+  ```
+</CodeGroup>
+
+### Complex Array Operations
+
+<CodeGroup>
+  ```json JSON
+  {
+    "tags": {
+      "$all": ["python", "tutorial"],
+      "$size": {"$gte": 3}
+    }
+  }
+  ```
+
+  ```python Python
+  # Complex array operations
+  filters = {
+      "tags": {
+          "$all": ["python", "tutorial"],
+          "$size": {"$gte": 3}
+      }
+  }
+  ```
+
+  ```javascript JavaScript
+  // Complex array operations
+  const filters = {
+    tags: {
+      $all: ["python", "tutorial"],
+      $size: {$gte: 3}
+    }
+  };
+  ```
+</CodeGroup>
+
+## Using Filters in Retrievers
+
+### Filter Stage in a Retriever Pipeline
+
+<Frame>
+  ```json
+  {
+    "stages": [
+      {
+        "name": "vector_search",
+        "type": "vector",
+        "collection_id": "col_products",
+        "index": "multimodal",
+        "limit": 100
+      },
+      {
+        "name": "category_filter",
+        "type": "filter",
+        "input": "vector_search.results",
+        "filter": {
+          "category": "electronics",
+          "price": {"$lte": 500}
+        },
+        "limit": 50
+      },
+      {
+        "name": "availability_filter",
+        "type": "filter",
+        "input": "category_filter.results",
+        "filter": {
+          "in_stock": true,
+          "shipping_days": {"$lte": 3}
+        },
+        "limit": 20
+      }
+    ]
+  }
+  ```
+</Frame>
+
+### Creating a Retriever with Filters
+
+```python
+from mixpeek import Mixpeek
+
+mp = Mixpeek(api_key="YOUR_API_KEY")
+
+# Create a retriever with multiple filter stages
+retriever = mp.retrievers.create(
+    namespace_id="ns_abc123",
+    name="filtered-product-search",
+    description="Product search with category and availability filters",
+    stages=[
+        {
+            "name": "vector_search",
+            "type": "vector",
+            "collection_id": "col_products",
+            "index": "multimodal",
+            "limit": 100
+        },
+        {
+            "name": "category_filter",
+            "type": "filter",
+            "input": "vector_search.results",
+            "filter": {
+                "category": "electronics",
+                "price": {"$lte": 500}
+            },
+            "limit": 50
+        },
+        {
+            "name": "availability_filter",
+            "type": "filter",
+            "input": "category_filter.results",
+            "filter": {
+                "in_stock": True,
+                "shipping_days": {"$lte": 3}
+            },
+            "limit": 20
+        }
+    ]
+)
+
+retriever_id = retriever["retriever_id"]
+
+# Search using the retriever
+results = mp.retrievers.search(
+    retriever_id=retriever_id,
+    query={
+        "text": "wireless headphones with noise cancellation"
+    }
+)
+```
+
+## Using Filters in Search Queries
+
+Filters can be applied directly in search queries to filter results at query time:
+
+<CodeGroup>
+  ```python Python
+  # Search with query-time filters
+  results = mp.retrievers.search(
+      retriever_id="ret_def456",
+      query={
+          "text": "wireless headphones"
+      },
+      filters={
+          "brand": {"$in": ["Sony", "Bose", "Sennheiser"]},
+          "price": {"$lte": 300},
+          "rating": {"$gte": 4.0},
+          "features": {"$contains": "noise-cancellation"}
+      }
+  )
+  ```
+
+  ```javascript JavaScript
+  // Search with query-time filters
+  const results = await mp.retrievers.search({
+    retriever_id: "ret_def456",
+    query: {
+      text: "wireless headphones"
+    },
+    filters: {
+      brand: {$in: ["Sony", "Bose", "Sennheiser"]},
+      price: {$lte: 300},
+      rating: {$gte: 4.0},
+      features: {$contains: "noise-cancellation"}
+    }
+  });
+  ```
+</CodeGroup>
+
+## Filter Optimization
+
+### Pre-filtering vs. Post-filtering
+
+<CardGroup cols={2}>
+  <Card title="Pre-filtering" icon="filter">
+    **When to use:**
+    - To reduce the dataset size before vector search
+    - For filters that can significantly reduce the number of candidates
+    - When metadata fields have indexes
+    
+    **Implementation:**
+    Apply filters directly in the search query or in an early filter stage before vector search
+  </Card>
+  
+  <Card title="Post-filtering" icon="magnifying-glass-plus">
+    **When to use:**
+    - After vector search to refine semantically relevant results
+    - For more complex filters or combinations
+    - When vector similarity is the primary ranking factor
+    
+    **Implementation:**
+    Apply filters in a stage after vector search in the retriever pipeline
+  </Card>
+</CardGroup>
+
+### Indexing for Filters
+
+For optimal filter performance, ensure that frequently filtered fields are properly indexed in your collections. Index the following types of fields:
+
+<AccordionGroup>
+  <Accordion title="Equality Filters" icon="equals">
+    Fields used in equality filters (`$eq`, `$in`, exact matches) should be indexed as `keyword` type.
+    
+    ```json
+    {
+      "field_name": "category",
+      "type": "keyword"
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Range Filters" icon="arrow-right-arrow-left">
+    Fields used in range filters (`$gt`, `$lt`, etc.) should be indexed as their appropriate numeric or date types.
+    
+    ```json
+    {
+      "field_name": "price",
+      "type": "float"
+    },
+    {
+      "field_name": "publish_date",
+      "type": "datetime"
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Text Filters" icon="font">
+    Fields used in text search filters (`$text`, `$regex`) should be indexed as `text` type.
+    
+    ```json
+    {
+      "field_name": "description",
+      "type": "text",
+      "field_schema": {
+        "type": "text",
+        "tokenizer": "word",
+        "lowercase": true
+      }
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Array Filters" icon="list-ul">
+    Fields used in array filters (`$contains`, `$all`) should be indexed as `keyword` arrays.
+    
+    ```json
+    {
+      "field_name": "tags",
+      "type": "keyword"
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<Steps>
+  <Step title="Filter Early">
+    Apply filters as early as possible in the pipeline to reduce the dataset size before more expensive operations.
+  </Step>
+  <Step title="Index Key Fields">
+    Ensure fields used frequently in filters are properly indexed in your collections.
+  </Step>
+  <Step title="Use Precise Filters">
+    Be as specific as possible with filter criteria to narrow down results effectively.
+  </Step>
+  <Step title="Avoid Over-Filtering">
+    Balance filter specificity with result diversity. Overly restrictive filters may eliminate potentially relevant results.
+  </Step>
+</Steps>
+
+<Warning>
+  Complex filters with many nested logical operations can impact query performance. When possible, simplify filters and ensure indexed fields are used for optimal performance.
+</Warning>
+
+## Common Use Cases
+
+### E-commerce Product Filtering
+
+```json
+{
+  "query": {
+    "text": "running shoes"
+  },
+  "filters": {
+    "$and": [
+      {
+        "category": "footwear"
+      },
+      {
+        "brand": {"$in": ["Nike", "Adidas", "New Balance"]}
+      },
+      {
+        "price": {"$gte": 50, "$lte": 150}
+      },
+      {
+        "size": {"$in": [9, 9.5, 10]}
+      },
+      {
+        "color": {"$in": ["black", "blue", "gray"]}
+      },
+      {
+        "rating": {"$gte": 4.0}
+      },
+      {
+        "in_stock": true
+      }
+    ]
+  }
+}
+```
+
+### Content Filtering
+
+```json
+{
+  "query": {
+    "text": "machine learning tutorials"
+  },
+  "filters": {
+    "$and": [
+      {
+        "content_type": {"$in": ["article", "video"]}
+      },
+      {
+        "publish_date": {"$gte": "2023-01-01T00:00:00Z"}
+      },
+      {
+        "duration_minutes": {"$lte": 30}
+      },
+      {
+        "difficulty_level": {"$in": ["beginner", "intermediate"]}
+      },
+      {
+        "tags": {"$contains": "python"}
+      }
+    ]
+  }
+}
+```
+
+### User-Specific Filtering
+
+```json
+{
+  "query": {
+    "text": "data visualization techniques"
+  },
+  "filters": {
+    "$and": [
+      {
+        "$or": [
+          {
+            "access_level": "public"
+          },
+          {
+            "allowed_user_ids": {"$contains": "user_123"}
+          }
+        ]
+      },
+      {
+        "language": "en"
+      },
+      {
+        "$not": {
+          "viewed_by": {"$contains": "user_123"}
+        }
+      }
+    ]
+  }
+}
+```
+
+## API Reference
+
+For complete details on using filters in retrievers and search queries, see our [Retrievers API Reference](/api-reference/retrievers/create-retriever) and [Search API Reference](/api-reference/retrievers/search).

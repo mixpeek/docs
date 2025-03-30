@@ -1,0 +1,108 @@
+---
+title: "Model Tuning"
+description: "Customize and fine-tune machine learning models for your specific use cases"
+---
+
+<Note>
+  Model tuning allows you to adapt Mixpeek's underlying machine learning models to your specific domain, improving performance on specialized tasks and content types.
+</Note>
+
+## Overview
+
+Model tuning in Mixpeek lets you customize and fine-tune feature extractor and retriever models to better match your specific use cases, data, and domain. By providing examples and feedback, you can improve model performance on specialized tasks without having to build models from scratch.
+
+<CardGroup cols={2}>
+  <Card title="Domain Adaptation" icon="bullseye">
+    Adapt general-purpose models to your specific industry, content types, or terminology
+  </Card>
+  
+  <Card title="Task Optimization" icon="sliders">
+    Fine-tune models for specific tasks like classification, extraction, or similarity matching
+  </Card>
+</CardGroup>
+
+<Warning>Model tuning is only available for Enterprise accounts. If you'd like to use this contact us.</Warning>
+
+## Available Tuning Approaches
+
+<AccordionGroup>
+  <Accordion title="Classification Tuning" icon="tags">
+    Train the platform to better classify content into your custom categories by providing labeled examples.
+    
+    **Supported Models:** Topic classifier, sentiment analyzer, content categorizer
+  </Accordion>
+
+  <Accordion title="Embedding Adaptation" icon="network-wired">
+    Adjust embedding models to better represent the semantic relationships specific to your domain.
+    
+    **Supported Models:** Text embeddings, multimodal embeddings
+  </Accordion>
+
+  <Accordion title="Extraction Refinement" icon="filter">
+    Improve extraction of specific entities, attributes, or patterns from your content.
+    
+    **Supported Models:** Named entity recognition, attribute extraction, relationship extraction
+  </Accordion>
+
+  <Accordion title="Similarity Calibration" icon="arrows-left-right">
+    Refine how similarity is measured between items in your specific domain context.
+    
+    **Supported Models:** All vector search models
+  </Accordion>
+</AccordionGroup>
+
+## How Model Tuning Works
+
+<Steps>
+  <Step title="Collect Examples">
+    Gather a set of representative examples and annotations that demonstrate the desired behavior
+  </Step>
+  <Step title="Create Tuning Set">
+    Upload your examples to create a tuning dataset in Mixpeek
+  </Step>
+  <Step title="Configure Tuning Job">
+    Specify which model to tune and set the tuning parameters
+  </Step>
+  <Step title="Launch Tuning Process">
+    Start the tuning job and monitor progress
+  </Step>
+  <Step title="Evaluate Results">
+    Compare performance metrics between the original and tuned models
+  </Step>
+  <Step title="Deploy Tuned Model">
+    Apply the tuned model to your pipelines for improved performance
+  </Step>
+</Steps>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Data Quality" icon="database">
+    Focus on high-quality, diverse examples that represent the full range of cases in your domain
+  </Card>
+  
+  <Card title="Sample Size" icon="chart-simple">
+    For best results, provide at least 50-100 examples per class or task, with more for complex domains
+  </Card>
+
+  <Card title="Balanced Classes" icon="scale-balanced">
+    Try to provide roughly equal numbers of examples for each class or category
+  </Card>
+  
+  <Card title="Iterative Approach" icon="rotate">
+    Tune models iteratively, evaluating performance and adding examples for challenging cases
+  </Card>
+</CardGroup>
+
+<Warning>
+  Very small tuning sets (fewer than 20 examples) may not provide significant improvements and could lead to overfitting. For best results, provide diverse, high-quality examples.
+</Warning>
+
+## Limitations
+
+- Model tuning preserves the general capabilities of the base models while adapting them to your domain
+- Complete retraining from scratch is not supported
+- Some advanced model architectures may have limited tuning capabilities
+- Tuning jobs may take anywhere from a few minutes to several hours depending on dataset size and complexity
+- Maximum number of examples per tuning set is 10,000
+- For very specialized domains, custom model building (available through our Professional Services) may be more appropriate

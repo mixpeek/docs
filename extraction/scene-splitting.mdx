@@ -1,0 +1,123 @@
+---
+title: "Scene Splitting"
+description: "Automatically detect and split scenes by configuration"
+---
+
+<Note>
+  The Scene Splitting extractor accepts a video input and returns multiple documents split by `silence`, `scene` or `time`.
+</Note>
+
+## Overview
+The Scene Splitting feature extractor analyzes video content to detect and segment distinct scenes based on visual changes. It breaks down videos into logical segments that can be processed and searched independently.
+
+
+## Required Inputs
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| video_url | string | Yes | - | URL pointing to the video file to be processed. Supported formats: MP4, MOV, AVI |
+| min_scene_duration | float | No | 1.0 | Minimum duration (in seconds) for a scene segment |
+| threshold | float | No | 0.3 | Sensitivity threshold for scene change detection (0.0-1.0) |
+
+
+## Configurations
+
+### Split Types
+
+When processing video content, the extractor supports three different split methods:
+
+| Split Type | Description | Common Use Cases |
+|------------|-------------|------------------|
+| `scene` | Splits video based on visual content changes | Content analysis, scene detection |
+| `silence` | Splits video at periods of audio silence | Speech segmentation, presentation slides |
+| `time` | Splits video at fixed time intervals | Regular sampling, uniform segments |
+
+#### Configuration Examples
+
+```json Scene-based
+{
+  "split_type": "scene",
+  "threshold": 0.35,           // Scene change sensitivity (0-1)
+  "min_scene_length": 2.5,     // Minimum scene duration in seconds
+  "max_scene_length": 60,      // Maximum scene duration in seconds
+  "keyframe_method": "content" // How to select the keyframe
+}
+```
+```json Silence-based
+{
+  "split_type": "silence",
+  "silence_threshold": -30,    // dB threshold for silence detection
+  "min_silence_length": 1.0,   // Minimum silence duration
+  "padding": 0.1              // Padding around silence boundaries
+}
+```
+```json Time-based
+{
+  "split_type": "time",
+  "interval": 10.0,           // Fixed interval in seconds
+  "overlap": 0.0              // Overlap between segments
+}
+```
+
+### Base Configuration 
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `min_scene_length` | float | `2.0` | Minimum scene duration in seconds |
+| `max_scene_length` | float | `120.0` | Maximum scene duration in seconds (will force-split longer scenes) |
+
+
+#### Configuration Examples
+
+  ```json Sample
+{
+    "min_scene_length": 2.5,     // Minimum scene duration in seconds
+    "max_scene_length": 60,      // Maximum scene duration in seconds
+}
+  ```
+
+### Processing Flow
+
+<Frame>
+  ```mermaid
+  graph TD
+    A[Input Video] --> B[Split Detection]
+    B --> C[Multi Document Creation]
+    C --> D[Collection Storage]
+    style A fill:#FC5185,stroke:#333
+    style D fill:#FC5185,stroke:#333
+  ```
+</Frame>
+
+### Output Schema
+
+This feature extractor will output as `multiple documents`.
+
+```json
+{
+  "document_id": "doc_abc123",
+  "collection_id": "col_xyz789",
+  "source_object_id": "obj_def456",
+  
+  // Scene metadata
+  "scene": {
+    "index": 3,               // Scene index in the video (0-based)
+    "start_time": 42.5,       // Start timestamp in seconds
+    "end_time": 68.2,         // End timestamp in seconds
+    "duration": 25.7,         // Scene duration in seconds
+    "keyframe_time": 55.2,    // Timestamp of the keyframe
+    "keyframe_url": "https://storage.example.com/keyframes/abc123.jpg",
+    "confidence": 0.87        // Confidence score of scene boundary detection
+  },
+  
+  // Video metadata
+  "video": {
+    "filename": "company_event_2023.mp4",
+    "total_duration": 1258.4,  // Total video duration in seconds
+    "total_scenes": 17,        // Total number of detected scenes
+    "width": 1920,
+    "height": 1080,
+    "fps": 30
+  }
+}
+```

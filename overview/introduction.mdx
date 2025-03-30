@@ -1,120 +1,208 @@
 ---
 title: "Introduction"
-description: "Learn how Mixpeek enables powerful multimodal search applications across different types of media"
+description: "The Multimodal Data Warehouse"
 ---
 
 <Note>
-  Mixpeek is a developer platform for building multimodal search applications that understand user intention across multiple types of media.
+  Welcome to the Mixpeek documentation! We're happy to empower you to build multimodal understanding applications.
 </Note>
 
+Before we dive in, let's quickly define what a **Multimodal Warehouse** is:
+
+> **Multimodal Warehouse**: A specialized data platform that ingests, processes, and enables retrieval across diverse media types (text, images, videos, audio, PDFs) by extracting features and storing them in optimized collections and feature stores. 
+> 
+> It serves as the foundation for building AI-powered search and analysis applications that can work seamlessly across different content types.
+
+Within Mixpeek, developers have access to pre-built feature extraction pipelines and retrieval stages that enables ad-hoc search and discovery across any file type.
+
 <CardGroup cols={2}>
-  <Card title="Extract Features" icon="wand-magic-sparkles">
-    Extract meaningful features from images, videos, and text automatically
+  <Card title="Unified Multimodal Platform" icon="gears">
+  - Process and analyze any content type with a single platform
+  - **Example**: Finding unique faces in videos that mention topics present in pdfs
   </Card>
   
-  <Card title="Build Search" icon="magnifying-glass">
-    Create powerful search experiences across different content types
+  <Card title="Custom Processing Pipelines" icon="magnifying-glass">
+  - Define exactly how your content is processed with customizable feature extraction
+  - **Example**: Creating a pipeline that extracts speaker identity, sentiment, and product mentions from customer call recordings
   </Card>
 
-  <Card title="Customize" icon="sliders">
-    Build custom search experiences tailored to your specific use case
+  <Card title="Advanced Retrieval" icon="layer-group">
+  - Combine vector similarity with metadata filtering for precise results across modalities
+  - **Example**: Searching for "marketing videos featuring outdoor scenes that align with our brand guidelines document"
   </Card>
 
-  <Card title="Scale" icon="rocket">
-    Deploy production-ready applications with scalable infrastructure
+  <Card title="Data Organization" icon="server">
+  - Apply taxonomies and clustering to bring structure to unstructured content
+  - **Example**: Automatically organizing product images into categories based on visual similarity and metadata from product descriptions
   </Card>
 </CardGroup>
+
+<iframe
+  width="600"
+  height="310"
+  src="https://d8ts56gtwtyh1.cloudfront.net/docs/warehouse/introduction.mp4"
+  frameborder="0"
+  allow="accelerometer; autoplay; muted"
+  allowfullscreen
+  autoplay
+  muted
+></iframe>
+
+### Always State-of-the-Art
+
+<CardGroup cols={2}>
+  <Card title="Continuous Improvement" icon="arrows-rotate">
+    Mixpeek manages all feature extractors and retriever stages, continuously updating them to incorporate the latest advancements in AI and ML.
+  </Card>
+  
+  <Card title="Tightly Coupled" icon="link">
+    Our extractors and retrievers are designed as an integrated system. This tight coupling enables advanced techniques like late interaction models (e.g., <a href="https://github.com/stanford-futuredata/ColBERT">ColBERT</a>).
+  </Card>
+</CardGroup>
+
+<Warning>
+  Unlike traditional solutions that require rebuilding your entire index when upgrading to new models, Mixpeek performs upgrades seamlessly behind the scenes—keeping you on the cutting edge without disruption.
+</Warning>
 
 ## How It Works
 
 <Steps>
-  <Step title="Index Your Content">
-    Upload your media (images, videos, text) to Mixpeek
+  <Step title="Upload Objects">
+    Upload and store your multimodal data in buckets, organizing related files as objects
   </Step>
   <Step title="Extract Features">
-    Mixpeek automatically processes your content to extract meaningful features
+    Extract features using custom pipelines with specialized extractors for different content types
   </Step>
-  <Step title="Search & Analyze">
-    Use our APIs to build search, recommendation, and analytics applications
+  <Step title="Enrich Documents">
+    Apply taxonomies (joins) and clustering (groups) to categorize and group related content
+  </Step>
+  <Step title="Retrieve & Analyze">
+    Search and retrieve content using advanced multimodal search capabilities
   </Step>
 </Steps>
 
-## Key Features
+## Getting Started
 
-<AccordionGroup>
-  <Accordion title="🔍 Multimodal Search" icon="magnifying-glass">
-    Build sophisticated search experiences:
-    - Natural language queries across all media types
-    - Visual similarity search for images and videos
-    - Cross-modal search (find images with text, or vice versa)
-    - Semantic understanding of content
+The fastest way to start using Mixpeek is to follow our [Quickstart Guide](/overview/quickstart) which will walk you through setting up your first project.
 
-    Learn more in our [Search API](/api-reference/features/search-features).
-  </Accordion>
+For a deeper understanding of how Mixpeek works, check out our [Core Concepts](/overview/concepts) page.
 
-  <Accordion title="🎯 Feature Extraction" icon="gears">
-    Extract valuable insights automatically:
-    - Object and scene detection
-    - Text extraction from images and videos
-    - Face detection and recognition
-    - Custom extraction pipelines
+<Frame>
+  ```mermaid
+  graph TD
+    A[Upload Content] --> B[Process & Extract Features]
+    B --> C[Store in Collections]
+    C --> D[Apply Taxonomies & Clustering]
+    D --> E[Search & Retrieve]
+    style A fill:#FC5185,stroke:#333
+    style E fill:#FC5185,stroke:#333
+  ```
+</Frame>
 
-    Explore our [Features API](/concepts/features) to learn more.
-  </Accordion>
-</AccordionGroup>
 
 ## Common Use Cases
 
-<CardGroup cols={2}>
-  <Card title="Video Alerting" icon="video">
-    Real-time monitoring and detection of objects, events, or anomalies in video streams
-  </Card>
-  
-  <Card title="Visual Discovery" icon="image">
-    Power visual search engines and recommendation systems
-  </Card>
+<Tabs>
+  <Tab title="Multimodal Search">
+    ### Cross-Modal Search Operations
+    
+    Organize and store content to enable efficient search across different modalities:
 
-  <Card title="Multimodal Search" icon="search">
-    Enable natural language search across all content types
-  </Card>
+    **Storage Pattern**
+    - Group related images, videos, and text documents in single objects
+    - Store raw files alongside their extracted features
+    - Maintain indexes for cross-modal querying
 
-  <Card title="Content Recommendation" icon="rectangle-list">
-    Build personalized recommendation systems
-  </Card>
+    **Example Object Structure**
+    ```json
+    {
+      "product_id": "shoe_123",
+      "blobs": [
+        {"type": "image", "url": "front_view.jpg"},
+        {"type": "image", "url": "side_view.jpg"},
+        {"type": "text", "url": "description.txt"},
+        {"type": "video", "url": "rotation.mp4"}
+      ]
+    }
+    ```
+  </Tab>
 
-  <Card title="Media Analytics" icon="chart-line">
-    Gain insights through automated content analysis
-  </Card>
+  <Tab title="Content Analytics">
+    ### Automated Analysis Workflows
+    
+    Structure content to support comprehensive analytics processing:
 
-  <Card title="Multimodal RAG" icon="robot">
-    Create AI applications that process cross-modal information
-  </Card>
-</CardGroup>
+    **Storage Pattern**
+    - Raw media files paired with extracted metadata
+    - Processing state tracking for each stage
+    - Version control for processed outputs
 
-## Getting Started
+    **Example Object Structure**
+    ```json
+    {
+      "video_id": "stream_456",
+      "blobs": [
+        {"type": "video", "url": "source.mp4"},
+        {"type": "json", "url": "scene_metadata.json"},
+        {"type": "text", "url": "transcript.txt"},
+        {"type": "json", "url": "analytics_results.json"}
+      ]
+    }
+    ```
+  </Tab>
 
-<CardGroup cols={2}>
-  <Card title="Quickstart Guide" icon="play">
-    Set up your first Mixpeek application
-    <Link href="/overview/quickstart">Get Started →</Link>
-  </Card>
-  
-  <Card title="Client Libraries" icon="code">
-    Integrate using our SDKs
-    <Link href="/overview/client-libraries">View SDKs →</Link>
-  </Card>
+  <Tab title="Training Data">
+    ### ML Training Data Management
+    
+    Organize datasets for machine learning model training:
 
-  <Card title="API Reference" icon="book">
-    Explore our REST API
-    <Link href="/api-reference">View API →</Link>
-  </Card>
+    **Storage Pattern**
+    - Paired multimodal training examples
+    - Ground truth data alongside source files
+    - Version control for dataset iterations
 
-  <Card title="Studio" icon="desktop">
-    Use our visual interface
-    <Link href="/studio/overview">Open Studio →</Link>
-  </Card>
-</CardGroup>
+    **Example Object Structure**
+    ```json
+    {
+      "training_pair_id": "train_789",
+      "blobs": [
+        {"type": "image", "url": "input.jpg"},
+        {"type": "json", "url": "labels.json"},
+        {"type": "text", "url": "annotations.txt"},
+        {"type": "json", "url": "metadata.json"}
+      ]
+    }
+    ```
+  </Tab>
+
+  <Tab title="Processing Pipelines">
+    ### Content Processing Workflows
+    
+    Manage data through multi-stage processing pipelines:
+
+    **Storage Pattern**
+    - Source files organized for parallel processing
+    - Intermediate results stored with clear lineage
+    - Output files linked to source data
+
+    **Example Object Structure**
+    ```json
+    {
+      "batch_id": "process_101",
+      "blobs": [
+        {"type": "video", "url": "raw_footage.mp4"},
+        {"type": "json", "url": "processing_state.json"},
+        {"type": "json", "url": "extracted_features.json"},
+        {"type": "text", "url": "processing_logs.txt"}
+      ]
+    }
+    ```
+  </Tab>
+</Tabs>
+
 
 <Note>
-  Ready to build? [Create your account](https://mixpeek.com/start) or check out our [Quickstart Guide](/overview/quickstart).
+  Each use case leverages Mixpeek's ability to process and understand relationships across different content types - from text and images to video and audio - providing a unified view of your data.
 </Note>
+
+Ready to get started? [Create your first project →](/overview/quickstart) 

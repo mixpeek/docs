@@ -1,0 +1,132 @@
+---
+title: "Tasks"
+description: "Monitor and manage processing tasks for tracking pipeline execution"
+---
+
+<Note>
+  Tasks represent processing jobs in Mixpeek. They allow you to track the status, progress, and results of pipeline executions and other asynchronous operations.
+</Note>
+
+## Overview
+
+In Mixpeek, tasks represent processing jobs that are executed asynchronously. When you trigger a pipeline to process an object or run any other long-running operation, a task is created to track its execution status, progress, and results.
+
+<CardGroup cols={2}>
+  <Card title="Asynchronous Processing" icon="hourglass">
+    Tasks allow you to submit processing jobs and check their status later, without having to wait for completion
+  </Card>
+  
+  <Card title="Execution Tracking" icon="chart-line">
+    Monitor the progress and status of your processing operations in real-time
+  </Card>
+</CardGroup>
+
+## Task Lifecycle
+
+<Steps>
+  <Step title="Creation">
+    A task is created when you trigger a processing operation, such as running a pipeline on an object
+  </Step>
+  <Step title="Queuing">
+    The task enters a queue and waits to be picked up by a worker
+  </Step>
+  <Step title="Processing">
+    The task begins execution, processing the requested operation
+  </Step>
+  <Step title="Completion">
+    The task finishes successfully, producing the desired results
+  </Step>
+</Steps>
+
+During this lifecycle, a task can also encounter errors or be cancelled:
+
+<Frame>
+  ```mermaid
+  graph TD
+    A[Created] --> B[Queued]
+    B --> C[Processing]
+    C --> D[Completed]
+    C --> E[Failed]
+    B --> F[Cancelled]
+    C --> F
+    style A fill:#FC5185,stroke:#333
+    style D fill:#4CAF50,stroke:#333
+    style E fill:#F44336,stroke:#333
+    style F fill:#9E9E9E,stroke:#333
+  ```
+</Frame>
+
+## Task Statuses
+
+| Status | Icon | Description |
+|--------|------|-------------|
+| created | 🟢 | The task has been created but not yet queued for processing. |
+| queued | ⏱️ | The task is in the processing queue, waiting to be picked up by a worker. |
+| processing | ⚙️ | The task is currently being executed. |
+| completed | ✅ | The task has been successfully completed, and the results are available. |
+| failed | ❌ | The task encountered an error during execution and could not be completed. |
+| cancelled | 🚫 | The task was manually cancelled before completion. |
+
+## Creating Tasks
+
+Tasks are typically created indirectly by triggering other operations. The most common way to create a task is by creating an object in your bucket. If there are collections that use it as a source, tasks will be created. 
+
+
+## Common Task Types
+
+<CardGroup cols={2}>
+  <Card title="object_create" icon="conveyor-belt">
+    Processing an object with a collection
+  </Card>
+  
+  <Card title="model_tuning" icon="sliders">
+    Tuning a machine learning model with custom data
+  </Card>
+
+  <Card title="batch_import" icon="file-import">
+    Importing multiple objects in a batch
+  </Card>
+  
+  <Card title="taxonomy_apply" icon="sitemap">
+    Applying a taxonomy to a collection
+  </Card>
+  
+  <Card title="clustering" icon="object-group">
+    Running clustering algorithms on a collection
+  </Card>
+  
+  <Card title="index_rebuild" icon="database">
+    Rebuilding feature store indexes
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use Task IDs" icon="id-badge">
+    Always store task IDs when triggering operations to allow status checking later
+  </Card>
+  
+  <Card title="Implement Timeouts" icon="stopwatch">
+    Add reasonable timeouts when waiting for tasks to complete to avoid blocking indefinitely
+  </Card>
+
+  <Card title="Handle Failures" icon="triangle-exclamation">
+    Implement proper error handling to address failed tasks and understand the cause
+  </Card>
+  
+  <Card title="Use Webhooks" icon="bell">
+    Set up webhooks for task notifications rather than continuous polling for better performance
+  </Card>
+</CardGroup>
+
+## Limitations
+
+- **Processing Timeout:** Tasks time out after 30 minutes of processing
+- **Log Retention:** Task logs are retained for 7 days
+- **Record Retention:** Completed task records are retained for 30 days
+- **Concurrency Limits:** Maximum of 100 concurrent tasks per namespace
+
+## API Reference
+
+For complete details on working with tasks, see our [Tasks API Reference](/api-reference/tasks/get-task). 

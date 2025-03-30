@@ -1,0 +1,658 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Mixpeek Multimodal Pipeline & Retrieval Platform - User Requirements Document
+
+## 1. Introduction
+
+### Purpose
+Mixpeek is a multimodal data processing and retrieval platform designed for developers and data teams to efficiently ingest, extract features, and search across diverse media types (text, images, videos, audio, PDFs). This document outlines user expectations and requirements for the system's functionality, ensuring clarity on how the platform should behave from a user perspective.
+
+### Audience
+This document is intended for design partners who will integrate and utilize Mixpeek for their applications. It serves as a high-level reference for expected capabilities and interactions with the platform.
+
+## 2. Key Terms & Concepts
+
+| Mixpeek Term | Description | Traditional Data Warehouse Analogue |
+|--------------|-------------|-------------------------------------|
+| Bucket | Storage container for raw objects and their associated files. | Storage layer |
+| Object | A collection of related input files representing a single entity (e.g., a pharmaceutical ad composed of a video, script, and legal document). | Analogue of a row in a source table |
+| Collection | A grouping of processed documents with a consistent schema. Collections store the structured outputs from ingestion pipelines. | Logical partition/table |
+| Document | A structured output from the ingestion process, representing processed data ready for retrieval. Each document references its source object in a bucket. | Row/Record in a processed table |
+| Feature Store | Specialized storage for extracted features (like embeddings, detected objects, etc.) optimized for specific query patterns. Each feature references its parent document. | Index or specialized analytical store |
+| Feature | The lowest-level primitive extracted from files (e.g., embeddings, detected text, objects in images). Features are stored in feature stores and linked to documents. | Features are the analog of columns in a tabular dataset |
+| Retriever | The process of querying feature stores and collections to retrieve relevant documents and their source objects. | Query execution plan |
+| Feature Extractor | A component within a pipeline that processes an object to extract specific features. | Preprocessing task that extracts specific data attributes |
+| Namespace | Query boundary. A single query is not expected to span multiple namespaces. | Schema/DB |
+| Taxonomy | A classification system for organizing and enriching data with metadata or tags. Can be flat (single-level) or hierarchical (multi-level). | Join operations in SQL |
+| Clustering | A process that groups documents based on feature similarity. | GROUP BY operation in SQL |
+
+### Taxonomies
+Taxonomies in Mixpeek serve as a mechanism for organizing and enriching data, allowing classification and retrieval of documents based on specific attributes. They function as the multimodal analogue to SQL JOIN operations.
+
+#### Flat Taxonomies
+- **Purpose**: Enrich a collection of documents by adding metadata or tags from another collection
+- **Implementation**: Functions as a join operation between collections, similar to SQL JOIN
+- **Process**: For each document in the original collection, Mixpeek performs a search against the taxonomy collection to find matches based on specified criteria
+- **Result**: Creates enriched documents with additional context and improved searchability
+- **SQL Analogue**: Similar to a single JOIN between two tables based on a matching column
+
+#### Hierarchical Taxonomies
+- **Purpose**: Enable complex organization of data using multiple collections with overlapping features
+- **Structure**: Reflects relationships between different document types and their classifications
+- **Implementation**: Documents are tagged based on their classification in the hierarchy
+- **Example**: A document might be tagged as both "executive" and "employee" in a personnel hierarchy
+- **Requirement**: Collections must have compatible features (e.g., face embeddings) to be included in the same hierarchy
+- **SQL Analogue**: Analogous to a multi-way JOIN in SQL where multiple tables are joined together based on related columns
+
+#### Hierarchical Node Inheritance
+- **Node Relationship**: When node A is a child of node B, all tags and properties attached to node B are automatically attached to node A
+- **Tag Inheritance**: Parent nodes have a subset of the tags of their children (e.g., "employee" tag exists in both employee and executive nodes)
+- **Property Inheritance**: Child nodes inherit all properties of parent nodes while adding their own unique properties
+- **Implementation Example**:
+  ```
+  // People Collection with hierarchical properties
+  [
+    {
+      "_id": "p1",
+      "name": "Jane Smith",
+      // Employee properties (inherited from parent)
+      "employeeId": "E12345",
+      "department": "Marketing",
+      // Executive-specific properties (unique to this node)
+      "executiveLevel": "VP",
+      "budgetAuthority": 5000000
+    },
+    {
+      "_id": "p2",
+      "name": "John Doe",
+      // Only employee properties
+      "employeeId": "E67890",
+      "department": "Engineering"
+    },
+    {
+      "_id": "p3",
+      "name": "Alice Johnson"
+      // Regular person, no employee or executive properties
+    }
+  ]
+  ```
+
+#### Taxonomy as Collection Joining
+- **Joining Mechanism**: Taxonomies function as specialized joins between collections
+- **Collection Structure**: A taxonomy is a collection where each node is a structured document
+- **Feature Consistency**: Nodes at all levels must have compatible feature types to enable matching
+- **Join Implementation**: Similar to MongoDB's `$lookup` aggregation operation:
+  ```
+  // Example join operation (conceptual)
+  db.content.aggregate([
+    {
+      $lookup: {
+        from: "taxonomyNodes",
+        localField: "features.faceEmbedding",
+        foreignField: "features.faceEmbedding",
+        as: "matchedTaxonomyNodes",
+        similarity: 0.85  // Mixpeek-specific extension for similarity matching
+      }
+    }
+  ])
+  ```
+- **Result**: Content documents are enriched with matching taxonomy node properties
+- **Distinction from Traditional Joins**: Unlike exact-match SQL joins, taxonomies can use similarity-based matching (vector distance, semantic similarity, etc.)
+
+#### Taxonomy Application Workflow
+1. **Creation**: Taxonomies are created as collections with documents representing nodes at different levels
+2. **Feature Assignment**: Each node is assigned features (embeddings, metadata, etc.) required for matching
+3. **Hierarchy Definition**: Nodes are organized in a hierarchy with inheritance relationships
+4. **Application**: When applied to content during ingestion or retrieval:
+   - Content features are compared to taxonomy node features
+   - Matching nodes' properties (tags, metadata) are added to the content document
+   - Hierarchy is respected, so content matching a child node also inherits parent node properties
+
+#### Usage Considerations
+- Taxonomies provide structured organization to otherwise unstructured multimodal content
+- They enable complex filtering and categorization during retrieval
+- The hierarchical model allows for more flexible and granular classification
+- Applying taxonomies should be configurable (during ingestion, as a separate operation, or during retrieval)
+- Feature compatibility between taxonomy nodes and content is essential for effective matching
+
+#### Usage in Mixpeek
+- Taxonomies enhance searchability and organization of multimodal content
+- They enable more effective filtering and categorization during retrieval
+- Taxonomies can be applied during ingestion pipelines or as part of retrieval enrichment
+- They serve as a critical component for implementing join-like operations in the multimodal context
+
+#### Taxonomy Components and Configuration
+
+1. **Retriever Configuration**
+   - Taxonomies leverage the existing retriever architecture for matching
+   - Retriever input schema can be:
+     - Explicitly defined in taxonomy configuration
+     - Inherited from source collection schema (e.g., face embeddings)
+   - Query parameters (like limit/offset) can be:
+     - Hardcoded in pipeline stages
+     - Exposed as parameters in query schema
+     - Used differently across stages as needed
+
+2. **Collection Structure**
+   - Collections in a taxonomy are defined with optional parent relationships
+   - Hierarchy is expressed through parent_collection_id references
+   - Example structure:
+   ```json
+   {
+     "source_collections": [
+       {
+         "collection_id": "col_people",
+         "enrichment_fields": ["name", "basic_access"]
+       },
+       {
+         "collection_id": "col_employees",
+         "parent_collection_id": "col_people",
+         "enrichment_fields": ["employee_id", "department"]
+       }
+     ]
+   }
+   ```
+
+3. **Materialization Options**
+   - Taxonomies can be applied in two modes:
+     - **Materialized**: Results stored in specified output collection
+     - **On-Demand**: Computed during query execution
+   - Materialization is controlled when applying taxonomy to collections
+   - Trade-offs:
+     - Materialized: Better query performance, more storage
+     - On-Demand: Latest results, no extra storage, higher compute cost
+
+#### Retriever Integration
+
+1. **Pipeline Flexibility**
+   - Retriever pipelines can be configured per use case
+   - Each stage can use query parameters independently
+   - Common parameters (limit/offset, cursor/page_size) can be:
+     - Shared across stages
+     - Used differently in each stage
+     - Set as constants or exposed as query parameters
+
+2. **Schema Handling**
+   - Input schema can be inherited from source collections
+   - Explicit schema definition available when needed
+   - Query parameters can include:
+     - Numeric values for pagination/limits
+     - Feature-specific parameters (e.g., similarity thresholds)
+     - Custom parameters for specialized matching
+
+#### Example Configurations
+
+1. **Flat Taxonomy with Inherited Schema**
+```json
+{
+  "taxonomy_name": "Product Categories",
+  "retriever": {
+    "retriever_id": "ret_product_matcher"
+    // Schema inherited from source collection
+  },
+  "source_collections": [...]
+}
+```
+
+2. **Hierarchical Taxonomy with Explicit Schema**
+```json
+{
+  "taxonomy_name": "Organization Structure",
+  "retriever": {
+    "retriever_id": "ret_face_matcher",
+    "input_schema": {
+      "face_embedding": "vector",
+      "limit": "integer",
+      "threshold": "float"
+    }
+  },
+  "source_collections": [
+    {
+      "collection_id": "col_people",
+      "enrichment_fields": [...]
+    },
+    {
+      "collection_id": "col_employees",
+      "parent_collection_id": "col_people",
+      "enrichment_fields": [...]
+    }
+  ]
+}
+```
+
+3. **Taxonomy Application**
+```json
+{
+  "taxonomy_id": "tax_123",
+  "output_collection": "enriched_docs"  // For materialization
+  // or
+  "output_collection": null  // For on-demand computation
+}
+```
+
+#### Implementation Benefits
+- Reuses existing retriever infrastructure
+- Flexible matching behavior through pipeline configuration
+- Simple hierarchy expression through collection relationships
+- Optional materialization for performance/storage trade-offs
+- Consistent parameter handling across pipeline stages
+
+### Clustering and Grouping
+
+In traditional SQL databases, the GROUP BY operation aggregates rows with the same values in specified columns. In Mixpeek's multimodal context, clustering serves as the analogue to GROUP BY operations:
+
+#### Clustering as Group By
+- **Purpose**: Group similar documents together based on feature similarity
+- **Implementation**: Uses algorithms to identify similar documents based on feature proximity
+- **Process**: Documents are grouped based on similarity of specified features (e.g., vector embeddings)
+- **Result**: Creates logical clusters of related documents that can be queried as a unit
+- **SQL Analogue**: Similar to GROUP BY in SQL, but using similarity metrics instead of exact matches
+
+#### Grouper Interface
+To enable flexible grouping beyond just vector-based clustering:
+
+- **Concept**: The Grouper interface provides a standardized way to implement different grouping algorithms
+- **Implementation**: Any algorithm implementing the Grouper interface can be used to cluster documents
+- **Flexibility**: Supports grouping based on arbitrary features, not just vector embeddings
+- **Examples**:
+  - Vector-based clustering using embeddings (K-means, DBSCAN, etc.)
+  - Time-based grouping (by day, month, scene duration)
+  - Categorical grouping (by detected objects, transcribed topics)
+  - Custom similarity metrics for domain-specific grouping
+
+#### Usage in Mixpeek
+- Clustering enhances content organization and discovery
+- Grouped documents can be retrieved and processed as logical units
+- Clusters can be used as inputs to other pipelines or as filtering criteria
+- Different grouping algorithms can be applied to the same collection for different analytical purposes
+
+### Component Relationships
+| Relationship | Cardinality | Description |
+|--------------|-------------|-------------|
+| Bucket → Object | 1:N | A bucket contains multiple objects, each representing a collection of related files. |
+| Object → Document | 1:N | An object can be processed into multiple documents across different collections. |
+| Document → Feature | 1:N | A document has multiple associated features stored in feature stores. |
+| Collection → Document | 1:N | A collection contains multiple documents with a consistent schema. |
+| Feature Store → Feature | 1:N | A feature store contains multiple features of a specific type (e.g., embeddings, detected objects). |
+| Pipeline → Collection | 1:N | A single pipeline can output to multiple collections. |
+| Collection → Pipeline | N:1 | A collection can have one pipeline attached to it for schema validation. |
+| Retriever → Collection | N:M | A retrieval pipeline can query from multiple collections, and a collection can be queried by multiple retrievers. |
+| Retriever → Feature Store | N:M | A retrieval pipeline can query from multiple feature stores to find relevant documents. |
+| Collection → Feature Store | 1:N | A collection is associated with multiple feature stores that index its documents to support retrieval operations. |
+
+### Multimodal Joins and Group By Operations
+In traditional data warehouses, joins connect related data across tables, while GROUP BY operations aggregate related rows. In the multimodal context, we implement these concepts through:
+
+1. **Taxonomies (JOIN Analogue)**: Predefined search schemas with attached properties that can be used to search over collections and enrich matching documents.
+   - Examples include face enrollments, taxonomies, and other grouped features with metadata.
+   - These act as the join tables in relational databases.
+   - Hierarchical taxonomies function similarly to multi-way joins in SQL.
+
+2. **Clustering (GROUP BY Analogue)**: The process of grouping documents based on feature similarity or other criteria.
+   - Various clustering algorithms (K-means, DBSCAN, etc.) serve as instances of the "Grouper" interface.
+   - Can be extended to support arbitrary grouping criteria beyond just vector similarity.
+   - Enables document organization and retrieval in logical clusters.
+
+3. **Feature Linking**: The process of connecting features across different collections based on semantic or visual similarity.
+   - For example, connecting a FaceObject in one collection to matching faces in video frames in another collection.
+
+### Data Flow Architecture
+
+The Mixpeek platform follows a clear data flow architecture:
+
+1. **Storage Layer (Buckets)**
+   - Raw objects and their associated files are stored in buckets
+   - Objects represent collections of related files (e.g., a marketing campaign with video, script, and legal documents)
+   - Buckets provide the source data for ingestion pipelines
+
+2. **Processing Flow (Ingestion Pipelines)**
+   - Objects from buckets are processed through ingestion pipelines
+   - Feature extractors extract various features from the object's files
+   - Processed data is organized into documents stored in collections
+   - Extracted features are stored in specialized feature stores
+   - Each feature maintains a reference to its parent document
+   - Each document maintains a reference to its source object
+
+3. **Retrieval Flow (Retrieval Pipelines)**
+   - Queries are processed through retrieval pipelines
+   - Retrieval pipelines search feature stores to find relevant features
+   - Features are used to locate their parent documents in collections
+   - Documents provide access to processed content and metadata
+   - Source objects can be accessed through document references
+
+This architecture provides several advantages:
+- Clear separation of storage, processing, and retrieval concerns
+- Optimized storage for different data types (raw files, documents, features)
+- Efficient retrieval through specialized feature stores
+- Complete data lineage from query results back to source files
+
+### Parallel Relationships in Ingestion and Retrieval
+
+The Mixpeek architecture has parallel relationships between ingestion and retrieval components:
+
+#### Ingestion Side:
+- **Documents** are constructed to support the selected set of **Feature Extractors**
+- Each Feature Extractor processes specific aspects of the input data
+- The document schema is the union of all fields required by the selected Feature Extractors
+- Feature Extractors populate both document fields and specialized feature stores
+
+#### Retrieval Side:
+- **Collection Indexes** (Feature Stores) are constructed to support the selected set of **Retrievers**
+- Each Retriever requires specific indexes to perform efficient searches
+- The collection's associated feature stores represent the union of all indexes needed by potential retrievers
+- Retrievers query these feature stores to locate relevant documents efficiently
+
+This parallel structure ensures that:
+1. During ingestion, documents are structured to support all potential feature extraction needs
+2. During retrieval, indexes are optimized to support all potential query patterns
+3. Both sides maintain proper references to enable complete data lineage
+
+## 3. User Expectations & Requirements
+
+### 3.1 Multimodal Ingestion
+
+#### Pipeline Definition & Schema Assignment
+- Users define their input schema for the pipeline once they create it.
+- Pipelines specify which buckets they will process objects from.
+- Pipelines define which collections they will write documents to.
+- Pipelines specify which feature stores they will populate with extracted features.
+
+#### Supported Inputs:
+- Objects containing multiple files (image, audio, video, text)
+- Mimetypes (video/mp4, image/png, etc.) are determined from file URLs
+- Built-in JSONSchemas defining Features (FaceObject, SplitScene, etc.)
+- Standard JSON types (string, boolean, integer, etc.)
+
+#### Feature Extractors:
+- Users can select which properties from the pipeline input schema to send to feature extraction workflows
+- Feature extractors process objects and their files to extract specific features
+- Extracted features are stored in appropriate feature stores with references to their parent documents
+- Documents are stored in collections with references to their source objects
+
+#### Feature Extractor Dependencies:
+- Some feature extractors depend on outputs from other extractors
+- Feature extractors can be chained in a pipeline to satisfy these dependencies
+- When defining a pipeline, the system will validate that all required dependencies are met
+
+#### Pipeline Invocation
+- Schema input required for accepting an ingestion request (bucket, object, pipeline, collection, etc.)
+- All schema types defined in the pipeline must be provided during invocation
+- The pipeline will validate the combined schema of all Feature Extractors against the input data
+
+#### Ingestion Workflow Architecture
+
+The ingestion workflow follows this process:
+
+1. **Input Acceptance**
+   - System accepts objects from buckets via API
+   - Each object is processed as an independent parallel job
+   - Input validation occurs against the pipeline's defined schema
+
+2. **File Processing**
+   - Files within the object are processed according to their types
+   - Metadata extraction occurs during ingestion
+   - All metadata is stored with the document for efficient retrieval
+
+3. **Parallel Feature Extraction**
+   - Feature extractors run in parallel to process the object's files
+   - Each feature extractor produces features that are stored in feature stores
+   - Features maintain references to their parent documents
+
+4. **Document Creation**
+   - Processed data is organized into documents
+   - Documents are stored in collections with references to source objects
+   - Document status tracking via `__fully_enriched` flag
+
+### 3.2 Data Storage & Indexing
+
+User Requirement: Users expect structured storage of extracted data.
+- Buckets store raw objects and their files
+- Collections store processed documents with references to source objects
+- Feature stores contain extracted features with references to parent documents
+- This three-tier storage architecture optimizes for different access patterns:
+  - Buckets optimize for raw file storage and retrieval
+  - Collections optimize for document-level queries and filtering
+  - Feature stores optimize for specialized search (vector similarity, object detection, etc.)
+- Documents will have the following metadata properties:
+  - __fully_enriched (bool)
+  - __missing_features (string[])
+  - __pipeline_version (int)
+  - source_object_id (reference to the source object in a bucket)
+
+### 3.3 Multimodal Search & Retrieval
+
+#### Query Execution & Schema Handling
+- Queries must specify input schema to determine parameter configuration
+- Retrieval pipelines search feature stores to find relevant features
+- Features are used to locate their parent documents in collections
+- Documents provide access to processed content and metadata
+- Source objects can be accessed through document references
+
+#### Retrieval Pipeline
+
+##### Retrieval Pipeline Definition
+- Users define search inputs and select which feature stores and collections to query
+- Retrieval pipelines consist of stages that search different feature stores
+- Results from feature stores are used to locate documents in collections
+- Final results include documents with references to their source objects
+
+##### Pipeline Execution:
+- Retrieval pipelines can involve multiple stages:
+  - KNN search in vector feature stores
+  - Filtering in document collections
+  - Joining results across different feature stores and collections
+- Each stage in the retrieval pipeline can be sequential or parallel
+- Final results maintain the complete lineage from features to documents to source objects
+
+#### Task Statuses & Webhooks
+
+##### Status Endpoints:
+- Pipeline status endpoint for overall execution tracking.
+- Task status endpoint for granular progress tracking.
+
+##### Workflow Management:
+- Each pipeline has multiple associated tasks.
+- Status filtering by task_id or pipeline_id supported.
+
+##### Webhooks:
+- Enable external feature extractor plugins.
+- Support custom data preparation at ingestion time.
+
+### Out of Scope
+- Auto Migration between Collections
+  - MVP does not support collection migration (i.e., modifying feature shape post-ingestion). This will be valuable down the line however (i.e. new embedding model comes out and users want to test different versions, or a new retrieval technique requires a different feature shape).
+- Optional Schema Validation
+
+## Appendix
+
+- Figure 1. High-level architectural diagram for ingestion & feature extraction (Link)
+- Figure 2. Initial architecture diagram whiteboard session
+
+## Developer Task List for Mixpeek Multimodal Platform
+
+### 1. Multimodal Ingestion
+- Implement pipeline definition and schema assignment functionality
+- Support ingestion of various file types (image, audio, video, text, etc.)
+- Implement MIME type determination from file URLs
+- Design and implement JSONSchema-based feature extraction models
+- Develop user-configurable feature extractors with structured inputs/outputs
+- Handle errors when a required index is missing in a namespace
+- Implement schema validation for ingestion requests
+- Develop ingestion pipeline triggers (API call, scheduled jobs, event-driven)
+- Optimize ingestion workflow for parallel execution and temporary storage
+- Enable pipeline chaining with automated triggers
+- Implement retry/timeout handling for pipeline triggering
+- Ensure feature extractors execute in parallel with proper dependency management
+- Implement two-shot retry mechanism for feature extractors
+- Develop robust error handling with logging and notifications (Slack, email, webhooks)
+- Implement functionality to attach pipelines to collections for schema validation
+- Enable collections to enforce pipeline-defined schemas for all incoming data
+- Implement specialized feature extractors:
+  - Face detection and recognition
+  - Embedding generation for various content types
+  - Taxonomy classification with hierarchical categories
+  - Clustering algorithms for grouping similar items
+- Develop dependency management for feature extractors that require outputs from other extractors
+- Implement validation to ensure feature extractor dependencies are satisfied
+
+### 2. Data Storage & Indexing
+- Implement structured storage for extracted data with versioning
+- Ensure immutable pipeline versions for consistent data indexing
+- Support versioning of downstream collections based on pipeline ID
+- Develop mechanism to attach pipelines to collections for schema validation
+- Implement validation rules when pipelines are attached to collections
+- Implement query profiling to optimize frequently accessed keys
+- Track missing feature keys in a metadata field (__missing_features array)
+- Define metadata properties for documents (__fully_enriched, __pipeline_version)
+
+### 3. Multimodal Search & Retrieval
+- Implement query schema validation and configuration
+- Default queries to return only fully enriched documents
+- Develop hybrid search capabilities with vector model selection (CLIP, multimodal, etc.)
+- Implement metadata-based pre-filters (timestamp, object category, etc.)
+- Support filtering, group-by, and pagination for retrieval
+- Develop query execution pipeline with sequential/parallel search stages
+- Implement template tag support for retrieval pipeline definitions
+- Support dynamic stage inputs and outputs with dot notation
+- Optimize retrieval execution for hybrid search (parallel and sequential stages)
+- Implement pre-filter and post-filter mechanisms in retrieval pipeline
+- Support integration of multiple retrieval techniques (KNN, LLM, 3P APIs)
+- Develop status endpoints for tracking retrieval execution
+- Implement specialized retrieval capabilities:
+  - Taxonomy-based filtering and search
+  - Cluster-based content discovery
+  - Face-based content retrieval
+- Support hybrid search across taxonomies, clusters, and other features
+
+### 4. Task Status & Webhooks
+- Develop pipeline status endpoint for overall execution tracking
+- Implement task-level progress tracking
+- Support webhook-based integrations for external feature extractors
+- Enable custom data preparation through webhooks at ingestion time
+
+### 5. Out of Scope (MVP Considerations)
+- Exclude automatic migration between collections in the MVP phase
+- Keep optional schema validation out of initial implementation
+
+*Note: Ensure that each task is well-defined with clear ownership and priority levels for implementation. This task list should be periodically reviewed and updated based on system evolution and design changes.*
+
+### Taxonomies
+
+#### Hierarchical Taxonomy Implementation Details
+
+Mixpeek supports two implementation approaches for hierarchical taxonomies:
+
+1. **Explicit Hierarchy**
+   - Parent-child relationships defined directly in configuration
+   - Clear, intentional structure specification
+   - Recommended for complex hierarchies
+
+2. **Implicit Hierarchy**
+   - Relationships inferred from metadata field patterns
+   - More flexible but requires careful metadata management
+   - Suitable for simpler, metadata-driven hierarchies
+
+##### Explicit Hierarchy Configuration
+```json
+{
+  "taxonomy_name": "Personnel Hierarchy",
+  "description": "Hierarchical taxonomy for organizing personnel",
+  "taxonomy_type": "hierarchical",
+  "retriever_id": "ret_default_face_matching",
+  "hierarchical_config": {
+    "collection_nodes": [
+      {
+        "parent_collection_id": null,
+        "collection_id": "col_people",
+        "enrichment_fields": ["name"]
+      },
+      {
+        "parent_collection_id": "col_people",
+        "collection_id": "col_employees",
+        "enrichment_fields": ["employeeId", "department"]
+      }
+      // ... additional nodes ...
+    ]
+  }
+}
+```
+
+##### Implicit Hierarchy Configuration
+```json
+{
+  "taxonomy_name": "Personnel Categories",
+  "description": "Personnel categories with implicit relationships",
+  "taxonomy_type": "hierarchical",
+  "implicit_hierarchy_config": {
+    "collections": [
+      {
+        "collection_id": "col_people",
+        "enrichment_fields": ["name"],
+        "retriever_id": "ret_face_matching"
+      },
+      {
+        "collection_id": "col_employees",
+        "enrichment_fields": ["employeeId", "department", "name"],
+        "retriever_id": "ret_face_matching"
+      }
+      // ... additional collections ...
+    ]
+  }
+}
+```
+
+##### Hierarchical Enrichment Process
+
+The enrichment process follows a sequential pattern through the hierarchy:
+
+1. **Parent Level Processing**
+   - Initial search against top-level collections
+   - Base metadata fields added to results
+
+2. **Child Level Processing**
+   - Enriched results used for subsequent searches
+   - Additional metadata fields accumulated
+   - Process continues through hierarchy levels
+
+3. **Result Accumulation**
+   - Metadata inherited from all matching levels
+   - Clear lineage maintained through hierarchy
+   - Final results contain complete enrichment chain
+
+Example enrichment flow:
+```json
+// Original document
+{
+  "frame_id": "frame_123",
+  "face_embedding": [0.2, 0.3, 0.1]
+}
+
+// After hierarchical enrichment
+{
+  "frame_id": "frame_123",
+  "face_embedding": [0.2, 0.3, 0.1],
+  "name": "Jane Smith",           // From People collection
+  "employeeId": "EMP-42",        // From Employees collection
+  "department": "Engineering"     // From Employees collection
+}
+```
+
+##### Implementation Requirements
+
+1. **Retriever Configuration**
+   - Each hierarchy level can specify unique retriever
+   - Retrievers must handle accumulated metadata
+   - Consistent feature compatibility across levels
+
+2. **Metadata Management**
+   - Clear field ownership per level
+   - Conflict resolution for duplicate fields
+   - Validation of required fields per level
+
+3. **Performance Considerations**
+   - Cascading searches impact query time
+   - Caching strategies for frequent patterns
+   - Optimization of retriever execution order

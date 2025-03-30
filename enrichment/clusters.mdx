@@ -1,0 +1,175 @@
+---
+title: "Clusters"
+---
+
+<Note>
+  Clustering in Mixpeek serves as the multimodal equivalent of SQL GROUP BY operations, allowing you to group similar documents together based on feature similarity rather than exact field matches.
+</Note>
+
+## Overview
+
+Clustering enables you to organize and group documents based on their feature similarity. Unlike traditional SQL GROUP BY operations that group rows based on exact field matches, clustering uses similarity metrics to group documents that share similar characteristics.
+
+<iframe
+  width="600"
+  height="310"
+  src="https://d8ts56gtwtyh1.cloudfront.net/docs/warehouse/clusters.mp4"
+  title="Clustering Demo"
+  frameborder="0"
+  allow="accelerometer; autoplay; muted"
+  allowfullscreen
+  autoplay
+  muted
+></iframe>
+
+<Steps>
+  <Step title="Select Clustering Approach">
+    Choose between two clustering methods:
+    
+    **Vector-Based Clustering**
+    Groups documents based on semantic similarity using embedding vectors and clustering algorithms like HDBSCAN or K-Means.
+    
+    **Attribute-Based Grouping**
+    Groups documents based on specific metadata attributes like categories, dates, or custom fields.
+  </Step>
+  
+  <Step title="Configure Options">
+    Set specific parameters for your chosen approach. For vector-based clustering, select the embedding model and algorithm (e.g., HDBSCAN). For attribute-based, select the fields to group by.
+  </Step>
+  
+  <Step title="Configure Cluster Naming">
+    Set up automatic cluster naming:
+    
+    **Automatic Naming**
+    - Enable: Yes/No
+    - Generative Model: GPT-4o
+    - Method: Centroid
+  </Step>
+  
+  <Step title="Select Target Collection">
+    Choose which collection the cluster information will be added to. This determines which documents will be grouped together.
+  </Step>
+  
+  <Step title="Set Execution Schedule">
+    Determine when clustering will run:
+    - One-time execution
+    - Scheduled at a defined cadence (daily, weekly, etc.)
+    - Trigger-based (when new documents are added)
+  </Step>
+</Steps>
+
+## Clustering Types
+
+Mixpeek supports various clustering approaches through the Grouper interface:
+
+<CardGroup cols={2}>
+  <Card title="Vector Clustering" icon="vector-square">
+    Groups documents based on embedding similarity using algorithms like K-means or DBSCAN. Perfect for finding visually or semantically similar content.
+  </Card>
+
+  <Card title="Time-based Clustering" icon="clock">
+    Groups documents based on temporal proximity, such as grouping video scenes by time ranges or documents by creation date.
+  </Card>
+
+  <Card title="Categorical Clustering" icon="tags">
+    Groups documents based on detected categories, objects, or topics. Useful for organizing content by subject matter.
+  </Card>
+
+  <Card title="Custom Clustering" icon="code">
+    Supports custom grouping criteria through the Grouper interface for domain-specific clustering needs.
+  </Card>
+</CardGroup>
+
+## Implementation Details
+
+### Dimensional Reduction and Visualization
+
+Before applying clustering algorithms, high-dimensional feature vectors (like embeddings) are reduced to lower dimensions using techniques like UMAP or t-SNE. This process serves two important purposes:
+
+1. **Improves Clustering Performance**: Reduces computational complexity and often leads to better cluster separation
+2. **Enables Visual Inspection**: Allows you to visualize feature relationships in 2D or 3D space
+
+<Frame>
+  ![Cluster Visualization Example](https://d8ts56gtwtyh1.cloudfront.net/docs/warehouse/images/cluster-tsne.jpg)
+  *t-SNE visualization showing document clusters by content type and category*
+</Frame>
+
+This visualization step is crucial for:
+- Validating clustering quality before applying
+- Identifying outliers or unexpected groupings
+- Determining optimal cluster parameters
+- Communicating patterns to stakeholders
+
+### Clustering Process
+
+<Steps>
+  <Step title="Feature Selection">
+    Choose which features to use for clustering (e.g., embeddings, timestamps, categories)
+  </Step>
+  <Step title="Dimensional Reduction">
+    Apply UMAP or t-SNE to reduce high-dimensional features to 2D or 3D for visualization and improved clustering
+  </Step>
+  <Step title="Algorithm Configuration">
+    Configure clustering parameters (e.g., number of clusters, similarity thresholds)
+  </Step>
+  <Step title="Grouping Execution">
+    Apply the clustering algorithm to group similar documents
+  </Step>
+  <Step title="Result Storage">
+    Store cluster assignments and metadata for future retrieval
+  </Step>
+</Steps>
+
+## Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Content Organization" icon="folder-tree">
+    Automatically organize large collections of documents into logical groups
+  </Card>
+
+  <Card title="Similar Content Discovery" icon="magnifying-glass">
+    Find related content by exploring documents within the same cluster
+  </Card>
+
+  <Card title="Batch Processing" icon="layer-group">
+    Process similar documents together for efficiency
+  </Card>
+
+  <Card title="Analytics" icon="chart-bar">
+    Analyze patterns and trends within document clusters
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Feature Selection" icon="check">
+    Choose features that best represent the similarity you want to capture. For example:
+    - Use embeddings for semantic similarity
+    - Use timestamps for temporal grouping
+    - Use categorical features for topic-based grouping
+  </Accordion>
+
+  <Accordion title="Algorithm Choice" icon="microchip">
+    Select clustering algorithms based on your needs:
+    - K-means for well-defined, spherical clusters
+    - DBSCAN for density-based clustering
+    - Custom algorithms for specialized grouping criteria
+  </Accordion>
+
+  <Accordion title="Performance Considerations" icon="gauge-high">
+    Consider the computational complexity of your chosen algorithm and the size of your document collection when planning clustering operations.
+  </Accordion>
+</AccordionGroup>
+
+## Limitations
+
+- **Document Threshold:** Maximum of 100,000 documents per clustering operation
+- **Algorithm Constraints:** K-means limited to 1,000 clusters; HDBSCAN limited to 50,000 documents
+- **Visualization Limits:** t-SNE and UMAP visualizations limited to 10,000 points for performance reasons
+- **Reclustering Frequency:** Scheduled clustering limited to once per hour at minimum intervals
+- **Feature Compatibility:** Not all feature types can be used for clustering (e.g., some binary features)
+- **Processing Time:** Large-scale clustering operations may take several minutes to complete
+- **Cluster Storage:** Cluster assignments persist for 90 days by default before requiring refresh
+- **Naming Generation:** Automatic cluster naming limited to 50 characters per cluster label
+

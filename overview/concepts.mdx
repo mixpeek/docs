@@ -1,0 +1,174 @@
+---
+title: "Concepts"
+description: "Key concepts for using a Multimodal Data Warehouse"
+---
+
+<Note>
+  Understanding these concepts will help you utilize the Mixpeek Multimodal Warehouse offerings.
+</Note>
+
+Mixpeek organizes data in a structured hierarchy designed for flexibility and performance of multimodal content processing and retrieval.
+
+
+| Mixpeek Term | Description | Data Warehouse Analogy |
+|--------------|-------------|-----------------------------------|
+| [Namespace](/management/namespaces) | Query boundaries that isolate environments | Database/Schema |
+| [Bucket](/management/buckets) | Storage containers for raw objects and files | Raw Data Lake/Storage Layer |
+| [Object](/management/buckets#objects) | Collections of related input files | Raw Data Files/Source Documents |
+| [Blob](/management/buckets#blobs) | Individual raw files within Objects | Binary Data/Single File |
+| [Collection](/management/collections) | Groups of processed documents with consistent schema | Table |
+| [Document](/management/collections#documents) | Structured outputs from feature extractors | Row |
+| [Feature Extractor](/extraction/overview) | Specialized components that process inputs to extract specific features | ETL Process/Transformation |
+| [Feature](/management/features) | Extracted data elements stored in feature stores | Column/Field |
+| [Feature Store](/management/features#feature-storage) | Specialized storage for extracted features optimized for efficient retrieval | Indexed Columns/Materialized Views |
+| [Retriever](/search/retrievers) | Query engines that search feature stores to find relevant documents | SQL Query Engine |
+| [Retriever Stage](/search/stages) | Components of search pipelines that perform specific operations in the retrieval process | Query Execution Plan Step |
+| [Taxonomy](/enrichment/taxonomies) | Multimodal equivalent of SQL JOIN operations | JOIN Operation |
+| [Clustering](/enrichment/clusters) | Multimodal equivalent of SQL GROUP BY operations | GROUP BY Operation |
+| [Research](/search/research) | Multi-step process that explores topics through iterative searches, generates structured reports with sections, and combines retrieved information into cohesive content | Business Intelligence Report |
+
+
+
+## Component Relationships
+
+The different components in Mixpeek relate to each other in specific ways:
+
+<Frame>
+  ```mermaid
+  graph TD
+    A[Namespace] --> B[Buckets]
+    B --> D[Objects]
+    D --> C[Collections]
+    
+    C --> FE[Feature Extractors]
+    FE --> F[Features]
+    F --> E[Documents]
+    
+    style A fill:#FC5185,stroke:#333
+    style FE fill:#FC5185,stroke:#333
+    style F fill:#FC5185,stroke:#333
+  ```
+</Frame>
+
+### Understanding the Relationships
+
+<AccordionGroup>
+  <Accordion title="Bucket → Object Relationship" icon="arrow-right">
+    A bucket contains multiple objects, each representing a collection of related files. Objects are the raw data containers before processing.
+  </Accordion>
+
+  <Accordion title="Object → Document Relationship" icon="arrow-right">
+    An object can be processed into multiple documents across different collections, depending on the processing pipeline applied.
+  </Accordion>
+
+  <Accordion title="Document → Feature Relationship" icon="arrow-right">
+    A document has multiple associated features stored in feature stores. Features are the extracted elements that make up the document's content.
+  </Accordion>
+
+  <Accordion title="Collection → Document Relationship" icon="arrow-right">
+    A collection contains multiple documents with a consistent schema. Documents in a collection share the same structure.
+  </Accordion>
+</AccordionGroup>
+
+## Processing Components
+
+<CardGroup cols={2}>
+  <Card title="Feature Extractors" icon="microchip">
+    Specialized components that process inputs to extract specific features like embeddings, detected objects, or transcriptions
+  </Card>
+
+  <Card title="Retrievers" icon="magnifying-glass">
+    Query engines that search feature stores to find relevant documents
+  </Card>
+</CardGroup>
+
+## Multimodal Analogs to SQL Operations
+
+Mixpeek provides specialized components that function as multimodal analogs to traditional SQL operations:
+
+<Tabs>
+  <Tab title="JOIN → Taxonomies">
+    <CardGroup cols={1}>
+      <Card title="Taxonomies" icon="sitemap">
+        Taxonomies in Mixpeek serve as the multimodal equivalent of SQL JOIN operations. They allow you to enrich documents with metadata from other collections based on feature similarity rather than exact key matches.
+      </Card>
+    </CardGroup>
+
+    <AccordionGroup>
+      <Accordion title="Flat Taxonomies">
+        Similar to a single JOIN between two tables, enriching a collection of documents with metadata from another collection.
+      </Accordion>
+
+      <Accordion title="Hierarchical Taxonomies">
+        Analogous to multi-way JOINs in SQL where multiple tables are connected through related columns, creating a hierarchy of related data.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+
+  <Tab title="GROUP BY → Clustering">
+    <CardGroup cols={1}>
+      <Card title="Clustering" icon="object-group">
+        Clustering functions as the multimodal equivalent of SQL GROUP BY operations. It groups similar documents together based on feature similarity rather than exact field matches.
+      </Card>
+    </CardGroup>
+
+    <AccordionGroup>
+      <Accordion title="Vector Clustering">
+        Groups documents based on embedding similarity using algorithms like K-means or DBSCAN.
+      </Accordion>
+
+      <Accordion title="Custom Grouping">
+        Supports custom grouping criteria beyond vector similarity, such as time-based or categorical grouping.
+      </Accordion>
+    </AccordionGroup>
+  </Tab>
+</Tabs>
+
+## Data Flow Architecture
+
+<Steps>
+  <Step title="Storage Layer (Buckets)">
+    Raw objects and their associated files are stored in buckets. Objects represent collections of related files (e.g., a marketing campaign with video, script, and legal documents).
+  </Step>
+  <Step title="Processing Flow (Feature Extrctors)">
+    Objects from buckets are processed through feature extractors. Feature extractors extract various features from the object's files, which are then organized into documents stored in collections.
+  </Step>
+  <Step title="Feature Storage">
+    Extracted features are stored in specialized feature stores. Each feature maintains a reference to its parent document, and each document maintains a reference to its source object.
+  </Step>
+  <Step title="Retrieval Flow (Retrieval Pipelines)">
+    Queries are processed through retrieval pipelines that search feature stores to find relevant features. Features are used to locate their parent documents in collections.
+  </Step>
+</Steps>
+
+## Metadata and Document Properties
+
+All documents in Mixpeek collections include standard metadata properties:
+
+```json
+{
+  "__fully_enriched": true,           // Indicates if all expected features have been extracted
+  "__missing_features": [],           // Lists any features that failed to extract
+  "__pipeline_version": 1,            // Version of the pipeline that processed this document
+  "source_object_id": "obj_123abc"    // Reference to the source object in a bucket
+  // Additional document-specific fields...
+}
+```
+
+<Warning>
+  Fields prefixed with double underscores (`__`) are reserved for system metadata. Do not use this prefix for your custom fields.
+</Warning>
+
+## Next Steps
+
+Now that you understand the core concepts of Mixpeek, you're ready to start building with the platform:
+
+<CardGroup cols={2}>
+  <Card title="Quickstart Guide" icon="rocket" href="/overview/quickstart">
+    Get started with your first Mixpeek project
+  </Card>
+  
+  <Card title="Data Management" icon="database" href="/management/namespaces">
+    Learn how to organize and manage your data
+  </Card>
+</CardGroup>

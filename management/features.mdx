@@ -1,0 +1,152 @@
+---
+title: "Features"
+description: "Understanding features and feature extraction in Mixpeek"
+---
+
+<Note>
+  Features are the extracted data elements that represent the content and characteristics of your documents. They are the building blocks that enable advanced search and retrieval capabilities.
+</Note>
+
+## Overview
+
+Features in Mixpeek are structured data elements extracted from your content during processing. They represent specific aspects of your data such as:
+
+- Text embeddings
+- Image descriptors
+- Audio transcriptions
+- Video scene information
+- PDF content structures
+- Detected entities and concepts
+
+
+<iframe
+  width="600"
+  height="310"
+  src="https://d8ts56gtwtyh1.cloudfront.net/docs/warehouse/features.mp4"
+  title="YouTube video player"
+  frameborder="0"
+  allow="accelerometer; autoplay; muted"
+  allowfullscreen
+  autoplay
+  muted
+></iframe>
+
+<Steps>
+  <Step title="Feature Selection">
+    Choose which specific characteristics need to be extracted based on your retrieval and analysis requirements.
+  </Step>
+  <Step title="Extraction Processing">
+    Run specialized extractors that process the content to generate features using AI models and algorithms.
+  </Step>
+  <Step title="Feature Storage">
+    Store processed features in optimized feature stores designed for rapid retrieval and similarity searching.
+  </Step>
+</Steps>
+
+<Frame>
+  ```mermaid
+  graph TD
+    A[Raw Content] --> B[Feature Extractors]
+    B --> C[Features]
+    C --> D[Feature Store]
+    D --> E[Retrieval System]
+    
+    style B fill:#FC5185,stroke:#333
+    style C fill:#FC5185,stroke:#333
+    style D fill:#FC5185,stroke:#333
+  ```
+</Frame>
+
+## Feature Extractors
+
+Extractors are pre-built pipelines that have defined input and output schemas. Each extractor runs in parallel within a collection (in a queue). These extractors have optional parameters that can be configured when the collection is defined. 
+
+![Bucket Details](https://d8ts56gtwtyh1.cloudfront.net/docs/warehouse/images/feature_extractor.jpg)
+
+
+<CardGroup cols={2}>
+  <Card title="Vector Embeddings" icon="brain">
+    High-dimensional numerical representations of content that capture semantic meaning
+  </Card>
+  
+  <Card title="Metadata Features" icon="tags">
+    Structured data fields such as categories, timestamps, and attributes
+  </Card>
+  
+  <Card title="Media-Specific Features" icon="photo-film">
+    Specialized features like image scene classifications, video timestamps, or audio speaker identification
+  </Card>
+  
+  <Card title="Relational Features" icon="diagram-project">
+    Features that establish connections between different content items
+  </Card>
+</CardGroup>
+
+### Extraction Process
+
+Features are created through feature extractors as part of processing pipelines. This happens in several stages:
+
+<Steps>
+  <Step title="Raw Content Analysis">
+    Content is analyzed based on its type (text, image, video, etc.)
+  </Step>
+  <Step title="Feature Extraction">
+    Specialized extractors process the content to generate features
+  </Step>
+  <Step title="Feature Normalization">
+    Features are normalized into consistent formats
+  </Step>
+  <Step title="Storage">
+    Processed features are stored in optimized feature stores
+  </Step>
+</Steps>
+
+
+## Feature Storage
+
+Features are stored in specialized feature stores optimized for efficient retrieval. Unlike traditional database columns, feature stores are designed to handle:
+
+- High-dimensional vector data
+- Efficient similarity searching
+- Specialized indexes for multimodal content
+- Rapid retrieval of specific feature types
+
+
+![Bucket Details](https://d8ts56gtwtyh1.cloudfront.net/docs/warehouse/images/feature_details.jpg)
+
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Understand Feature Types" icon="lightbulb">
+    Different content requires different feature types. Text works well with embeddings, while images need visual descriptors.
+  </Card>
+  
+  <Card title="Feature Composition" icon="layer-group">
+    Combine multiple features within multiple retrieval stages for more accurate retrieval. Text + image features provide better results than either alone.
+  </Card>
+  
+  <Card title="Regular Updates" icon="arrows-rotate">
+    As your content evolves, consider reprocessing to generate updated features with the latest extractors.
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+Now that you understand features in Mixpeek, you can:
+
+<CardGroup cols={2}>
+  <Card title="Explore Feature Extractors" icon="microchip" href="/extraction">
+    Learn about the different feature extractors available
+  </Card>
+</CardGroup>
+
+## Limitations
+
+- **Extraction Time:** Complex feature extraction on large media files may require extended processing time
+- **Model Specificity:** Features are tied to the specific model version used during extraction
+- **Storage Limits:** Feature stores have capacity limits based on your account tier
+- **Update Constraints:** Features cannot be selectively updated; re-extraction of the entire document is required
+- **Processing Dependencies:** Feature extraction depends on the availability of third-party models and services
+- **Cross-Feature Compatibility:** Not all feature types can be directly compared or combined in search operations
+- **Format Support:** Some specialized formats may have limited feature extraction capabilities

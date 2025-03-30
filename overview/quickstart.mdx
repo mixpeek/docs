@@ -1,153 +1,138 @@
 ---
 title: "Quickstart"
+description: "Get up and running with Mixpeek in minutes"
 ---
 
-<a href="https://app.getpostman.com/run-collection/32693262-6a661bb8-eed3-4066-9faa-423ab21dbeab?action=collection%2Ffork&source=rip_markdown&collection-url=entityId%3D32693262-6a661bb8-eed3-4066-9faa-423ab21dbeab%26entityType%3Dcollection%26workspaceId%3Da7b77c3c-100a-414b-95ef-64425338281e#?env%5BProduction%5D=W3sia2V5IjoidG9rZW4iLCJ2YWx1ZSI6IkFQSV9LRVlfSEVSRSIsImVuYWJsZWQiOnRydWUsInR5cGUiOiJkZWZhdWx0Iiwic2Vzc2lvblZhbHVlIjoiQVBJX0tFWV9IRVJFIiwiY29tcGxldGVTZXNzaW9uVmFsdWUiOiJBUElfS0VZX0hFUkUiLCJzZXNzaW9uSW5kZXgiOjB9LHsia2V5IjoibmFtZXNwYWNlIiwidmFsdWUiOiJOQU1FU1BBQ0VfSEVSRSIsImVuYWJsZWQiOnRydWUsInR5cGUiOiJkZWZhdWx0Iiwic2Vzc2lvblZhbHVlIjoiTkFNRVNQQUNFX0hFUkUiLCJjb21wbGV0ZVNlc3Npb25WYWx1ZSI6Ik5BTUVTUEFDRV9IRVJFIiwic2Vzc2lvbkluZGV4IjoxfV0=" target="_blank">
-  <img height="200" noZoom src="https://run.pstmn.io/button.svg" />
-</a>
-
+<Note>
+  This quickstart guide will walk you through creating a simple multimodal search application with Mixpeek. You'll learn how to ingest content, extract features, and build a search endpoint.
+</Note>
 
 <iframe
-  width="560"
-  height="315"
-  src="https://www.youtube.com/embed/jkIXzfKBvM0"
-  title="YouTube video player"
+  width="600"
+  height="310"
+  src="https://d8ts56gtwtyh1.cloudfront.net/docs/warehouse/quickstart.mp4"
   frameborder="0"
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allow="accelerometer; autoplay; muted"
   allowfullscreen
+  autoplay
+  muted
 ></iframe>
 
-## Getting Started
+## Prerequisites
 
-We'll be using the requests library.
+Before you begin, make sure you have:
 
+- A Mixpeek account (sign up at [mixpeek.com/start](https://mixpeek.com/start))
+- Your API key (found in your dashboard)
+- Basic familiarity with REST APIs
 
-```python
-import os
-import requests
-
-api_key = "YOUR_API_KEY"
-
-headers = {
-  'Authorization': f'Bearer {api_key}',
-  'Content-Type': 'application/json'
-}
-```
-
-## Indexing Content
-
-You can index various types of content including images, videos, and text:
-
-### Image Indexing
+## Complete Example
 
 ```python
-# Index an image from URL
-import requests
-import json
+from mixpeek import Mixpeek
+import time
 
-url = "https://api.mixpeek.com/v1/ingest/images/url"
+# Initialize the Mixpeek client
+mp = Mixpeek(api_key="YOUR_API_KEY")
 
-payload = json.dumps({
-  "url": "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/aussie_jumping.jpg",
-  "collection": "test",
-  "feature_extractors": {
-    "embed": [
-      {
-        "embedding_model": "multimodal",
-        "type": "url"
+# Create a namespace
+namespace = mp.namespaces.create(
+    name="quickstart",
+    description="My first Mixpeek project"
+)
+namespace_id = namespace["namespace_id"]
+
+# Create a bucket
+bucket = mp.buckets.create(
+    namespace_id=namespace_id,
+    name="content-bucket",
+    description="Storage for our content",
+    schema={
+      "my_img": {
+        "type" : "image"
       }
+    }
+)
+bucket_id = bucket["bucket_id"]
+
+# Create a collection
+collection = mp.collections.create(
+    namespace_id=namespace_id,
+    name="content-collection",
+    description="Processed content documents",
+    source={
+      "bucket": bucket_id
+    }
+    feature_extractors=[
+      {"feature_extractor_name": "scene_splitter"}
     ]
-  }
-})
-response = requests.request("POST", url, headers=headers, data=payload)
-```
+)
+collection_id = collection["collection_id"]
 
-[Ingest Image API](/api-reference/ingest-assets/ingest-image-url)
-
-### Video Indexing
-
-```python
-# Index a video from URL
-url = "https://api.mixpeek.com/v1/ingest/videos/url"
-
-payload = json.dumps({
-  "url": "https://mixpeek-public-demo.s3.us-east-2.amazonaws.com/starter/jurassic_bunny.mp4",
-  "collection": "test",
-  "feature_extractors": [
-    {
-      "interval_sec": 30,
-      "transcribe": {
-        "enabled": True,
-        "embedding_model": "text"
-      },
-      "embed": [
+# Upload an object
+object = mp.objects.create(
+    bucket_id=bucket_id,
+    name="content-bucket",
+    files=[
         {
-          "type": "url",
-          "embedding_model": "multimodal"
+            "my_img": "https://example.com/sample-image.jpg"
         }
-      ]
-    }
-  ]
-})
-
-response = requests.request("POST", url, headers=headers, data=payload)
-```
-
-[Ingest Video API](/api-reference/ingest-assets/ingest-video-url)
-
-
-### Text Indexing
-
-```python
-url = "https://api.mixpeek.com/v1/ingest/text"
-
-payload = json.dumps({
-  "collection": "test",
-  "feature_extractors": {
-    "embed": [
-      {
-        "type": "text",
-        "value": "Lorem ipsum ... ",
-        "embedding_model": "text"
-      }
     ]
-  }
-})
+)
+object_id = object["object_id"]
 
-response = requests.request("POST", url, headers=headers, data=payload)
-```
+# Wait for processing to complete
+print("Processing content, please wait...")
+time.sleep(30)  # Adjust based on content size
 
-[Ingest Text API](/api-reference/ingest-assets/ingest-text)
+# Create a retriever
+retriever = mp.retrievers.create(
+    namespace_id=namespace_id,
+    name="content-retriever",
+    description="Search across processed content",
+    stages=[
+        {
+            "name": "embedding_search",
+            "type": "vector",
+            "collection_id": collection_id,
+            "index": "multimodal",
+            "limit": 20
+        }
+    ]
+)
+retriever_id = retriever["retriever_id"]
 
-
-## Searching Content
-
-Now you can perform both text and vector searches across your collections:
-
-```python
-url = "https://api.mixpeek.com/v1/features/search"
-
-payload = json.dumps({
-  "collections": [
-    "test"
-  ],
-  "queries": [
-    {
-      "embedding_model": "multimodal",
-      "value": "dog outside",
-      "type": "text"
+# Search for content
+results = mp.retrievers.execute(
+    retriever_id=retriever_id,
+    query={
+        "text": "show me images with people"
     }
-  ]
-})
+)
 
-response = requests.request("POST", url, headers=headers, data=payload)
-
+# Display results
+print("\nSearch Results:")
+for result in results["results"]:
+    print(f"Document ID: {result['document_id']}")
+    print(f"Score: {result['score']}")
+    print(f"Content: {result['content']}")
+    print("---")
 ```
-
-[Feature Search](/api-reference/feature-search/search-features)
 
 ## Next Steps
 
-- Explore more advanced indexing options in the [API documentation](/api-documentation)
-- Learn about [file storage integrations](/integrations) for various cloud providers
-- Discover [exciting use cases](/use-cases) like Real-Time Video Alerting and Visual Discovery
+Congratulations! You've just built a simple multimodal search application with Mixpeek. To continue your journey:
+
+<CardGroup cols={3}>
+  <Card title="Learn about Namespaces" icon="folder-tree" href="/management/namespaces">
+    Organize your data into isolated environments
+  </Card>
+  
+  <Card title="Explore Feature Extractors" icon="microchip" href="/management/features">
+    Discover advanced extraction capabilities
+  </Card>
+
+  <Card title="Build Powerful Retrievers" icon="magnifying-glass" href="/retrieval/overview">
+    Create sophisticated search experiences
+  </Card>
+</CardGroup> 

@@ -2,7 +2,7 @@
   "name": "Mixpeek",
   "layout": "sidenav",
   "favicon": "/favicon.png",
-  "openapi": "https://api.mixpeek.com/docs/openapi.json",
+  "openapi": "https://server-xb24.onrender.com/docs/openapi.json",
   "logo": {
     "dark": "/logo/dark.png",
     "light": "/logo/light.png"
@@ -51,16 +51,6 @@
       "name": "Engineering Blog",
       "icon": "book-open",
       "url": "https://mixpeek.com/blog"
-    },
-    {
-      "name": "Multimodal University",
-      "icon": "graduation-cap",
-      "url": "https://mixpeek.com/learn"
-    },
-    {
-      "name": "Community",
-      "icon": "users",
-      "url": "https://mixpeek.com/community"
     }
   ],
   "primaryTab": {
@@ -78,72 +68,86 @@
       "url": "api-reference"
     },
     {
-      "name": "Integrations",
-      "url": "integrations"
-    },
-    {
-      "name": "Changelog",
-      "url": "changelog"
+      "name": "Studio Walkthrough",
+      "url": "studio"
     }
   ],
   "navigation": [
     {
-      "group": "Getting Started",
+      "group": "Overview",
       "pages": [
         "overview/introduction",
-        "overview/quickstart",
-        "overview/how-it-works",
-        "overview/benefits",
-        "overview/limits"
+        "overview/concepts",
+        "overview/quickstart"
       ]
     },
     {
-      "group": "Core Concepts",
+      "group": "Data Management",
       "pages": [
-        "concepts/overview",
-        "concepts/collections",
-        "concepts/namespaces",
-        "concepts/assets",
-        "concepts/tasks"
+        "management/namespaces",
+        "management/buckets",
+        "management/collections",
+        "management/features"
       ]
     },
     {
-      "group": "Models & Processing",
+      "group": "Data Processing",
       "pages": [
-        "ingestion/extractors",
-        "models/available-models",
-        "models/fine-tuning"
-      ]
-    },
-    {
-      "group": "Entities & Enrichment",
-      "pages": [
-        "entities/taxonomies",
-        "entities/clusters",
-        "entities/relationships"
+        {
+          "group": "Feature Extractors",
+          "pages": [
+            "extraction/scene-splitting",
+            "extraction/video_embedding",
+            "extraction/face_detection"
+          ]
+        },
+        "processing/model-tuning",
+        "processing/tasks"
       ]
     },
     {
       "group": "Search & Retrieval",
       "pages": [
-        "search/queries",
-        "search/filters",
-        "search/group",
-        "search/rerank"
+        "retrieval/retrievers",
+        {
+          "group": "Stages",
+          "pages": [
+            "stages/knn_search",
+            "stages/hybrid_search",
+            "stages/llm_generation",
+            "stages/reranking",
+            "stages/face_search"
+          ]
+        },
+        "retrieval/interactions",
+        "retrieval/research"
       ]
     },
     {
-      "group": "Databases",
+      "group": "Data Enrichment",
       "pages": [
-        "integrations/embedding-storage",
-        "integrations/databases/timescale",
-        "integrations/databases/mongodb",
-        "integrations/databases/supabase",
-        "integrations/databases/postgresql",
-        "integrations/databases/pinecone",
-        "integrations/databases/weaviate",
-        "integrations/databases/qdrant",
-        "integrations/databases/redis"
+        "enrichment/taxonomies",
+        "enrichment/clusters"
+      ]
+    },
+    {
+      "group": "Troubleshooting",
+      "pages": [
+        "troubleshooting/errors",
+        "troubleshooting/limits"
+      ]
+    },
+    {
+      "group": "Pages",
+      "pages": [
+        "studio/quickstart",
+        "studio/namespaces",
+        "studio/buckets",
+        "studio/collections",
+        "studio/taxonomies",
+        "studio/clusters",
+        "studio/retrievers",
+        "studio/research"
       ]
     },
     {
@@ -153,63 +157,82 @@
       ]
     },
     {
-      "group": "Features",
+      "group": "Buckets",
       "pages": [
-        "api-reference/feature-search/search-features",
-        "api-reference/features/get-feature",
-        "api-reference/features/full-feature-update",
-        "api-reference/features/delete-feature",
-        "api-reference/features/list-features"
+        "api-reference/buckets/create-bucket",
+        "api-reference/buckets/get-bucket",
+        "api-reference/buckets/update-bucket",
+        "api-reference/buckets/delete-bucket",
+        "api-reference/buckets/list-buckets"
       ]
     },
     {
-      "group": "Ingest Assets",
+      "group": "Bucket Objects",
       "pages": [
-        "api-reference/ingest-assets/ingest-text",
-        "api-reference/ingest-assets/ingest-video-url",
-        "api-reference/ingest-assets/ingest-image-url"
-      ]
-    },
-    {
-      "group": "Entities",
-      "pages": [
-        {
-          "group": "Taxonomy",
-          "pages": [
-            "api-reference/taxonomy-entities/list-taxonomies",
-            "api-reference/taxonomy-entities/create-taxonomy",
-            "api-reference/taxonomy-entities/get-taxonomy",
-            "api-reference/taxonomy-entities/delete-taxonomy",
-            "api-reference/taxonomy-entities/update-taxonomy",
-            "api-reference/taxonomy-entities/get-taxonomy-node",
-            "api-reference/taxonomy-entities/update-node",
-            "api-reference/taxonomy-entities/classify-features-against-taxonomy",
-            "api-reference/taxonomy-entities/list-taxonomy-classifications",
-            "api-reference/taxonomy-entities/delete-classifications"
-          ]
-        }
-      ]
-    },
-    {
-      "group": "Assets",
-      "pages": [
-        "api-reference/assets/get-asset",
-        "api-reference/assets/full-asset-update",
-        "api-reference/assets/delete-asset",
-        "api-reference/assets/partial-asset-update",
-        "api-reference/assets/get-asset-with-features",
-        "api-reference/assets/list-assets",
-        "api-reference/assets/search-assets"
+        "api-reference/bucket-objects/create-object",
+        "api-reference/bucket-objects/get-object",
+        "api-reference/bucket-objects/update-object",
+        "api-reference/bucket-objects/delete-object",
+        "api-reference/bucket-objects/list-objects"
       ]
     },
     {
       "group": "Collections",
       "pages": [
-        "api-reference/collections/list-collections",
         "api-reference/collections/create-collection",
-        "api-reference/collections/get-collection",
-        "api-reference/collections/update-collection",
-        "api-reference/collections/delete-collection"
+        "api-reference/collections/get-collection"
+      ]
+    },
+    {
+      "group": "Collection Documents",
+      "pages": [
+        "api-reference/collection-documents/get-document",
+        "api-reference/collection-documents/update-document",
+        "api-reference/collection-documents/delete-document",
+        "api-reference/collection-documents/list-documents",
+        "api-reference/collection-documents/batch-update-documents",
+        "api-reference/collection-documents/batch-delete-documents"
+      ]
+    },
+    {
+      "group": "Collection Features",
+      "pages": [
+        "api-reference/collection-features/list-feature-extractors"
+      ]
+    },
+    {
+      "group": "Retrievers",
+      "pages": [
+        "api-reference/retrievers/create-retriever",
+        "api-reference/retrievers/get-retriever",
+        "api-reference/retrievers/execute-retriever"
+      ]
+    },
+    {
+      "group": "Retriever Stages",
+      "pages": [
+        "api-reference/retriever-stages/list-retriever-stages"
+      ]
+    },
+    {
+      "group": "Taxonomies",
+      "pages": [
+        "api-reference/taxonomies/create-taxonomy"
+      ]
+    },
+    {
+      "group": "Clusters",
+      "pages": [
+        "api-reference/clusters/create-cluster"
+      ]
+    },
+    {
+      "group": "Retriever Interactions",
+      "pages": [
+        "api-reference/retriever-interactions/list-interactions",
+        "api-reference/retriever-interactions/create-interaction",
+        "api-reference/retriever-interactions/get-interaction",
+        "api-reference/retriever-interactions/delete-interaction"
       ]
     },
     {
@@ -219,14 +242,7 @@
         "api-reference/namespaces/create-namespace",
         "api-reference/namespaces/get-namespace",
         "api-reference/namespaces/update-namespace",
-        "api-reference/namespaces/delete-namespace",
-        "api-reference/namespaces/list-available-models"
-      ]
-    },
-    {
-      "group": "Feature Extractors",
-      "pages": [
-        "api-reference/feature-extractors/extract-embeddings"
+        "api-reference/namespaces/delete-namespace"
       ]
     },
     {
@@ -238,9 +254,9 @@
       ]
     },
     {
-      "group": "Changelog",
+      "group": "Research",
       "pages": [
-        "changelog/overview"
+        "api-reference/research/get-research"
       ]
     }
   ],

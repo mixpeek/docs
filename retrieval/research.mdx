@@ -1,0 +1,302 @@
+---
+title: "Research"
+---
+
+<Note>
+  Research is a powerful feature that allows you to conduct multi-step explorations of your data, creating comprehensive reports through iterative searches, structured organization, and cohesive content generation.
+</Note>
+
+<iframe
+  width="600"
+  height="310"
+  src="https://d8ts56gtwtyh1.cloudfront.net/docs/warehouse/research.mp4"
+  title="YouTube video player"
+  frameborder="0"
+  allow="accelerometer; autoplay; muted"
+  allowfullscreen
+  autoplay
+  muted
+></iframe>
+
+## Overview
+
+Research in Mixpeek enables deep exploration of your content through multiple connected search operations, helping users discover insights, generate reports, and synthesize information across your multimodal data.
+
+<Frame>
+  ```mermaid
+  graph TD
+    A[Initial Query] --> B[Topic Exploration]
+    B --> C[Multiple Targeted Searches]
+    C --> D[Content Organization]
+    D --> E[Report Generation]
+    
+    style A fill:#FC5185,stroke:#333
+    style E fill:#FC5185,stroke:#333
+  ```
+</Frame>
+
+Unlike standard search which focuses on finding immediate answers, Research:
+- Conducts multiple connected searches across your content
+- Organizes findings into structured reports with sections
+- Maintains consistent narrative and terminology across sections
+- Provides citations and references to source documents
+- Synthesizes information for comprehensive understanding
+
+### Key Features
+
+<CardGroup cols={2}>
+  <Card title="Multi-Stage Search" icon="magnifying-glass-chart">
+    Automatically breaks down complex queries into multiple targeted searches for deeper exploration
+  </Card>
+  
+  <Card title="Structured Reports" icon="file-lines">
+    Organizes findings into coherent sections with proper formatting and clear hierarchical structure
+  </Card>
+  
+  <Card title="Content Synthesis" icon="brain">
+    Combines information from multiple sources into cohesive narratives while maintaining accuracy
+  </Card>
+  
+  <Card title="Source Citations" icon="quote-left">
+    Properly attributes information to source documents with references and citations
+  </Card>
+</CardGroup>
+
+### Getting Started with Research
+
+<Steps>
+  <Step title="Initialize a Research Session">
+    Start by creating a new research session with your primary query and optional parameters.
+  </Step>
+  <Step title="Configure Report Structure">
+    Optionally specify the structure of the final report, including sections and organizational approach.
+  </Step>
+  <Step title="Monitor Progress">
+    Research operations run asynchronously - you can monitor their progress as they explore data.
+  </Step>
+  <Step title="Retrieve the Report">
+    Once complete, retrieve the structured report with all findings and references.
+  </Step>
+</Steps>
+
+
+### Research Parameters
+
+<AccordionGroup>
+  <Accordion title="Basic Parameters">
+    | Parameter | Type | Description |
+    |-----------|------|-------------|
+    | `query` | string | The primary research question or topic |
+    | `namespace` | string | Namespace to search within |
+    | `max_runtime` | integer | Maximum runtime in seconds (Default: 300) |
+    | `report_format` | string | Output format: "markdown", "html", or "json" (Default: "markdown") |
+    | `depth` | string | Research depth: "quick", "standard", or "comprehensive" (Default: "standard") |
+  </Accordion>
+  
+  <Accordion title="Advanced Parameters">
+    | Parameter | Type | Description |
+    |-----------|------|-------------|
+    | `structure` | object | Custom report structure definition |
+    | `collections` | array | Specific collections to include in the research |
+    | `filters` | object | Additional filters to apply to searches |
+    | `max_sources` | integer | Maximum number of source documents to consider (Default: 100) |
+    | `style_guide` | object | Style preferences for the generated report |
+  </Accordion>
+  
+  <Accordion title="Custom Structure Example">
+    ```json
+    {
+      "structure": {
+        "sections": [
+          {
+            "title": "Introduction",
+            "content": "Brief overview of the topic"
+          },
+          {
+            "title": "Historical Context",
+            "content": "Background and development of the issue"
+          },
+          {
+            "title": "Current Research",
+            "content": "Recent findings and studies"
+          },
+          {
+            "title": "Impact Analysis",
+            "content": "Effects and implications"
+          },
+          {
+            "title": "Future Outlook",
+            "content": "Projections and predictions"
+          }
+        ]
+      }
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Retrieving Research Results
+
+Once the research is complete, retrieve the full report:
+
+<Tabs>
+  <Tab title="Python">
+    ```python
+    # Get final research report
+    report = client.research.get(research_id)
+    
+    if report["status"] == "completed":
+        # Access the full report
+        content = report["content"]
+        sources = report["sources"]
+        
+        # Save report to file
+        with open("research_report.md", "w") as f:
+            f.write(content)
+            
+        print(f"Report generated with {len(sources)} source citations")
+    else:
+        print(f"Research still in progress: {report['progress']}% complete")
+    ```
+  </Tab>
+  
+  <Tab title="JavaScript">
+    ```javascript
+    // Get final research report
+    async function getReport(researchId) {
+      const report = await client.research.get(researchId);
+      
+      if (report.status === "completed") {
+        // Access the full report
+        const content = report.content;
+        const sources = report.sources;
+        
+        // Do something with the report
+        console.log(`Report generated with ${sources.length} source citations`);
+        return content;
+      } else {
+        console.log(`Research still in progress: ${report.progress}% complete`);
+        return null;
+      }
+    }
+    ```
+  </Tab>
+  
+  <Tab title="cURL">
+    ```bash
+    curl -X GET "https://api.mixpeek.com/v1/research/{research_id}" \
+      -H "Authorization: Bearer YOUR_API_KEY"
+    ```
+  </Tab>
+</Tabs>
+
+## Working with Research Reports
+
+Research reports include both the generated content and metadata about sources:
+
+<AccordionGroup>
+  <Accordion title="Report Structure">
+    ```json
+    {
+      "id": "research_abc123",
+      "status": "completed",
+      "query": "Impact of climate change on agriculture",
+      "content": "# Impact of Climate Change on Agriculture\n\n## Introduction\n...",
+      "format": "markdown",
+      "sources": [
+        {
+          "id": "doc_123",
+          "title": "Climate Effects on Global Crop Yields",
+          "collection": "research_papers",
+          "relevance_score": 0.92,
+          "citations": [
+            {
+              "section": "Introduction",
+              "position": "paragraph_2"
+            }
+          ]
+        },
+        // More sources...
+      ],
+      "sections": [
+        {
+          "title": "Introduction",
+          "word_count": 312,
+          "sources_used": ["doc_123", "doc_456"]
+        },
+        // More sections...
+      ],
+      "metadata": {
+        "completion_time": "2023-06-15T09:12:33Z",
+        "total_runtime": 1632,
+        "searches_performed": 28,
+        "documents_analyzed": 142
+      }
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Citation Formats">
+    Research reports can include citations in different formats:
+
+    ```python
+    # Request specific citation format
+    report = client.research.get(
+        research_id, 
+        citation_format="apa"  # Options: apa, mla, chicago, ieee
+    )
+    ```
+
+    The citation format affects how sources are referenced in the report content.
+  </Accordion>
+</AccordionGroup>
+
+## Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Competitor Analysis" icon="chart-line">
+    Generate comprehensive reports on competitors, their products, market positioning, and strategies
+  </Card>
+  
+  <Card title="Literature Review" icon="books">
+    Create structured summaries of academic or industry literature on specific topics
+  </Card>
+
+  <Card title="Market Research" icon="magnifying-glass-dollar">
+    Conduct in-depth analysis of market trends, customer preferences, and industry developments
+  </Card>
+  
+  <Card title="Product Documentation" icon="file-lines">
+    Generate comprehensive documentation from technical content, user feedback, and support data
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Craft Specific Queries">
+    More specific primary queries tend to yield better-focused research reports. Consider using specific time frames, industries, or contexts in your query.
+  </Accordion>
+  
+  <Accordion title="Provide Structure for Complex Topics">
+    For complex research needs, providing a custom structure helps guide the research process and ensures all critical aspects are covered.
+  </Accordion>
+  
+  <Accordion title="Combine with Taxonomies">
+    Research performed on collections with well-defined [taxonomies](/enrichment/taxonomies) produces more coherent and structured reports.
+  </Accordion>
+  
+  <Accordion title="Monitor and Iterate">
+    For large research operations, monitor progress and review early findings. You can always start a new research session with a refined query based on initial results.
+  </Accordion>
+</AccordionGroup>
+
+## Limitations
+
+- **Session Duration:** Research sessions have a maximum runtime of 1 hour (Enterprise tier)
+- **Report Size:** Maximum report size is 100,000 words
+- **Source Constraints:** A maximum of 500 sources can be cited in a single report
+- **Processing Tiers:** Research depth affects both quality and processing time:
+  - **Quick Mode:** 1-3 minutes, surface-level exploration
+  - **Standard Mode:** 5-10 minutes, moderately detailed
+  - **Comprehensive Mode:** 15-60 minutes, highly detailed with extensive sources
