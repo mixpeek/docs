@@ -2,7 +2,7 @@
   "name": "Mixpeek",
   "layout": "sidenav",
   "favicon": "/favicon.png",
-  "openapi": "https://api.mixpeek.com/docs/openapi.json",
+  "openapi": "https://server-xb24.onrender.com/docs/openapi.json",
   "logo": {
     "dark": "/logo/dark.png",
     "light": "/logo/light.png"
@@ -154,6 +154,109 @@
       "group": "Health",
       "pages": [
         "api-reference/health/healthcheck"
+      ]
+    },
+    {
+      "group": "Buckets",
+      "pages": [
+        "api-reference/buckets/create-bucket",
+        "api-reference/buckets/get-bucket",
+        "api-reference/buckets/update-bucket",
+        "api-reference/buckets/delete-bucket",
+        "api-reference/buckets/list-buckets"
+      ]
+    },
+    {
+      "group": "Bucket Objects",
+      "pages": [
+        "api-reference/bucket-objects/create-object",
+        "api-reference/bucket-objects/get-object",
+        "api-reference/bucket-objects/update-object",
+        "api-reference/bucket-objects/delete-object",
+        "api-reference/bucket-objects/list-objects"
+      ]
+    },
+    {
+      "group": "Collections",
+      "pages": [
+        "api-reference/collections/create-collection",
+        "api-reference/collections/get-collection"
+      ]
+    },
+    {
+      "group": "Collection Documents",
+      "pages": [
+        "api-reference/collection-documents/get-document",
+        "api-reference/collection-documents/update-document",
+        "api-reference/collection-documents/delete-document",
+        "api-reference/collection-documents/list-documents",
+        "api-reference/collection-documents/batch-update-documents",
+        "api-reference/collection-documents/batch-delete-documents"
+      ]
+    },
+    {
+      "group": "Collection Features",
+      "pages": [
+        "api-reference/collection-features/list-feature-extractors"
+      ]
+    },
+    {
+      "group": "Retrievers",
+      "pages": [
+        "api-reference/retrievers/create-retriever",
+        "api-reference/retrievers/get-retriever",
+        "api-reference/retrievers/execute-retriever"
+      ]
+    },
+    {
+      "group": "Retriever Stages",
+      "pages": [
+        "api-reference/retriever-stages/list-retriever-stages"
+      ]
+    },
+    {
+      "group": "Taxonomies",
+      "pages": [
+        "api-reference/taxonomies/create-taxonomy"
+      ]
+    },
+    {
+      "group": "Clusters",
+      "pages": [
+        "api-reference/clusters/create-cluster"
+      ]
+    },
+    {
+      "group": "Retriever Interactions",
+      "pages": [
+        "api-reference/retriever-interactions/list-interactions",
+        "api-reference/retriever-interactions/create-interaction",
+        "api-reference/retriever-interactions/get-interaction",
+        "api-reference/retriever-interactions/delete-interaction"
+      ]
+    },
+    {
+      "group": "Namespaces",
+      "pages": [
+        "api-reference/namespaces/list-namespaces",
+        "api-reference/namespaces/create-namespace",
+        "api-reference/namespaces/get-namespace",
+        "api-reference/namespaces/update-namespace",
+        "api-reference/namespaces/delete-namespace"
+      ]
+    },
+    {
+      "group": "Tasks",
+      "pages": [
+        "api-reference/tasks/get-task-information",
+        "api-reference/tasks/kill-task",
+        "api-reference/tasks/list-active-tasks"
+      ]
+    },
+    {
+      "group": "Research",
+      "pages": [
+        "api-reference/research/get-research"
       ]
     }
   ],
