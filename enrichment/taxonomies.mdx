@@ -22,6 +22,24 @@ Taxonomies in Mixpeek are specialized structures that allow you to classify, org
   muted
 ></iframe>
 
+<Steps>
+  <Step title="Select Taxonomy Type">
+    Choose between flat or hierarchical taxonomy structure based on your organizational needs and data relationships.
+  </Step>
+  <Step title="Select Source Collection">
+    Select the collection containing the reference data that will be used to enrich your documents.
+  </Step>
+  <Step title="Select Enrichment Fields">
+    Choose which fields from the source collection will be added to enrich your target documents.
+  </Step>
+  <Step title="Select Retriever">
+    Choose the retriever that will match documents from your target collection with the appropriate reference data.
+  </Step>
+  <Step title="Configure Input Fields">
+    Select the input fields from the source collection for the retriever. These fields define what data is used for matching, and can include constants.
+  </Step>
+</Steps> 
+
 <CardGroup cols={2}>
   <Card title="Content Classification" icon="sitemap">
     Create organized classification systems to categorize your multimodal content
@@ -59,39 +77,24 @@ Mixpeek supports two main types of taxonomies:
     - Property inheritance from parent to child nodes
     - Support for complex nested categorization
     
+    Hierarchies can be implemented in two ways:
+    
+    1. **Explicit Hierarchy**
+       - Parent-child relationships defined directly in configuration
+       - Clear, intentional structure specification
+       - Recommended for complex hierarchies
+
+    2. **Implicit Hierarchy**
+       - Relationships inferred from metadata field patterns
+       - More flexible but requires careful metadata management
+       - Suitable for simpler, metadata-driven hierarchies
+    
     **Use cases:**
     - Product categories (Electronics > Computers > Laptops)
     - Content taxonomies (Science > Physics > Quantum Mechanics)
     - Organizational structures (Company > Department > Team)
   </Accordion>
 </AccordionGroup>
-
-## How Taxonomies Work
-
-<Frame>
-  ```mermaid
-  graph TD
-    A[Source Collection] --> B[Taxonomy]
-    C[Target Collection] --> B
-    B --> D[Enriched Documents]
-    
-    subgraph "Taxonomy Process"
-      E[Feature Extraction] --> F[Similarity Matching]
-      F --> G[Metadata Application]
-    end
-    
-    style A fill:#FC5185,stroke:#333
-    style C fill:#FC5185,stroke:#333
-    style D fill:#FC5185,stroke:#333
-  ```
-</Frame>
-
-Taxonomies work by:
-
-1. Defining a source collection with taxonomy nodes (categories)
-2. Setting up a retriever to match content to taxonomy nodes
-3. Applying the taxonomy to enrich documents in target collections
-4. Inheriting properties based on taxonomy structure (for hierarchical taxonomies)
 
 ## Creating a Taxonomy
 
@@ -223,56 +226,7 @@ Taxonomies work by:
 
 ## Applying Taxonomies
 
-Once you've created a taxonomy, you can apply it to enrich documents in your collections:
-
-<CodeGroup>
-  ```python Python
-  # Apply a taxonomy to a collection
-  task = mp.taxonomies.apply(
-      taxonomy_id=taxonomy_id,
-      target_collection_id="col_products",
-      output_collection_id="col_enriched_products",  # Leave as None to enrich in-place
-      options={
-          "materialize": True,  # Store results in output collection
-          "overwrite": True     # Overwrite existing taxonomy fields
-      }
-  )
-  
-  task_id = task["task_id"]
-  print(f"Taxonomy application task started: {task_id}")
-  
-  # Check task status
-  import time
-  time.sleep(5)  # Wait a bit
-  
-  status = mp.tasks.get(task_id=task_id)
-  print(f"Task status: {status['status']}")
-  ```
-
-  ```javascript JavaScript
-  // Apply a taxonomy to a collection
-  const task = await mp.taxonomies.apply({
-    taxonomy_id: taxonomyId,
-    target_collection_id: "col_products",
-    output_collection_id: "col_enriched_products",  // Leave as null to enrich in-place
-    options: {
-      materialize: true,  // Store results in output collection
-      overwrite: true     // Overwrite existing taxonomy fields
-    }
-  });
-  
-  const taskId = task.task_id;
-  console.log(`Taxonomy application task started: ${taskId}`);
-  
-  // Check task status
-  await new Promise(resolve => setTimeout(resolve, 5000));  // Wait 5 seconds
-  
-  const status = await mp.tasks.get({
-    task_id: taskId
-  });
-  console.log(`Task status: ${status.status}`);
-  ```
-</CodeGroup>
+Once you've created a taxonomy, you can apply it to enrich documents in your collections.
 
 ## Materialization Options
 
@@ -311,29 +265,27 @@ When applying taxonomies, you have two main materialization options:
 
 In a hierarchical taxonomy, nodes are documents in collections with specific structures:
 
-<Frame>
-  ```json
-  // Example: Executive node in a hierarchical taxonomy
-  {
-    "document_id": "doc_abc123",
-    "collection_id": "col_executives",
-    // Person properties (inherited from col_people)
-    "name": "Jane Smith",
-    "basic_access": true,
-    
-    // Employee properties (inherited from col_employees)
-    "employee_id": "E12345",
-    "department": "Marketing",
-    
-    // Executive-specific properties
-    "executive_level": "VP",
-    "budget_authority": 5000000,
-    
-    // Embedding for matching
-    "face_embedding": [0.1, 0.2, 0.3, ...]
-  }
-  ```
-</Frame>
+```json
+// Example: Executive node in a hierarchical taxonomy
+{
+  "document_id": "doc_abc123",
+  "collection_id": "col_executives",
+  // Person properties (inherited from col_people)
+  "name": "Jane Smith",
+  "basic_access": true,
+  
+  // Employee properties (inherited from col_employees)
+  "employee_id": "E12345",
+  "department": "Marketing",
+  
+  // Executive-specific properties
+  "executive_level": "VP",
+  "budget_authority": 5000000,
+  
+  // Embedding for matching
+  "face_embedding": [0.1, 0.2, 0.3, ...]
+}
+```
 
 ### Property Inheritance
 
@@ -343,37 +295,6 @@ In hierarchical taxonomies, properties are inherited from parent to child nodes:
 - Child nodes can override inherited properties with their own values
 - Inheritance follows the collection hierarchy defined in the taxonomy
 
-## Creating a Taxonomy Retriever
-
-For taxonomies to work effectively, you need a retriever that can match content to taxonomy nodes. Here's an example of creating a retriever for face matching:
-
-```python
-# Create a retriever for face matching in a taxonomy
-face_retriever = mp.retrievers.create(
-    namespace_id="ns_abc123",
-    name="face_matcher",
-    description="Match faces for personnel taxonomy",
-    stages=[
-        {
-            "name": "face_match",
-            "type": "vector",
-            "collection_id": "col_people",  # Will also search child collections
-            "index": "face",  # Specialized face embedding index
-            "threshold": 0.7,
-            "limit": 5
-        },
-        {
-            "name": "best_match",
-            "type": "filter",
-            "input": "face_match.results",
-            "limit": 1
-        }
-    ],
-    input_schema={
-        "face_embedding": "vector"  # Define expected input
-    }
-)
-```
 
 ## Using Enriched Documents
 
@@ -381,7 +302,7 @@ Once you've applied a taxonomy, you can use the enriched fields in searches and 
 
 ```python
 # Search using enriched taxonomy fields
-results = mp.retrievers.search(
+results = mp.retrievers.execute(
     retriever_id="ret_jkl012",
     query={
         "text": "marketing presentation"
@@ -391,11 +312,6 @@ results = mp.retrievers.search(
         "executive_level": {"$exists": True}  # Only match executive content
     }
 )
-
-for result in results["results"]:
-    print(f"Document: {result['title']}")
-    print(f"Department: {result['department']}")
-    print(f"Executive Level: {result.get('executive_level', 'N/A')}")
 ```
 
 ## Example Use Cases

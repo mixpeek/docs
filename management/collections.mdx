@@ -23,6 +23,24 @@ When raw objects are processed by feature extractors, the resulting structured d
   muted
 ></iframe>
 
+<Steps>
+  <Step title="Select Source">
+    Choose whether to use a bucket or another collection as your data source. Buckets provide raw files, while collections offer already processed documents.
+  </Step>
+  <Step title="Select Feature Extractors">
+    Determine which feature extractors will process your source data. These extractors define what information will be derived from your content.
+  </Step>
+  <Step title="Pass Properties from Source">
+    Specify which properties from your source (blobs from buckets or fields from collections) should be passed to your feature extractors.
+  </Step>
+  <Step title="Configure Feature Extractors">
+    Customize settings for each feature extractor to optimize their performance for your specific use case and content types.
+  </Step>
+  <Step title="Configure Processing">
+    Set up additional processing like taxonomy application to further enhance and organize the extracted features and resulting documents.
+  </Step>
+</Steps>
+
 When defining a collection's source they can use buckets or existing collections for downstream feature extraction.
 
 ![Bucket Details](https://d8ts56gtwtyh1.cloudfront.net/docs/warehouse/images/collection_sources.jpg)

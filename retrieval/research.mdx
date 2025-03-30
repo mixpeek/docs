@@ -18,7 +18,7 @@ title: "Research"
   muted
 ></iframe>
 
-## What is Research?
+## Overview
 
 Research in Mixpeek enables deep exploration of your content through multiple connected search operations, helping users discover insights, generate reports, and synthesize information across your multimodal data.
 
@@ -42,7 +42,7 @@ Unlike standard search which focuses on finding immediate answers, Research:
 - Provides citations and references to source documents
 - Synthesizes information for comprehensive understanding
 
-## Key Features
+### Key Features
 
 <CardGroup cols={2}>
   <Card title="Multi-Stage Search" icon="magnifying-glass-chart">
@@ -62,7 +62,7 @@ Unlike standard search which focuses on finding immediate answers, Research:
   </Card>
 </CardGroup>
 
-## Getting Started with Research
+### Getting Started with Research
 
 <Steps>
   <Step title="Initialize a Research Session">
@@ -79,70 +79,6 @@ Unlike standard search which focuses on finding immediate answers, Research:
   </Step>
 </Steps>
 
-## Creating a Research Session
-
-<Tabs>
-  <Tab title="Python">
-    ```python
-    from mixpeek import Client
-    
-    client = Client("YOUR_API_KEY")
-    
-    # Create a new research session
-    research = client.research.create(
-        query="Impact of climate change on agriculture",
-        namespace="research_data",
-        max_runtime=600,  # Maximum runtime in seconds
-        report_format="markdown",  # Output format (markdown, html, or json)
-        depth="comprehensive"  # quick, standard, or comprehensive
-    )
-    
-    # Get the research session ID for monitoring
-    research_id = research["id"]
-    print(f"Research session initiated with ID: {research_id}")
-    ```
-  </Tab>
-  
-  <Tab title="JavaScript">
-    ```javascript
-    import { MixpeekClient } from '@mixpeek/sdk';
-    
-    const client = new MixpeekClient('YOUR_API_KEY');
-    
-    // Create a new research session
-    async function initiateResearch() {
-      const research = await client.research.create({
-        query: "Impact of climate change on agriculture",
-        namespace: "research_data",
-        maxRuntime: 600,  // Maximum runtime in seconds
-        reportFormat: "markdown",  // Output format (markdown, html, or json)
-        depth: "comprehensive"  // quick, standard, or comprehensive
-      });
-      
-      // Get the research session ID for monitoring
-      const researchId = research.id;
-      console.log(`Research session initiated with ID: ${researchId}`);
-    }
-    
-    initiateResearch();
-    ```
-  </Tab>
-  
-  <Tab title="cURL">
-    ```bash
-    curl -X POST "https://api.mixpeek.com/v1/research" \
-      -H "Authorization: Bearer YOUR_API_KEY" \
-      -H "Content-Type: application/json" \
-      -d '{
-        "query": "Impact of climate change on agriculture",
-        "namespace": "research_data",
-        "max_runtime": 600,
-        "report_format": "markdown",
-        "depth": "comprehensive"
-      }'
-    ```
-  </Tab>
-</Tabs>
 
 ### Research Parameters
 
@@ -198,79 +134,6 @@ Unlike standard search which focuses on finding immediate answers, Research:
     ```
   </Accordion>
 </AccordionGroup>
-
-## Monitoring Research Progress
-
-Research operations run asynchronously. You can monitor their progress to receive updates:
-
-<Tabs>
-  <Tab title="Python">
-    ```python
-    # Check research status
-    status = client.research.status(research_id)
-    print(f"Research status: {status['status']}")
-    print(f"Progress: {status['progress']}%")
-    
-    # Current findings (partial results)
-    if status['progress'] > 0:
-        current_findings = status['current_findings']
-        print(f"Sections completed: {len(current_findings['sections'])}")
-    ```
-  </Tab>
-  
-  <Tab title="JavaScript">
-    ```javascript
-    // Check research status
-    async function checkStatus(researchId) {
-      const status = await client.research.status(researchId);
-      console.log(`Research status: ${status.status}`);
-      console.log(`Progress: ${status.progress}%`);
-      
-      // Current findings (partial results)
-      if (status.progress > 0) {
-        const currentFindings = status.currentFindings;
-        console.log(`Sections completed: ${currentFindings.sections.length}`);
-      }
-    }
-    ```
-  </Tab>
-  
-  <Tab title="cURL">
-    ```bash
-    curl -X GET "https://api.mixpeek.com/v1/research/{research_id}/status" \
-      -H "Authorization: Bearer YOUR_API_KEY"
-    ```
-  </Tab>
-</Tabs>
-
-### Research Status Response
-
-```json
-{
-  "id": "research_abc123",
-  "status": "in_progress",
-  "progress": 45,
-  "start_time": "2023-06-15T08:45:21Z",
-  "estimated_completion_time": "2023-06-15T08:51:21Z",
-  "current_findings": {
-    "sections": [
-      {
-        "title": "Introduction",
-        "content": "Climate change represents one of the most significant challenges...",
-        "completed": true
-      },
-      {
-        "title": "Historical Climate Patterns",
-        "content": "Agricultural records dating back to the early 20th century show...",
-        "completed": true
-      }
-    ]
-  },
-  "current_stage": "Researching impact on crop yields",
-  "searches_completed": 12,
-  "sources_analyzed": 37
-}
-```
 
 ## Retrieving Research Results
 
@@ -430,24 +293,10 @@ Research reports include both the generated content and metadata about sources:
 
 ## Limitations
 
-- Research sessions have a maximum runtime of 1 hour (Enterprise tier)
-- Maximum report size is 100,000 words
-- A maximum of 500 sources can be cited in a single report
-- Research depth affects both quality and processing time:
-  - Quick: 1-3 minutes, surface-level exploration
-  - Standard: 5-10 minutes, moderately detailed
-  - Comprehensive: 15-60 minutes, highly detailed with extensive sources
-
-## Next Steps
-
-Learn how to enhance your research capabilities:
-
-<CardGroup cols={2}>
-  <Card title="Filters" icon="filter" href="/search/filters">
-    Apply filters to focus research on specific content
-  </Card>
-  
-  <Card title="Interactions" icon="hand-pointer" href="/search/interactions">
-    Track user engagement with research reports
-  </Card>
-</CardGroup> 
+- **Session Duration:** Research sessions have a maximum runtime of 1 hour (Enterprise tier)
+- **Report Size:** Maximum report size is 100,000 words
+- **Source Constraints:** A maximum of 500 sources can be cited in a single report
+- **Processing Tiers:** Research depth affects both quality and processing time:
+  - **Quick Mode:** 1-3 minutes, surface-level exploration
+  - **Standard Mode:** 5-10 minutes, moderately detailed
+  - **Comprehensive Mode:** 15-60 minutes, highly detailed with extensive sources

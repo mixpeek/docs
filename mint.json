@@ -119,7 +119,6 @@
             "stages/face_search"
           ]
         },
-        "retrieval/filters",
         "retrieval/interactions",
         "retrieval/research"
       ]

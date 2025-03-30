@@ -22,6 +22,42 @@ Clustering enables you to organize and group documents based on their feature si
   muted
 ></iframe>
 
+<Steps>
+  <Step title="Select Clustering Approach">
+    Choose between two clustering methods:
+    
+    **Vector-Based Clustering**
+    Groups documents based on semantic similarity using embedding vectors and clustering algorithms like HDBSCAN or K-Means.
+    
+    **Attribute-Based Grouping**
+    Groups documents based on specific metadata attributes like categories, dates, or custom fields.
+  </Step>
+  
+  <Step title="Configure Options">
+    Set specific parameters for your chosen approach. For vector-based clustering, select the embedding model and algorithm (e.g., HDBSCAN). For attribute-based, select the fields to group by.
+  </Step>
+  
+  <Step title="Configure Cluster Naming">
+    Set up automatic cluster naming:
+    
+    **Automatic Naming**
+    - Enable: Yes/No
+    - Generative Model: GPT-4o
+    - Method: Centroid
+  </Step>
+  
+  <Step title="Select Target Collection">
+    Choose which collection the cluster information will be added to. This determines which documents will be grouped together.
+  </Step>
+  
+  <Step title="Set Execution Schedule">
+    Determine when clustering will run:
+    - One-time execution
+    - Scheduled at a defined cadence (daily, weekly, etc.)
+    - Trigger-based (when new documents are added)
+  </Step>
+</Steps>
+
 ## Clustering Types
 
 Mixpeek supports various clustering approaches through the Grouper interface:
@@ -46,25 +82,32 @@ Mixpeek supports various clustering approaches through the Grouper interface:
 
 ## Implementation Details
 
-### Grouper Interface
+### Dimensional Reduction and Visualization
 
-The Grouper interface provides a standardized way to implement different clustering algorithms:
+Before applying clustering algorithms, high-dimensional feature vectors (like embeddings) are reduced to lower dimensions using techniques like UMAP or t-SNE. This process serves two important purposes:
 
-```typescript
-interface Grouper {
-  // Group documents based on specified criteria
-  group(documents: Document[], options: GroupingOptions): Cluster[];
-  
-  // Get cluster metadata and statistics
-  getClusterInfo(cluster: Cluster): ClusterInfo;
-}
-```
+1. **Improves Clustering Performance**: Reduces computational complexity and often leads to better cluster separation
+2. **Enables Visual Inspection**: Allows you to visualize feature relationships in 2D or 3D space
+
+<Frame>
+  ![Cluster Visualization Example](https://d8ts56gtwtyh1.cloudfront.net/docs/warehouse/images/cluster-tsne.jpg)
+  *t-SNE visualization showing document clusters by content type and category*
+</Frame>
+
+This visualization step is crucial for:
+- Validating clustering quality before applying
+- Identifying outliers or unexpected groupings
+- Determining optimal cluster parameters
+- Communicating patterns to stakeholders
 
 ### Clustering Process
 
 <Steps>
   <Step title="Feature Selection">
     Choose which features to use for clustering (e.g., embeddings, timestamps, categories)
+  </Step>
+  <Step title="Dimensional Reduction">
+    Apply UMAP or t-SNE to reduce high-dimensional features to 2D or 3D for visualization and improved clustering
   </Step>
   <Step title="Algorithm Configuration">
     Configure clustering parameters (e.g., number of clusters, similarity thresholds)
@@ -119,14 +162,14 @@ interface Grouper {
   </Accordion>
 </AccordionGroup>
 
-## Next Steps
+## Limitations
 
-<CardGroup cols={2}>
-  <Card title="API Reference" icon="code" href="/api/clusters">
-    Learn how to use the clustering API
-  </Card>
-  
-  <Card title="Examples" icon="book" href="/examples/clustering">
-    See clustering in action with real-world examples
-  </Card>
-</CardGroup>
+- **Document Threshold:** Maximum of 100,000 documents per clustering operation
+- **Algorithm Constraints:** K-means limited to 1,000 clusters; HDBSCAN limited to 50,000 documents
+- **Visualization Limits:** t-SNE and UMAP visualizations limited to 10,000 points for performance reasons
+- **Reclustering Frequency:** Scheduled clustering limited to once per hour at minimum intervals
+- **Feature Compatibility:** Not all feature types can be used for clustering (e.g., some binary features)
+- **Processing Time:** Large-scale clustering operations may take several minutes to complete
+- **Cluster Storage:** Cluster assignments persist for 90 days by default before requiring refresh
+- **Naming Generation:** Automatic cluster naming limited to 50 characters per cluster label
+

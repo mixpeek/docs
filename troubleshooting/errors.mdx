@@ -24,6 +24,19 @@ All Mixpeek API errors follow a consistent JSON response format:
 }
 ```
 
+## Common Errors and Solutions
+
+| Error Type | Common Cause | Solution |
+|------------|--------------|----------|
+| NotFoundError | Resource ID doesn't exist or was deleted | Verify IDs and check if the resource was deleted |
+| ValidationError | Invalid data format or missing required fields | Check the API documentation for required fields and formats |
+| TooManyRequestsError | Rate limit exceeded | Implement backoff with the provided retry_after value |
+| FeatureExtractionError | Content format issue or corrupted file | Verify file integrity and ensure it matches supported formats |
+| MimeTypeError | Unsupported file type | Convert to a supported format listed in the docs |
+| S3StorageError | Network issues or file size too large | Check network connection and file size limits |
+| TimeoutError | Operation took too long to complete | Break large operations into smaller batches |
+
+
 <AccordionGroup>
   <Accordion title="Response Fields">
     | Field | Description |
@@ -50,7 +63,7 @@ All Mixpeek API errors follow a consistent JSON response format:
   </Accordion>
 </AccordionGroup>
 
-## HTTP Errors
+### HTTP Errors
 
 These errors represent standard HTTP status code errors.
 
@@ -157,175 +170,171 @@ These errors represent standard HTTP status code errors.
   </Tab>
 </Tabs>
 
-## Processing Errors
+### Processing Errors
 
-Errors that occur during the content processing pipeline.
-
-<CardGroup cols={2}>
-  <Card title="ProcessingError" icon="triangle-exclamation">
-    General processing error that occurs during content processing.
+<Tabs>
+  <Tab title="Input Errors">
+    ### Content Format and Validation Errors
     
-    ```json
-    {
-      "success": false,
-      "status": 500,
-      "error": {
-        "message": "Error processing document",
-        "type": "ProcessingError"
-      }
-    }
-    ```
-  </Card>
+    Errors related to invalid input data or format issues:
+    
+    | Error Code | Description | Resolution |
+    |------------|-------------|------------|
+    | `INVALID_FORMAT` | File format not supported or corrupted | Verify file is in a supported format and not corrupted |
+    | `SCHEMA_VALIDATION` | Object does not match bucket schema | Check object structure against bucket schema requirements |
+    | `EXCEEDED_SIZE` | File size exceeds allowed maximum | Reduce file size or request increased limits |
+    | `MALFORMED_JSON` | Invalid JSON structure in metadata or config | Validate JSON structure before submission |
+    | `MISSING_REQUIRED` | Required field or property is missing | Add all required properties to the request payload |
+  </Tab>
   
-  <Card title="FeatureExtractionError" icon="microchip">
-    Error during feature extraction phase of processing.
+  <Tab title="Extraction Errors">
+    ### Feature Extraction Failures
     
-    ```json
-    {
-      "success": false,
-      "status": 500,
-      "error": {
-        "message": "Failed to extract image features",
-        "type": "FeatureExtractionError",
-        "details": {
-          "extractor": "image_embeddings"
-        }
-      }
-    }
-    ```
-  </Card>
-
-  <Card title="SchemaValidationError" icon="file-contract">
-    Invalid schema or data format during processing.
+    Errors occurring during feature extraction processing:
     
-    ```json
-    {
-      "success": false,
-      "status": 400,
-      "error": {
-        "message": "Schema validation failed",
-        "type": "SchemaValidationError",
-        "details": {
-          "field": "metadata.dimensions",
-          "error": "Expected array, got string"
-        }
-      }
-    }
-    ```
-  </Card>
-
-  <Card title="ParallelExecutionError" icon="network-wired">
-    Error in parallel processing of content.
-    
-    ```json
-    {
-      "success": false,
-      "status": 500,
-      "error": {
-        "message": "Parallel execution failed",
-        "type": "ParallelExecutionError"
-      }
-    }
-    ```
-  </Card>
-</CardGroup>
-
-### Handling Processing Errors
-
-Processing errors often involve large files or complex operations. Follow these guidelines:
-
-<Steps>
-  <Step title="Check File Formats">
-    Ensure your files meet the requirements specified in the [Supported Formats](/overview/limits) documentation.
-  </Step>
-  <Step title="Review Task Status">
-    For long-running operations, check the task status endpoint to get detailed progress information.
-  </Step>
-  <Step title="Process in Smaller Batches">
-    If processing large collections, try breaking them into smaller batches to identify problematic content.
-  </Step>
-  <Step title="Check Logs">
-    If you're on the Business or Enterprise tier, contact support to review processing logs for your specific errors.
-  </Step>
-</Steps>
-
-## Storage Errors
-
-Errors related to object storage and data persistence.
-
-<AccordionGroup>
-  <Accordion title="StorageError">
-    Base storage error that indicates problems with the storage subsystem.
-    
-    ```json
-    {
-      "success": false,
-      "status": 500,
-      "error": {
-        "message": "Failed to store object",
-        "type": "StorageError"
-      }
-    }
-    ```
-    
-    **Resolution:**
-    - Check file permissions
-    - Verify storage quota hasn't been exceeded
-    - Ensure file paths are valid
-  </Accordion>
+    | Error Code | Description | Resolution |
+    |------------|-------------|------------|
+    | `EXTRACTION_TIMEOUT` | Feature extraction exceeded time limit | Optimize input file or increase timeout threshold |
+    | `MODEL_UNAVAILABLE` | Required extraction model unavailable | Try again later or contact support |
+    | `UNSUPPORTED_CONTENT` | Content type not supported by extractor | Verify compatibility between content and extractor |
+    | `EXTRACTION_FAILED` | General extraction failure | Check logs for specific error details |
+    | `INSUFFICIENT_CONTENT` | Content too small or lacks necessary information | Ensure content meets minimum requirements for extraction |
+  </Tab>
   
-  <Accordion title="S3StorageError">
-    Specific to S3 object storage issues.
+  <Tab title="Resource Errors">
+    ### Resource and Capacity Limitations
     
-    ```json
-    {
-      "success": false,
-      "status": 500,
-      "error": {
-        "message": "Failed to upload to S3",
-        "type": "S3StorageError"
-      }
-    }
-    ```
+    Errors related to system resources and limitations:
     
-    **Resolution:**
-    - Verify network connectivity
-    - Check if the file size exceeds S3 limits
-    - Ensure proper permissions are set
-  </Accordion>
+    | Error Code | Description | Resolution |
+    |------------|-------------|------------|
+    | `QUOTA_EXCEEDED` | Account quota or rate limit exceeded | Reduce request rate or upgrade account tier |
+    | `INSUFFICIENT_STORAGE` | Not enough storage in namespace | Free up storage or request increased capacity |
+    | `PROCESSING_CAPACITY` | System processing capacity reached | Retry during lower usage period |
+    | `MEMORY_LIMIT` | Operation exceeded memory limits | Optimize request or split into smaller operations |
+    | `CONCURRENT_LIMIT` | Too many concurrent operations | Reduce number of parallel processes |
+  </Tab>
+  
+  <Tab title="System Errors">
+    ### Internal System Failures
+    
+    Errors related to internal system issues:
+    
+    | Error Code | Description | Resolution |
+    |------------|-------------|------------|
+    | `INTERNAL_ERROR` | Unexpected system error | Contact support with error details |
+    | `SERVICE_UNAVAILABLE` | Processing service temporarily unavailable | Retry operation after a short delay |
+    | `DATABASE_ERROR` | Error connecting to storage backend | Check system status or contact support |
+    | `DEPENDENCY_FAILURE` | External service dependency failure | Verify third-party service status |
+    | `INCONSISTENT_STATE` | System detected inconsistent data state | Contact support for data recovery options |
+  </Tab>
+  
+  <Tab title="Configuration Errors">
+    ### Setup and Configuration Issues
+    
+    Errors related to pipeline and configuration settings:
+    
+    | Error Code | Description | Resolution |
+    |------------|-------------|------------|
+    | `INVALID_PIPELINE` | Pipeline configuration is invalid | Review and correct pipeline definition |
+    | `MISSING_PARAMETER` | Required configuration parameter missing | Add all required parameters to configuration |
+    | `INCOMPATIBLE_COMPONENTS` | Pipeline components are incompatible | Verify compatibility between pipeline stages |
+    | `CIRCULAR_REFERENCE` | Circular dependency in configuration | Restructure pipeline to remove circular references |
+    | `FEATURE_CONFLICT` | Conflicting feature extractors specified | Remove conflicting components from pipeline |
+  </Tab>
+</Tabs>
 
-  <Accordion title="MimeTypeError">
-    Indicates an unsupported file type was provided.
-    
-    ```json
-    {
-      "success": false,
-      "status": 400,
-      "error": {
-        "message": "Unsupported MIME type: application/octet-stream",
-        "type": "MimeTypeError",
-        "details": {
-          "provided_mime": "application/octet-stream",
-          "supported_mimes": ["image/jpeg", "image/png", "application/pdf"]
-        }
-      }
-    }
-    ```
-    
-    **Resolution:**
-    - Convert the file to a supported format
-    - Check the [Supported Formats](/overview/limits) documentation
-    - Ensure proper file extensions are used
-  </Accordion>
-</AccordionGroup>
+### Storage Errors
 
-## Database Errors
+<Tabs>
+  <Tab title="Object Storage">
+    ### Raw Data Storage Issues
+    
+    Errors related to bucket operations and object storage:
+    
+    | Error Code | Description | Resolution |
+    |------------|-------------|------------|
+    | `BUCKET_NOT_FOUND` | Referenced bucket does not exist | Verify bucket ID or create the bucket |
+    | `OBJECT_NOT_FOUND` | Referenced object does not exist | Check object ID and bucket path |
+    | `DUPLICATE_OBJECT` | Object with same ID already exists | Use unique object IDs or update existing object |
+    | `BLOB_UPLOAD_FAILED` | Failed to upload blob to storage | Check network connection and retry |
+    | `PREFIX_INVALID` | Object prefix format is invalid | Use valid path format for prefix |
+  </Tab>
+  
+  <Tab title="Collection Storage">
+    ### Document Storage Issues
+    
+    Errors related to collection operations and document storage:
+    
+    | Error Code | Description | Resolution |
+    |------------|-------------|------------|
+    | `COLLECTION_NOT_FOUND` | Referenced collection does not exist | Verify collection ID or create the collection |
+    | `DOCUMENT_NOT_FOUND` | Referenced document does not exist | Check document ID and collection |
+    | `SCHEMA_MISMATCH` | Document does not match collection schema | Update document to match collection schema |
+    | `INDEX_CONSTRAINT` | Document violates index constraints | Modify document to comply with index requirements |
+    | `DOCUMENT_TOO_LARGE` | Document exceeds size limits | Reduce document size or split into multiple documents |
+  </Tab>
+  
+  <Tab title="Feature Storage">
+    ### Feature Store Issues
+    
+    Errors related to feature storage operations:
+    
+    | Error Code | Description | Resolution |
+    |------------|-------------|------------|
+    | `VECTOR_STORE_ERROR` | Error accessing vector storage | Check vector store connection and configuration |
+    | `INVALID_EMBEDDING` | Embedding format or dimensions invalid | Verify embedding dimensions match configured vector store |
+    | `FEATURE_NOT_FOUND` | Referenced feature does not exist | Check feature ID and document reference |
+    | `INDEX_BUILD_FAILED` | Failed to build vector index | Check index configuration and available resources |
+    | `VECTOR_LIMIT_EXCEEDED` | Exceeded vector count limit for store | Reduce number of vectors or upgrade storage tier |
+  </Tab>
+  
+  <Tab title="Permission Issues">
+    ### Access and Permission Errors
+    
+    Errors related to storage access permissions:
+    
+    | Error Code | Description | Resolution |
+    |------------|-------------|------------|
+    | `ACCESS_DENIED` | Insufficient permissions for operation | Verify API key has required permissions |
+    | `NAMESPACE_ACCESS` | Cannot access specified namespace | Ensure account has access to the namespace |
+    | `READ_ONLY_ACCESS` | Attempted write to read-only resource | Use appropriate credentials with write access |
+    | `OWNERSHIP_REQUIRED` | Operation requires resource ownership | Transfer ownership or use owner credentials |
+    | `KEY_SCOPE_LIMITED` | API key scope does not include action | Create new API key with required scope |
+  </Tab>
+  
+  <Tab title="Management Issues">
+    ### Storage Lifecycle Management
+    
+    Errors related to storage management and organization:
+    
+    | Error Code | Description | Resolution |
+    |------------|-------------|------------|
+    | `STORAGE_QUOTA_EXCEEDED` | Namespace storage quota exceeded | Free up storage or request increased quota |
+    | `RETENTION_POLICY_CONFLICT` | Operation conflicts with retention policy | Modify operation to comply with retention policy |
+    | `VERSIONING_ERROR` | Error in object versioning | Check versioning configuration |
+    | `LIFECYCLE_RULE_ERROR` | Lifecycle management rule error | Review and correct lifecycle rules |
+    | `REPLICATION_FAILED` | Data replication between regions failed | Check replication configuration and network |
+  </Tab>
+</Tabs>
+
+### Database Errors
 
 Errors related to database operations.
 
-<CardGroup cols={2}>
-  <Card title="QdrantError" icon="database">
-    Vector database operations error.
+<Tabs>
+  <Tab title="Vector Database">
+    ### Qdrant Vector Database Issues
+    
+    Errors related to vector database operations:
+    
+    | Error Code | Description | Resolution |
+    |------------|-------------|------------|
+    | `VECTOR_INSERT_FAILED` | Failed to insert vectors into database | Check vector format and dimensions |
+    | `INDEX_CREATION_FAILED` | Failed to create search index | Verify index configuration parameters |
+    | `INVALID_VECTOR_DIMENSION` | Vector dimensions don't match configured space | Ensure vectors match the expected dimension count |
+    | `VECTOR_QUERY_FAILED` | Search query operation failed | Check query syntax and parameters |
+    | `COLLECTION_CONFIG_ERROR` | Vector collection configuration issue | Review collection settings and recreate if needed |
     
     ```json
     {
@@ -337,10 +346,20 @@ Errors related to database operations.
       }
     }
     ```
-  </Card>
+  </Tab>
   
-  <Card title="MongoDBError" icon="database">
-    Document database operations error.
+  <Tab title="Document Database">
+    ### MongoDB Document Storage Issues
+    
+    Errors related to document database operations:
+    
+    | Error Code | Description | Resolution |
+    |------------|-------------|------------|
+    | `DOCUMENT_INSERT_FAILED` | Failed to insert document into database | Check document format and required fields |
+    | `QUERY_SYNTAX_ERROR` | Invalid query syntax | Verify query structure follows MongoDB syntax |
+    | `INDEX_MISSING` | Required index not found | Create necessary indexes for query performance |
+    | `DUPLICATE_KEY` | Document with same unique key exists | Use upsert or check for existing documents |
+    | `CONNECTION_ERROR` | Database connection issue | Check network and database availability |
     
     ```json
     {
@@ -352,10 +371,20 @@ Errors related to database operations.
       }
     }
     ```
-  </Card>
+  </Tab>
 
-  <Card title="DBWriterError" icon="pen-to-square">
-    Error during database write operations.
+  <Tab title="Write Operations">
+    ### Database Write Failures
+    
+    Errors related to writing data to storage systems:
+    
+    | Error Code | Description | Resolution |
+    |------------|-------------|------------|
+    | `TRANSACTION_FAILED` | Database transaction failure | Retry operation or check data consistency |
+    | `WRITE_TIMEOUT` | Write operation timed out | Check database performance and try smaller batches |
+    | `CONCURRENT_MODIFICATION` | Document modified concurrently | Implement optimistic concurrency control |
+    | `SCHEMA_VIOLATION` | Data violates schema constraints | Modify data to match required schema |
+    | `PERMISSION_ERROR` | Insufficient write permissions | Check database user permissions |
     
     ```json
     {
@@ -367,16 +396,26 @@ Errors related to database operations.
       }
     }
     ```
-  </Card>
-</CardGroup>
+  </Tab>
+</Tabs>
 
-## Workflow Errors
+### Workflow Errors
 
 Errors related to workflow orchestration and pipeline execution.
 
-<AccordionGroup>
-  <Accordion title="PipelineError">
-    General pipeline processing error.
+<Tabs>
+  <Tab title="Pipeline Errors">
+    ### Data Processing Pipeline Issues
+    
+    Errors related to pipeline execution and processing:
+    
+    | Error Code | Description | Resolution |
+    |------------|-------------|------------|
+    | `PIPELINE_CONFIG_INVALID` | Invalid pipeline configuration | Check pipeline configuration syntax and components |
+    | `STAGE_EXECUTION_FAILED` | Specific pipeline stage failed | Review logs for the failing stage |
+    | `INPUT_VALIDATION_FAILED` | Pipeline input validation error | Ensure inputs match pipeline requirements |
+    | `PIPELINE_TIMEOUT` | Pipeline execution timed out | Optimize processing or break into smaller pipelines |
+    | `DEPENDENCY_MISSING` | Required pipeline dependency not found | Install or configure missing dependencies |
     
     ```json
     {
@@ -396,10 +435,20 @@ Errors related to workflow orchestration and pipeline execution.
     - Check pipeline configuration
     - Review task logs for specific failure points
     - Verify input data meets pipeline requirements
-  </Accordion>
+  </Tab>
   
-  <Accordion title="PrefectError">
-    Workflow orchestration error.
+  <Tab title="Orchestration Errors">
+    ### Workflow Orchestration Issues
+    
+    Errors related to workflow scheduling and management:
+    
+    | Error Code | Description | Resolution |
+    |------------|-------------|------------|
+    | `FLOW_EXECUTION_FAILED` | Workflow execution failure | Check workflow logs and task dependencies |
+    | `TASK_DEPENDENCY_ERROR` | Task dependency resolution failed | Verify task dependency configuration |
+    | `SCHEDULING_ERROR` | Workflow scheduling error | Check schedule configuration and triggers |
+    | `RESOURCE_ALLOCATION_FAILED` | Failed to allocate required resources | Verify resource availability and requirements |
+    | `STATE_PERSISTENCE_ERROR` | Error saving workflow state | Check storage system for workflow states |
     
     ```json
     {
@@ -419,155 +468,37 @@ Errors related to workflow orchestration and pipeline execution.
     - Check for service disruptions
     - Verify workflow configuration
     - Review task dependencies
-  </Accordion>
-</AccordionGroup>
-
-## Best Practices for Error Handling
-
-<CardGroup cols={2}>
-  <Card title="Implement Retry Logic" icon="rotate">
-    Use exponential backoff for retriable errors (429, 503).
-    
-    ```javascript
-    async function fetchWithRetry(url, options, maxRetries = 3) {
-      let retries = 0;
-      while (retries < maxRetries) {
-        try {
-          const response = await fetch(url, options);
-          if (response.status === 429) {
-            const data = await response.json();
-            const retryAfter = data.error.details?.retry_after || 1;
-            await new Promise(r => setTimeout(r, retryAfter * 1000));
-            retries++;
-            continue;
-          }
-          return response;
-        } catch (err) {
-          if (retries === maxRetries - 1) throw err;
-          retries++;
-          await new Promise(r => setTimeout(r, 2 ** retries * 1000));
-        }
-      }
-    }
-    ```
-  </Card>
+  </Tab>
   
-  <Card title="Check Task Status" icon="clipboard-check">
-    For long-running operations, poll the task status endpoint.
+  <Tab title="Execution Errors">
+    ### Task Execution Issues
     
-    ```javascript
-    async function checkTaskCompletion(taskId) {
-      let completed = false;
-      while (!completed) {
-        const response = await fetch(`/api/tasks/${taskId}`);
-        const data = await response.json();
-        
-        if (data.status === 'completed') {
-          return data.result;
-        } else if (data.status === 'failed') {
-          throw new Error(data.error.message);
+    Errors related to individual task execution:
+    
+    | Error Code | Description | Resolution |
+    |------------|-------------|------------|
+    | `TASK_TIMEOUT` | Task execution timed out | Optimize task or increase timeout |
+    | `RESOURCE_EXHAUSTED` | Task exceeded allocated resources | Optimize resource usage or increase allocation |
+    | `TASK_RETRY_FAILED` | Task failed after maximum retries | Investigate persistent failure cause |
+    | `INPUT_SERIALIZATION_ERROR` | Error serializing task inputs | Check input data format and size |
+    | `OUTPUT_HANDLING_ERROR` | Error processing task outputs | Verify output handlers and data structure |
+    
+    ```json
+    {
+      "success": false,
+      "status": 500,
+      "error": {
+        "message": "Task execution failed after 3 retries",
+        "type": "TaskExecutionError",
+        "details": {
+          "task_id": "task_67890",
+          "retries": 3
         }
-        
-        // Wait 2 seconds before polling again
-        await new Promise(r => setTimeout(r, 2000));
       }
     }
     ```
-  </Card>
-
-  <Card title="Validate Before Submitting" icon="check-double">
-    Perform client-side validation to catch errors early.
-    
-    ```javascript
-    function validateDocument(doc) {
-      const errors = [];
-      
-      if (!doc.title) errors.push('Title is required');
-      if (doc.metadata && typeof doc.metadata !== 'object') {
-        errors.push('Metadata must be an object');
-      }
-      
-      return errors.length ? errors : null;
-    }
-    ```
-  </Card>
-
-  <Card title="Log Error Responses" icon="file-lines">
-    Log complete error responses for troubleshooting.
-    
-    ```javascript
-    async function apiCall(endpoint, options) {
-      try {
-        const response = await fetch(endpoint, options);
-        const data = await response.json();
-        
-        if (!data.success) {
-          console.error('API Error:', {
-            endpoint,
-            status: data.status,
-            error: data.error
-          });
-          throw new Error(data.error.message);
-        }
-        
-        return data;
-      } catch (err) {
-        // Re-throw to handle in calling code
-        throw err;
-      }
-    }
-    ```
-  </Card>
-</CardGroup>
-
-## Common Errors and Solutions
-
-<Table>
-  <Thead>
-    <Tr>
-      <Th>Error Type</Th>
-      <Th>Common Cause</Th>
-      <Th>Solution</Th>
-    </Tr>
-  </Thead>
-  <Tbody>
-    <Tr>
-      <Td>NotFoundError</Td>
-      <Td>Resource ID doesn't exist or was deleted</Td>
-      <Td>Verify IDs and check if the resource was deleted</Td>
-    </Tr>
-    <Tr>
-      <Td>ValidationError</Td>
-      <Td>Invalid data format or missing required fields</Td>
-      <Td>Check the API documentation for required fields and formats</Td>
-    </Tr>
-    <Tr>
-      <Td>TooManyRequestsError</Td>
-      <Td>Rate limit exceeded</Td>
-      <Td>Implement backoff with the provided retry_after value</Td>
-    </Tr>
-    <Tr>
-      <Td>FeatureExtractionError</Td>
-      <Td>Content format issue or corrupted file</Td>
-      <Td>Verify file integrity and ensure it matches supported formats</Td>
-    </Tr>
-    <Tr>
-      <Td>MimeTypeError</Td>
-      <Td>Unsupported file type</Td>
-      <Td>Convert to a supported format listed in the docs</Td>
-    </Tr>
-    <Tr>
-      <Td>S3StorageError</Td>
-      <Td>Network issues or file size too large</Td>
-      <Td>Check network connection and file size limits</Td>
-    </Tr>
-    <Tr>
-      <Td>TimeoutError</Td>
-      <Td>Operation took too long to complete</Td>
-      <Td>Break large operations into smaller batches</Td>
-    </Tr>
-  </Tbody>
-</Table>
+  </Tab>
+</Tabs>
 
 ## Contacting Support
 

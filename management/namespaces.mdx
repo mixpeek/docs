@@ -29,6 +29,18 @@ They serve as the highest-level organizational unit, similar to databases in tra
   muted
 ></iframe>
 
+<Steps>
+  <Step title="Select Features">
+    Choose which feature extractors and vector indexes you want to use in your namespace. This determines what capabilities will be available for processing your data.
+  </Step>
+  <Step title="Select Payload Index">
+    Define which fields you want to index for efficient querying. Well-chosen payload indexes optimize search performance for your most common query patterns.
+  </Step>
+  <Step title="Create Namespace">
+    Set up your namespace with the selected configurations. Once created, your namespace serves as an isolated environment for all your data processing and retrieval operations.
+  </Step>
+</Steps>
+
 
 When you create a namespace, you select the features you want to make available across the namespace. This is important to select up-front because the features map to index definitions and are immutable. The features you select here limit the feature extractors you have available when you create collections. 
 

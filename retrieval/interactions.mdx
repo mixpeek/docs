@@ -26,7 +26,7 @@ In Mixpeek, interactions represent how users engage with search results. By trac
 Mixpeek supports several types of user interactions that you can track:
 
 <AccordionGroup>
-  <Accordion title="Click Interactions" icon="mouse-pointer">
+  <Accordion title="Click Interactions" icon="hand-pointer">
     Track when users click on or select search results.
     
     **Use cases:**
@@ -44,7 +44,7 @@ Mixpeek supports several types of user interactions that you can track:
     - Evaluate post-click relevance
   </Accordion>
 
-  <Accordion title="Conversion Interactions" icon="shopping-cart">
+  <Accordion title="Conversion Interactions" icon="cart-shopping">
     Track when users take valuable actions like purchases, signups, or downloads.
     
     **Use cases:**
@@ -167,132 +167,6 @@ You can record interactions using the Mixpeek API:
   </Tab>
 </Tabs>
 
-## Tracking Different Interaction Types
-
-### Click Interactions
-
-```python
-# Record a click interaction
-click = mp.interactions.create(
-    namespace_id="ns_abc123",
-    type="click",
-    document_id="doc_def456",
-    user_id="user_ghi789",
-    session_id="session_jkl012",
-    search_id="search_mno345",
-    position=3
-)
-```
-
-### View Interactions
-
-```python
-# Record a view interaction
-view = mp.interactions.create(
-    namespace_id="ns_abc123",
-    type="view",
-    document_id="doc_def456",
-    user_id="user_ghi789",
-    session_id="session_jkl012",
-    search_id="search_mno345",
-    duration=45,  # User viewed the content for 45 seconds
-    metadata={
-        "scroll_depth": 0.8,  # User scrolled through 80% of the content
-        "view_complete": True
-    }
-)
-```
-
-### Conversion Interactions
-
-```python
-# Record a conversion interaction
-conversion = mp.interactions.create(
-    namespace_id="ns_abc123",
-    type="conversion",
-    document_id="doc_def456",
-    user_id="user_ghi789",
-    session_id="session_jkl012",
-    search_id="search_mno345",
-    value=99.99,  # Purchase value
-    metadata={
-        "conversion_type": "purchase",
-        "product_id": "prod_xyz789",
-        "quantity": 1
-    }
-)
-```
-
-### Custom Interactions
-
-```python
-# Record a custom interaction type
-bookmark = mp.interactions.create(
-    namespace_id="ns_abc123",
-    type="bookmark",  # Custom interaction type
-    document_id="doc_def456",
-    user_id="user_ghi789",
-    session_id="session_jkl012",
-    metadata={
-        "collection_id": "col_favorites",
-        "added_from": "search_results"
-    }
-)
-```
-
-## Retrieving Interactions
-
-You can retrieve interaction data for analysis or use in your application:
-
-<CodeGroup>
-  ```python Python
-  # Get a specific interaction
-  interaction = mp.interactions.get(
-      interaction_id="int_pqr678"
-  )
-  
-  print(f"Interaction type: {interaction['type']}")
-  print(f"Document ID: {interaction['document_id']}")
-  print(f"Timestamp: {interaction['timestamp']}")
-  
-  # List interactions with filtering
-  interactions = mp.interactions.list(
-      namespace_id="ns_abc123",
-      user_id="user_ghi789",
-      type="click",
-      document_id="doc_def456",
-      start_time="2023-01-01T00:00:00Z",
-      end_time="2023-01-31T23:59:59Z",
-      limit=100
-  )
-  
-  print(f"Found {len(interactions['interactions'])} interactions")
-  ```
-
-  ```javascript JavaScript
-  // Get a specific interaction
-  const interaction = await mp.interactions.get({
-    interaction_id: "int_pqr678"
-  });
-  
-  console.log(`Interaction type: ${interaction.type}`);
-  console.log(`Document ID: ${interaction.document_id}`);
-  console.log(`Timestamp: ${interaction.timestamp}`);
-  
-  // List interactions with filtering
-  const interactions = await mp.interactions.list({
-    namespace_id: "ns_abc123",
-    user_id: "user_ghi789",
-    type: "click",
-    document_id: "doc_def456",
-    start_time: "2023-01-01T00:00:00Z",
-    end_time: "2023-01-31T23:59:59Z",
-    limit: 100
-  });
-  
-  console.log(`Found ${interactions.interactions.length} interactions`);
-  ```
-</CodeGroup>
 
 ## Using Interactions in Search
 
@@ -300,36 +174,34 @@ Interactions can be used to personalize and improve search results:
 
 ### Personalized Retriever
 
-<Frame>
-  ```json
-  {
-    "stages": [
-      {
-        "name": "vector_search",
-        "type": "vector",
-        "collection_id": "col_products",
-        "index": "multimodal",
-        "limit": 50
+```json
+{
+  "stages": [
+    {
+      "name": "vector_search",
+      "type": "vector",
+      "collection_id": "col_products",
+      "index": "multimodal",
+      "limit": 50
+    },
+    {
+      "name": "personalized_rank",
+      "type": "rank",
+      "input": "vector_search.results",
+      "weights": {
+        "vector_score": 0.6,
+        "user_interactions": 0.4
       },
-      {
-        "name": "personalized_rank",
-        "type": "rank",
-        "input": "vector_search.results",
-        "weights": {
-          "vector_score": 0.6,
-          "user_interactions": 0.4
-        },
-        "parameters": {
-          "user_id": "{user_id}",
-          "interaction_types": ["click", "conversion"],
-          "recency_decay": 0.1
-        },
-        "limit": 20
-      }
-    ]
-  }
-  ```
-</Frame>
+      "parameters": {
+        "user_id": "{user_id}",
+        "interaction_types": ["click", "conversion"],
+        "recency_decay": 0.1
+      },
+      "limit": 20
+    }
+  ]
+}
+```
 
 ### User-Based Filtering
 
@@ -400,71 +272,108 @@ document.querySelectorAll('.search-result').forEach((element, index) => {
 
 ## Analytics and Reporting
 
-Interaction data can be used for analytics and reporting to understand user behavior and content performance:
+<Tabs>
+  <Tab title="Usage Analytics">
+    ### User Interaction Tracking
+    
+    Monitor how users interact with your retrieval system:
 
-<CardGroup cols={2}>
-  <Card title="Click-Through Rate (CTR)" icon="chart-line">
+    **Key Metrics**
+    - Query volume (total, by time period, by user segment)
+    - Session metrics (duration, queries per session)
+    - Most frequent queries and search patterns
+    - Abandonment rates and search refinements
+
+    **Implementation**
     ```python
-    # Calculate CTR for specific documents
-    def calculate_ctr(namespace_id, document_ids):
-        results = {}
-        
-        for doc_id in document_ids:
-            # Get impression count
-            impressions = mp.interactions.list(
-                namespace_id=namespace_id,
-                document_id=doc_id,
-                type="impression",
-                limit=0,  # Only get count
-                count=True
-            )
-            
-            # Get click count
-            clicks = mp.interactions.list(
-                namespace_id=namespace_id,
-                document_id=doc_id,
-                type="click",
-                limit=0,  # Only get count
-                count=True
-            )
-            
-            if impressions["count"] > 0:
-                ctr = (clicks["count"] / impressions["count"]) * 100
-                results[doc_id] = ctr
-            else:
-                results[doc_id] = 0
-        
-        return results
+    # Generate usage report for the last 30 days
+    usage_report = analytics.generate_report(
+      report_type="usage",
+      time_range={"days": 30},
+      segments=["user_type", "device_type"]
+    )
+    
+    # Export report data
+    analytics.export_to_csv(usage_report, "monthly_usage_analytics.csv")
     ```
-  </Card>
-  
-  <Card title="Position Analysis" icon="trophy">
+  </Tab>
+
+  <Tab title="Performance Metrics">
+    ### Retrieval Effectiveness Measurement
+    
+    Evaluate the quality and speed of your retrieval results:
+
+    **Key Metrics**
+    - Latency (average, p95, p99 response times)
+    - Precision and recall (when ground truth available)
+    - Mean Reciprocal Rank (MRR) and Normalized Discounted Cumulative Gain (NDCG)
+    - Cache hit rates and optimization opportunities
+
+    **Implementation**
     ```python
-    # Analyze clicks by result position
-    def analyze_position_performance(namespace_id, start_time, end_time):
-        # Get clicks with position data
-        clicks = mp.interactions.list(
-            namespace_id=namespace_id,
-            type="click",
-            start_time=start_time,
-            end_time=end_time,
-            limit=10000
-        )
-        
-        # Group clicks by position
-        position_counts = {}
-        for click in clicks["interactions"]:
-            position = click.get("position")
-            if position:
-                position_counts[position] = position_counts.get(position, 0) + 1
-        
-        # Sort by position
-        sorted_positions = sorted(position_counts.items())
-        
-        return sorted_positions
+    # Analyze retriever performance across different query types
+    performance_metrics = analytics.evaluate_retrievers(
+      retrievers=["product_search", "content_search"],
+      metrics=["latency", "mrr", "ndcg@10"],
+      query_dataset="benchmark_queries"
+    )
+    
+    # Generate performance comparison visualization
+    analytics.visualize(performance_metrics, chart_type="comparison")
     ```
-  </Card>
-</CardGroup>
+  </Tab>
+
+  <Tab title="User Feedback">
+    ### Feedback Collection and Analysis
+    
+    Track and analyze explicit and implicit user feedback:
+
+    **Key Metrics**
+    - Explicit ratings (thumbs up/down, star ratings)
+    - Click-through rates and result selection patterns
+    - Time spent on results and engagement metrics
+    - Feedback comments and sentiment analysis
+
+    **Implementation**
+    ```python
+    # Analyze user feedback for the past quarter
+    feedback_analysis = analytics.analyze_feedback(
+      time_range={"months": 3},
+      feedback_types=["ratings", "clicks", "comments"],
+      group_by="query_category"
+    )
+    
+    # Generate insight report with recommendations
+    recommendations = analytics.generate_recommendations(feedback_analysis)
+    ```
+  </Tab>
+
+  <Tab title="Content Analysis">
+    ### Retrieved Content Patterns
+    
+    Analyze patterns in retrieved documents and content:
+
+    **Key Metrics**
+    - Most frequently retrieved documents
+    - Content distribution by type, category, or attribute
+    - Content freshness and recency metrics
+    - Coverage and gaps in retrieved content
+
+    **Implementation**
+    ```python
+    # Analyze content retrieval patterns
+    content_report = analytics.content_analysis(
+      time_range={"weeks": 4},
+      dimensions=["content_type", "category", "age"],
+      metrics=["retrieval_count", "click_rate"]
+    )
+    
+    # Generate content heat map
+    analytics.visualize(content_report, chart_type="heatmap")
+    ```
+  </Tab>
+
+</Tabs>
 
 ## Best Practices
 
