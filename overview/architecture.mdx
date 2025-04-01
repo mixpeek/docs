@@ -1,0 +1,86 @@
+---
+title: 'Architecture'
+description: 'Understanding Mixpeek core architecture and data flow'
+---
+
+## Overview
+
+Mixpeek's architecture is designed for efficient, scalable processing of multimedia files across various formats. The platform handles everything from secure data ingestion to parallel feature extraction and optimized search.
+
+
+<img src="https://d8ts56gtwtyh1.cloudfront.net/docs/diagrams/architecture.png" alt="Mixpeek Architecture Diagram" />
+
+
+## Technology Stack
+
+Our architecture leverages best-in-class technologies selected for performance, reliability, and scalability:
+
+- **[Temporal](https://temporal.io/)**: Powers our workflow orchestration for fault-tolerance and reliable execution of complex, long-running processes
+- **[Ray](https://ray.io/)**: Enables distributed computing for efficient parallel processing of feature extraction workloads
+- **[Qdrant](https://qdrant.tech/)**: Provides high-performance vector search capabilities with ANN indexing for sub-second queries at scale
+- **[DuckDB](https://duckdb.org/)**: Offers analytical capabilities with minimal overhead for comprehensive system monitoring
+- **[Docker](https://www.docker.com/)**: Ensures consistent, isolated environments for feature extractors across deployments
+- **[AWS Lambda](https://aws.amazon.com/lambda/)**: Facilitates secure, event-driven data ingestion from S3 with minimal configuration
+- **[AWS S3](https://aws.amazon.com/s3/)**: Provides durable storage for source objects with versioning and lifecycle management
+
+## Extensibility
+
+Mixpeek is designed with extensibility as a core principle:
+
+- **Self-hosting Options**: Deploy key components on your infrastructure for enhanced control and compliance
+- **Custom Feature Extractors**: Integrate your own extractors via our standardized container interface
+- **API-first Design**: All functionality is accessible through well-documented APIs
+- **Pluggable Authentication**: Support for various auth providers including OAuth, API keys, and custom JWT solutions
+- **Bring Your Own Storage**: Connect existing storage solutions while maintaining our processing capabilities
+
+## Core Components
+
+### Data Ingestion
+- **S3 Integration**: Secure Change Data Capture (CDC) via AWS Lambda functions deployed to your account
+- **Direct Upload**: HTTP POST endpoint for direct file uploads via Bucket Object API
+- **Scalable Storage**: Efficient management of files regardless of size or format
+
+### Processing Pipeline
+- **Temporal Orchestration**: Workflow engine that manages the entire processing lifecycle
+- **Ray Clusters**: Distributed computing framework for parallel processing
+- **Feature Extractors**: Specialized processing units with dedicated resources:
+  - Each runs in isolated Docker containers
+  - Configurable EC2 hardware footprint
+  - GPU/TPU accelerator support where needed
+  - Auto-scaling based on workload
+
+### Vector Storage
+- **Qdrant**: High-performance vector database for storing extracted features
+- **Optimized Indices**: Fast similarity search across multimedia content
+- **Multi-modal Support**: Unified approach to handling different data types
+
+### Monitoring & Observability
+- **DuckDB**: Analytics engine for logging and monitoring system performance
+- **Task Tracking**: Comprehensive visibility into processing status
+- **Error Handling**: Robust recovery mechanisms for failed operations
+
+## Data Flow
+
+1. **Ingestion**: Content enters the system via S3 integration or direct API upload
+2. **Orchestration**: Temporal workflows coordinate processing based on collection configuration
+3. **Feature Extraction**: Multiple extractors process content in parallel, generating specialized embeddings
+4. **Storage**: Extracted features are stored in Qdrant for efficient retrieval
+5. **Search & Retrieval**: Optimized vector search enables powerful content discovery capabilities
+
+### Authentication & Security
+
+All API requests require authentication via API keys. Data is encrypted both in transit and at rest, with granular access controls at the namespace, bucket, and collection levels.
+
+### Task Management
+
+Long-running operations are managed via our task system:
+- Tasks are tracked with unique IDs
+- Status updates are available in real-time
+- Failures trigger automatic retry mechanisms with configurable policies
+- Tasks can be monitored and controlled through dedicated API endpoints
+
+This architecture ensures maximum performance, reliability, and scalability as your content library grows. 
+
+<Card title="Questions About Our Architecture?" icon="message-question" href="https://mixpeek.com/contact">
+Our engineering team is ready to help you understand how Mixpeek can fit into your specific use case. 
+</Card> 

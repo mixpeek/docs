@@ -78,7 +78,8 @@
       "pages": [
         "overview/introduction",
         "overview/concepts",
-        "overview/quickstart"
+        "overview/quickstart",
+        "overview/architecture"
       ]
     },
     {
