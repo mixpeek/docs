@@ -1,0 +1,133 @@
+---
+title: "Object Detection"
+description: "Detect objects in images and videos with boolean output"
+---
+
+<Note>
+  The Object Detection extractor identifies the presence of specified objects in images and videos, providing boolean results indicating if objects are present.
+</Note>
+
+## Overview
+The Object Detection feature extractor analyzes visual content to detect the presence of specified objects, returning boolean values indicating whether each object type is present. This enables content categorization, filtering, and simplified search based on object presence.
+
+## Required Inputs
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| media_url | string | Yes | - | URL pointing to image or video file. Supported formats: JPG, PNG, MP4, MOV |
+| objects_to_detect | array | Yes | - | Array of object classes to detect (e.g., ["person", "car", "dog"]) |
+| detection_threshold | float | No | 0.7 | Confidence threshold for object detection (0.0-1.0) |
+
+## Configurations
+
+### Detection Modes
+
+The extractor supports different detection modes based on use case requirements:
+
+| Mode | Description | Best For |
+|------|-------------|----------|
+| `standard` | Balanced accuracy and performance | General object detection |
+| `high-accuracy` | Prioritizes detection accuracy | Critical detection applications |
+| `high-performance` | Prioritizes processing speed | Real-time applications |
+
+#### Configuration Examples
+
+```json Standard
+{
+  "detection_mode": "standard",
+  "objects_to_detect": ["person", "car", "bicycle"],
+  "detection_threshold": 0.7
+}
+```
+```json High Accuracy
+{
+  "detection_mode": "high-accuracy",
+  "objects_to_detect": ["weapon", "suspicious_package", "fire"],
+  "detection_threshold": 0.85
+}
+```
+```json High Performance
+{
+  "detection_mode": "high-performance",
+  "objects_to_detect": ["person", "vehicle"],
+  "detection_threshold": 0.6,
+  "frame_sampling": 10
+}
+```
+
+### Advanced Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `min_object_size` | float | `0.01` | Minimum object size as a ratio of image size (0.0-1.0) |
+| `include_count` | boolean | `false` | Include count of detected objects (not just boolean) |
+| `include_timestamp` | boolean | `false` | For videos, include first detection timestamp |
+| `frame_sampling` | integer | `1` | For videos, process every Nth frame for performance |
+
+#### Configuration Examples
+
+```json Sample
+{
+  "min_object_size": 0.05,       // Minimum 5% of image size
+  "include_count": true,         // Include object counts
+  "include_timestamp": true,     // Include detection timestamps
+  "frame_sampling": 5            // Process every 5th frame
+}
+```
+
+### Processing Flow
+
+<Frame>
+  ```mermaid
+  graph TD
+    A[Input Media] --> B[Object Detection]
+    B --> C[Boolean Result Generation]
+    C --> D[Feature Store]
+    style A fill:#FC5185,stroke:#333
+    style D fill:#FC5185,stroke:#333
+  ```
+</Frame>
+
+### Output Schema
+
+This feature extractor will output as `features` in the feature store.
+
+```json
+{
+  "document_id": "doc_abc123",
+  "collection_id": "col_xyz789",
+  "source_object_id": "obj_def456",
+  
+  // Object detection results
+  "objects": {
+    "person": {
+      "present": true,            // Boolean indicating presence
+      "confidence": 0.96,         // Highest confidence score
+      "count": 3,                 // Optional: count of detected instances
+      "first_detection": 2.5      // Optional: timestamp in seconds (videos only)
+    },
+    "car": {
+      "present": true,
+      "confidence": 0.92,
+      "count": 2,
+      "first_detection": 0.0
+    },
+    "bicycle": {
+      "present": false,
+      "confidence": 0.0,
+      "count": 0,
+      "first_detection": null
+    }
+  },
+  
+  // Media metadata
+  "media": {
+    "type": "video", // or "image"
+    "filename": "street_scene.mp4",
+    "width": 1920,
+    "height": 1080,
+    "duration": 30.5, // null for images
+    "frame_count": 915 // null for images
+  }
+}
+``` 

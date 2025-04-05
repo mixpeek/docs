@@ -100,7 +100,11 @@
           "pages": [
             "extraction/scene-splitting",
             "extraction/video_embedding",
-            "extraction/face_detection"
+            "extraction/face_detection",
+            "extraction/object_detection",
+            "extraction/activity_grouping",
+            "extraction/face_grouping",
+            "extraction/object_grouping"
           ]
         },
         "processing/model-tuning",
