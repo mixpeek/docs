@@ -79,7 +79,8 @@
         "overview/introduction",
         "overview/concepts",
         "overview/quickstart",
-        "overview/architecture"
+        "overview/architecture",
+        "overview/caching"
       ]
     },
     {
