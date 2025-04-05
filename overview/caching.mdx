@@ -9,9 +9,42 @@ description: "Understanding Mixpeek's caching system for improved performance"
 
 ## Overview
 
+Mixpeek's caching system is designed to optimize performance by reducing computational overhead and improving response times. The system caches both retriever results and collection data, providing significant benefits:
+
+1. **Reducing Computational Overhead**: Caching expensive retrieval operations and feature computations
+2. **Improving Response Times**: Serving frequently accessed results from cache instead of recomputing
+3. **Optimizing Resource Usage**: Minimizing redundant processing of the same queries
+4. **Enabling Scalability**: Supporting high-throughput retrieval operations efficiently
+
+<Frame>
+  ```mermaid
+  graph TD
+    A[Query] --> B[Retriever]
+    B --> C{Cache Check}
+    C -->|Hit| D[Return Cached Result]
+    C -->|Miss| E[Collection]
+    E --> F{Cache Check}
+    F -->|Hit| G[Return Cached Data]
+    F -->|Miss| H[Process & Cache]
+    H --> G
+    G --> D
+    D --> I[Response]
+  ```
+</Frame>
+
 The caching system operates at two levels:
-1. **Retriever-level Caching**: Caches the results of specific retriever operations
-2. **Collection-level Caching**: Caches collection-specific data and metadata
+
+1. **Retriever-level Caching**: Caches the results of specific retriever operations, particularly useful for:
+   - Frequently repeated queries
+   - Expensive vector similarity searches
+   - Complex multimodal retrieval pipelines
+   - High-traffic search endpoints
+
+2. **Collection-level Caching**: Caches collection-specific data and metadata, beneficial for:
+   - Frequently accessed documents
+   - Stable reference data
+   - Metadata that doesn't change often
+   - Feature store lookups
 
 ## Cache Configuration
 
