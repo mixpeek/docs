@@ -18,7 +18,6 @@ Features in Mixpeek are structured data elements extracted from your content dur
 - PDF content structures
 - Detected entities and concepts
 
-
 <iframe
   width="600"
   height="310"
@@ -60,6 +59,37 @@ Features in Mixpeek are structured data elements extracted from your content dur
 ## Feature Extractors
 
 Extractors are pre-built pipelines that have defined input and output schemas. Each extractor runs in parallel within a collection (in a queue). These extractors have optional parameters that can be configured when the collection is defined. 
+
+<Tip>
+  Feature extraction in Mixpeek often follows a similar pattern to pandas' `group_by` operation (split, aggregate, merge). Just as pandas splits data into groups, applies operations, and combines results, feature extractors often have the ability to splits content by some characteristic, extracts relevant features, and merges them for unified retrieval.
+</Tip>
+
+<CardGroup cols={2}>
+  <Card title="Text Documents" icon="file-lines">
+    <b>Split:</b> By paragraphs or sections<br/>
+    <b>Aggregate:</b> Extract embeddings, entities, and topics<br/>
+    <b>Merge:</b> Combine semantic vectors with metadata
+  </Card>
+  
+  <Card title="Images" icon="image">
+    <b>Split:</b> By regions or objects<br/>
+    <b>Aggregate:</b> Extract visual features and scene descriptions<br/>
+    <b>Merge:</b> Combine visual embeddings with object detections
+  </Card>
+  
+  <Card title="Audio" icon="microphone">
+    <b>Split:</b> By time segments or speakers<br/>
+    <b>Aggregate:</b> Extract transcriptions and audio features<br/>
+    <b>Merge:</b> Combine speech-to-text with audio embeddings
+  </Card>
+  
+  <Card title="Video" icon="video">
+    <b>Split:</b> By scenes or frames<br/>
+    <b>Aggregate:</b> Extract visual and audio features per segment<br/>
+    <b>Merge:</b> Combine scene detections with temporal features
+  </Card>
+</CardGroup>
+
 
 ![Bucket Details](https://d8ts56gtwtyh1.cloudfront.net/docs/warehouse/images/feature_extractor.jpg)
 
