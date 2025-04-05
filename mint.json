@@ -98,13 +98,13 @@
         {
           "group": "Feature Extractors",
           "pages": [
-            "extraction/scene-splitting",
-            "extraction/video_embedding",
-            "extraction/face_detection",
-            "extraction/object_detection",
-            "extraction/activity_grouping",
-            "extraction/face_grouping",
-            "extraction/object_grouping"
+            "extraction/activity-segmentation",
+            "extraction/face-segmentation",
+            "extraction/object-segmentation",
+            "extraction/activity-segmentation",
+            "extraction/face-segmentation",
+            "extraction/object-segmentation",
+            "extraction/video-embedding"
           ]
         },
         "processing/model-tuning",
