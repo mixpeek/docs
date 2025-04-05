@@ -98,12 +98,12 @@
         {
           "group": "Feature Extractors",
           "pages": [
-            "extraction/activity-segmentation",
-            "extraction/face-segmentation",
-            "extraction/object-segmentation",
-            "extraction/activity-segmentation",
-            "extraction/face-segmentation",
-            "extraction/object-segmentation",
+            "extraction/activity-grouping",
+            "extraction/face-detection",
+            "extraction/face-grouping",
+            "extraction/object-detection",
+            "extraction/object-grouping",
+            "extraction/scene-splitting",
             "extraction/video-embedding"
           ]
         },
