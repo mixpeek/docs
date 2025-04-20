@@ -30,10 +30,17 @@ Feature extractors in Mixpeek are purpose-built data transformation pipelines th
     - Documents in a [collection](/management/collections) where the index is not being used
   </Step>
   <Step title="Transform (T)">
-    Apply feature extractors to pull out and structure relevant data
+    Apply feature extractors to pull out and structure relevant data:
+    - Configure input handling: `individual` or `grouped` documents
+    - Define output type: `single` or `multiple` documents
+    - Map inputs and outputs between pipeline stages
+    - Set document handling strategies
   </Step>
   <Step title="Load (L)">
-    Index the extracted features for efficient search and retrieval
+    Index the extracted features for efficient search and retrieval:
+    - Create new documents
+    - Update existing documents
+    - Merge with existing content
   </Step>
 </Steps>
 
@@ -43,10 +50,27 @@ Feature extractors in Mixpeek are purpose-built data transformation pipelines th
     A[Raw Documents] -->|From Bucket| B[Document Extraction]
     A -->|From Collection| B
     B --> C[Feature Extraction]
-    C --> D[Feature Indexing]
+    C -->|Input: individual/grouped| D[Processing]
+    D -->|Output: single/multiple| E[Feature Indexing]
     style C fill:#FC5185,stroke:#333
   ```
 </Frame>
+
+## Configuration Options
+
+When creating a collection with feature extractors, you can configure:
+
+### Feature Extractor Configuration
+- `feature_extractor_name`: Name of the extractor
+- `version`: Version of the extractor
+- `parameters`: Custom parameters for the extractor
+- `input_mapping`: Maps pipeline inputs to extractor inputs
+- `output_mapping`: Maps extractor outputs to pipeline outputs
+- `document_output_type`: Type of output (`single` or `multiple`)
+- `document_input_handling`: How documents are provided (`individual` or `grouped`)
+- `document_output_handling`: How output is handled (`create_new`)
+
+For complete API details, see [Create Collection API Reference](/api-reference/collections/create-collection).
 
 ## Types of Feature Extractors
 
