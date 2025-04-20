@@ -1,0 +1,180 @@
+---
+title: "Feature Extractors"
+description: "Transform and enrich your data through customizable extraction pipelines"
+---
+
+<Note>
+  Feature extractors are specialized data transformation pipelines that extract meaningful information from your content. They represent the crucial "Transform" stage in the ETL (Extract, Transform, Load) ingestion process. Learn more about the [overall architecture](/overview/architecture) and [core concepts](/overview/concepts).
+</Note>
+
+## Overview
+
+Feature extractors in Mixpeek are purpose-built data transformation pipelines that convert raw, unstructured content into structured, meaningful features. They operate as a distinct step in the ingestion pipeline, sitting between initial document extraction and final indexing. For more details on data management, see [buckets](/management/buckets) and [collections](/management/collections).
+
+<CardGroup cols={2}>
+  <Card title="Transformation Focus" icon="wand-magic-sparkles">
+    Convert raw content into structured, searchable features specific to your use case
+  </Card>
+  
+  <Card title="Pipeline Integration" icon="diagram-project">
+    Seamlessly integrate with document extraction and indexing stages in the ETL process
+  </Card>
+</CardGroup>
+
+## The Ingestion Pipeline
+
+<Steps>
+  <Step title="Extract (E)">
+    Start with documents from either:
+    - Unindexed documents in a [bucket](/management/buckets)
+    - Documents in a [collection](/management/collections) where the index is not being used
+  </Step>
+  <Step title="Transform (T)">
+    Apply feature extractors to pull out and structure relevant data
+  </Step>
+  <Step title="Load (L)">
+    Index the extracted features for efficient search and retrieval
+  </Step>
+</Steps>
+
+<Frame>
+  ```mermaid
+  graph TD
+    A[Raw Documents] -->|From Bucket| B[Document Extraction]
+    A -->|From Collection| B
+    B --> C[Feature Extraction]
+    C --> D[Feature Indexing]
+    style C fill:#FC5185,stroke:#333
+  ```
+</Frame>
+
+## Types of Feature Extractors
+
+<AccordionGroup>
+  <Accordion title="Text Extractors" icon="font">
+    Extract meaningful text features from documents.
+    
+    - Full-text content
+    - Named entities
+    - Key phrases
+    - Semantic embeddings
+    
+    For advanced text processing, see [model tuning](/processing/model-tuning).
+  </Accordion>
+
+  <Accordion title="Metadata Extractors" icon="tags">
+    Pull out document metadata and attributes.
+    
+    - File properties
+    - Document metadata
+    - Custom attributes
+    - Timestamps
+    
+    Learn more about [collection features](/management/features).
+  </Accordion>
+
+  <Accordion title="Media Extractors" icon="photo-film">
+    Process images, audio, and video content.
+    
+    - Image features
+    - Audio transcription
+    - Video keyframes
+    - Media metadata
+    
+    For specialized media processing, see [face search](/stages/face_search).
+  </Accordion>
+
+  <Accordion title="Custom Extractors" icon="code">
+    Build specialized extractors for your use case.
+    
+    - Domain-specific features
+    - Business logic
+    - Custom algorithms
+    - Integration with external tools
+    
+    Check the [API reference](/api-reference/collection-features/list-feature-extractors) for implementation details.
+  </Accordion>
+</AccordionGroup>
+
+## Common Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Document Analysis" icon="file-lines">
+    Extract key information from business documents, contracts, and reports
+  </Card>
+  
+  <Card title="Content Enrichment" icon="sparkles">
+    Add structured metadata and features to enhance searchability
+  </Card>
+
+  <Card title="Media Processing" icon="images">
+    Extract features from images, audio, and video content
+  </Card>
+  
+  <Card title="Data Standardization" icon="arrows-to-dot">
+    Transform varied content into consistent, structured formats
+  </Card>
+</CardGroup>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Pipeline Design" icon="sitemap">
+    Design extractors as focused, single-responsibility components in your pipeline
+  </Card>
+  
+  <Card title="Error Handling" icon="triangle-exclamation">
+    Implement robust error handling to manage extraction failures gracefully. See [error handling](/troubleshooting/errors) for details.
+  </Card>
+
+  <Card title="Performance" icon="gauge-high">
+    Optimize extractors for efficiency when processing large volumes of content. Review [system limits](/troubleshooting/limits).
+  </Card>
+  
+  <Card title="Validation" icon="check-double">
+    Validate extracted features before passing them to the indexing stage
+  </Card>
+</CardGroup>
+
+## Example: Document Processing Pipeline
+
+Here's an example of how feature extractors fit into a complete document processing pipeline:
+
+```python
+from mixpeek import Pipeline
+
+# Configure the pipeline stages
+pipeline = Pipeline(
+    extractors=[
+        # Document extraction stage
+        DocumentExtractor(),
+        
+        # Feature extraction stage
+        TextFeatureExtractor(),
+        MetadataExtractor(),
+        CustomDomainExtractor(),
+        
+        # Indexing stage
+        FeatureIndexer()
+    ]
+)
+
+# Process documents through the pipeline
+results = pipeline.process(documents)
+```
+
+For more examples and implementation details, see the [Studio Walkthrough](/studio) and [API Reference](/api-reference).
+
+## Limitations
+
+- Maximum document size: 100MB per file
+- Processing timeout: 5 minutes per document
+- Concurrent extractions: 20 per account
+- Supported file types vary by extractor type
+- Custom extractors require Enterprise plan
+
+For complete details on system limits, see [Limits](/troubleshooting/limits).
+
+## API Reference
+
+For complete details on implementing and using feature extractors, see our [Feature Extractors API Reference](/api-reference/collection-features/list-feature-extractors). For monitoring and managing extraction tasks, see [Tasks API Reference](/api-reference/tasks/get-task-information). 

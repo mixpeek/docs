@@ -95,18 +95,7 @@
     {
       "group": "Data Processing",
       "pages": [
-        {
-          "group": "Feature Extractors",
-          "pages": [
-            "extraction/activity-grouping",
-            "extraction/face-detection",
-            "extraction/face-grouping",
-            "extraction/object-detection",
-            "extraction/object-grouping",
-            "extraction/scene-splitting",
-            "extraction/video-embedding"
-          ]
-        },
+        "processing/feature-extractors",
         "processing/model-tuning",
         "processing/tasks"
       ]
