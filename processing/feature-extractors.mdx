@@ -81,7 +81,6 @@ Feature extractors in Mixpeek are purpose-built data transformation pipelines th
     - Video keyframes
     - Media metadata
     
-    For specialized media processing, see [face search](/stages/face_search).
   </Accordion>
 
   <Accordion title="Custom Extractors" icon="code">
@@ -92,7 +91,6 @@ Feature extractors in Mixpeek are purpose-built data transformation pipelines th
     - Custom algorithms
     - Integration with external tools
     
-    Check the [API reference](/api-reference/collection-features/list-feature-extractors) for implementation details.
   </Accordion>
 </AccordionGroup>
 
@@ -116,64 +114,90 @@ Feature extractors in Mixpeek are purpose-built data transformation pipelines th
   </Card>
 </CardGroup>
 
-## Best Practices
 
-<CardGroup cols={2}>
-  <Card title="Pipeline Design" icon="sitemap">
-    Design extractors as focused, single-responsibility components in your pipeline
-  </Card>
-  
-  <Card title="Error Handling" icon="triangle-exclamation">
-    Implement robust error handling to manage extraction failures gracefully. See [error handling](/troubleshooting/errors) for details.
-  </Card>
+## Example: Creating a Collection with Feature Extractors
 
-  <Card title="Performance" icon="gauge-high">
-    Optimize extractors for efficiency when processing large volumes of content. Review [system limits](/troubleshooting/limits).
-  </Card>
-  
-  <Card title="Validation" icon="check-double">
-    Validate extracted features before passing them to the indexing stage
-  </Card>
-</CardGroup>
-
-## Example: Document Processing Pipeline
-
-Here's an example of how feature extractors fit into a complete document processing pipeline:
+Here's an example of how to create a collection that uses a bucket as its source and applies multiple feature extractors. For complete Python SDK documentation, see [mixpeek on PyPI](https://pypi.org/project/mixpeek/).
 
 ```python
-from mixpeek import Pipeline
+import mixpeek
+from mixpeek import Mixpeek
+import os
 
-# Configure the pipeline stages
-pipeline = Pipeline(
-    extractors=[
-        # Document extraction stage
-        DocumentExtractor(),
-        
-        # Feature extraction stage
-        TextFeatureExtractor(),
-        MetadataExtractor(),
-        CustomDomainExtractor(),
-        
-        # Indexing stage
-        FeatureIndexer()
-    ]
-)
+# Initialize the Mixpeek client
+with Mixpeek(
+    token=os.getenv("MIXPEEK_TOKEN", ""),
+) as m_client:
 
-# Process documents through the pipeline
-results = pipeline.process(documents)
+    # Create a collection with feature extractors
+    res = m_client.collections.create(
+        collection_name="my-documents",
+        description="A collection of processed business documents",
+        source={
+            "type": mixpeek.SourceType.BUCKET,
+            "bucket_id": "bucket_1234567890",  # ID of the source bucket
+            "prefix_key": "documents/",  # Optional prefix to filter bucket objects
+            "filters": {
+                "and_": [],  # List of AND conditions
+                "or_": [],   # List of OR conditions
+                "not_": [],  # List of NOT conditions
+                "case_sensitive": True,  # Whether filters are case sensitive
+            },
+        },
+        feature_extractors=[
+            {
+                "feature_extractor_name": "text-extractor",
+                "version": "1.0.0",
+                "parameters": {
+                    "min_length": 100,
+                    "max_length": 1000
+                },
+                "input_mapping": {
+                    "source_text": "content"
+                },
+                "output_mapping": {
+                    "extracted_text": "processed_content"
+                },
+                "document_output_type": "TEXT",
+                "document_input_handling": {
+                    "type": "DIRECT",
+                    "chunk_size": 1024
+                },
+                "document_output_handling": {
+                    "type": "MERGE",
+                    "strategy": "APPEND"
+                }
+            }
+        ]
+    )
+
+    # Handle response
+    print(res)
 ```
 
-For more examples and implementation details, see the [Studio Walkthrough](/studio) and [API Reference](/api-reference).
+This example demonstrates:
+- Creating a collection named "my-documents" with a description
+- Using a bucket as the source of documents with:
+  - Specific bucket ID
+  - Optional prefix key for filtering objects
+  - Configurable filters for document selection
+- Applying two feature extractors with complete configurations:
+  - Text extractor with:
+    - Custom parameters for text length limits
+    - Input/output mappings
+    - Document handling configurations
+  - Metadata extractor with:
+    - Parameters for specific metadata fields
+    - Custom input/output mappings
+    - Document handling strategies
 
-## Limitations
+The feature extractor configuration allows you to:
+- Specify custom parameters for each extractor
+- Map inputs and outputs between pipeline stages
+- Control how documents are handled during processing
+- Define output types and handling strategies
 
-- Maximum document size: 100MB per file
-- Processing timeout: 5 minutes per document
-- Concurrent extractions: 20 per account
-- Supported file types vary by extractor type
-- Custom extractors require Enterprise plan
-
-For complete details on system limits, see [Limits](/troubleshooting/limits).
+For more examples and implementation details, see the [Studio Walkthrough](/studio), [API Reference](/api-reference), and [Python SDK Documentation](https://pypi.org/project/mixpeek/).
 
 ## API Reference
 
