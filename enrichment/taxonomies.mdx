@@ -286,6 +286,70 @@ In hierarchical taxonomies, properties are inherited from parent to child nodes:
 - Child nodes can override inherited properties with their own values
 - Inheritance follows the collection hierarchy defined in the taxonomy
 
+### Enrichment and Retrieval Processes
+
+The way taxonomies enrich and retrieve data differs between explicit and implicit hierarchies:
+
+<AccordionGroup>
+  <Accordion title="Explicit Hierarchy Enrichment">
+    In explicit hierarchies, enrichment follows a structured, rule-based approach:
+    
+    - **Enrichment Process**:
+      - Happens via rule-based assignment or taxonomy classification
+      - Documents are enriched with all ancestor nodes by walking up the tree
+      - Uses explicit fields like `parent`, `depth`, or `path`
+    
+    - **Retrieval Process**:
+      - Supports broad → narrow filtering (e.g., querying "Visual" matches anything under it)
+      - Filter expansion is deterministic
+      - Ideal for UI tree filters and structured navigation
+    
+    **Example:**
+    ```json
+    {
+      "category": "Photography",
+      "taxonomy": {
+        "Photography": ["Visual", "Media"]
+      }
+    }
+    ```
+    A document classified as `Photography` gets enriched with all parents: `Visual`, `Media`
+  </Accordion>
+
+  <Accordion title="Implicit Hierarchy Enrichment">
+    In implicit hierarchies, enrichment is more dynamic and relationship-driven:
+    
+    - **Enrichment Process**:
+      - Happens on-the-fly during ingestion or retrieval
+      - Relies on feature extractors or retriever chaining
+      - Inputs are resolved from relationships (e.g., face_id → scene_id)
+    
+    - **Retrieval Process**:
+      - Works as retrieval chains or composite queries
+      - Supports multi-hop search patterns
+      - Often handled by query pipelines that chain stages
+    
+    **Example:**
+    ```yaml
+    feature_extractors:
+      - type: "taxonomy_extraction"
+        taxonomy: "scene_taxonomy"
+        inputs:
+          face_id: "{{ face_extractor.output.face_id }}"
+    ```
+    The face extractor doesn't explicitly know it's linked to a scene, but the enrichment pipeline wires them together implicitly.
+  </Accordion>
+</AccordionGroup>
+
+### Comparison Table
+
+| Feature | Explicit Hierarchy | Implicit Hierarchy |
+|---------|-------------------|-------------------|
+| **Defined by** | Schema (`parent`, `children`, etc.) | Data behavior or retriever chaining |
+| **Enrichment** | Rule-based, tree traversal | Dynamic, input-driven enrichment chains |
+| **Retrieval** | `IN subtree("X")`, static filters | Chained stages (face → scene → cluster) |
+| **Query Composition** | One query with expanded filters | Multi-step query pipeline |
+| **Examples** | Category trees, controlled vocabularies | Face → Scene → Episode, video tags |
 
 ## Using Enriched Documents
 
