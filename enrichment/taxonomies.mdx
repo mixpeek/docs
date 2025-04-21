@@ -8,7 +8,7 @@ title: "Taxonomies"
 
 ## Overview
 
-Taxonomies in Mixpeek are specialized structures that allow you to classify, organize, and enrich your data with structured metadata. They function similarly to JOIN operations in traditional databases, but operate on feature similarity rather than exact key matches, making them ideal for multimodal content.
+Taxonomies in Mixpeek are specialized structures that allow you to classify, organize, and enrich your data with structured metadata. They function similarly to JOIN operations in traditional databases, but operate on feature similarity rather than exact key matches, making them ideal for multimodal content. Conceptually, each taxonomy functions as a specialized collection with a defined schema. Associated retrievers handle the logic for looking up and enriching documents based on this taxonomy.
 
 [Watch an Intro Video](/studio/taxonomies)
 
@@ -61,7 +61,7 @@ Mixpeek supports two main types of taxonomies:
   </Accordion>
 
   <Accordion title="Hierarchical Taxonomies" icon="network-wired">
-    Hierarchical taxonomies organize categories in parent-child relationships, allowing for more complex classification systems.
+    Hierarchical taxonomies organize categories in parent-child relationships **within a single taxonomy**, allowing for more complex classification systems. This is often referred to as **intra-taxonomy hierarchy**.
     
     **Key characteristics:**
     - Multi-level organization with parent-child relationships
@@ -73,17 +73,16 @@ Mixpeek supports two main types of taxonomies:
     1. **Explicit Hierarchy**
        - Parent-child relationships defined directly in configuration
        - Clear, intentional structure specification
-       - Recommended for complex hierarchies
+       - Recommended for complex hierarchies with well-defined levels
 
     2. **Implicit Hierarchy**
-       - Relationships inferred from metadata field patterns
-       - More flexible but requires careful metadata management
-       - Suitable for simpler, metadata-driven hierarchies
+       - Relationships are inferred dynamically based on data behavior, shared identifiers, feature similarity (like embeddings), or through the chaining of retrievers across different collections. 
+       - This is more flexible but requires careful design of features and retriever logic.
+       - It enables powerful **inter-taxonomy relationships** (e.g., linking Faces to Scenes), effectively creating joins across different types of data.
     
     **Use cases:**
-    - Product categories (Electronics > Computers > Laptops)
-    - Content taxonomies (Science > Physics > Quantum Mechanics)
-    - Organizational structures (Company > Department > Team)
+    - *Intra-Taxonomy:* Product categories (Electronics > Computers > Laptops), Content taxonomies (Science > Physics > Quantum Mechanics)
+    - *Inter-Taxonomy (Implicit):* Linking faces identified in images to scenes where they appear, connecting product mentions in text to product catalog entries.
   </Accordion>
 </AccordionGroup>
 
@@ -285,6 +284,7 @@ In hierarchical taxonomies, properties are inherited from parent to child nodes:
 - Child nodes inherit all properties from their parent nodes
 - Child nodes can override inherited properties with their own values
 - Inheritance follows the collection hierarchy defined in the taxonomy
+- While explicit hierarchies use defined parent-child links for inheritance, implicit relationships facilitate a similar flow of enrichment data between linked documents identified during the retrieval process (e.g., a Scene document inheriting details from a matched Face document).
 
 ### Enrichment and Retrieval Processes
 
@@ -518,4 +518,19 @@ results = mp.retrievers.execute(
 
 ## API Reference
 
-For complete details on working with taxonomies, see our [Taxonomies API Reference](/api-reference/taxonomies/create-taxonomy). 
+For complete details on working with taxonomies, see our [Taxonomies API Reference](/api-reference/taxonomies/create-taxonomy).
+
+### Retriever Input Sources
+
+The inputs required by a taxonomy's retriever can be sourced at different points in the data lifecycle:
+
+- **During Ingestion (Feature Extraction):**
+  - **Raw uploaded data:** Directly from file contents (text, image frames, audio segments).
+  - **Output of previous extractors:** Using results from other processing steps (e.g., text from OCR used for entity recognition).
+  - **Static metadata:** Information associated with the source document (filename, timestamp, user-provided tags).
+
+- **During Query / Retrieval:**
+  - **User query inputs:** Text, filters, or embeddings provided in the search request.
+  - **Intermediate outputs:** Results from earlier stages in a multi-stage retrieval pipeline (e.g., a `face_id` found by one retriever stage is used as input for a scene taxonomy retriever).
+
+Query pipelines can be configured to dynamically wire these inputs and outputs together, enabling complex, chained enrichment and retrieval workflows. 
