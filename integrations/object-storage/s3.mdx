@@ -1,0 +1,99 @@
+---
+title: "AWS S3 Integration"
+description: "Connect Mixpeek to your Amazon S3 buckets to ingest and process your data."
+---
+
+import { Steps } from 'mintlify/components'; 
+
+<Note>
+  This guide explains how to connect your AWS Simple Storage Service (S3) buckets to Mixpeek, enabling automated data ingestion and processing.
+</Note>
+
+## Prerequisites
+
+*   An active AWS account.
+*   An S3 bucket containing the data you want Mixpeek to process.
+*   Permissions to create IAM policies and users/roles in your AWS account.
+
+## Configuration Steps
+
+Connecting Mixpeek to S3 requires granting Mixpeek read access to your bucket. We recommend using an IAM Role for enhanced security, but you can also use an IAM User with access keys.
+
+<Steps>
+
+### Step 1: Create an IAM Policy
+
+First, create an IAM policy that grants the necessary permissions for Mixpeek to list and read objects from your S3 bucket.
+
+1.  Navigate to the IAM service in your AWS Console.
+2.  Go to **Policies** and click **Create policy**.
+3.  Switch to the **JSON** tab and paste the following policy document. Remember to replace `YOUR_BUCKET_NAME` with the actual name of your S3 bucket.
+
+    ```json
+    {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "s3:ListBucket"
+                ],
+                "Resource": [
+                    "arn:aws:s3:::YOUR_BUCKET_NAME"
+                ]
+            },
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "s3:GetObject"
+                ],
+                "Resource": [
+                    "arn:aws:s3:::YOUR_BUCKET_NAME/*"
+                ]
+            }
+        ]
+    }
+    ```
+4.  Click **Next: Tags**, then **Next: Review**.
+5.  Give the policy a descriptive name (e.g., `MixpeekS3ReadAccessPolicy`) and click **Create policy**.
+
+### Step 2: Create an IAM User (or Role)
+
+**Option A: IAM User (Simpler Setup)**
+
+1.  In the IAM service, go to **Users** and click **Add users**.
+2.  Enter a user name (e.g., `mixpeek-s3-user`).
+3.  Select **Access key - Programmatic access** as the AWS credential type.
+4.  Click **Next: Permissions**.
+5.  Choose **Attach existing policies directly**.
+6.  Search for and select the policy you created in Step 1 (e.g., `MixpeekS3ReadAccessPolicy`).
+7.  Click **Next: Tags**, then **Next: Review**, then **Create user**.
+8.  **Important:** Copy the **Access key ID** and **Secret access key**. You will need these to configure the connection in Mixpeek. Store them securely.
+
+**Option B: IAM Role (Recommended for Security)**
+
+*   Follow AWS best practices to create an IAM role that Mixpeek can assume. This typically involves setting up a trust policy allowing Mixpeek's AWS account (or a specific identifier provided by Mixpeek) to assume the role.
+*   Attach the `MixpeekS3ReadAccessPolicy` created in Step 1 to this role.
+*   You will use the **Role ARN** when configuring the connection in Mixpeek instead of access keys. (Consult Mixpeek's specific requirements for Role ARN setup if available).
+
+### Step 3: Add S3 Connection in Mixpeek
+
+1.  Navigate to the **Integrations** or **Data Sources** section in your Mixpeek dashboard.
+2.  Click **Add Connection** or **New Source** and select **AWS S3**.
+3.  Enter the required details:
+    *   **Bucket Name:** The name of your S3 bucket (e.g., `YOUR_BUCKET_NAME`).
+    *   **Region:** The AWS region where your bucket is located (e.g., `us-east-1`).
+    *   **Authentication:**
+        *   If using an IAM User: Provide the **Access Key ID** and **Secret Access Key** obtained in Step 2A.
+        *   If using an IAM Role: Provide the **Role ARN** obtained in Step 2B.
+    *   Optionally, specify a **Prefix** if you only want Mixpeek to process files within a specific folder in your bucket.
+4.  Click **Test Connection** (if available) to verify the credentials and permissions.
+5.  Click **Save** or **Connect**.
+
+</Steps>
+
+## Verification
+
+Once connected, Mixpeek should start discovering files in your specified S3 bucket (and prefix, if provided). You can monitor the ingestion status within the Mixpeek Studio. Depending on your pipeline configuration, feature extraction and indexing will begin automatically for supported file types.
+
+If you encounter issues, double-check the IAM policy permissions and the credentials provided in Mixpeek. Ensure the bucket name and region are correct.

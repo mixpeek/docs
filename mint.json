@@ -70,6 +70,10 @@
     {
       "name": "Studio Walkthrough",
       "url": "studio"
+    },
+    {
+      "name": "Integrations",
+      "url": "integrations"
     }
   ],
   "navigation": [
@@ -123,6 +127,18 @@
       "pages": [
         "enrichment/taxonomies",
         "enrichment/clusters"
+      ]
+    },
+    {
+      "group": "Integrations",
+      "pages": [
+        {
+          "group": "Object Storage",
+          "pages": [
+            "integrations/object-storage/overview",
+            "integrations/object-storage/s3"
+          ]
+        }
       ]
     },
     {

@@ -1,0 +1,73 @@
+---
+title: "Overview"
+description: "Connect Mixpeek to your cloud object storage for seamless multimodal data ingestion."
+---
+
+<Note>
+  Integrate Mixpeek directly with your existing object storage solutions like AWS S3, Google Cloud Storage (GCS), and Azure Blob Storage to process and analyze your multimodal data where it lives.
+</Note>
+
+Object storage systems are a fundamental component for storing large amounts of unstructured data, making them ideal upstream sources for Mixpeek. By connecting your buckets, you enable Mixpeek to automatically discover, process, and index your files, unlocking powerful search and analysis capabilities across images, videos, audio, PDFs, and more.
+
+## Why Connect Object Storage?
+
+<CardGroup cols={2}>
+  <Card title="Centralized Data Processing" icon="cloud-upload">
+    Process diverse file types stored in your buckets without needing to move data. Mixpeek accesses files directly from your provider.
+  </Card>
+  <Card title="Scalable Ingestion" icon="expand-arrows-alt">
+    Leverage the scalability of cloud object storage. Mixpeek can handle growing volumes of data as your needs evolve.
+  </Card>
+  <Card title="Automated Workflows" icon="gears">
+    Set up automated pipelines. New files added to connected buckets can be automatically indexed and enriched by Mixpeek.
+  </Card>
+  <Card title="Secure Access" icon="lock">
+    Utilize secure authentication methods (like IAM roles or access keys) to grant Mixpeek the necessary permissions to access your data.
+  </Card>
+</CardGroup>
+
+## Supported Providers
+
+Mixpeek supports direct integration with the major cloud object storage providers:
+
+<CardGroup cols={3}>
+  <Card title="AWS S3" icon="aws" href="/integrations/object-storage/s3">
+    Connect your Amazon Simple Storage Service (S3) buckets.
+  </Card>
+  <Card title="Google Cloud Storage" icon="google" href="/integrations/object-storage/gcs">
+    Integrate with Google Cloud Storage (GCS) buckets.
+  </Card>
+  <Card title="Azure Blob Storage" icon="windows" href="/integrations/object-storage/azure-blob">
+    Connect your Azure Blob Storage containers.
+  </Card>
+</CardGroup>
+
+Choose your provider above to find specific setup instructions.
+
+## Best Practices for Data Structuring
+
+While Mixpeek can process complex, nested data structures within a single bucket connection, a more robust and scalable strategy often involves structuring your data upfront in your object storage.
+
+**Recommended Approach: Pre-Structured Pipelines**
+
+1.  **Separate Buckets or Prefixes:** Organize related but distinct types of content into separate buckets or dedicated prefixes (folders) within a single bucket.
+    *   *Example (using S3):* For analyzing video content, you might store raw videos in `s3://my-videos/raw/`, extracted transcripts in `s3://my-videos/transcripts/`, and associated metadata JSON files in `s3://my-videos/metadata/`. This principle applies equally to GCS and Azure Blob Storage.
+2.  **Multiple Mixpeek Connections:** Set up distinct Mixpeek connections or pipelines pointing to each specific bucket or prefix.
+3.  **Join in Mixpeek:** After ingestion, use Mixpeek's enrichment features like **Clustering** or **Taxonomies** (joining based on matching IDs or other rules) to link the related pieces of content (e.g., connecting a transcript to its corresponding video and metadata).
+
+**Benefits:**
+
+*   **Scalability:** Processing pipelines become simpler and more focused, handling one type of content structure at a time.
+*   **Reliability:** Makes the data structure explicit and easier for Mixpeek to process programmatically, reducing potential errors from complex nested formats.
+*   **Flexibility:** Easier to manage and update processing logic for specific content types independently.
+
+Consider this approach if you are dealing with complex multimodal data where different components (like video, audio, text transcripts, metadata) need to be linked and analyzed together.
+
+## Getting Started
+
+1.  **Choose your Provider:** Select the object storage provider you use (AWS S3, GCS, Azure Blob Storage).
+2.  **Configure Access:** Follow the provider-specific guide to grant Mixpeek secure access to your desired bucket(s). This typically involves setting up appropriate permissions (e.g., read access).
+3.  **Add Connection in Mixpeek:** Use the Mixpeek dashboard or API to add the connection details for your object storage bucket.
+4.  **Start Processing:** Once connected, Mixpeek can begin discovering and processing files according to your configured pipelines.
+
+Ready to connect your data? Select a provider guide above to begin.
