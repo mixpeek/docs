@@ -27,7 +27,7 @@ Taxonomies in Mixpeek are specialized structures that allow you to classify, org
     Choose the retriever that will match documents from your target collection with the appropriate reference data.
   </Step>
   <Step title="Configure Input Fields">
-    Select the input fields from the source collection for the retriever. These fields define what data is used for matching, and can include constants.
+    Define how the retriever gets its input data. This might involve mapping fields from source data, using outputs from previous processing steps, or incorporating query-time information.
   </Step>
 </Steps> 
 
@@ -288,68 +288,54 @@ In hierarchical taxonomies, properties are inherited from parent to child nodes:
 
 ### Enrichment and Retrieval Processes
 
-The way taxonomies enrich and retrieve data differs between explicit and implicit hierarchies:
+The way taxonomies populate data (**Enrichment**) and how that populated data is subsequently used for filtering and searching (**Retrieval**) differs significantly based on whether the relationships are explicit (intra-taxonomy trees) or implicit (inter-taxonomy links or dynamic connections).
 
 <AccordionGroup>
-  <Accordion title="Explicit Hierarchy Enrichment">
-    In explicit hierarchies, enrichment follows a structured, rule-based approach:
+  <Accordion title="Explicit Hierarchy Enrichment & Retrieval">
+    Based on structured, declared relationships (like a tree).
     
-    - **Enrichment Process**:
-      - Happens via rule-based assignment or taxonomy classification
-      - Documents are enriched with all ancestor nodes by walking up the tree
-      - Uses explicit fields like `parent`, `depth`, or `path`
+    - **Enrichment Process:**
+      - Happens via rule-based assignment or direct classification within the taxonomy structure.
+      - Documents can be automatically enriched with properties from all ancestor nodes by traversing the defined hierarchy (e.g., `parent` links).
+      - Often uses explicit fields like `parent`, `depth`, or `path` calculated during ingestion.
+      
+      **Example:** A document classified under `Photography` is automatically enriched with `Visual` and `Media` tags if those are its defined ancestors.
     
-    - **Retrieval Process**:
-      - Supports broad → narrow filtering (e.g., querying "Visual" matches anything under it)
-      - Filter expansion is deterministic
-      - Ideal for UI tree filters and structured navigation
-    
-    **Example:**
-    ```json
-    {
-      "category": "Photography",
-      "taxonomy": {
-        "Photography": ["Visual", "Media"]
-      }
-    }
-    ```
-    A document classified as `Photography` gets enriched with all parents: `Visual`, `Media`
+    - **Retrieval Process (Querying with Hierarchy):**
+      - Once documents are enriched with their hierarchical tags (as described above), you can leverage this structure during searches and filtering.
+      - Supports deterministic broad-to-narrow filtering: Querying for a parent term (e.g., `Visual`) retrieves items tagged with its descendants (e.g., `Photography`, `Illustration`).
+      - This filtering relies on the pre-established hierarchical metadata associated with the documents.
+      - Filter expansion is predictable based on the tree structure (e.g., `WHERE category IN subtree('Visual')`).
+      - Ideal for UI tree filters and structured browsing.
   </Accordion>
 
-  <Accordion title="Implicit Hierarchy Enrichment">
-    In implicit hierarchies, enrichment is more dynamic and relationship-driven:
+  <Accordion title="Implicit Relationship Enrichment & Retrieval">
+    Based on dynamically inferred relationships (shared keys, embeddings, retriever chains).
     
-    - **Enrichment Process**:
-      - Happens on-the-fly during ingestion or retrieval
-      - Relies on feature extractors or retriever chaining
-      - Inputs are resolved from relationships (e.g., face_id → scene_id)
+    - **Enrichment Process:**
+      - Often happens dynamically during ingestion or retrieval via feature extractors or retriever chaining.
+      - Enrichment flows based on identified connections rather than a static tree (e.g., a Scene document gets enriched with data from a matched Face document via a shared `face_id` or embedding similarity).
+      - Inputs for enrichment are resolved from related data points (e.g., `face_id` from a face detector feeds into a scene taxonomy retriever).
+
+      **Example:** A feature extraction pipeline identifies a face (`face_id: 123`), and a subsequent step uses this ID to query a Scene taxonomy, enriching the original document with relevant scene information associated with `face_id: 123`.
     
-    - **Retrieval Process**:
-      - Works as retrieval chains or composite queries
-      - Supports multi-hop search patterns
-      - Often handled by query pipelines that chain stages
-    
-    **Example:**
-    ```yaml
-    feature_extractors:
-      - type: "taxonomy_extraction"
-        taxonomy: "scene_taxonomy"
-        inputs:
-          face_id: "{{ face_extractor.output.face_id }}"
-    ```
-    The face extractor doesn't explicitly know it's linked to a scene, but the enrichment pipeline wires them together implicitly.
+    - **Retrieval Process:**
+      - Works as multi-step retrieval chains or composite queries (graph traversal).
+      - Enables multi-hop search patterns (e.g., Find Face -> Use Face ID to find Scenes -> Use Scene Info to find Episodes).
+      - Often handled by query pipelines that dynamically chain retrieval stages based on intermediate results.
   </Accordion>
 </AccordionGroup>
 
 ### Comparison Table
 
-| Feature | Explicit Hierarchy | Implicit Hierarchy |
-|---------|-------------------|-------------------|
-| **Defined by** | Schema (`parent`, `children`, etc.) | Data behavior or retriever chaining |
-| **Enrichment** | Rule-based, tree traversal | Dynamic, input-driven enrichment chains |
-| **Retrieval** | `IN subtree("X")`, static filters | Chained stages (face → scene → cluster) |
-| **Query Composition** | One query with expanded filters | Multi-step query pipeline |
-| **Examples** | Category trees, controlled vocabularies | Face → Scene → Episode, video tags |
+| Feature             | Explicit Hierarchy (Intra-Taxonomy) | Implicit Relationships (Inter-Taxonomy / Dynamic) |
+|---------------------|------------------------------------|-------------------------------------------------|
+| **Defined by**      | Schema (`parent`, structure)       | Data behavior, shared IDs, retriever chaining  |
+| **Enrichment**      | Rule-based, tree traversal         | Dynamic, input-driven enrichment chains         |
+| **Retrieval**       | `IN subtree("X")`, static filters  | Chained stages (e.g., Face → Scene → Cluster)     |
+| **Query Composition** | Single query, expanded filters    | Multi-step query pipeline, composite queries    |
+| **Analogy**         | Folder structure / Tree            | SQL JOINs / Graph Traversal                     |
+| **Examples**        | Category trees, org charts         | Face → Scene → Episode links, Product Mentions  |
 
 ## Using Enriched Documents
 
@@ -520,17 +506,77 @@ results = mp.retrievers.execute(
 
 For complete details on working with taxonomies, see our [Taxonomies API Reference](/api-reference/taxonomies/create-taxonomy).
 
-### Retriever Input Sources
+### 🧩 Where Do Retriever Inputs Get Their Values?
 
-The inputs required by a taxonomy's retriever can be sourced at different points in the data lifecycle:
+There are two key sources for these inputs, depending on **when** the retriever is being executed:
 
-- **During Ingestion (Feature Extraction):**
-  - **Raw uploaded data:** Directly from file contents (text, image frames, audio segments).
-  - **Output of previous extractors:** Using results from other processing steps (e.g., text from OCR used for entity recognition).
-  - **Static metadata:** Information associated with the source document (filename, timestamp, user-provided tags).
+---
 
-- **During Query / Retrieval:**
-  - **User query inputs:** Text, filters, or embeddings provided in the search request.
-  - **Intermediate outputs:** Results from earlier stages in a multi-stage retrieval pipeline (e.g., a `face_id` found by one retriever stage is used as input for a scene taxonomy retriever).
+### 1. **During Ingestion (a.k.a. feature extraction time)**
 
-Query pipelines can be configured to dynamically wire these inputs and outputs together, enabling complex, chained enrichment and retrieval workflows. 
+Here, values for retriever inputs come from:
+
+- **Raw uploaded data** (e.g., file contents, video frames, text)
+- **Output of previous extractors** (e.g., OCR → text → entity recognition)
+- **Static metadata** from the doc (e.g., file name, timestamp)
+
+You often see this in the config like:
+
+```yaml
+feature_extractors:
+  - type: taxonomy_extraction
+    taxonomy: "scene_taxonomy"
+```
+
+In this case, a retriever associated with the taxonomy might pull its input from:
+
+```json
+{
+  "text": "<output of OCR>",
+  "image": "<scene frame>",
+  ...
+}
+```
+
+---
+
+### 2. **During Query / Retrieval Time**
+
+When someone is **searching**, retriever inputs can come from:
+
+- **User query inputs** (text, filters, embeddings)
+- **Intermediate outputs** in the retrieval pipeline (e.g., a `face_id` found from a face query used as input into a `scene_taxonomy` retriever)
+- **Query pipelines** can be pre-defined to wire these together dynamically, as in:
+
+```json
+{
+  "face_input": "img_of_brad_pitt.jpg",
+  "scene_query": "fighting scene"
+}
+```
+
+Then one retriever resolves the face to a canonical ID, which is used as a pre-filter in another retriever's execution.
+
+---
+
+### 🔄 Enrichment on Retrieval
+
+When we say "fields get enriched on retrieval execution," it means:
+
+- A taxonomy's retriever will take the inputs and try to compute or resolve field values (like resolving `"John Wick"` → `character_id`)
+- This can happen "on demand" for a query result if the field wasn't stored pre-computed
+
+So the same retriever logic might be used both:
+
+- **During ingestion** (to store the enriched field)
+- **During query** (to enrich or filter results live)
+
+---
+
+### 🧠 Bonus Analogy
+
+Think of a taxonomy collection as a **smart join table**:
+
+- Each row is an entity
+- The retrievers act like **lookup functions** that populate columns
+- The inputs to those functions come either from **raw docs**, **previous retrievers**, or **user queries** 
