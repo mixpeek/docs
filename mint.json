@@ -136,6 +136,7 @@
     {
       "group": "Troubleshooting",
       "pages": [
+        "troubleshooting/observability",
         "troubleshooting/errors",
         "troubleshooting/limits"
       ]
