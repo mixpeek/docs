@@ -1,0 +1,62 @@
+---
+title: "Google Cloud Storage Integration"
+description: "Connect Mixpeek to your Google Cloud Storage buckets to ingest and process your data."
+---
+
+<Note>
+  This guide explains how to connect your Google Cloud Storage (GCS) buckets to Mixpeek, enabling automated data ingestion and processing.
+</Note>
+
+## Prerequisites
+
+*   An active Google Cloud project.
+*   A GCS bucket containing the data you want Mixpeek to process.
+*   Permissions to create service accounts and manage IAM policies in your Google Cloud project.
+
+## Configuration Steps
+
+Connecting Mixpeek to GCS requires granting Mixpeek read access to your bucket. We recommend using a service account with appropriate IAM roles for enhanced security.
+
+<Steps>
+  <Step title="Create Service Account">
+    First, create a service account that Mixpeek will use to access your GCS bucket.
+
+    1.  Navigate to the IAM & Admin > Service Accounts section in your Google Cloud Console.
+    2.  Click **Create Service Account**.
+    3.  Enter a name for the service account (e.g., `mixpeek-gcs-access`).
+    4.  Click **Create and Continue**.
+    5.  Grant the service account the following roles:
+        *   `Storage Object Viewer` (roles/storage.objectViewer)
+        *   `Storage Legacy Bucket Reader` (roles/storage.legacyBucketReader)
+    6.  Click **Done**.
+  </Step>
+
+  <Step title="Create and Download Service Account Key">
+    To authenticate with GCS, you'll need to create and download a service account key.
+
+    1.  Find your newly created service account in the list and click on it.
+    2.  Go to the **Keys** tab.
+    3.  Click **Add Key** > **Create new key**.
+    4.  Choose **JSON** as the key type.
+    5.  Click **Create**.
+    6.  **Important:** The JSON key file will be downloaded to your computer. Store this file securely as you'll need it to configure the connection in Mixpeek.
+  </Step>
+
+  <Step title="Add GCS Connection in Mixpeek">
+    1.  Navigate to the **Integrations** or **Data Sources** section in your Mixpeek dashboard (or Mixpeek Studio).
+    2.  Click **Add Connection** or **New Source** and select **Google Cloud Storage**.
+    3.  Enter the required details:
+        *   **Bucket Name:** The name of your GCS bucket (e.g., `YOUR_BUCKET_NAME`).
+        *   **Project ID:** Your Google Cloud project ID.
+        *   **Service Account Key:** Upload the JSON key file you downloaded in the previous step.
+        *   Optionally, specify a **Prefix** if you only want Mixpeek to process files within a specific folder in your bucket.
+    4.  Click **Test Connection** (if available) to verify the credentials and permissions.
+    5.  Click **Save** or **Connect**.
+  </Step>
+</Steps>
+
+## Verification
+
+Once connected, Mixpeek should start discovering files in your specified GCS bucket (and prefix, if provided). You can monitor the ingestion status within the Mixpeek Studio. Depending on your pipeline configuration, feature extraction and indexing will begin automatically for supported file types.
+
+If you encounter issues, double-check the service account permissions and the credentials provided in Mixpeek. Ensure the bucket name and project ID are correct. 

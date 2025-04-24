@@ -68,12 +68,12 @@
       "url": "api-reference"
     },
     {
-      "name": "Studio Walkthrough",
-      "url": "studio"
-    },
-    {
       "name": "Integrations",
       "url": "integrations"
+    },
+    {
+      "name": "Studio Walkthrough",
+      "url": "studio"
     }
   ],
   "navigation": [
@@ -136,7 +136,9 @@
           "group": "Object Storage",
           "pages": [
             "integrations/object-storage/overview",
-            "integrations/object-storage/s3"
+            "integrations/object-storage/s3",
+            "integrations/object-storage/gcs",
+            "integrations/object-storage/azure-blob"
           ]
         }
       ]

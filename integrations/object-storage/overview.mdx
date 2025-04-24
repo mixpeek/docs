@@ -12,13 +12,13 @@ Object storage systems are a fundamental component for storing large amounts of 
 ## Why Connect Object Storage?
 
 <CardGroup cols={2}>
-  <Card title="Centralized Data Processing" icon="cloud-upload">
+  <Card title="Centralized Data Processing" icon="cloud-arrow-up">
     Process diverse file types stored in your buckets without needing to move data. Mixpeek accesses files directly from your provider.
   </Card>
-  <Card title="Scalable Ingestion" icon="expand-arrows-alt">
+  <Card title="Scalable Ingestion" icon="scale-unbalanced-flip">
     Leverage the scalability of cloud object storage. Mixpeek can handle growing volumes of data as your needs evolve.
   </Card>
-  <Card title="Automated Workflows" icon="gears">
+  <Card title="Automated Workflows" icon="timeline">
     Set up automated pipelines. New files added to connected buckets can be automatically indexed and enriched by Mixpeek.
   </Card>
   <Card title="Secure Access" icon="lock">
@@ -46,20 +46,36 @@ Choose your provider above to find specific setup instructions.
 
 ## Best Practices for Data Structuring
 
-While Mixpeek can process complex, nested data structures within a single bucket connection, a more robust and scalable strategy often involves structuring your data upfront in your object storage.
+While Mixpeek can process complex, nested data structures within a single bucket connection, a more robust and scalable strategy often involves structuring your data upfront in your object storage, then relying on taxonomy joins to put them together.
+
+We rely on the post processing joins to intelligently combine related content after ingestion. This approach offers several advantages over trying to group files during the initial upload:
+
+<CardGroup cols={2}>
+  <Card title="Explicit Structure" icon="folder-tree">
+    By organizing content into separate buckets or prefixes, you make the relationships between files clear and programmatically accessible. This is more reliable than trying to infer relationships from file names or metadata.
+  </Card>
+  <Card title="Flexible Joining" icon="code-merge">
+    Mixpeek's taxonomy and clustering features allow you to join related content based on multiple criteria (IDs, metadata, semantic similarity) after ingestion, giving you more control over how content is combined.
+  </Card>
+  <Card title="Scalable Processing" icon="up-right-and-down-left-from-center">
+    Processing pipelines become simpler and more focused when handling one type of content structure at a time, making it easier to scale and maintain.
+  </Card>
+  <Card title="Reliable Updates" icon="arrows-rotate">
+    When new content is added to a structured bucket, Mixpeek can process it independently and then join it with related content, avoiding issues with partial uploads or timing dependencies.
+  </Card>
+</CardGroup>
 
 **Recommended Approach: Pre-Structured Pipelines**
 
-1.  **Separate Buckets or Prefixes:** Organize related but distinct types of content into separate buckets or dedicated prefixes (folders) within a single bucket.
-    *   *Example (using S3):* For analyzing video content, you might store raw videos in `s3://my-videos/raw/`, extracted transcripts in `s3://my-videos/transcripts/`, and associated metadata JSON files in `s3://my-videos/metadata/`. This principle applies equally to GCS and Azure Blob Storage.
-2.  **Multiple Mixpeek Connections:** Set up distinct Mixpeek connections or pipelines pointing to each specific bucket or prefix.
+1.  **Separate Buckets or Prefixes:** Organize related but distinct types of content into separate S3 buckets or dedicated prefixes (folders) within a single bucket.
+    *   *Example:* For analyzing video content, you might store raw videos in `s3://my-videos/raw/`, extracted transcripts in `s3://my-videos/transcripts/`, and associated metadata JSON files in `s3://my-videos/metadata/`.
+2.  **Multiple Mixpeek Connections:** Set up distinct Mixpeek buckets & collections pointing to each specific bucket or prefix.
 3.  **Join in Mixpeek:** After ingestion, use Mixpeek's enrichment features like **Clustering** or **Taxonomies** (joining based on matching IDs or other rules) to link the related pieces of content (e.g., connecting a transcript to its corresponding video and metadata).
 
-**Benefits:**
-
-*   **Scalability:** Processing pipelines become simpler and more focused, handling one type of content structure at a time.
-*   **Reliability:** Makes the data structure explicit and easier for Mixpeek to process programmatically, reducing potential errors from complex nested formats.
-*   **Flexibility:** Easier to manage and update processing logic for specific content types independently.
+This approach is more reliable than alternatives like:
+- Relying on file naming conventions or metadata (which can be inconsistent)
+- Using "agent mode" with LLMs to infer relationships (which is experimental and less predictable)
+- Trying to group files during upload (which can be fragile due to timing issues)
 
 Consider this approach if you are dealing with complex multimodal data where different components (like video, audio, text transcripts, metadata) need to be linked and analyzed together.
 

@@ -1,0 +1,70 @@
+---
+title: "Azure Blob Storage Integration"
+description: "Connect Mixpeek to your Azure Blob Storage containers to ingest and process your data."
+---
+
+<Note>
+  This guide explains how to connect your Azure Blob Storage containers to Mixpeek, enabling automated data ingestion and processing.
+</Note>
+
+## Prerequisites
+
+*   An active Azure subscription.
+*   A Storage Account with Blob Storage containers containing the data you want Mixpeek to process.
+*   Permissions to create and manage storage account access keys or managed identities.
+
+## Configuration Steps
+
+Connecting Mixpeek to Azure Blob Storage requires granting Mixpeek read access to your containers. We recommend using a managed identity or storage account access key for authentication.
+
+<Steps>
+  <Step title="Configure Storage Account Access">
+    First, you need to configure access to your Azure Blob Storage containers. Choose one of the following methods:
+
+    **Option A: Storage Account Access Key (Simpler Setup)**
+
+    1.  Navigate to your Storage Account in the Azure Portal.
+    2.  Go to **Access keys** under **Security + networking**.
+    3.  Copy either the **key1** or **key2** value. You'll need this to configure the connection in Mixpeek.
+    4.  Store the key securely.
+
+    **Option B: Managed Identity (Recommended for Security)**
+
+    1.  Navigate to your Storage Account in the Azure Portal.
+    2.  Go to **Access Control (IAM)**.
+    3.  Click **Add** > **Add role assignment**.
+    4.  Select the **Storage Blob Data Reader** role.
+    5.  Assign access to the managed identity that Mixpeek will use.
+  </Step>
+
+  <Step title="Configure Container Access">
+    Ensure your container has the appropriate access level:
+
+    1.  Navigate to your container in the Azure Portal.
+    2.  Go to **Change access level**.
+    3.  Set the access level to either:
+        *   **Private (no anonymous access)** - Use this if you're using access keys or managed identity
+        *   **Blob (anonymous read access for blobs only)** - Use this if you want to allow public read access
+    4.  Click **OK** to save the changes.
+  </Step>
+
+  <Step title="Add Azure Blob Storage Connection in Mixpeek">
+    1.  Navigate to the **Integrations** or **Data Sources** section in your Mixpeek dashboard (or Mixpeek Studio).
+    2.  Click **Add Connection** or **New Source** and select **Azure Blob Storage**.
+    3.  Enter the required details:
+        *   **Storage Account Name:** The name of your Azure Storage Account.
+        *   **Container Name:** The name of your Blob container.
+        *   **Authentication:**
+            *   If using Access Key: Provide the **Access Key** obtained in Step 1A.
+            *   If using Managed Identity: Provide the **Managed Identity Client ID**.
+        *   Optionally, specify a **Prefix** if you only want Mixpeek to process files within a specific folder in your container.
+    4.  Click **Test Connection** (if available) to verify the credentials and permissions.
+    5.  Click **Save** or **Connect**.
+  </Step>
+</Steps>
+
+## Verification
+
+Once connected, Mixpeek should start discovering files in your specified Azure Blob container (and prefix, if provided). You can monitor the ingestion status within the Mixpeek Studio. Depending on your pipeline configuration, feature extraction and indexing will begin automatically for supported file types.
+
+If you encounter issues, double-check the access permissions and the credentials provided in Mixpeek. Ensure the storage account name, container name, and authentication details are correct. 
