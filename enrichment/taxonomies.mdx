@@ -45,44 +45,159 @@ Taxonomies in Mixpeek are specialized structures that allow you to classify, org
 
 Mixpeek supports two main types of taxonomies:
 
+### Flat Taxonomies 
+
+Flat taxonomies are simple, single-level classification systems that enrich documents with metadata from a reference collection.
+
+**Key characteristics:**
+- Function as a join operation between collections
+- Add metadata or tags from one collection to another
+- No hierarchical relationships between categories
+
+**Use Cases:**
+
 <AccordionGroup>
-  <Accordion title="Flat Taxonomies" icon="grip-lines">
-    Flat taxonomies are simple, single-level classification systems that enrich documents with metadata from a reference collection.
-    
-    **Key characteristics:**
-    - Function as a join operation between collections
-    - Add metadata or tags from one collection to another
-    - No hierarchical relationships between categories
-    
-    **Use cases:**
-    - Simple categorization (product types, content formats)
-    - Attribute tagging (colors, sizes, features)
-    - Binary classification (safe/unsafe, approved/unapproved)
+  <Accordion title="Content & Topic Tagging">
+    Use flat taxonomies to automatically tag articles, blog posts, or other documents with relevant topics, formats, or simple categories based on their content. This helps organize large volumes of unstructured data.
   </Accordion>
+  <Accordion title="Product Attribute Enrichment">
+    Enrich product listings by automatically tagging them with attributes like color, size, material, or specific features drawn from a reference collection (e.g., a color palette collection). This is useful for faceted search and filtering.
+  </Accordion>
+  <Accordion title="Compliance & Safety Classification">
+    Implement binary classifications like safe/unsafe, approved/unapproved, or PII/non-PII by matching content against predefined criteria in a reference collection.
+  </Accordion>
+  <Accordion title="Example: Content Tagging">
+    Create a flat taxonomy for automatically tagging content with relevant topics:
 
-  <Accordion title="Hierarchical Taxonomies" icon="network-wired">
-    Hierarchical taxonomies organize categories in parent-child relationships **within a single taxonomy**, allowing for more complex classification systems. This is often referred to as **intra-taxonomy hierarchy**.
-    
-    **Key characteristics:**
-    - Multi-level organization with parent-child relationships
-    - Property inheritance from parent to child nodes
-    - Support for complex nested categorization
-    
-    Hierarchies can be implemented in two ways:
-    
-    1. **Explicit Hierarchy**
-       - Parent-child relationships defined directly in configuration
-       - Clear, intentional structure specification
-       - Recommended for complex hierarchies with well-defined levels
+    ```python
+    # Create content tagging taxonomy
+    taxonomy = mp.taxonomies.create(
+        namespace_id="ns_abc123",
+        name="content_topics",
+        description="Content topic classification",
+        taxonomy_type="flat",
+        retriever={
+            "retriever_id": "ret_topic_matcher",
+            "threshold": 0.6
+        },
+        source_collections=[
+            {
+                "collection_id": "col_topics",
+                "enrichment_fields": ["topic", "subtopics", "audience_level"]
+            }
+        ]
+    )
+    ```
 
-    2. **Implicit Hierarchy**
-       - Relationships are inferred dynamically based on data behavior, shared identifiers, feature similarity (like embeddings), or through the chaining of retrievers across different collections. 
-       - This is more flexible but requires careful design of features and retriever logic.
-       - It enables powerful **inter-taxonomy relationships** (e.g., linking Faces to Scenes), effectively creating joins across different types of data.
-    
-    **Use cases:**
-    - *Intra-Taxonomy:* Product categories (Electronics > Computers > Laptops), Content taxonomies (Science > Physics > Quantum Mechanics)
-    - *Inter-Taxonomy (Implicit):* Linking faces identified in images to scenes where they appear, connecting product mentions in text to product catalog entries.
+    Apply this taxonomy to automatically tag articles, blog posts, or other content with relevant topics.
+  </Accordion>
+</AccordionGroup>
+
+### Hierarchical Taxonomies 
+
+Hierarchical taxonomies organize categories in parent-child relationships **within a single taxonomy**, allowing for more complex classification systems. This is often referred to as **intra-taxonomy hierarchy**.
+
+**Key characteristics:**
+- Multi-level organization with parent-child relationships
+- Property inheritance from parent to child nodes
+- Support for complex nested categorization
+
+Hierarchies can be implemented in two ways:
+
+1.  **Explicit Hierarchy**
+    - Parent-child relationships defined directly in configuration
+    - Clear, intentional structure specification
+    - Recommended for complex hierarchies with well-defined levels
+
+2.  **Implicit Hierarchy**
+    - Relationships are inferred dynamically based on data behavior, shared identifiers, feature similarity (like embeddings), or through the chaining of retrievers across different collections.
+    - This is more flexible but requires careful design of features and retriever logic.
+    - It enables powerful **inter-taxonomy relationships** (e.g., linking Faces to Scenes), effectively creating joins across different types of data.
+
+**Use Cases:**
+
+<AccordionGroup>
+  <Accordion title="Multi-Level Data Organization">
+    Model complex, structured relationships like product catalogs (Electronics > TV & Home Theater > TVs > OLED TVs), organizational charts (Company > Department > Team > Employee), or scientific classifications (Biology > Zoology > Mammalia). Properties can be inherited down the hierarchy.
+
+    **Example 1: Product Categorization**
+
+    Create a product taxonomy to automatically classify products and inherit category properties:
+
+    ```python
+    # Create product category taxonomy
+    taxonomy = mp.taxonomies.create(
+        namespace_id="ns_abc123",
+        name="product_hierarchy",
+        description="Product category hierarchy",
+        taxonomy_type="hierarchical",
+        retriever={
+            "retriever_id": "ret_product_matcher"
+        },
+        hierarchical_config={
+            "collection_nodes": [
+                {
+                    "collection_id": "col_categories",
+                    "parent_collection_id": None,
+                    "enrichment_fields": ["category", "tax_group"]
+                },
+                {
+                    "collection_id": "col_subcategories",
+                    "parent_collection_id": "col_categories",
+                    "enrichment_fields": ["subcategory", "warranty_policy"]
+                },
+                {
+                    "collection_id": "col_product_types",
+                    "parent_collection_id": "col_subcategories",
+                    "enrichment_fields": ["product_type", "return_window"]
+                }
+            ]
+        }
+    )
+    ```
+
+    This creates a three-level product hierarchy where each level inherits properties from its parent.
+
+    **Example 2: Personnel Recognition & Hierarchy**
+
+    Create a hierarchical taxonomy for recognizing faces and applying appropriate metadata based on roles within an organization:
+
+    ```python
+    # Create face recognition taxonomy
+    taxonomy = mp.taxonomies.create(
+        namespace_id="ns_abc123",
+        name="personnel_faces",
+        description="Personnel face recognition",
+        taxonomy_type="hierarchical",
+        retriever={
+            "retriever_id": "ret_face_matcher"
+        },
+        hierarchical_config={
+            "collection_nodes": [
+                {
+                    "collection_id": "col_people",
+                    "parent_collection_id": None,
+                    "enrichment_fields": ["name", "id_verified"]
+                },
+                {
+                    "collection_id": "col_employees",
+                    "parent_collection_id": "col_people",
+                    "enrichment_fields": ["employee_id", "department", "title"]
+                },
+                {
+                    "collection_id": "col_visitors",
+                    "parent_collection_id": "col_people",
+                    "enrichment_fields": ["visitor_type", "access_level"]
+                }
+            ]
+        }
+    )
+    ```
+
+    This taxonomy can be used to automatically identify and tag people in images or videos based on their organizational role.
+  </Accordion>
+  <Accordion title="Linking Disparate Datasets">
+    Use implicit relationships, often powered by retriever chaining and embedding similarity, to connect related information across different collections. For example, link faces identified in video frames (`face_collection`) to the scenes they appear in (`scene_collection`), or connect product mentions in customer reviews (`review_collection`) to entries in your official product catalog (`product_collection`). This enables powerful graph-like queries. *Detailed examples typically involve pipeline configurations rather than just taxonomy creation.*
   </Accordion>
 </AccordionGroup>
 
