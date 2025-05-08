@@ -55,4 +55,37 @@ Connecting Mixpeek to R2 requires granting Mixpeek read access to your bucket.
 
 Once connected, Mixpeek should start discovering files in your specified R2 bucket (and prefix, if provided). You can monitor the ingestion status within the Mixpeek Studio. Depending on your pipeline configuration, feature extraction and indexing will begin automatically for supported file types.
 
-If you encounter issues, double-check the API Token permissions and the credentials provided in Mixpeek. Ensure the bucket name and S3 endpoint URL (including your Account ID) are correct. 
+If you encounter issues, double-check the API Token permissions and the credentials provided in Mixpeek. Ensure the bucket name and S3 endpoint URL (including your Account ID) are correct.
+
+## Conceptual Diagram: Mixpeek and R2 Integration
+
+```mermaid
+graph TD
+    R2Bucket[R2 Bucket] -- Contains Objects (Files) --> R2Bucket;
+    MixpeekPlatform[Mixpeek Platform] -- "Connects via S3 API using API Token credentials" --> R2Bucket;
+    MixpeekPlatform -- "Retrieves & Processes Each Object" --> ProcessedData[Processed & Indexed Data];
+    MixpeekPlatform -- "Exposes" --> SearchAPI[Mixpeek Search API];
+    YourApp[Your Application / Users] -- "Sends Search Queries" --> SearchAPI;
+    SearchAPI -- "Returns Results" --> YourApp;
+
+    subgraph "Mixpeek Infrastructure"
+        direction LR
+        MixpeekPlatform
+        ProcessedData
+        SearchAPI
+    end
+
+    style R2Bucket fill:#F6821F,stroke:#333,stroke-width:2px
+    style MixpeekPlatform fill:#4CAF50,stroke:#333,stroke-width:2px
+    style ProcessedData fill:#2196F3,stroke:#333,stroke-width:2px
+    style SearchAPI fill:#7E57C2,stroke:#333,stroke-width:2px
+    style YourApp fill:#00BCD4,stroke:#333,stroke-width:2px
+```
+
+This diagram illustrates the workflow:
+1.  Your data (objects/files) resides in your **R2 Bucket**.
+2.  The **Mixpeek Platform** securely connects to your R2 Bucket using the S3 API, authenticating with the API Token credentials you provide (as detailed in the configuration steps).
+3.  Mixpeek retrieves each object from the bucket, performs its processing and indexing routines, creating **Processed & Indexed Data** within its infrastructure.
+4.  Mixpeek then exposes a **Mixpeek Search API**.
+5.  **Your Application or Users** interact with this API by sending search queries.
+6.  The API processes these queries against the indexed data and **Returns Results** to your application or users. 
