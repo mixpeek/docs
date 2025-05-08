@@ -128,7 +128,8 @@
             "integrations/object-storage/overview",
             "integrations/object-storage/s3",
             "integrations/object-storage/gcs",
-            "integrations/object-storage/azure-blob"
+            "integrations/object-storage/azure-blob",
+            "integrations/object-storage/r2"
           ]
         }
       ]
