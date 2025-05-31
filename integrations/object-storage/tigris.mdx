@@ -1,0 +1,74 @@
+---
+title: "Tigris"
+description: "Connect Mixpeek to your Tigris buckets to ingest and process your data."
+---
+
+<Note>
+  This guide explains how to connect your Tigris buckets to Mixpeek, enabling automated data ingestion and processing. Tigris is a globally distributed, multi-cloud object storage service with built-in support for the S3 API.
+</Note>
+
+## Prerequisites
+
+*   An active Tigris account
+*   A Tigris bucket containing the data you want Mixpeek to process
+*   Access key and secret key from your Tigris account
+
+## Configuration Steps
+
+Connecting Mixpeek to Tigris requires granting Mixpeek read access to your bucket. Tigris uses S3-compatible authentication, making it straightforward to set up.
+
+<Steps>
+  <Step title="Get Tigris Credentials">
+    To access your Tigris buckets, you'll need your access key and secret key:
+
+    1.  Log in to your Tigris account
+    2.  Navigate to your account settings
+    3.  Generate or copy your access key and secret key
+    4.  Store these credentials securely - you'll need them to configure the connection in Mixpeek
+  </Step>
+
+  <Step title="Configure AWS CLI (Optional)">
+    If you want to test your Tigris connection locally first, you can configure the AWS CLI:
+
+    ```bash
+    # Configure AWS CLI
+    aws configure set aws_access_key_id <access-key>
+    aws configure set aws_secret_access_key <secret-key>
+    aws configure set region auto
+
+    # List buckets
+    aws s3 ls --endpoint-url https://t3.storage.dev
+
+    # Create a bucket
+    aws s3api create-bucket --bucket <bucket-name> --endpoint-url https://t3.storage.dev
+    ```
+
+    This step is optional but can help verify your credentials are working correctly.
+  </Step>
+
+  <Step title="Add Tigris Connection in Mixpeek">
+    1.  Navigate to the **Integrations** or **Data Sources** section in your Mixpeek dashboard
+    2.  Click **Add Connection** or **New Source** and select **Tigris**
+    3.  Enter the required details:
+        *   **Bucket Name:** The name of your Tigris bucket
+        *   **Endpoint URL:** `https://t3.storage.dev`
+        *   **Access Key ID:** Your Tigris access key
+        *   **Secret Access Key:** Your Tigris secret key
+        *   Optionally, specify a **Prefix** if you only want Mixpeek to process files within a specific folder in your bucket
+    4.  Click **Test Connection** to verify the credentials and permissions
+    5.  Click **Save** or **Connect**
+  </Step>
+</Steps>
+
+## Verification
+
+Once connected, Mixpeek should start discovering files in your specified Tigris bucket (and prefix, if provided). You can monitor the ingestion status within the Mixpeek Studio. Depending on your pipeline configuration, feature extraction and indexing will begin automatically for supported file types.
+
+If you encounter issues, double-check your Tigris credentials and ensure the bucket name is correct. Since Tigris is S3-compatible, you can use standard S3 tools and libraries to verify your bucket access.
+
+## Features
+
+* **Global Distribution:** Tigris automatically places your data close to users for low-latency access worldwide
+* **Zero Egress Fees:** Free data egress ensures seamless access to your data
+* **Strong Consistency:** Ensures you always get the correct version of your data
+* **S3 Compatibility:** Works with all your familiar S3 tools and libraries
