@@ -1,0 +1,85 @@
+---
+title: "Features"
+description: "Model outputs stored inside documents for retrieval"
+---
+
+<Note>
+  Features are fields inside documents produced by feature extractors. They include vectors and payload attributes that power retrieval, enrichment, and analytics.
+</Note>
+
+## Overview
+
+- **Where features live**: Inside collection documents (not standalone). Documents are written by extractors during processing.
+- **What features are**: Model outputs such as vectors (dense/sparse/multi) and structured payload fields.
+- **Configured by**: The collection’s feature extractors and index definitions.
+
+## Feature anatomy (in a document)
+
+A document stores features as payload fields and vectors. Exact paths depend on the collection’s extractor configuration and feature addresses.
+
+```json
+{
+  "document_id": "doc_123",
+  "collection_id": "col_products_v1",
+  "metadata": {"category": "shoes"},
+  "features": {
+    "text_embedding": {"vector": [0.12, 0.03, ...]},
+    "clip_image": {"vector": [0.09, 0.41, ...]},
+    "entities": ["shoe", "sneaker"],
+    "title": "Red Sneaker"
+  }
+}
+```
+
+- Vectors are stored under configured vector field names and indexed per the collection’s vector indexes.
+- Non-vector outputs (payload) are stored as normal document fields under `features` or other configured paths.
+
+## Describe features for a collection
+
+Get feature addresses and metadata available in a collection.
+
+- **API**: Describe Collection Features
+- **Method**: GET
+- **Path**: `/v1/collections/{collection_identifier}/features`
+- **Reference**: [API Reference](/api-reference/collections/describe-collection-features)
+
+## Discover feature extractors
+
+Browse supported extractors and their input/output schemas.
+
+- **List Extractors**: [API Reference](/api-reference/feature-extractors/list-feature-extractors)
+- **Get Extractor by Name**: [API Reference](/api-reference/feature-extractors/get-feature-extractor-by-name)
+
+## Used by
+
+- **Retrievers**: Execute vector/payload search over features in documents ([Retrievers](/retrieval/retrievers)).
+- **Taxonomies**: Join/enrich using configured feature fields ([Taxonomies](/enrichment/taxonomies)).
+- **Clusters**: Build similarity groups over feature vectors ([Clusters](/enrichment/clusters)).
+
+## Best practices
+
+- **Pick extractors per modality**: Text, images, audio, and video often need different models.
+- **Version your models**: Prefer new collections or reprocessing when changing model versions.
+- **Name feature fields clearly**: Stable field names simplify retriever and taxonomy configs.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Collections" icon="database" href="/ingestion/collections">
+    Configure extractors and index definitions
+  </Card>
+  
+  <Card title="Feature Extractors" icon="wand-magic-sparkles" href="/processing/feature-extractors">
+    Supported extractors and configurations
+  </Card>
+</CardGroup>
+
+<CardGroup cols={2}>
+  <Card title="Retrievers" icon="magnifying-glass" href="/retrieval/retrievers">
+    Search across feature vectors and payloads
+  </Card>
+  
+  <Card title="Taxonomies" icon="diagram-project" href="/enrichment/taxonomies">
+    Enrich documents using feature-based joins
+  </Card>
+</CardGroup>

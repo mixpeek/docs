@@ -1,0 +1,97 @@
+---
+title: "Buckets"
+description: "Logical containers for objects with schema enforcement"
+---
+
+<Note>
+  Buckets are the entry point for ingestion. They define a schema for the objects you register and provide a logical container for organizing raw files (blobs) before processing.
+</Note>
+
+## Overview
+
+- **Purpose**: Store registered objects (and their blobs) under a clear schema.
+- **Schema**: Enforces allowed field names and types for blobs.
+- **Isolation**: Use `X-Namespace` to scope buckets per tenant/environment.
+- **Processing**: Bucket creation and object registration do not process data; collections handle processing later.
+
+## Bucket schema
+
+Define allowed fields and types. Field types align with ingestion inputs (e.g., `image`, `video`, `pdf`, `document`, `json`).
+
+```json
+{
+  "bucket_name": "product-images",
+  "description": "Product images and specs",
+  "bucket_schema": {
+    "properties": {
+      "image_main": {"type": "image"},
+      "specs": {"type": "json"}
+    }
+  }
+}
+```
+
+- `bucket_schema.properties`: keys are blob field names; values specify the type.
+- Objects referencing missing or mismatched fields are rejected.
+
+## Create a bucket
+
+- API: Create Bucket
+- Method: POST
+- Path: `/v1/buckets`
+- Reference: [API Reference](/api-reference/buckets/create-bucket)
+
+```bash
+curl -X POST https://api.mixpeek.com/v1/buckets \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: ns_123" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "bucket_name": "product-images",
+    "description": "Product images and specs",
+    "bucket_schema": {
+      "properties": {
+        "image_main": {"type": "image"},
+        "specs": {"type": "json"}
+      }
+    }
+  }'
+```
+
+## Manage buckets
+
+- [Get Bucket](/api-reference/buckets/get-bucket)
+- [Update Bucket](/api-reference/buckets/update-bucket)
+- [Delete Bucket](/api-reference/buckets/delete-bucket)
+- [List Buckets](/api-reference/buckets/list-buckets)
+
+## Behavior & validation
+
+- **Schema enforcement**: Objects must conform to `bucket_schema`.
+- **Naming**: `bucket_name` must be unique within a namespace.
+- **Schema mutability**: Schema is set at creation; updates are limited to mutable fields (name, description, metadata).
+- **Rate limits**: Bucket operations are rate-limited per account tier.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Uploads" icon="arrow-up-from-bracket" href="/ingestion/uploads">
+    Register single or batch objects into your buckets
+  </Card>
+  
+  <Card title="Objects & Blobs" icon="box" href="/ingestion/objects">
+    Understand object and blob shapes with examples
+  </Card>
+</CardGroup>
+
+<CardGroup cols={2}>
+  <Card title="Collections" icon="database" href="/ingestion/collections">
+    Configure feature extractors and outputs for processing
+  </Card>
+  
+  <Card title="Feature Extractors" icon="wand-magic-sparkles" href="/processing/feature-extractors">
+    Supported extractors and expected inputs/outputs
+  </Card>
+</CardGroup>
+
+

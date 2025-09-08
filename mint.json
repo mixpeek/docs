@@ -44,12 +44,17 @@
   "anchors": [
     {
       "name": "Homepage",
-      "icon": "link",
+      "icon": "house",
       "url": "https://mixpeek.com"
     },
     {
-      "name": "Engineering Blog",
+      "name": "Examples & Recipes",
       "icon": "book-open",
+      "url": "https://mixpeek.com/recipes"
+    },
+    {
+      "name": "Engineering Blog",
+      "icon": "newspaper",
       "url": "https://mixpeek.com/blog"
     }
   ],
@@ -72,13 +77,13 @@
       "url": "integrations"
     },
     {
-      "name": "Studio Walkthrough",
+      "name": "Studio Overview",
       "url": "studio"
     }
   ],
   "navigation": [
     {
-      "group": "Overview",
+      "group": "Getting Started",
       "pages": [
         "overview/introduction",
         "overview/quickstart",
@@ -88,24 +93,27 @@
       ]
     },
     {
-      "group": "Data Management",
+      "group": "Ingest Data",
       "pages": [
-        "management/namespaces",
-        "management/buckets",
-        "management/collections",
-        "management/features"
+        "ingestion/objects",
+        "ingestion/buckets",
+        "ingestion/collections",
+        "ingestion/namespaces",
+        "ingestion/features"
       ]
     },
     {
-      "group": "Data Processing",
+      "group": "Process Data",
       "pages": [
         "processing/feature-extractors",
+        "processing/batching",
         "processing/model-tuning",
-        "processing/tasks"
+        "processing/tasks",
+        "processing/pipelines"
       ]
     },
     {
-      "group": "Search & Retrieval",
+      "group": "Search & Retrieve",
       "pages": [
         "retrieval/retrievers",
         "retrieval/interactions",
@@ -113,10 +121,25 @@
       ]
     },
     {
-      "group": "Data Enrichment",
+      "group": "Enrich & Organize",
       "pages": [
         "enrichment/taxonomies",
         "enrichment/clusters"
+      ]
+    },
+    {
+      "group": "Operate in Production",
+      "pages": [
+        "operations/security",
+        "operations/deployment",
+        "operations/observability"
+      ]
+    },
+    {
+      "group": "Troubleshoot",
+      "pages": [
+        "troubleshoot/errors",
+        "troubleshoot/limits"
       ]
     },
     {
@@ -134,14 +157,6 @@
             "integrations/object-storage/tigris"
           ]
         }
-      ]
-    },
-    {
-      "group": "Troubleshooting",
-      "pages": [
-        "troubleshooting/observability",
-        "troubleshooting/errors",
-        "troubleshooting/limits"
       ]
     },
     {

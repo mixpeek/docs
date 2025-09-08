@@ -1,215 +1,60 @@
 ---
 title: "Caching"
-description: "Understanding Mixpeek's caching system for improved performance"
+description: "How Mixpeek caches inference embeddings to improve retriever performance"
 ---
 
 <Note>
-  The Mixpeek caching system provides efficient caching of retriever results and collection data to improve performance and reduce computational overhead.
+  Mixpeek currently caches embeddings generated during retriever pipelines to avoid recomputation. There is no collection-level caching and no cache configuration or stats endpoints at this time.
 </Note>
 
 ## Overview
 
-Mixpeek's caching system is designed to optimize performance by reducing computational overhead and improving response times. The system caches both retriever results and collection data, providing significant benefits:
-
-1. **Reducing Computational Overhead**: Caching expensive retrieval operations and feature computations
-2. **Improving Response Times**: Serving frequently accessed results from cache instead of recomputing
-3. **Optimizing Resource Usage**: Minimizing redundant processing of the same queries
-4. **Enabling Scalability**: Supporting high-throughput retrieval operations efficiently
+- **What’s cached**: Embeddings produced by the inference stage in retriever pipelines (dense and sparse).
+- **Why**: Reduce repeated calls to the inference engine for identical inputs, cutting latency and cost.
+- **Where**: Redis, with per-namespace key prefixing.
+- **Invalidation**: TTL-based expiration only; no event-based invalidation.
 
 <Frame>
   ```mermaid
   graph TD
-    A[Query] --> B[Retriever]
-    B --> C{Cache Check}
-    C -->|Hit| D[Return Cached Result]
-    C -->|Miss| E[Collection]
-    E --> F{Cache Check}
-    F -->|Hit| G[Return Cached Data]
-    F -->|Miss| H[Process & Cache]
-    H --> G
-    G --> D
-    D --> I[Response]
+    Q[Retriever Query] --> P[Prepare Inference Inputs]
+    P --> L[Redis Lookup]
+    L --> U[Use Cached Embedding]
+    L --> C[Call Inference Engine]
+    C --> W[Cache Embedding TTL]
+    U --> S[Downstream Search]
+    W --> S[Downstream Search]
   ```
 </Frame>
 
-The caching system operates at two levels:
+## How it works
 
-1. **Retriever-level Caching**: Caches the results of specific retriever operations, particularly useful for:
-   - Frequently repeated queries
-   - Expensive vector similarity searches
-   - Complex multimodal retrieval pipelines
-   - High-traffic search endpoints
+- The inference stage builds a deterministic cache key from:
+  - **namespace_id**
+  - **inference_name**
+  - **query inputs** (JSON-serialized with stable sorting)
+- On hit: the cached embedding (dense list or sparse vector) is returned.
+- On miss: Mixpeek calls the inference engine, then writes the result to Redis with a TTL.
 
-2. **Collection-level Caching**: Caches collection-specific data and metadata, beneficial for:
-   - Frequently accessed documents
-   - Stable reference data
-   - Metadata that doesn't change often
-   - Feature store lookups
+## Cache keys and TTL
 
-## Cache Configuration
+- **Key format**: `embedding:{namespace_id}:{inference_name}:{stable_json_of_inputs}`
+- **TTL**: Default 3600 seconds for stored embeddings.
+- **Namespacing**: Keys can be prefixed by namespace to isolate tenants.
 
-### Retriever Cache Configuration
+## Configuration surface
 
-Retrievers can be configured with specific caching parameters:
+- **Toggle**: Stages use a `use_cache` flag (defaults to enabled for inference embeddings).
+- **TTL**: Set in the inference caching call (default 3600s). There is no per-retriever or API-level cache config.
+- **No APIs**: There are currently no endpoints for cache configuration, statistics, or invalidation.
 
-```json
-{
-  "enabled": true,
-  "ttl_override_seconds": 3600,
-  "score_threshold": 0.8,
-  "invalidation_events": [
-    {
-      "collection": "my_collection",
-      "action": "update",
-      "recompute_strategy": "BACKGROUND"
-    }
-  ],
-  "max_entries_per_key": 5
-}
-```
+## Invalidation
 
-### Collection Cache Configuration
+- **TTL expiry only**: Entries naturally expire after the TTL.
+- **Manual deletion**: Possible via Redis tools, but no Mixpeek endpoints for targeted invalidation.
 
-Collections can also be configured with caching parameters:
+## Best practices
 
-```json
-{
-  "enabled": true,
-  "ttl_seconds": 604800,
-  "invalidation_strategy": "REPLACE_IF_BETTER",
-  "max_entries_per_key": 5
-}
-```
-
-## Cache Invalidation Strategies
-
-The system supports three invalidation strategies:
-
-1. **REPLACE_IF_BETTER**: Replace cache entry only if new score is better
-2. **REPLACE_ALWAYS**: Always replace cache entry on invalidation
-3. **KEEP_EXISTING**: Keep existing cache entry regardless of new data
-
-## Recompute Strategies
-
-When cache entries are invalidated, you can choose how to handle recomputation:
-
-1. **IMMEDIATE**: Recompute the result immediately
-2. **BACKGROUND**: Recompute in the background
-3. **LAZY**: Recompute only when the result is next accessed
-
-## Cache Entry Structure
-
-Each cache entry contains:
-- `key`: Unique identifier for the cache entry
-- `value`: The cached result
-- `score`: Score of the cached result
-- `created_at`: Timestamp of creation
-- `expires_at`: Optional expiration timestamp
-
-## Usage with Collections
-
-Collections can be configured with caching to improve performance:
-
-1. **Collection-level caching** is controlled by `CollectionCacheConfig`
-2. Cache entries are automatically invalidated when collection data changes
-3. Collections can specify their own TTL and invalidation strategies
-
-## Usage with Retrievers
-
-Retrievers can leverage caching to improve performance:
-
-1. **Retriever-level caching** is controlled by `RetrieverCacheConfig`
-2. Cache keys are generated based on retriever ID and source document ID
-3. Results are cached only if they meet the score threshold
-4. Cache invalidation can be triggered by specific events
-
-## Best Practices
-
-1. **Configure Appropriate TTLs**: Set TTLs based on data volatility
-2. **Use Score Thresholds**: Only cache high-quality results
-3. **Monitor Cache Statistics**: Track hit ratios and adjust configurations
-4. **Implement Proper Invalidation**: Configure invalidation events for data changes
-5. **Balance Cache Size**: Use max_entries_per_key to prevent cache bloat
-
-## Example Usage
-
-### Configure Retriever Caching
-
-```bash
-curl -X POST https://api.mixpeek.com/v1/retrievers/{retriever_id}/cache \
-  -H "Authorization: Bearer {api_key}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "enabled": true,
-    "score_threshold": 0.8,
-    "ttl_override_seconds": 3600,
-    "invalidation_events": [
-      {
-        "collection": "my_collection",
-        "action": "update",
-        "recompute_strategy": "BACKGROUND"
-      }
-    ]
-  }'
-```
-
-### Configure Collection Caching
-
-```bash
-curl -X POST https://api.mixpeek.com/v1/collections/{collection_id}/cache \
-  -H "Authorization: Bearer {api_key}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "enabled": true,
-    "ttl_seconds": 86400,
-    "invalidation_strategy": "REPLACE_IF_BETTER"
-  }'
-```
-
-### Get Cache Statistics
-
-```bash
-curl -X GET https://api.mixpeek.com/v1/cache/stats \
-  -H "Authorization: Bearer {api_key}"
-```
-
-### Invalidate Cache
-
-```bash
-curl -X POST https://api.mixpeek.com/v1/cache/invalidate \
-  -H "Authorization: Bearer {api_key}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "retriever_id": "my_retriever",
-    "collection_id": "my_collection",
-    "action": "update"
-  }'
-```
-
-## Cache Key Generation
-
-Cache keys are automatically generated by the system based on:
-- Retriever ID
-- Query parameters
-- Source document IDs
-- Collection IDs
-- Timestamp (for time-sensitive queries)
-
-The system uses a consistent hashing algorithm to ensure:
-- Unique keys for different queries
-- Consistent keys for identical queries
-- Proper cache invalidation when data changes
-
-You don't need to configure cache key generation - it's handled automatically by the system to ensure consistency and reliability.
-
-## Next Steps
-
-<CardGroup cols={2}>
-  <Card title="Retrievers" icon="magnifying-glass" href="/search/retrievers">
-    Learn more about configuring retrievers with caching
-  </Card>
-  
-  <Card title="Collections" icon="database" href="/management/collections">
-    Learn more about collection configuration and management
-  </Card>
-</CardGroup> 
+- **Stable inputs**: Ensure input mappings are deterministic so equivalent queries hit the same key.
+- **Appropriate TTL**: Use longer TTLs for stable content; shorter TTLs if inputs or models change frequently.
+- **Sparse vs dense**: Both are cached; sparse vectors are stored as indices/values.

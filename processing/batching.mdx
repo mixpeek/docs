@@ -1,0 +1,120 @@
+---
+title: "Batching"
+description: "Group objects and submit asynchronous processing jobs"
+---
+
+<Note>
+  Batches group previously registered object IDs and submit them for asynchronous processing. Use batching for larger or scheduled ingestions. Batches operate on object IDs; they do not upload files.
+</Note>
+
+## Overview
+
+- **Purpose**: Organize many objects into a single processing job.
+- **Scope**: Batches are created per bucket.
+- **Flow**: Create batch → add objects → submit for processing → monitor tasks.
+
+## When to use batching
+
+- **Large backfills**: Process thousands or millions of objects in controlled chunks
+- **Scheduled ingestion**: Nightly/weekly jobs without manual triggers
+- **Load smoothing**: Avoid spikes from many single-object submissions
+- **Consistent snapshot**: Group a known set of objects for reproducible results
+
+## Typical flow
+
+1) Create a batch with object IDs (or create empty and add later)
+2) Add objects to the batch (optional step if not provided at creation)
+3) Submit the batch for processing
+4) Track progress via Tasks
+
+## Create a batch
+
+- **API**: Create Batch
+- **Method**: POST
+- **Path**: `/v1/buckets/{bucket_identifier}/batches`
+- **Reference**: [API Reference](/api-reference/bucket-batches/create-batch)
+
+```bash
+curl -X POST https://api.mixpeek.com/v1/buckets/bkt_123/batches \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: ns_123" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "object_ids": ["obj_abc","obj_def"]
+  }'
+```
+
+## Add objects to a batch
+
+- **API**: Add Objects to Batch
+- **Method**: POST
+- **Path**: `/v1/buckets/{bucket_identifier}/batches/{batch_id}/objects`
+- **Reference**: [API Reference](/api-reference/bucket-batches/add-objects-to-batch)
+
+```bash
+curl -X POST https://api.mixpeek.com/v1/buckets/bkt_123/batches/batch_456/objects \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: ns_123" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "object_ids": ["obj_xyz"]
+  }'
+```
+
+## Submit batch for processing
+
+- **API**: Submit Batch for Processing
+- **Method**: POST
+- **Path**: `/v1/buckets/{bucket_identifier}/batches/{batch_id}/submit`
+- **Reference**: [API Reference](/api-reference/bucket-batches/submit-batch-for-processing)
+
+```bash
+curl -X POST https://api.mixpeek.com/v1/buckets/bkt_123/batches/batch_456/submit \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: ns_123"
+```
+
+## What happens after submit
+
+- Engine runs the configured feature extractors for downstream collections
+- Documents are written into target collections with lineage and features
+- Track status via [Tasks](/api-reference/tasks/get-task-information)
+
+## Example scenario
+
+You import 50k new product assets each week. Create a batch with the new object IDs on Friday, submit it, and monitor the task. By Monday, enriched documents and vectors are available in your `products_v1` collection for retrieval.
+
+## Monitor and manage
+
+- **Track jobs**: [Tasks](/api-reference/tasks/get-task-information)
+- **List batches**: [List Batches](/api-reference/bucket-batches/list-batches)
+- **Delete batch**: [Delete Batch](/api-reference/bucket-batches/delete-batch)
+
+## Behavior & validation
+
+- **Bucket-scoped**: A batch belongs to a bucket; objects must come from that bucket.
+- **Status lifecycle**: Batches are created as draft, populated with objects, then submitted for processing.
+- **Requirements**: Submit only after adding at least one object.
+- **Idempotency**: Adding the same object twice is ignored.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Uploads" icon="arrow-up-from-bracket" href="/ingestion/uploads">
+    Register objects (single or batch) before batching
+  </Card>
+  
+  <Card title="Objects & Blobs" icon="box" href="/ingestion/objects">
+    Object and blob request shapes
+  </Card>
+</CardGroup>
+
+<CardGroup cols={2}>
+  <Card title="Collections" icon="database" href="/ingestion/collections">
+    Configure extractors; where processing writes documents
+  </Card>
+  
+  <Card title="Tasks" icon="list-check" href="/processing/tasks">
+    Track processing status and outcomes
+  </Card>
+</CardGroup>

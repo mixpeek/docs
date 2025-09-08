@@ -1,0 +1,112 @@
+---
+title: "Objects & Blobs"
+description: "Structure, schema, and metadata for registered inputs"
+---
+
+<Note>
+  Objects are registered records inside a bucket that reference one or more blobs (files or JSON). Objects are validated against the bucket schema. Creating an object does not execute processing; collections handle processing later.
+</Note>
+
+## Overview
+
+- **Object**: Logical container you create in a bucket; holds one or more blobs and optional metadata.
+- **Blob**: A single file or JSON payload referenced by an object; must match the bucket schema field type.
+- **Lineage**: Downstream documents keep lineage to each object and blob.
+- **Processing**: Use batches or collection pipelines to process after registration.
+
+## Object shape
+
+Object creation uses this request body shape. See the full endpoint at [Create Object](/api-reference/bucket-objects/create-object).
+
+```json
+{
+  "key_prefix": "/products/red-sneaker",
+  "metadata": {"category": "shoes", "year": 2024},
+  "skip_duplicates": true,
+  "blobs": [
+    {
+      "property": "image_main",
+      "type": "image",
+      "data": "https://example.com/images/red-sneaker-front.jpg",
+      "metadata": {"mimetype": "image/jpeg"}
+    },
+    {
+      "property": "specs",
+      "type": "json",
+      "data": {"title": "Red Sneaker", "sizes": [7,8,9,10]}
+    }
+  ]
+}
+```
+
+- `key_prefix` (optional): Logical path prefix applied to the object; helps organize downstream documents.
+- `metadata` (optional): Arbitrary JSON. Propagates to documents produced by collections.
+- `skip_duplicates` (optional): When true, identical blobs (by content hash) are skipped.
+- `blobs` (required): One or more blob entries.
+
+## Blob shape
+
+Blobs map to fields in your bucket schema. See field types in your bucket definition.
+
+```json
+{
+  "property": "image_main",
+  "key_prefix": "/images", 
+  "type": "image",
+  "data": "https://example.com/images/red-sneaker-front.jpg",
+  "metadata": {"mimetype": "image/jpeg"}
+}
+```
+
+- `property` (required): Schema field name in the bucket.
+- `key_prefix` (optional): Path segment for this blob (appended to the object's prefix if provided).
+- `type` (required): Must match the schema field type (e.g., `image`, `video`, `pdf`, `json`).
+- `data` (required): The payload. For files, a URL; for JSON fields, inline JSON.
+- `metadata` (optional): Blob-level metadata; merged into downstream processing context.
+
+## Batch create
+
+Register multiple objects in a single request using [Create Objects in Batch](/api-reference/bucket-objects/create-objects-in-batch).
+
+```json
+{
+  "objects": [
+    { "key_prefix": "/products/red-sneaker", "blobs": [ {"property": "image_main", "type": "image", "data": "https://example.com/red.jpg"} ] },
+    { "key_prefix": "/products/blue-sneaker", "blobs": [ {"property": "image_main", "type": "image", "data": "https://example.com/blue.jpg"} ] }
+  ]
+}
+```
+
+## Behavior & validation
+
+- **Schema enforcement**: Each blob’s `property` and `type` must match the bucket schema; invalid objects are rejected.
+- **Prefixes**: `object.key_prefix` and `blob.key_prefix` combine to form a logical path carried into downstream documents.
+- **Metadata propagation**: `object.metadata` is copied to downstream documents (collections may add more).
+- **Idempotence**: Use `skip_duplicates` to avoid re-registering the same content.
+
+## Related endpoints
+
+- [Create Object](/api-reference/bucket-objects/create-object)
+- [Create Objects in Batch](/api-reference/bucket-objects/create-objects-in-batch)
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Uploads" icon="arrow-up-from-bracket" href="/ingestion/uploads">
+    How to submit single and batch object registrations
+  </Card>
+  
+  <Card title="Buckets" icon="bucket" href="/ingestion/buckets">
+    Define schemas and organize objects
+  </Card>
+</CardGroup>
+
+<CardGroup cols={2}>
+  <Card title="Collections" icon="database" href="/ingestion/collections">
+    Configure feature extractors and outputs
+  </Card>
+  
+  <Card title="Batching" icon="layer-group" href="/processing/batching">
+    Submit grouped objects for asynchronous processing
+  </Card>
+</CardGroup>

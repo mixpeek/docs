@@ -17,97 +17,192 @@ Before you begin, make sure you have:
 - Your API key (found in your dashboard)
 - Basic familiarity with REST APIs
 
-## Complete Example
+## Base URL and Headers
 
-```python
-from mixpeek import Mixpeek
-import time
+All requests use the base URL `https://api.mixpeek.com` and require an API key. Most endpoints also require a namespace header.
 
-# Initialize the Mixpeek client
-mp = Mixpeek(api_key="YOUR_API_KEY")
+```bash
+export API_URL="https://api.mixpeek.com"
+export API_KEY="YOUR_API_KEY"
 
-# Create a namespace
-namespace = mp.namespaces.create(
-    name="quickstart",
-    description="My first Mixpeek project"
-)
-namespace_id = namespace["namespace_id"]
+# Common headers (example usage shown in each step)
+# Authorization: Bearer $API_KEY
+# X-Namespace: <namespace_id>
+```
 
-# Create a bucket
-bucket = mp.buckets.create(
-    namespace_id=namespace_id,
-    name="content-bucket",
-    description="Storage for our content",
-    schema={
-      "my_img": {
-        "type" : "image"
+## 1) Create a Namespace
+
+Namespaces isolate data and queries. You can also use an existing namespace if you have one.
+
+```bash
+curl -sS -X POST "$API_URL/v1/namespaces" \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "namespace_name": "quickstart",
+    "description": "My first Mixpeek project",
+    "feature_extractors": [
+      { "feature_extractor_name": "video_extractor", "version": "1.0.0" }
+    ]
+  }'
+```
+
+Note the returned `namespace_id` and use it in `X-Namespace` for subsequent calls.
+
+## 2) Create a Bucket
+
+```bash
+curl -sS -X POST "$API_URL/v1/buckets" \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: <namespace_id>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "bucket_name": "content-bucket",
+    "description": "Storage for our content",
+    "bucket_schema": {
+      "properties": {
+        "my_img": { "type": "image" }
       }
     }
-)
-bucket_id = bucket["bucket_id"]
+  }'
+```
 
-# Create a collection
-collection = mp.collections.create(
-    namespace_id=namespace_id,
-    name="content-collection",
-    description="Processed content documents",
-    source={
-      "bucket": bucket_id
-    }
-    feature_extractors=[
-      {"feature_extractor_name": "scene_splitter"}
+Capture the `bucket_id` from the response.
+
+## 3) Create a Collection
+
+Collections define processing lineage and (optionally) feature extractors.
+
+```bash
+curl -sS -X POST "$API_URL/v1/collections" \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: <namespace_id>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "collection_name": "content-collection",
+    "description": "Processed content documents",
+    "source": { "type": "bucket", "bucket_id": "<bucket_id>" }
+  }'
+```
+
+Capture the `collection_id`.
+
+## 4) Upload an Object
+
+Creating an object registers the files but does not start processing.
+
+Processing requires creating and submitting a batch.
+
+```bash
+curl -sS -X POST "$API_URL/v1/buckets/<bucket_id>/objects" \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: <namespace_id>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "key_prefix": "/sample",
+    "blobs": [
+      {
+        "property": "my_img",
+        "type": "image",
+        "data": "https://example.com/sample-image.jpg"
+      }
+    ],
+    "metadata": { "category": "demo" }
+  }'
+```
+
+Capture the `object_id` from the response.
+
+## 5) Create a Batch
+
+```bash
+curl -sS -X POST "$API_URL/v1/buckets/<bucket_id>/batches" \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: <namespace_id>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "object_ids": ["<object_id>"]
+  }'
+```
+
+Capture the `batch_id` from the response.
+
+## 6) Submit the Batch for Processing
+
+```bash
+curl -sS -X POST "$API_URL/v1/buckets/<bucket_id>/batches/<batch_id>/submit" \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: <namespace_id>"
+```
+
+This returns a `task_id` you can poll.
+
+## 7) Check Task Status
+
+```bash
+curl -sS -X GET "$API_URL/v1/tasks/<task_id>" \
+  -H "Authorization: Bearer $API_KEY"
+```
+
+Wait for `status` to become `COMPLETED`.
+
+## 8) List Documents in the Collection
+
+```bash
+curl -sS -X POST "$API_URL/v1/collections/<collection_id>/documents/list" \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: <namespace_id>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "limit": 10,
+    "return_url": true
+  }'
+```
+
+## (Optional) 9) Create and Execute a Retriever
+
+First, inspect available stages:
+
+```bash
+curl -sS -X GET "$API_URL/v1/retrievers/stages" \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: <namespace_id>"
+```
+
+Then create a simple retriever (adapt parameters to the stages you choose):
+
+```bash
+curl -sS -X POST "$API_URL/v1/retrievers" \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: <namespace_id>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "retriever_name": "content-retriever",
+    "description": "Search across processed content",
+    "input_schema": { "properties": { "query_text": { "type": "string" } } },
+    "collection_ids": ["<collection_id>"],
+    "stages": [
+      {
+        "stage_name": "knn_search",
+        "version": "1.0.0",
+        "parameters": { "k": 10 }
+      }
     ]
-)
-collection_id = collection["collection_id"]
+  }'
+```
 
-# Upload an object
-object = mp.objects.create(
-    bucket_id=bucket_id,
-    name="content-bucket",
-    files=[
-        {
-            "my_img": "https://example.com/sample-image.jpg"
-        }
-    ]
-)
-object_id = object["object_id"]
+Execute it:
 
-# Wait for processing to complete
-print("Processing content, please wait...")
-time.sleep(30)  # Adjust based on content size
-
-# Create a retriever
-retriever = mp.retrievers.create(
-    namespace_id=namespace_id,
-    name="content-retriever",
-    description="Search across processed content",
-    stages=[
-        {
-            "name": "embedding_search",
-            "type": "vector",
-            "collection_id": collection_id,
-            "index": "multimodal",
-            "limit": 20
-        }
-    ]
-)
-retriever_id = retriever["retriever_id"]
-
-# Search for content
-results = mp.retrievers.execute(
-    retriever_id=retriever_id,
-    query={
-        "text": "show me images with people"
-    }
-)
-
-# Display results
-print("\nSearch Results:")
-for result in results["results"]:
-    print(f"Document ID: {result['document_id']}")
-    print(f"Score: {result['score']}")
-    print(f"Content: {result['content']}")
-    print("---")
+```bash
+curl -sS -X POST "$API_URL/v1/retrievers/<retriever_id>/execute" \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: <namespace_id>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "inputs": { "query_text": "show me images with people" },
+    "limit": 10,
+    "return_urls": true
+  }'
 ```
 
 ## Next Steps
@@ -115,15 +210,15 @@ for result in results["results"]:
 Congratulations! You've just built a simple multimodal search application with Mixpeek. To continue your journey:
 
 <CardGroup cols={3}>
-  <Card title="Learn about Namespaces" icon="folder-tree" href="/management/namespaces">
+  <Card title="Learn about Namespaces" icon="folder-tree" href="/ingestion/namespaces">
     Organize your data into isolated environments
   </Card>
   
-  <Card title="Explore Feature Extractors" icon="microchip" href="/management/features">
+  <Card title="Explore Feature Extractors" icon="microchip" href="/processing/feature-extractors">
     Discover advanced extraction capabilities
   </Card>
 
-  <Card title="Build Powerful Retrievers" icon="magnifying-glass" href="/retrieval/overview">
+  <Card title="Build Powerful Retrievers" icon="magnifying-glass" href="/retrieval/retrievers">
     Create sophisticated search experiences
   </Card>
 </CardGroup> 

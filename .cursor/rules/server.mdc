@@ -1,0 +1,355 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+## Mixpeek Multimodal Platform – Architecture and Capabilities Overview
+
+This document describes Mixpeek’s core concepts, architecture, APIs, storage/indexing approach, ingestion and retrieval flows, taxonomy and clustering capabilities, authentication/authorization, error handling, and operational/testing expectations. It is intended to serve as the foundation for public documentation and internal onboarding.
+
+### Audience and scope
+- Engineers integrating Mixpeek for multimodal ingestion and retrieval
+- Platform operators deploying and running Mixpeek
+- Documentation writers drafting end-user and developer docs
+
+
+## Core Concepts and Data Model
+
+### Tenancy primitives
+- **Organization**: Top-level tenant. Users and API keys belong to an organization. Each org has an `internal_id` used for scoping data.
+- **Namespace**: Query and storage boundary within an organization. Nearly all operations require a namespace (header `X-Namespace`). Within Qdrant, the namespace maps 1:1 to a Qdrant collection (index).
+
+### Storage layers and entities
+- **Bucket**: Logical storage container for raw objects and related files. Buckets define a JSON schema for object validation.
+- **Object**: A registered input record that references one or more files (e.g., video, audio, text). Objects are validated against their bucket’s schema. Object creation does not execute processing by itself.
+- **Collection**: Logical grouping of processed documents produced by ingestion pipelines. Collections declare feature extractors, expected outputs, and index configurations.
+- **Document**: The processed and enriched representation of an object within a collection. Documents include metadata and feature references appropriate for retrieval. Documents are stored as Qdrant points in the namespace, with payload fields and vectors.
+- **Feature Store**: Embeddings and other feature representations stored in Qdrant vectors. Feature data is colocated with document payloads in Qdrant and keyed by vector index names (e.g., embedding model identifiers).
+
+### Retrieval, features, and enrichment
+- **Retriever**: A configurable pipeline describing how to search across feature stores and collections, with optional pre/post-filters, grouping, and fusion.
+- **Feature Extractor**: A component that transforms raw object content (video, image, audio, text) into features and structured outputs. Feature extractors run in parallel in the Engine, write vectors/payloads into Qdrant, and update document metadata.
+- **Taxonomy**: A structured set of nodes (flat or hierarchical) used to enrich or classify documents. Taxonomies can be applied on-demand during retrieval or materialized (batch enrichment) after ingestion.
+- **Cluster**: Grouping of similar documents based on features. Clustering is exposed via dedicated Engine routes and used for discovery and analytics.
+
+### Required metadata and lineage
+Documents are expected to carry:
+- `__fully_enriched` (bool), `__missing_features` (string[]), `__pipeline_version` (int)
+- `source_object_id` (reference to the originating object)
+- `collection_id` (which collection this document belongs to)
+- `internal_id` (tenant filter) – injected automatically at write time
+
+
+## High-level Architecture
+
+### Components
+- **API (FastAPI)**: Public API surface area for buckets/objects, collections, retrievers, taxonomies, tasks, etc. Handles authentication/authorization, request validation, and orchestration.
+- **Engine (FastAPI + Ray)**: Distributed execution of feature extraction and enrichment (taxonomy, clustering). Exposed over HTTP for API-to-Engine calls.
+- **Datastores**:
+  - Qdrant (vector DB) – primary store for documents and features
+  - MongoDB – metadata/configuration (e.g., collections, taxonomies, retrievers)
+  - Redis – caching, counters, rate limiting, task metadata
+  - S3-compatible storage – object blobs and batch artifacts
+- **Tasking**:
+  - Celery (API side) – asynchronous API tasks (e.g., bucket delete), health checks
+  - Ray (Engine side) – distributed feature extraction and enrichment
+
+### Service startup and middleware
+- API created in `api.main:app` with CORS, centralized exception middleware, and rate limiting via SlowAPI (enabled when `ENV != local`).
+- Feature extractor registry is initialized on API startup to enforce extractor availability.
+- API routers are composed under `/v1` with shared error response models and dependency injection for tenancy.
+
+
+## Authentication, Authorization, and Rate Limiting
+
+### Auth headers and tenancy resolution
+- `Authorization: Bearer <API_KEY>` – maps to an organization via `UnprotectedAsyncOrganizationService`. On success, request context is populated with:
+  - `request.state.organization` (serialized org model)
+  - `request.state.internal_id` (tenant scope)
+  - `request.state.organization_id`
+  - `request.state.api_key`
+- `X-Namespace: <namespace_id_or_name>` – resolved by `AsyncNamespaceService`. Required for namespace-scoped routes. Sets `request.state.namespace_id` and `request.state.namespace`.
+
+Most `/v1` routes require `Depends(get_internal_id)` and `Depends(get_namespace_id)` to ensure both org and namespace are resolved prior to handler execution.
+
+### Access policy decorator
+`@access_policy(...)` adds layered authorization and safety checks:
+- Tier enforcement (e.g., paid features)
+- Permission checks (API key scoped) using `shared.authentications.models.Permission`
+- Free-tier credit enforcement
+- Rate limiting via Redis per `internal_id` and API name
+
+Rate limiting also benefits from SlowAPI middleware in non-local environments.
+
+
+## Error Handling and Response Shape
+
+- Centralized errors in `shared.errors.exceptions` define strongly-typed API error classes (e.g., `BadRequestError`, `ValidationError`, `NotFoundError`, `UnauthorizedError`, `TooManyRequestsError`, `QdrantError`, etc.).
+- API attaches a global `ExceptionMiddleware` that converts exceptions into a consistent JSON error envelope:
+  - `success: false`, `status: <http_status>`, `error: { message, type, details? }`
+- Validation and HTTP exceptions are normalized with explicit handlers.
+- Shared `ErrorResponse` model is registered on the main router for Swagger.
+
+
+## API Surface (v1) – Modules and Capabilities
+
+All routes below are prefixed by `/v1`. Unless noted, routes require both `Authorization` and `X-Namespace` headers.
+
+### Health
+- `GET /v1/health` – Fanout health check for Redis, MongoDB, Qdrant, Celery, and Engine HTTP endpoint. Returns an overall status and per-service flags and errors.
+
+### Organizations and Namespaces
+- `POST /v1/private/organizations/...` – Admin-provisioned routes (unauthenticated in local/test only) for syncing orgs and keys from administrative systems.
+- `GET/POST/DELETE /v1/organizations` – Organization CRUD (auth-only, no namespace required).
+- `GET/POST/DELETE /v1/namespaces` – Namespace CRUD (auth-only). Namespaces gate data access via Qdrant collections.
+
+### Buckets and Objects
+- Buckets (`/v1/buckets`)
+  - `POST` create – validates uniqueness, persists schema/metadata
+  - `GET /{bucket_identifier}` – retrieve by id or name
+  - `PUT /{bucket_identifier}` – update mutable fields with conflict checks
+  - `DELETE /{bucket_identifier}` – enqueues a Celery task to delete bucket and objects; records a task entry in Redis (TaskService)
+  - `POST /list` – list with full pagination, sorting, and filtering
+- Objects (`/v1/buckets/{bucket_identifier}/objects`)
+  - `POST` create – validates payload against the bucket schema; registers object only (no processing)
+  - `POST /batch` create – batch register multiple objects with per-item validation
+
+### Collections
+- Collections (`/v1/collections`)
+  - `POST` create – creates a collection with feature extractors, lineage, and index configs
+  - `GET /{collection_identifier}` – retrieve by id or name
+  - `PATCH /{collection_identifier}` – update mutable fields (e.g., taxonomy applications)
+  - `GET /{collection_identifier}/features` – describe feature addresses and metadata for the collection
+  - `DELETE /{collection_identifier}` – delete a collection
+  - `POST /list` – list with filtering, sorting, and pagination
+
+Notes:
+- Collections capture `feature_extractors`, `source_lineage`, `vector_indexes`, `payload_indexes`, `taxonomy_applications`.
+- Shared models in `shared.collection.models` define request/response types and ensure Pydantic 2.0 validation.
+
+### Feature Extractors (catalog)
+- `GET /v1/collections/features/extractors/...` – endpoints for enumerating extractor configurations and registry metadata.
+
+### Retrievers
+- `POST /v1/retrievers` – create a retriever (input schema, stages, and collections)
+- `GET /v1/retrievers/{id_or_name}` – fetch retriever definition
+- `POST /v1/retrievers/{id_or_name}/execute` – execute retrieval pipeline
+  - Validates inputs vs retriever schema
+  - Executes configured stages via `SearchFlow`
+  - Applies pre- and post-filters and optional grouping
+  - Applies final sort/pagination across fused results
+  - Optional URL presigning for S3 assets when `return_urls=true`
+- `DELETE /v1/retrievers/{id_or_name}` – delete
+- `POST /v1/retrievers/list` – list with pagination and filters
+- `POST /v1/retrievers/debug-inference` – call inference backend directly to introspect embeddings or model outputs
+
+### Taxonomies
+- `POST /v1/taxonomies` – create taxonomy (flat or hierarchical). Names are unique per namespace.
+- `GET /v1/taxonomies/{id_or_name}` – retrieve taxonomy (optionally by version)
+- `POST /v1/taxonomies/{taxonomy_id}/versions` – create a new version snapshot
+- `GET /v1/taxonomies/{taxonomy_id}/versions` – list all versions
+- `DELETE /v1/taxonomies/{id_or_name}` – delete taxonomy
+- `POST /v1/taxonomies/list` – list with filtering/pagination
+- `POST /v1/taxonomies/execute/{id_or_name}` – validate/test taxonomy in Engine with provided sample documents (on-demand check only; batch materialization runs automatically post-ingestion)
+
+### Clusters
+- Engine-exposed endpoints under `/engine/clusters` drive clustering workflows for content discovery.
+
+### Tasks and Webhooks
+- `GET/POST /v1/tasks` – task tracking for asynchronous operations.
+- `POST /v1/organizations/webhooks/...` – webhook registration/management for external integrations.
+
+### Example headers for API requests
+```bash
+curl --location 'http://127.0.0.1:8000/v1/buckets/<bucket_id>/objects' \
+  --header 'X-Namespace: <namespace_id>' \
+  --header 'Authorization: Bearer API_KEY_FROM_ORGANIZATION' \
+  --header 'Content-Type: application/json' \
+  --data '{}'
+```
+
+
+## Retrieval Pipelines
+
+### SearchFlow execution
+- Implemented in `shared.retrievers.flows.SearchFlow` and invoked by API controllers.
+- Stages are resolved from a singleton `RetrieverStageRegistry`. Each stage’s `run(...)` method is passed clients (Qdrant, Mongo, inference), pre/post-filters, and group-by options.
+- The flow:
+  1) Validate query inputs vs retriever input schema
+  2) For each stage: merge query filters with stage pre-filters, run stage, propagate results
+  3) Apply optional sorts (respects grouped results) and pagination
+  4) Optionally presign S3 URLs for result documents
+
+### Qdrant search providers
+- Async providers in `clients.providers.qdrant.search` support:
+  - Single-vector KNN over a specific index
+  - Hybrid RRF fusion over multiple vectors (e.g., text + image)
+  - Grouped search (group_by) and counting distinct groups
+- Providers normalize payloads by removing redundant `id` fields from payload, preferring the Qdrant point id as `document_id` in results.
+- Sorting and next offset are performed at the response layer; payload selection honors `select` fields.
+
+### Clients bundle for stages
+- API composes a `SimpleNamespace` clients bundle with:
+  - `db_provider` (Mongo metadata)
+  - `qdrant_db` (search and CRUD)
+  - `inference_client` (model calls)
+  - `redis_provider` (optional caching stub)
+
+
+## Ingestion Pipelines (Engine)
+
+### Batch artifact processing
+Engine reads batch manifests (`metadata.json`) from S3 and resolves extractor configurations and collections to process.
+
+Core flow (`engine.extractors.flows.run_extractor_flow`):
+1) Download and parse manifest
+2) For each configured feature extractor and each collection to enrich:
+   - Build `QdrantBatchProcessorConfig` from the collection’s vector index definitions and write mode
+   - Submit Ray tasks (`process_feature_extractor.remote`) to run extractors in parallel; write results to Qdrant vectors/payloads
+3) After all extractors complete, trigger materialized taxonomy tasks for any collections that configured them (batch enrichment)
+
+### Qdrant namespace bootstrap
+Before extraction, Engine ensures the Qdrant collection for the namespace exists. If not, it creates one using `SyncQdrantManagement.create_collection` with vector and payload index definitions (falls back to defaults if necessary). All writes include `internal_id` in payload.
+
+### Materialized taxonomy execution
+After extraction, for each collection with `taxonomy_applications` set to `MATERIALIZE`, Engine triggers `run_materialize_taxonomy_task` to enrich documents in batch by scanning Qdrant and applying taxonomy joins. Current materialization path performs scanning and on-demand enrichment without an additional write step (ingestion pipelines already perform the single-write pattern).
+
+### On-demand taxonomy execution
+For testing and ad-hoc enrichment, `OnDemandTaxonomyService` fetches taxonomy configuration from Mongo (unless provided inline) and executes flat or hierarchical enrichment flows over provided documents.
+
+
+## Taxonomies
+
+### Types
+- **Flat**: Acts as a similarity join from a source collection to a taxonomy collection, attaching matching node properties (e.g., labels, tags) using vector similarity.
+- **Hierarchical**: Multi-level taxonomies with property/tag inheritance from parents to children. Requires compatible features for all levels (e.g., face embeddings).
+
+### Application modes
+- **On-demand (compute-time)**: Executed during retrieval or via explicit request to test/preview taxonomy behavior.
+- **Materialized (post-ingestion)**: Executed by Engine after feature extraction completes to enrich documents in target collections.
+
+### Join semantics
+- Implemented via the joins/enrichment layer:
+  - Scroll documents from Qdrant with tenant-aware filters
+  - For each record, build inputs per mapping and call `SearchFlow` on the taxonomy retriever
+  - Attach matching node metadata to documents (on-demand results returned to caller; materialization flow integrates with ingestion write path)
+
+
+## Clustering
+
+Clustering capabilities (e.g., KMeans/DBSCAN) are exposed via Engine routes. Clusters group similar documents based on vector proximity and can be surfaced in retrieval UX or downstream analytics.
+
+
+## Data Stores and Providers
+
+### Qdrant
+- Namespace maps to Qdrant collection; `internal_id` is stored in payload for enforced tenant filtering.
+- Providers:
+  - Management (`SyncQdrantManagement`): create/delete collections, payload indexes
+  - CRUD (`AsyncQdrantCRUD`): upsert, retrieve, list, update-many, delete-many, count with filters
+  - Search (`AsyncQdrantSingleSearch`, `AsyncQdrantHybridSearch`): vector and hybrid RRF queries, grouping
+- Queries and filters use Pydantic models (`LogicalOperator`, `QueryOptions`) translated to Qdrant filters via `QueryTranslator`.
+
+### MongoDB
+- `AsyncMongoDBProvider` and `SyncMongoDBProvider` apply base filters for `internal_id` and `namespace_id` automatically and expose get/list/create/update/delete/aggregate operations. Used for resources such as collections, taxonomies, retrievers, and tasks metadata.
+
+### Redis
+- `SyncRedisProvider` offers namespaced key/value operations, atomic counters, and bulk ops. Used for rate limiting and lightweight task metadata.
+
+### S3-compatible storage
+- `SyncS3Provider` used by API and Engine for downloading manifests and generating presigned URLs for document assets.
+
+
+## Engine Connectivity From API
+
+- `engine_required` decorator verifies Engine health before serving routes that depend on it.
+- `clients.providers.engine.services` implements HTTP request helpers with health-check caching and retry logic (`engine_request_async`, `engine_request_sync`).
+- The Engine exposes endpoints for inference (`/engine/inference`), taxonomies (`/engine/taxonomies`), clusters (`/engine/clusters`), and health (`/engine/health`).
+
+
+## Configuration and Environments
+
+All runtime configuration comes from `configs.settings.Settings` (Pydantic BaseSettings):
+- Environment: `ENV`, `DEBUG`, `LOG_LEVEL`, Sentry DSN
+- Engine: `RAY_*`, `ENGINE_SERVE_*`, `ENGINE_API_*`
+- Datastores: `MONGO_URI`, `MONGODB_API_DB`, `QDRANT_URL`, `QDRANT_API_KEY`, `REDIS_URL`
+- Cloud: `AWS_BUCKET`, `AWS_REGION`
+- External: `HUGGING_FACE_TOKEN`, `OPENAI_API_KEY`, `GEMINI_API_KEY`
+
+Derived convenience:
+- `ENGINE_API_URL = http://{ENGINE_API_HOST}:{ENGINE_API_PORT}`
+
+
+## Operational Notes
+
+- Rate limiting: enforced via Redis per API name and organization tier/plan; SlowAPI middleware additionally guards the API in non-local environments.
+- Exceptions: server and select client errors are logged; structured error responses ensure consistent client handling.
+- Tenancy enforcement: providers automatically filter by `internal_id` and `namespace_id`. Qdrant payloads always include `internal_id`.
+- Startup: API initializes feature extractor registry and configures exception handlers and CORS.
+
+
+## Testing and Development Expectations
+
+- Testing uses `pytest` via Poetry:
+  - Install for API: `poetry install --with dev,api --no-interaction --without engine`
+  - Run tests: `poetry run pytest`
+  - End-to-end and integration tests call real API routes using admin-provisioned org and API keys; include `Authorization` and `X-Namespace` headers.
+  - Test data assets pulled via `tests/assets.py` helper.
+- Directory mirroring for tests: each created Python file should have a mirrored test under `tests/` with the same path and `test_` prefix.
+- When working locally, run `./start.sh celery`, `./start.sh engine`, and API in separate terminals to inspect logs.
+- Pydantic 2.0 only. Avoid dynamic type checks for control flow in services; pass explicit parameters and keep imports at module top-level.
+
+
+## Example Flows
+
+### Ingestion (Batch)
+1) Client registers objects in a bucket (no processing yet)
+2) Engine processes a batch manifest from S3:
+   - Initializes Qdrant collection (namespace)
+   - Runs feature extractors in parallel (Ray)
+   - Writes vectors and payloads to Qdrant with tenant scoping
+   - Triggers materialized taxonomies configured on the collection
+
+### Retrieval
+1) Client defines a retriever (input schema, stages, collections)
+2) Client executes retriever with inputs and filters
+3) SearchFlow runs stages with Qdrant and inference clients
+4) Results are sorted, paginated, optionally grouped; URLs can be presigned
+
+
+## API Error Envelope (canonical)
+
+On failure, the API returns:
+```json
+{
+  "success": false,
+  "status": 404,
+  "error": {
+    "message": "Namespace not found",
+    "type": "NotFoundError",
+    "details": {"resource": "namespace", "id": "ns_123"}
+  }
+}
+```
+
+
+## Gut Check – Coverage
+
+This overview captures:
+- Core concepts: buckets, objects, collections, documents, features, retrievers, taxonomies, clusters, namespaces, organizations
+- API surface for health, organizations, namespaces, buckets/objects, collections, retrievers, taxonomies, clusters, tasks, webhooks
+- Authentication, authorization, rate limiting, tenancy resolution
+- Error handling and response shapes
+- Ingestion pipeline (Engine) including Qdrant bootstrap and taxonomy materialization
+- Retrieval pipeline (SearchFlow, stages, hybrid/grouped queries)
+- Data stores and providers (Qdrant, MongoDB, Redis, S3)
+- Engine connectivity and configuration
+- Testing and development practices (Poetry, test structure, headers, assets)
+
+If a section is missing for public docs, consider expanding with:
+- Concrete stage catalog for retriever pipelines (from `shared.retrievers.stages`)
+- Full taxonomy configuration schemas and node inheritance examples
+- Feature extractor registry contents and supported modalities/models
+- Detailed index configuration examples (dense/sparse vectors and payload indexes)
+

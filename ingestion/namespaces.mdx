@@ -1,0 +1,98 @@
+---
+title: "Namespaces"
+description: "Isolated environments that scope data and API operations"
+---
+
+<Note>
+  Namespaces are isolation boundaries. They scope buckets, objects, collections, documents, and searches so organizations can separate environments and tenants. Most API calls accept the `X-Namespace` header to operate within a namespace.
+</Note>
+
+## Overview
+
+- **Isolation**: Buckets, Objects, Collections, Documents, Tasks live within a namespace.
+- **Required header**: Pass `X-Namespace` on most resource calls (see API reference pages for specifics).
+- **Indexes**: Selected feature extractors add required vector/payload index definitions; you may also add custom payload indexes.
+- **Immutability**: Feature extractor choices set capabilities; payload indexes are mutable.
+
+## Namespace model
+
+Minimum fields when creating a namespace. See [Create Namespace](/api-reference/namespaces/create-namespace).
+
+```json
+{
+  "namespace_name": "spotify_playlists_dev",
+  "description": "This namespace contains playlists from Spotify",
+  "feature_extractors": [
+    {"feature_extractor_name": "video_extractor", "version": "1.0.0"}
+  ],
+  "payload_indexes": [
+    {
+      "field_name": "metadata.title",
+      "type": "text",
+      "field_schema": {"type": "text", "tokenizer": "word", "min_token_len": 2, "max_token_len": 15, "lowercase": true}
+    }
+  ]
+}
+```
+
+- `feature_extractors` (required): Enables associated features; required indexes are added automatically.
+- `payload_indexes` (optional): Additional payload indexes for common filters/sorts.
+
+## Create a namespace
+
+- **API**: Create Namespace
+- **Method**: POST
+- **Path**: `/v1/namespaces`
+- **Reference**: [API Reference](/api-reference/namespaces/create-namespace)
+
+```bash
+curl -X POST https://api.mixpeek.com/v1/namespaces \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "namespace_name": "spotify_playlists_dev",
+    "description": "This namespace contains playlists from Spotify",
+    "feature_extractors": [
+      {"feature_extractor_name": "video_extractor", "version": "1.0.0"}
+    ],
+    "payload_indexes": [
+      {"field_name": "metadata.title", "type": "text"}
+    ]
+  }'
+```
+
+## Manage namespaces
+
+- [Get Namespace](/api-reference/namespaces/get-namespace)
+- [Update Namespace](/api-reference/namespaces/update-namespace)
+- [Delete Namespace](/api-reference/namespaces/delete-namespace)
+- [List Namespaces](/api-reference/namespaces/list-namespaces)
+
+## Behavior & validation
+
+- **Header usage**: Pass `X-Namespace` on most routes after creation to scope reads/writes.
+- **Feature availability**: Selected `feature_extractors` constrain what can be used in collections within this namespace.
+- **Payload indexes**: Mutable; tune over time as query patterns evolve.
+- **Tenant filter**: All writes/read filters include tenant scoping automatically.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Buckets" icon="bucket" href="/ingestion/buckets">
+    Define schemas and register objects in a namespace
+  </Card>
+  
+  <Card title="Collections" icon="database" href="/ingestion/collections">
+    Store processed documents for retrieval
+  </Card>
+</CardGroup>
+
+<CardGroup cols={2}>
+  <Card title="Feature Extractors" icon="wand-magic-sparkles" href="/processing/feature-extractors">
+    Configure available features and model outputs
+  </Card>
+  
+  <Card title="Retrievers" icon="magnifying-glass" href="/retrieval/retrievers">
+    Query one or more collections within a namespace
+  </Card>
+</CardGroup>

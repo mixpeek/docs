@@ -1,0 +1,253 @@
+Title: Mintlify Components – Authoring Guide for Mixpeek Docs
+
+Purpose: Provide canonical, copy-pastable examples for all major Mintlify components used across Mixpeek docs. Use these patterns consistently to keep docs readable, skimmable, and cohesive. Reference: Mintlify components catalog – [Mintlify docs](https://mintlify.com/docs).
+
+General Guidance
+- Prefer short sections with clear headings and scannable lists.
+- Use "why-first" callouts sparingly to orient readers.
+- Keep examples runnable/minimal; hide detail behind Accordions/Expandables.
+- Use Tabs/CodeGroup for language/runtime variants.
+- Favor Examples for request/response flows and end-to-end snippets.
+
+Headers and Text
+```md
+### Section heading
+
+Describe the purpose in 1–2 sentences. Use `inline code` for keys like `X-Namespace`.
+
+- Key point one
+- Key point two
+
+> Optional quote or guidance statement.
+```
+
+Images and Embeds
+```md
+![High-level architecture](/images/how-it-works-diagram.png)
+
+![Studio explorer](/studio/explorer.png "Studio Explorer")
+
+// You can also paste a YouTube/Vimeo URL on its own line in content for auto-embed.
+```
+
+Lists and Tables
+```md
+- Item one
+- Item two
+
+| Field          | Type   | Description                 |
+| -------------- | ------ | --------------------------- |
+| X-Namespace    | string | Namespace/collection scope  |
+| Authorization  | string | Bearer <API_KEY>            |
+```
+
+Code (single)
+```md
+```bash
+curl -sS localhost:8000/v1/health \
+  -H 'Authorization: Bearer $API_KEY' \
+  -H 'X-Namespace: ns_default'
+```
+```
+
+Code Groups (multiple variants)
+```mdx
+<CodeGroup>
+  <CodeGroupItem title="curl" language="bash">
+{`
+```bash
+curl -sS localhost:8000/v1/namespaces \\
+  -H 'Authorization: Bearer $API_KEY'
+```
+`}
+  </CodeGroupItem>
+  <CodeGroupItem title="Python" language="python">
+{`
+```python
+import requests
+r = requests.get('http://localhost:8000/v1/namespaces', headers={
+  'Authorization': f'Bearer {API_KEY}'
+})
+print(r.json())
+```
+`}
+  </CodeGroupItem>
+</CodeGroup>
+```
+
+Tabs (content switching)
+```mdx
+<Tabs items={["Local", "Production"]}>
+  <Tab>
+    Use `localhost:8000` and disable rate limiting.
+  </Tab>
+  <Tab>
+    Use your deployed base URL and ensure Redis/SlowAPI are configured.
+  </Tab>
+</Tabs>
+```
+
+Accordions
+```mdx
+<AccordionGroup>
+  <Accordion title="What is a Bucket?">
+    A logical container for objects and schema validation.
+  </Accordion>
+  <Accordion title="When should I use multiple Buckets?">
+    Separate ingestion schemas or lifecycles across datasets.
+  </Accordion>
+</AccordionGroup>
+```
+
+Callouts
+```mdx
+<Callout type="warning">
+Ensure `X-Namespace` is set on all namespace-bound routes.
+</Callout>
+
+<Callout type="success">
+Engine health is green – clustering and taxonomy runs will succeed.
+</Callout>
+```
+
+Cards and Grids
+```mdx
+<Cards cols={3}>
+  <Card title="Buckets" icon="folder" href="/ingestion/buckets">
+    Define schemas and register objects.
+  </Card>
+  <Card title="Collections" icon="layers" href="/ingestion/collections">
+    Group documents, features, and indexes.
+  </Card>
+  <Card title="Retrievers" icon="search" href="/retrieval/retrievers">
+    Configure multi-stage search pipelines.
+  </Card>
+</Cards>
+```
+
+Columns (side-by-side)
+```mdx
+<Columns>
+  <Column>
+    ### Ingestion
+    Create objects, run extraction, and materialize taxonomies.
+  </Column>
+  <Column>
+    ### Retrieval
+    Execute retrievers with filters, grouping, and fusion.
+  </Column>
+</Columns>
+```
+
+Examples (request/response pairs)
+```mdx
+<Example>
+  <Tabs items={["Request", "Response"]}>
+    <Tab>
+{`
+```bash
+curl -sS http://localhost:8000/v1/health
+```
+`}
+    </Tab>
+    <Tab>
+{`
+```json
+{"success": true, "services": {"qdrant": true, "redis": true}}
+```
+`}
+    </Tab>
+  </Tabs>
+</Example>
+```
+
+Expandable (progressive disclosure)
+```mdx
+<Expandable label="Advanced query options">
+Supports group-by, distinct counts, and hybrid RRF fusion.
+</Expandable>
+```
+
+Fields (inline key/value UI)
+```mdx
+<Fields>
+  <Field name="X-Namespace" defaultValue="ns_default" />
+  <Field name="Authorization" defaultValue="Bearer sk_live_xxx" secret />
+</Fields>
+```
+
+Frames (browser/app frame)
+```mdx
+<Frame>
+  ![Explorer](/studio/explorer.png)
+</Frame>
+```
+
+Icons
+```mdx
+<Icon name="search" /> Retrievers
+```
+
+Mermaid Diagrams
+```mermaid
+graph TD;
+  Client-->API;
+  API-->Qdrant;
+  API-->MongoDB;
+  API-->Redis;
+  API-->Engine;
+  Engine-->Qdrant;
+```
+
+Panel
+```mdx
+<Panel title="Why Qdrant?">
+Optimized vector similarity with payload filtering and grouping.
+</Panel>
+```
+
+Steps (guided workflows)
+```mdx
+<Steps>
+  <Step title="Create a Namespace">Use `/v1/namespaces` to create your scope.</Step>
+  <Step title="Create a Bucket">Define a JSON schema for objects.</Step>
+  <Step title="Run Extraction">Submit a batch manifest to Engine.</Step>
+  <Step title="Search">Execute a retriever and paginate results.</Step>
+</Steps>
+```
+
+Tooltips
+```mdx
+<Tooltip text="Tenant-scoped collection selector">X-Namespace</Tooltip>
+```
+
+Update (release notes)
+```mdx
+<Update date="2025-09-01" version="v1.12.0">
+Added hierarchical taxonomy enrichment examples and Engine clustering docs.
+</Update>
+```
+
+Reusable Snippets (include shared blocks)
+```mdx
+// Define snippet once in /snippets/create-namespace.bash.mdx
+// and reuse via:
+<Snippet file="snippets/create-namespace.bash.mdx" />
+```
+
+Do/Don’t
+- Do: Use CodeGroup/Tabs for language/runtime choices.
+- Do: Collapse secondary details with Accordion/Expandable.
+- Do: Prefer Steps for quickstarts and end-to-end guides.
+- Don’t: Nest more than two interactive components deeply.
+- Don’t: Use Callouts for primary content; reserve for emphasis.
+
+Authoring Checklist
+- Heading clarity and one-sentence overview
+- At least one runnable example or API call
+- Appropriate component for complexity (Tabs/Accordion/Steps)
+- Screenshots/images referenced from `/images` or relevant folder
+- Links to related pages using relative paths
+
+Reference
+- Component docs: [Mintlify docs](https://mintlify.com/docs)

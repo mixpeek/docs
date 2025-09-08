@@ -1,0 +1,105 @@
+---
+title: "Pipelines & Workflows"
+description: "Chain collections to build multi-stage processing workflows"
+---
+
+<Note>
+  Pipelines let you chain multiple collections so the output documents of one stage become the input to the next. This enables modular, versioned, and reusable processing for complex multimodal workflows.
+</Note>
+
+## Overview
+
+- **What**: Multi-stage processing where a collection can use another collection as its source
+- **How**: Set collection `source.type` to `COLLECTION` and reference the upstream `collection_id`
+- **Why**: Compose extraction, transformation, enrichment, and indexing in clear stages
+
+## How chaining works
+
+Each collection declares a source and its own feature extractors. By pointing one collection at another, you build a directed graph of stages.
+
+```json
+{
+  "collection_name": "products_raw_v1",
+  "source": {"type": "BUCKET", "bucket_id": "bkt_123"},
+  "feature_extractors": [
+    {"feature_extractor_name": "pdf_parser", "version": "1.0.0"},
+    {"feature_extractor_name": "image_embedder", "version": "1.0.0"}
+  ]
+}
+```
+
+```json
+{
+  "collection_name": "products_enriched_v1",
+  "source": {"type": "COLLECTION", "collection_id": "col_products_raw_v1"},
+  "feature_extractors": [
+    {"feature_extractor_name": "text_embedder", "version": "1.0.0"}
+  ]
+}
+```
+
+<Frame>
+  ```mermaid
+  graph TD
+    B[Bucket] --> C1[Collection products_raw_v1]
+    C1 --> C2[Collection products_enriched_v1]
+    C2 --> R[Retrievers]
+  ```
+</Frame>
+
+- Upstream collection writes documents with initial features
+- Downstream collection reads those documents as its input and adds more features
+
+## Examples
+
+- **Video pipeline**: `video_scenes` (BUCKET → scene splitting) → `scene_analytics` (COLLECTION → face object detection) → `scene_enriched` (COLLECTION → taxonomy enrichment)
+- **Document pipeline**: `docs_raw` (BUCKET → OCR and PDF parse) → `docs_nlp` (COLLECTION → embeddings and entities) → `docs_topics` (COLLECTION → topic tagging)
+- **Image pipeline**: `images_raw` (BUCKET → EXIF and thumbnail) → `images_semantic` (COLLECTION → CLIP embeddings) → `images_moderation` (COLLECTION → safety labels)
+
+## What this unlocks
+
+- **Modularity**: Swap or upgrade a stage without rebuilding the entire flow
+- **Versioning**: Keep `*_v1`, `*_v2` collections side by side for safe rollouts
+- **Reuse**: Share upstream collections across multiple downstream use cases
+- **Parallelism**: Run different enrichments in parallel from the same source
+- **Observability**: Stage-by-stage lineage and targeted reprocessing
+
+## Describe and verify
+
+- Introspect feature addresses for each stage: [Describe Collection Features](/api-reference/collections/describe-collection-features)
+- List and inspect collections: [List Collections](/api-reference/collections/list-collections), [Get Collection](/api-reference/collections/get-collection)
+
+## API references
+
+- Create: [Create Collection](/api-reference/collections/create-collection)
+- Update: [Update Collection](/api-reference/collections/update-collection)
+- Delete: [Delete Collection](/api-reference/collections/delete-collection)
+
+## Best practices
+
+- **Explicit naming**: Use clear stage/version suffixes (e.g., `products_raw_v1`)
+- **Stable schemas**: Keep downstream contracts stable; add new outputs with new versions
+- **Small stages**: Prefer focused extractors per collection for easier upgrades
+- **Task monitoring**: Track processing with [Tasks](/processing/tasks)
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Collections" icon="database" href="/ingestion/collections">
+    Define sources and attach feature extractors
+  </Card>
+  
+  <Card title="Feature Extractors" icon="wand-magic-sparkles" href="/processing/feature-extractors">
+    Configure model-based outputs per stage
+  </Card>
+</CardGroup>
+
+<CardGroup cols={2}>
+  <Card title="Tasks" icon="list-check" href="/processing/tasks">
+    Monitor multi-stage processing jobs
+  </Card>
+  
+  <Card title="Retrievers" icon="magnifying-glass" href="/retrieval/retrievers">
+    Search across one or more target collections
+  </Card>
+</CardGroup>

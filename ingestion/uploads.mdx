@@ -1,0 +1,111 @@
+---
+title: "Uploads"
+description: "Register objects and blobs for processing"
+---
+
+<Note>
+  Uploads in Mixpeek mean registering objects that reference one or more blobs (files or JSON). Creating an object does not trigger processing; it simply records the object so downstream collections can process it later.
+</Note>
+
+## Overview
+
+- **What you create**: An object inside a bucket, composed of one or more blobs.
+- **Where files live**: Provide blob data as a URL or inline JSON, matching your bucket schema.
+- **Processing**: Object creation does not start processing; use batches or collection pipelines to process.
+
+## Create a single object
+
+- API: Create Object
+- Method: POST
+- Path: `/v1/buckets/{bucket_identifier}/objects`
+- Reference: [API Reference](/api-reference/bucket-objects/create-object)
+
+```bash
+curl -X POST https://api.mixpeek.com/v1/buckets/bkt_123/objects \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: ns_123" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "key_prefix": "/products/red-sneaker",
+    "metadata": {"category": "shoes", "year": 2024},
+    "skip_duplicates": true,
+    "blobs": [
+      {
+        "property": "image_main",
+        "type": "image",
+        "data": "https://example.com/images/red-sneaker-front.jpg",
+        "metadata": {"mimetype": "image/jpeg"}
+      },
+      {
+        "property": "specs",
+        "type": "json",
+        "data": {"title": "Red Sneaker", "sizes": [7,8,9,10]}
+      }
+    ]
+  }'
+```
+
+## Create multiple objects (batch)
+
+- API: Create Objects in Batch
+- Method: POST
+- Path: `/v1/buckets/{bucket_identifier}/objects/batch`
+- Reference: [API Reference](/api-reference/bucket-objects/create-objects-in-batch)
+
+```bash
+curl -X POST https://api.mixpeek.com/v1/buckets/bkt_123/objects/batch \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: ns_123" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "objects": [
+      {
+        "key_prefix": "/products/red-sneaker",
+        "metadata": {"category": "shoes"},
+        "blobs": [
+          {"property": "image_main", "type": "image", "data": "https://example.com/images/red-front.jpg"}
+        ]
+      },
+      {
+        "key_prefix": "/products/blue-sneaker",
+        "metadata": {"category": "shoes"},
+        "blobs": [
+          {"property": "image_main", "type": "image", "data": "https://example.com/images/blue-front.jpg"}
+        ]
+      }
+    ]
+  }'
+```
+
+## Batching primer
+
+Use batches to organize object processing into an asynchronous job. See the full guide at [Batching](/processing/batching).
+
+- [Create Batch](/api-reference/bucket-batches/create-batch)
+- [Add Objects to Batch](/api-reference/bucket-batches/add-objects-to-batch)
+- [Submit Batch for Processing](/api-reference/bucket-batches/submit-batch-for-processing)
+
+## Tips
+
+- **Match your schema**: Blob `property` and `type` must match your bucket schema.
+- **Use prefixes**: `key_prefix` helps organize downstream documents.
+- **Metadata propagates**: Object `metadata` is attached to downstream documents.
+- **Deduplication**: Set `skip_duplicates` to avoid re-registering identical blobs.
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Buckets" icon="bucket" href="/ingestion/buckets">
+    Design schemas and organize objects
+  </Card>
+  
+  <Card title="Collections" icon="database" href="/ingestion/collections">
+    Configure feature extractors and outputs
+  </Card>
+</CardGroup>
+
+<CardGroup cols={1}>
+  <Card title="Batching" icon="layer-group" href="/processing/batching">
+    Submit grouped objects for asynchronous processing
+  </Card>
+</CardGroup>

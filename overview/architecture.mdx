@@ -5,81 +5,78 @@ description: 'Understanding Mixpeek core architecture and data flow'
 
 ## Overview
 
-Mixpeek's architecture is designed for efficient, scalable processing of multimedia files across various formats. The platform handles everything from secure data ingestion to parallel feature extraction and optimized search.
+Mixpeek is a multimodal platform built for secure ingestion, distributed feature extraction, and low‑latency retrieval across text, image, audio, and video. The system separates control‑plane APIs from the execution Engine, enabling horizontal scale, strong tenancy, and consistent performance at load.
 
 
 <img src="https://d8ts56gtwtyh1.cloudfront.net/docs/diagrams/architecture.png" alt="Mixpeek Architecture Diagram" />
 
 
-## Technology Stack
+## Core Components
 
-Our architecture leverages best-in-class technologies selected for performance, reliability, and scalability:
+- **API (FastAPI)**
+  - Auth via API keys; tenancy resolved per request using `Authorization` and `X-Namespace` headers
+  - Centralized errors with a consistent JSON envelope and documented status codes
+  - Rate limiting and safety policies enforced per organization and API name
+  - Asynchronous tasks (e.g., bucket deletes) scheduled via Celery
 
-- **[Temporal](https://temporal.io/)**: Powers our workflow orchestration for fault-tolerance and reliable execution of complex, long-running processes
-- **[Ray](https://ray.io/)**: Enables distributed computing for efficient parallel processing of feature extraction workloads
-- **[Qdrant](https://qdrant.tech/)**: Provides high-performance vector search capabilities with ANN indexing for sub-second queries at scale
-- **[DuckDB](https://duckdb.org/)**: Offers analytical capabilities with minimal overhead for comprehensive system monitoring
-- **[Docker](https://www.docker.com/)**: Ensures consistent, isolated environments for feature extractors across deployments
-- **[AWS Lambda](https://aws.amazon.com/lambda/)**: Facilitates secure, event-driven data ingestion from S3 with minimal configuration
-- **[AWS S3](https://aws.amazon.com/s3/)**: Provides durable storage for source objects with versioning and lifecycle management
+- **Engine (FastAPI + Ray)**
+  - Distributed execution for feature extraction, taxonomy enrichment, and clustering
+  - Parallel processing across extractors; resilient fan‑out/fan‑in with backpressure
+  - Ensures Qdrant collections exist and writes vectors and payloads in a single‑write pattern
+
+- **Data stores**
+  - **Qdrant**: Primary store for documents, payloads, and feature vectors (per‑namespace collections)
+  - **MongoDB**: Metadata/configuration for collections, retrievers, and taxonomies
+  - **Redis**: Caching, counters, rate limiting, and lightweight task metadata
+  - **S3‑compatible storage**: Source object blobs, batch manifests, and optional presigned URL generation
+
+## Tenancy and Security
+
+- **Organizations and Namespaces**: Every request is scoped to an organization and, for most routes, a namespace. Namespaces map 1:1 to Qdrant collections.
+- **Headers**: `Authorization: Bearer <API_KEY>` and `X-Namespace: <id-or-name>` are required for namespace‑scoped routes.
+- **Payload scoping**: All Qdrant documents include `internal_id` for strict tenant filtering.
+- **Rate limiting**: Redis‑backed limits per organization and API operation.
+
+## Ingestion and Processing
+
+- **Uploads**
+  - Register objects via the Buckets/Object API; optionally batch register many at once
+  - Store raw assets in S3 (or any S3‑compatible storage)
+
+- **Batch extraction (Engine)**
+  - Engine reads batch manifests and collection configs
+  - Runs feature extractors in parallel using Ray
+  - Writes vectors and payloads to Qdrant with tenant metadata
+  - Optionally materializes taxonomy enrichments post‑extraction
+
+- **Feature store**
+  - Multiple vector indexes per collection (e.g., text, image) with payload indexes for filtering
+
+## Retrieval
+
+- **Retrievers** define inputs, stages, and target collections
+- **SearchFlow** executes KNN, hybrid (RRF), and grouped searches over Qdrant
+- Pre/post‑filters, sorting, pagination, and optional S3 URL presigning are supported
+- Normalized results prefer Qdrant point id as `document_id`
+
+## Error Handling and Health
+
+- Consistent error envelope with explicit status codes across all routes
+- Health fan‑out checks Redis, MongoDB, Qdrant, Celery, and Engine endpoints
+
+## Operations
+
+- **Asynchronous tasks**: Celery for API‑side async operations and housekeeping
+- **Configuration**: All services configure via environment variables (e.g., QDRANT_URL, MONGO_URI)
+- **Observability**: Structured logs and clear error surfaces; rate limiting in non‑local environments
 
 ## Extensibility
 
-Mixpeek is designed with extensibility as a core principle:
+- **Self‑host or managed**: Deploy core services in your cloud or use managed offerings
+- **Custom feature extractors**: Plug in your own extractors and indexes
+- **API‑first**: Everything is accessible via documented APIs
 
-- **Self-hosting Options**: Deploy key components on your infrastructure for enhanced control and compliance
-- **Custom Feature Extractors**: Integrate your own extractors via our standardized container interface
-- **API-first Design**: All functionality is accessible through well-documented APIs
-- **Pluggable Authentication**: Support for various auth providers including OAuth, API keys, and custom JWT solutions
-- **Bring Your Own Storage**: Connect existing storage solutions while maintaining our processing capabilities
-
-## Core Components
-
-### Data Ingestion
-- **S3 Integration**: Secure Change Data Capture (CDC) via AWS Lambda functions deployed to your account
-- **Direct Upload**: HTTP POST endpoint for direct file uploads via Bucket Object API
-- **Scalable Storage**: Efficient management of files regardless of size or format
-
-### Processing Pipeline
-- **Temporal Orchestration**: Workflow engine that manages the entire processing lifecycle
-- **Ray Clusters**: Distributed computing framework for parallel processing
-- **Feature Extractors**: Specialized processing units with dedicated resources:
-  - Each runs in isolated Docker containers
-  - Configurable EC2 hardware footprint
-  - GPU/TPU accelerator support where needed
-  - Auto-scaling based on workload
-
-### Vector Storage
-- **Qdrant**: High-performance vector database for storing extracted features
-- **Optimized Indices**: Fast similarity search across multimedia content
-- **Multi-modal Support**: Unified approach to handling different data types
-
-### Monitoring & Observability
-- **DuckDB**: Analytics engine for logging and monitoring system performance
-- **Task Tracking**: Comprehensive visibility into processing status
-- **Error Handling**: Robust recovery mechanisms for failed operations
-
-## Data Flow
-
-1. **Ingestion**: Content enters the system via S3 integration or direct API upload
-2. **Orchestration**: Temporal workflows coordinate processing based on collection configuration
-3. **Feature Extraction**: Multiple extractors process content in parallel, generating specialized embeddings
-4. **Storage**: Extracted features are stored in Qdrant for efficient retrieval
-5. **Search & Retrieval**: Optimized vector search enables powerful content discovery capabilities
-
-### Authentication & Security
-
-All API requests require authentication via API keys. Data is encrypted both in transit and at rest, with granular access controls at the namespace, bucket, and collection levels.
-
-### Task Management
-
-Long-running operations are managed via our task system:
-- Tasks are tracked with unique IDs
-- Status updates are available in real-time
-- Failures trigger automatic retry mechanisms with configurable policies
-- Tasks can be monitored and controlled through dedicated API endpoints
-
-This architecture ensures maximum performance, reliability, and scalability as your content library grows. 
+This architecture ensures predictable performance, strong isolation, and scale as your content grows.
 
 <Card title="Questions About Our Architecture?" icon="message-question" href="https://mixpeek.com/contact">
 Our engineering team is ready to help you understand how Mixpeek can fit into your specific use case. 
