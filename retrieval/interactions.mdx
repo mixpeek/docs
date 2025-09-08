@@ -65,105 +65,45 @@ Mixpeek supports several types of user interactions that you can track:
 
 ## Recording Interactions
 
-You can record interactions using the Mixpeek API:
+There is no dedicated public Interactions API in the OpenAPI spec. Track interactions in your application (e.g., analytics or your backend), then use those signals with supported endpoints like Retriever Execute.
 
-<CodeGroup>
-  ```python Python
-  from mixpeek import Mixpeek
-  
-  mp = Mixpeek(api_key="YOUR_API_KEY")
-  
-  # Record a click interaction
-  interaction = mp.interactions.create(
-      namespace_id="ns_abc123",
-      type="click",
-      document_id="doc_def456",
-      user_id="user_ghi789",
-      session_id="session_jkl012",
-      search_id="search_mno345",
-      position=3,
-      metadata={
-          "query": "wireless headphones",
-          "device": "mobile",
-          "page": "search_results"
-      }
-  )
-  
-  print(f"Recorded interaction: {interaction['interaction_id']}")
-  ```
+### Apply interaction signals at query time
 
-  ```javascript JavaScript
-  import { Mixpeek } from '@mixpeek/sdk';
-  
-  const mp = new Mixpeek({ apiKey: 'YOUR_API_KEY' });
-  
-  // Record a click interaction
-  const interaction = await mp.interactions.create({
-    namespace_id: "ns_abc123",
-    type: "click",
-    document_id: "doc_def456",
-    user_id: "user_ghi789",
-    session_id: "session_jkl012",
-    search_id: "search_mno345",
-    position: 3,
-    metadata: {
-      query: "wireless headphones",
-      device: "mobile",
-      page: "search_results"
-    }
-  });
-  
-  console.log(`Recorded interaction: ${interaction.interaction_id}`);
-  ```
+Use exclusion or boosting via filters/sorts when calling Execute Retriever:
 
-  ```bash cURL
-  curl -X POST "https://api.mixpeek.com/v1/interactions" \
-    -H "Authorization: Bearer YOUR_API_KEY" \
-    -H "Content-Type: application/json" \
-    -d '{
-      "namespace_id": "ns_abc123",
-      "type": "click",
-      "document_id": "doc_def456",
-      "user_id": "user_ghi789",
-      "session_id": "session_jkl012",
-      "search_id": "search_mno345",
-      "position": 3,
-      "metadata": {
-        "query": "wireless headphones",
-        "device": "mobile",
-        "page": "search_results"
-      }
-    }'
-  ```
-</CodeGroup>
+```bash
+curl -X POST https://api.mixpeek.com/v1/retrievers/RET_ID/execute \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: ns_abc123" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "inputs": {"query_text": "wireless headphones"},
+    "filters": {
+      "AND": [
+        {"field": "document_id", "operator": "nin", "value": ["doc_already_clicked_1", "doc_already_clicked_2"]}
+      ]
+    },
+    "limit": 20
+  }'
+```
 
-### Interaction Parameters
+### Recommended fields to log in your app
 
 <Tabs>
-  <Tab title="Required Parameters">
-    | Parameter | Type | Description |
-    |-----------|------|-------------|
-    | `namespace_id` | string | ID of the namespace containing the document |
-    | `type` | string | Interaction type: "click", "view", "conversion", or custom |
-    | `document_id` | string | ID of the document the user interacted with |
+  <Tab title="Core">
+    | Field | Type | Description |
+    |-------|------|-------------|
+    | `type` | string | Interaction type such as click, view, conversion |
+    | `document_id` | string | Document the user interacted with |
+    | `user_id` | string | The end-user identifier (pseudonymous recommended) |
   </Tab>
   
-  <Tab title="Recommended Parameters">
-    | Parameter | Type | Description |
-    |-----------|------|-------------|
-    | `user_id` | string | Identifier for the user performing the interaction |
-    | `session_id` | string | Identifier for the user's session |
-    | `search_id` | string | Identifier for the search query that produced the result |
-    | `position` | integer | Position of the document in the search results (1-based) |
-  </Tab>
-  
-  <Tab title="Optional Parameters">
-    | Parameter | Type | Description |
-    |-----------|------|-------------|
-    | `timestamp` | string | ISO 8601 timestamp for when the interaction occurred |
-    | `value` | number | Numeric value associated with the interaction (e.g., purchase amount) |
-    | `duration` | number | Duration of the interaction in seconds |
-    | `metadata` | object | Additional contextual data about the interaction |
+  <Tab title="Context">
+    | Field | Type | Description |
+    |-------|------|-------------|
+    | `session_id` | string | Session identifier |
+    | `position` | integer | Result position (1-based) |
+    | `metadata` | object | App-specific context (query text, device, page) |
   </Tab>
 </Tabs>
 
@@ -172,208 +112,61 @@ You can record interactions using the Mixpeek API:
 
 Interactions can be used to personalize and improve search results:
 
-### Personalized Retriever
+Use interaction history to pre-filter or post-process results on the client or your server. When using the API directly, prefer supported features like filters and sorts.
 
-```json
-{
-  "stages": [
-    {
-      "name": "vector_search",
-      "type": "vector",
-      "collection_id": "col_products",
-      "index": "multimodal",
-      "limit": 50
+### User-based filtering example
+
+```bash
+curl -X POST https://api.mixpeek.com/v1/retrievers/RET_ID/execute \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: ns_abc123" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "inputs": {"query_text": "running shoes"},
+    "filters": {
+      "AND": [
+        {"field": "document_id", "operator": "nin", "value": ["doc_clicked_1", "doc_clicked_2"]}
+      ]
     },
-    {
-      "name": "personalized_rank",
-      "type": "rank",
-      "input": "vector_search.results",
-      "weights": {
-        "vector_score": 0.6,
-        "user_interactions": 0.4
-      },
-      "parameters": {
-        "user_id": "{user_id}",
-        "interaction_types": ["click", "conversion"],
-        "recency_decay": 0.1
-      },
-      "limit": 20
-    }
-  ]
-}
-```
-
-### User-Based Filtering
-
-```python
-# Search with user-based filtering
-results = mp.retrievers.search(
-    retriever_id="ret_tuv901",
-    query={
-        "text": "running shoes"
-    },
-    user_context={
-        "user_id": "user_ghi789",
-        "use_interaction_history": True,
-        "interaction_types": ["click", "view", "conversion"],
-        "exclude_previously_interacted": False,
-        "interaction_recency_weight": 0.2
-    }
-)
+    "limit": 20
+  }'
 ```
 
 ## Tracking Interactions Client-Side
 
-For web applications, you can use the Mixpeek JavaScript SDK to track interactions:
+For web applications, capture interactions in your app and send them to your backend or analytics system. Use those signals to inform subsequent Mixpeek queries.
 
 ```javascript
-// Initialize the SDK with your API key
-const mp = new Mixpeek({
-  apiKey: 'YOUR_API_KEY',
-  namespace: 'ns_abc123'
-});
-
-// Get search results
-const results = await mp.retrievers.search({
-  retriever_id: "ret_def456",
-  query: {
-    text: "wireless headphones"
-  }
-});
-
-// Store the search ID for tracking interactions
-const searchId = results.search_id;
-
 // Add click event listeners to search results
 document.querySelectorAll('.search-result').forEach((element, index) => {
   element.addEventListener('click', async () => {
     const documentId = element.getAttribute('data-document-id');
-    
-    // Record click interaction
-    await mp.interactions.create({
-      type: "click",
+    const payload = {
+      type: 'click',
       document_id: documentId,
-      search_id: searchId,
       position: index + 1,
-      user_id: getCurrentUserId(), // Your function to get the user ID
-      session_id: getSessionId(),  // Your function to get the session ID
+      user_id: getCurrentUserId(),
+      session_id: getSessionId(),
       metadata: {
-        query: "wireless headphones",
-        device: getDeviceType(),  // Your function to detect device type
-        page: "search_results"
+        query: getCurrentQueryText(),
+        device: getDeviceType(),
+        page: 'search_results'
       }
+    };
+
+    // Send to your backend or analytics
+    await fetch('/api/track-interaction', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
-    
-    // Navigate to the result page
-    window.location.href = element.getAttribute('href');
   });
 });
 ```
 
 ## Analytics and Reporting
 
-<Tabs>
-  <Tab title="Usage Analytics">
-    ### User Interaction Tracking
-    
-    Monitor how users interact with your retrieval system:
-
-    **Key Metrics**
-    - Query volume (total, by time period, by user segment)
-    - Session metrics (duration, queries per session)
-    - Most frequent queries and search patterns
-    - Abandonment rates and search refinements
-
-    **Implementation**
-    ```python
-    # Generate usage report for the last 30 days
-    usage_report = analytics.generate_report(
-      report_type="usage",
-      time_range={"days": 30},
-      segments=["user_type", "device_type"]
-    )
-    
-    # Export report data
-    analytics.export_to_csv(usage_report, "monthly_usage_analytics.csv")
-    ```
-  </Tab>
-
-  <Tab title="Performance Metrics">
-    ### Retrieval Effectiveness Measurement
-    
-    Evaluate the quality and speed of your retrieval results:
-
-    **Key Metrics**
-    - Latency (average, p95, p99 response times)
-    - Precision and recall (when ground truth available)
-    - Mean Reciprocal Rank (MRR) and Normalized Discounted Cumulative Gain (NDCG)
-    - Cache hit rates and optimization opportunities
-
-    **Implementation**
-    ```python
-    # Analyze retriever performance across different query types
-    performance_metrics = analytics.evaluate_retrievers(
-      retrievers=["product_search", "content_search"],
-      metrics=["latency", "mrr", "ndcg@10"],
-      query_dataset="benchmark_queries"
-    )
-    
-    # Generate performance comparison visualization
-    analytics.visualize(performance_metrics, chart_type="comparison")
-    ```
-  </Tab>
-
-  <Tab title="User Feedback">
-    ### Feedback Collection and Analysis
-    
-    Track and analyze explicit and implicit user feedback:
-
-    **Key Metrics**
-    - Explicit ratings (thumbs up/down, star ratings)
-    - Click-through rates and result selection patterns
-    - Time spent on results and engagement metrics
-    - Feedback comments and sentiment analysis
-
-    **Implementation**
-    ```python
-    # Analyze user feedback for the past quarter
-    feedback_analysis = analytics.analyze_feedback(
-      time_range={"months": 3},
-      feedback_types=["ratings", "clicks", "comments"],
-      group_by="query_category"
-    )
-    
-    # Generate insight report with recommendations
-    recommendations = analytics.generate_recommendations(feedback_analysis)
-    ```
-  </Tab>
-
-  <Tab title="Content Analysis">
-    ### Retrieved Content Patterns
-    
-    Analyze patterns in retrieved documents and content:
-
-    **Key Metrics**
-    - Most frequently retrieved documents
-    - Content distribution by type, category, or attribute
-    - Content freshness and recency metrics
-    - Coverage and gaps in retrieved content
-
-    **Implementation**
-    ```python
-    # Analyze content retrieval patterns
-    content_report = analytics.content_analysis(
-      time_range={"weeks": 4},
-      dimensions=["content_type", "category", "age"],
-      metrics=["retrieval_count", "click_rate"]
-    )
-    
-    # Generate content heat map
-    analytics.visualize(content_report, chart_type="heatmap")
-    ```
-  </Tab>
-
-</Tabs>
+Use your existing analytics stack (e.g., Segment, Snowflake, BigQuery, ClickHouse) to store and analyze interaction events. Mixpeek does not expose analytics endpoints in the OpenAPI spec.
 
 ## Best Practices
 
@@ -430,4 +223,7 @@ document.querySelectorAll('.search-result').forEach((element, index) => {
 
 ## API Reference
 
-For complete details on working with interactions, see our [Interactions API Reference](/api-reference/interactions/create-interaction). 
+Relevant endpoints and guides:
+
+- [Execute Retriever](/api-reference/retrievers/execute-retriever)
+- [Filters](/retrieval/filters)

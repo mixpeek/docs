@@ -1,3 +1,74 @@
 ---
-title: "Security & Authentication"
+title: "Security"
+description: "Authentication, authorization, tenancy, and operational safeguards"
 ---
+
+<Note>
+  Mixpeek secures APIs with bearer auth, isolates data by namespace and organization, and enforces per‑route permissions and rate limits. This page outlines headers, scopes, tenancy, and operational protections.
+</Note>
+
+## Authentication & headers
+
+<CardGroup cols={2}>
+  <Card title="Bearer auth" icon="key">
+    <code>Authorization: Bearer &lt;api_key&gt;</code>
+  </Card>
+  
+  <Card title="Namespace" icon="layer-group">
+    <code>X-Namespace: &lt;namespace_id_or_name&gt;</code>
+  </Card>
+</CardGroup>
+
+## Authorization & permissions
+
+- API keys map to an organization and carry scoped permissions
+- Routes declare required permissions; enforced via access policies
+- Free‑tier credits and per‑route rate limits to protect backends
+
+## Tenancy and data isolation
+
+<Tabs>
+  <Tab title="Organization">
+    API keys, users, and base limits; <code>internal_id</code> used for tenant filters
+  </Tab>
+  
+  <Tab title="Namespace">
+    Data boundary for collections, documents, tasks, and artifacts
+  </Tab>
+  
+  <Tab title="Providers">
+    DB and storage clients automatically filter on <code>internal_id</code> and <code>namespace_id</code>
+  </Tab>
+</Tabs>
+
+## Rate limiting & abuse protection
+
+<CardGroup cols={2}>
+  <Card title="Per‑route limits" icon="gauge">
+    Redis‑backed counters with SlowAPI middleware in non‑local envs
+  </Card>
+  
+  <Card title="Backpressure" icon="shield-halved">
+    Engine and datastore errors bubble up; APIs degrade gracefully
+  </Card>
+  
+  <Card title="Payload validation" icon="shield">
+    Pydantic 2.0 schemas across routes prevent malformed requests
+  </Card>
+  
+  <Card title="CORS & headers" icon="lock">
+    Strict CORS and security headers on API
+  </Card>
+</CardGroup>
+
+## Secrets & configuration
+
+- Store API keys and datastore credentials in your secret manager
+- Rotate keys periodically; audit access logs
+- Scope S3 buckets per org/namespace where applicable
+
+## References
+
+- Organizations: [/api-reference/organizations/get-organization](/api-reference/organizations/get-organization)
+- Namespaces: [/api-reference/namespaces/create-namespace](/api-reference/namespaces/create-namespace)
+- Health: [/api-reference/health/healthcheck](/api-reference/health/healthcheck)

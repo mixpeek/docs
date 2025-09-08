@@ -1,3 +1,165 @@
 ---
-title: "Common Errors"
+title: "Errors"
+description: "Understand Mixpeek error responses and how to resolve common issues"
 ---
+
+<Note>
+  Mixpeek returns a consistent JSON error envelope for API errors and structured codes for WebSocket failures. This guide shows common error types, how to diagnose them, and recommended fixes.
+</Note>
+
+## Canonical error envelope
+
+```json
+{
+  "success": false,
+  "status": 404,
+  "error": {
+    "message": "Resource not found",
+    "type": "NotFoundError",
+    "details": {
+      "resource": "collection",
+      "id": "col_missing"
+    }
+  }
+}
+```
+
+- `success`: always false on errors
+- `status`: HTTP status code
+- `error.type`: stable, machine‑readable error class
+- `error.details`: optional context for debugging
+
+## Common API errors
+
+<CardGroup cols={2}>
+  <Card title="400 BadRequestError" icon="triangle-exclamation">
+    Malformed input, unsupported parameters, invalid state transitions
+  </Card>
+  
+  <Card title="422 ValidationError" icon="circle-exclamation">
+    Pydantic validation failed; check field names and types
+  </Card>
+  
+  <Card title="404 NotFoundError" icon="magnifying-glass">
+    Resource or route not found (IDs, names, or paths)
+  </Card>
+  
+  <Card title="409 AlreadyExistsError" icon="clone">
+    Unique constraint conflict (e.g., duplicate names per namespace)
+  </Card>
+  
+  <Card title="429 TooManyRequestsError" icon="gauge">
+    Rate limit exceeded; back off and retry later
+  </Card>
+  
+  <Card title="403 UnauthorizedError" icon="lock">
+    Missing/invalid permissions, tier/credit checks, or auth failures
+  </Card>
+  
+  <Card title="500 InternalServerError" icon="circle-xmark">
+    Unexpected server error; retry, then contact support if persistent
+  </Card>
+  
+  <Card title="503 InferenceServiceUnavailableError" icon="cloud-slash">
+    Inference backend unavailable; retry with backoff or failover
+  </Card>
+</CardGroup>
+
+## Domain‑specific errors
+
+- ProcessingError · FeatureExtractionError · SchemaValidationError
+- StorageError · S3StorageError
+- QdrantError · MongoDBError
+- NotEnabledError · NotImplementedError · UnavailableError
+- RaySubmissionError · TimeoutError (408)
+
+These include a descriptive `message` and may include `details` to pinpoint the failing phase (extraction, storage, database, engine dispatch).
+
+## WebSocket errors
+
+```json
+{ "code": 4001, "type": "WebSocketAuthenticationError", "message": "WebSocket authentication failed" }
+{ "code": 4004, "type": "WebSocketTaskNotFoundError", "message": "Task not found" }
+{ "code": 4000, "type": "WebSocketInternalError", "message": "Internal WebSocket server error" }
+```
+
+- 4001: Authentication failure
+- 4004: Referenced task not found/expired
+- 4000: Generic internal WebSocket error
+
+## Quick diagnosis
+
+<Steps>
+  <Step title="Check headers">
+    Ensure <code>Authorization</code> and <code>X-Namespace</code> are set where required
+  </Step>
+  <Step title="Validate inputs">
+    Compare body against API reference schemas; fix types/paths
+  </Step>
+  <Step title="Confirm resource IDs">
+    Verify namespace, collection/retriever/taxonomy IDs or names
+  </Step>
+  <Step title="Review limits">
+    For 429, see rate limits and backoff strategies
+  </Step>
+  <Step title="Inspect logs">
+    Correlate request IDs across API/Engine; check recent exceptions
+  </Step>
+</Steps>
+
+## Examples
+
+### Validation error (422)
+```json
+{
+  "success": false,
+  "status": 422,
+  "error": {
+    "message": "Validation error",
+    "type": "ValidationError",
+    "details": {
+      "validation_errors": [
+        { "type": "string_type", "location": ["body","collection_name"], "message": "Input should be a valid string" }
+      ]
+    }
+  }
+}
+```
+
+### Rate limit exceeded (429)
+```json
+{
+  "success": false,
+  "status": 429,
+  "error": { "message": "Rate limit exceeded", "type": "TooManyRequestsError", "details": {"api_name": "search"} }
+}
+```
+
+### Not found (404)
+```json
+{
+  "success": false,
+  "status": 404,
+  "error": { "message": "Resource not found", "type": "NotFoundError" }
+}
+```
+
+## Resolution tips
+
+- 400/422: Recheck body shape and field paths; align with OpenAPI
+- 403: Confirm API key permissions and account tier/credits
+- 404: Verify identifiers and namespace context; ensure resources exist
+- 408/429: Exponential backoff and retries; reduce request rate/size
+- 5xx: Retry with jitter; if persistent, capture request ID and contact support
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Troubleshooting: Limits" icon="gauge" href="/troubleshoot/limits">
+    Understand rate limits and quotas by tier
+  </Card>
+  
+  <Card title="Health API" icon="heart-pulse" href="/api-reference/health/healthcheck">
+    Check service readiness and dependency status
+  </Card>
+</CardGroup>

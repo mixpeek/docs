@@ -1,3 +1,99 @@
 ---
-title: "System Limits"
+title: "Limits"
+description: "Understand account tiers, permissions, and rate limits"
 ---
+
+<Note>
+  Requests are governed by account tier, per‑route permissions, and Redis‑backed rate limits. This guide explains tiers, defaults, and how to resolve 429 Too Many Requests.
+</Note>
+
+## Account tiers
+
+<CardGroup cols={3}>
+  <Card title="Free" icon="seedling">
+    Base limits; good for evaluation and small workloads
+  </Card>
+  
+  <Card title="Pro" icon="bolt">
+    Higher rate limits for growth and production pilots
+  </Card>
+  
+  <Card title="Enterprise" icon="building">
+    Very high limits and custom SLAs
+  </Card>
+</CardGroup>
+
+## Base rate limits (per minute)
+
+<Tabs>
+  <Tab title="Free">
+    - default: 10<br/>
+    - search: 10<br/>
+    - upload: 10<br/>
+    - delete: 10
+  </Tab>
+  
+  <Tab title="Pro">
+    - default: 60<br/>
+    - search: 60<br/>
+    - upload: 60<br/>
+    - delete: 60
+  </Tab>
+  
+  <Tab title="Enterprise">
+    - default: 99999<br/>
+    - search: 99999<br/>
+    - upload: 99999<br/>
+    - delete: 99999
+  </Tab>
+</Tabs>
+
+## Permissions
+
+- API keys carry permissions such as <code>view</code>, <code>create</code>, <code>update</code>, <code>delete</code>
+- Admin levels: <code>admin</code>, <code>super</code>
+- Data scopes: <code>read_public</code>, <code>read_private</code>, <code>write_public</code>, <code>write_private</code>
+
+If a route requires permissions you lack, calls may return 403 Unauthorized.
+
+## 429 Too Many Requests
+
+<Steps>
+  <Step title="Identify the route">
+    The <code>details.api_name</code> field indicates which bucket exceeded limits
+  </Step>
+  <Step title="Back off">
+    Apply exponential backoff (e.g., 1s, 2s, 4s, jitter)
+  </Step>
+  <Step title="Reduce concurrency">
+    Lower parallel calls to the route; batch where possible
+  </Step>
+  <Step title="Upgrade tier">
+    Consider Pro/Enterprise for higher limits if usage is sustained
+  </Step>
+</Steps>
+
+## Best practices
+
+<CardGroup cols={2}>
+  <Card title="Queue writes" icon="inbox">
+    Buffer high‑volume uploads to smooth bursts
+  </Card>
+  
+  <Card title="Cache reads" icon="floppy-disk">
+    Use application caching for hot reads to avoid duplicate calls
+  </Card>
+  
+  <Card title="Batch operations" icon="boxes-stacked">
+    Prefer batch endpoints for objects and tasks where applicable
+  </Card>
+  
+  <Card title="Monitor usage" icon="chart-line">
+    Track 429s and latency; adjust client concurrency dynamically
+  </Card>
+</CardGroup>
+
+## See also
+
+- Errors: [/troubleshoot/errors](/troubleshoot/errors)
+- Organizations: [/api-reference/organizations/get-organization](/api-reference/organizations/get-organization)

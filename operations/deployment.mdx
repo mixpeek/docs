@@ -1,3 +1,116 @@
 ---
-title: "Deployment & Scaling"
+title: "Deployment"
+description: "Run Mixpeek API and Engine reliably across environments"
 ---
+
+<Note>
+  Mixpeek consists of an API service and an Engine service (Ray). It depends on MongoDB, Qdrant, Redis, and S3‑compatible storage. This guide outlines common topologies, configuration, health, and scaling.
+</Note>
+
+## Overview
+
+<CardGroup cols={2}>
+  <Card title="API" icon="server">
+    FastAPI app with auth, tenancy, routes, and orchestration
+  </Card>
+  
+  <Card title="Engine" icon="gears">
+    Ray Serve app for extractors, clustering, and taxonomy execution
+  </Card>
+  
+  <Card title="Datastores" icon="database">
+    MongoDB (metadata), Qdrant (vectors), Redis (rate limit/tasks), S3 (artifacts)
+  </Card>
+  
+  <Card title="Observability" icon="chart-line">
+    Health checks, logs, metrics, and tasks status
+  </Card>
+</CardGroup>
+
+## Architecture
+
+<Frame>
+  ```mermaid
+  graph TD
+    C[Clients] --> API[API Service]
+    API --> ENG[Engine Service]
+    API --> M[MongoDB]
+    API --> R[Redis]
+    API --> Q[Qdrant]
+    ENG --> Q
+    ENG --> S3[S3 Artifacts]
+  ```
+</Frame>
+
+## Configuration
+
+<Tabs>
+  <Tab title="Core">
+    - <code>ENV</code>, <code>DEBUG</code>, <code>LOG_LEVEL</code><br/>
+    - <code>QDRANT_URL</code>, <code>QDRANT_API_KEY</code><br/>
+    - <code>MONGO_URI</code>, <code>MONGODB_API_DB</code><br/>
+    - <code>REDIS_URL</code><br/>
+    - <code>AWS_BUCKET</code>, <code>AWS_REGION</code>
+  </Tab>
+  
+  <Tab title="Engine">
+    - <code>ENGINE_API_HOST</code>, <code>ENGINE_API_PORT</code> (derived <code>ENGINE_API_URL</code>)<br/>
+    - Ray runtime (\`RAY_*\`) and serve settings (\`ENGINE_SERVE_*\`)
+  </Tab>
+  
+  <Tab title="External">
+    - <code>HUGGING_FACE_TOKEN</code>, <code>OPENAI_API_KEY</code>, <code>GEMINI_API_KEY</code> (optional)
+  </Tab>
+</Tabs>
+
+## Health and readiness
+
+- **Route**: /v1/health — checks Redis, MongoDB, Qdrant, Celery, Engine
+- **Reference**: [Health API](/api-reference/health/healthcheck)
+
+```bash
+curl -s https://api.mixpeek.com/v1/health | jq
+```
+
+## Deploy steps (typical)
+
+<Steps>
+  <Step title="Provision deps">
+    Managed MongoDB, Qdrant, Redis, and S3 bucket with IAM
+  </Step>
+  <Step title="Deploy Engine">
+    Start Ray Serve with configured workers and resource limits
+  </Step>
+  <Step title="Deploy API">
+    Start FastAPI app; point to Engine and datastores via env vars
+  </Step>
+  <Step title="Verify">
+    Call /v1/health and run a smoke: create namespace → collection → retriever → execute
+  </Step>
+</Steps>
+
+## Scaling and upgrades
+
+<CardGroup cols={2}>
+  <Card title="Scale Engine" icon="gauge-high">
+    Add Ray workers for extractor and clustering throughput
+  </Card>
+  
+  <Card title="Scale Qdrant" icon="cubes-stacked">
+    Increase memory/IO; shard by namespace if needed
+  </Card>
+  
+  <Card title="API Autoscale" icon="arrows-up-down-left-right">
+    Horizontally scale API; rate limit via Redis to protect backends
+  </Card>
+  
+  <Card title="Zero‑downtime" icon="rotate">
+    Blue/green or rolling restarts; confirm /v1/health before cutover
+  </Card>
+</CardGroup>
+
+## Operations references
+
+- Observability: [Logs, Metrics, Tasks](/operations/observability)
+- Security: [Auth, tenancy, rate limiting](/operations/security)
+- Tasks: [Monitor jobs](/processing/tasks)

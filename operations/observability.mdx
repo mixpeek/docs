@@ -1,3 +1,82 @@
 ---
 title: "Observability"
+description: "Health, logs, metrics, and task visibility for Mixpeek"
 ---
+
+<Note>
+  Observe API and Engine health, track background jobs via Tasks, and integrate logs/metrics to keep the platform healthy at scale.
+</Note>
+
+## Health checks
+
+- **API**: `/v1/health` returns status for Redis, MongoDB, Qdrant, Celery, and Engine
+- **Reference**: [Health API](/api-reference/health/healthcheck)
+
+```bash
+curl -s https://api.mixpeek.com/v1/health | jq
+```
+
+## Logs & tracing
+
+<CardGroup cols={2}>
+  <Card title="API logs" icon="server">
+    Structured logs for requests, exceptions, and rate limits
+  </Card>
+  
+  <Card title="Engine logs" icon="gears">
+    Ray task logs for extractors, clustering, and taxonomy flows
+  </Card>
+  
+  <Card title="Correlation" icon="link">
+    Propagate request IDs across API → Engine calls for traceability
+  </Card>
+  
+  <Card title="Errors" icon="triangle-exclamation">
+    Centralized error models; alert on spikes and repeated failures
+  </Card>
+</CardGroup>
+
+## Metrics
+
+<Tabs>
+  <Tab title="API">
+    - Request throughput, latency percentiles, error rates
+    - Rate limit hits per route and namespace
+  </Tab>
+  
+  <Tab title="Engine">
+    - Task queue depth, execution time, success/failure counts
+    - Extractor runtimes, clustering metrics, GPU/CPU utilization
+  </Tab>
+  
+  <Tab title="Datastores">
+    - Qdrant memory/IO, vector count, index build time
+    - MongoDB ops/latency, Redis connections, S3 errors
+  </Tab>
+</Tabs>
+
+## Tasks visibility
+
+- Use [Tasks](/processing/tasks) to monitor batch and long‑running jobs
+- List active tasks and drill into details; alert on FAILED/CANCELED
+
+## Dashboards & alerts
+
+<Steps>
+  <Step title="Dashboards">
+    Build API, Engine, and datastore dashboards with your metrics backend
+  </Step>
+  <Step title="SLOs">
+    Define target latency and error budgets; alert on burn rate
+  </Step>
+  <Step title="Runbooks">
+    Document incident steps for extractor failures, clustering stalls, and Qdrant errors
+  </Step>
+</Steps>
+
+## References
+
+- Health: [/api-reference/health/healthcheck](/api-reference/health/healthcheck)
+- Tasks: [/processing/tasks](/processing/tasks)
+- Clusters: [/enrichment/clusters](/enrichment/clusters)
+- Taxonomies: [/enrichment/taxonomies](/enrichment/taxonomies)

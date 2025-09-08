@@ -1,697 +1,273 @@
 ---
 title: "Taxonomies"
+description: "Enrich documents by joining against reference collections (flat and hierarchical)"
 ---
 
 <Note>
-  Taxonomies in Mixpeek allow you to classify, organize, and enrich your content with structured metadata, functioning as the multimodal analogue to SQL JOIN operations.
+  Taxonomies are reusable enrichment recipes. They join target documents with reference collections using a configured retriever, then copy selected fields into the results. Use flat taxonomies for 1:1 joins, or hierarchical taxonomies for multi‑level trees (explicit nodes and optional implicit inference).
 </Note>
 
 ## Overview
 
-Taxonomies in Mixpeek are specialized structures that allow you to classify, organize, and enrich your data with structured metadata. They function similarly to JOIN operations in traditional databases, but operate on feature similarity rather than exact key matches, making them ideal for multimodal content. Conceptually, each taxonomy functions as a specialized collection with a defined schema. Associated retrievers handle the logic for looking up and enriching documents based on this taxonomy.
-
-[Watch an Intro Video](/studio/taxonomies)
-
-
-<Steps>
-  <Step title="Select Taxonomy Type">
-    Choose between flat or hierarchical taxonomy structure based on your organizational needs and data relationships.
-  </Step>
-  <Step title="Select Source Collection">
-    Select the collection containing the reference data that will be used to enrich your documents.
-  </Step>
-  <Step title="Select Enrichment Fields">
-    Choose which fields from the source collection will be added to enrich your target documents.
-  </Step>
-  <Step title="Select Retriever">
-    Choose the retriever that will match documents from your target collection with the appropriate reference data.
-  </Step>
-  <Step title="Configure Input Fields">
-    Define how the retriever gets its input data. This might involve mapping fields from source data, using outputs from previous processing steps, or incorporating query-time information.
-  </Step>
-</Steps> 
-
 <CardGroup cols={2}>
-  <Card title="Content Classification" icon="sitemap">
-    Create organized classification systems to categorize your multimodal content
+  <Card title="Flat vs Hierarchical" icon="diagram-project">
+    Single‑level joins or multi‑level trees with inheritance
   </Card>
   
-  <Card title="Data Enrichment" icon="layer-group">
-    Enrich documents with additional metadata based on their characteristics
+  <Card title="Explicit & Implicit" icon="code-branch">
+    Define nodes manually or infer structure (schema/cluster/LLM)
+  </Card>
+  
+  <Card title="Execution Modes" icon="bolt">
+    Materialized (batch) or On‑Demand (query‑time)
+  </Card>
+  
+  <Card title="Retriever‑powered" icon="magnifying-glass">
+    Matching is driven by a configured retriever and input mappings
   </Card>
 </CardGroup>
 
-## Types of Taxonomies
-
-Mixpeek supports two main types of taxonomies:
-
-### Flat Taxonomies 
-
-Flat taxonomies are simple, single-level classification systems that enrich documents with metadata from a reference collection.
-
-**Key characteristics:**
-- Function as a join operation between collections
-- Add metadata or tags from one collection to another
-- No hierarchical relationships between categories
-
-**Use Cases:**
-
-<AccordionGroup>
-  <Accordion title="Content & Topic Tagging">
-    Use flat taxonomies to automatically tag articles, blog posts, or other documents with relevant topics, formats, or simple categories based on their content. This helps organize large volumes of unstructured data.
-  </Accordion>
-  <Accordion title="Product Attribute Enrichment">
-    Enrich product listings by automatically tagging them with attributes like color, size, material, or specific features drawn from a reference collection (e.g., a color palette collection). This is useful for faceted search and filtering.
-  </Accordion>
-  <Accordion title="Compliance & Safety Classification">
-    Implement binary classifications like safe/unsafe, approved/unapproved, or PII/non-PII by matching content against predefined criteria in a reference collection.
-  </Accordion>
-  <Accordion title="Example: Content Tagging">
-    Create a flat taxonomy for automatically tagging content with relevant topics:
-
-    ```python
-    # Create content tagging taxonomy
-    taxonomy = mp.taxonomies.create(
-        namespace_id="ns_abc123",
-        name="content_topics",
-        description="Content topic classification",
-        taxonomy_type="flat",
-        retriever={
-            "retriever_id": "ret_topic_matcher",
-            "threshold": 0.6
-        },
-        source_collections=[
-            {
-                "collection_id": "col_topics",
-                "enrichment_fields": ["topic", "subtopics", "audience_level"]
-            }
-        ]
-    )
-    ```
-
-    Apply this taxonomy to automatically tag articles, blog posts, or other content with relevant topics.
-  </Accordion>
-</AccordionGroup>
-
-### Hierarchical Taxonomies 
-
-Hierarchical taxonomies organize categories in parent-child relationships **within a single taxonomy**, allowing for more complex classification systems. This is often referred to as **intra-taxonomy hierarchy**.
-
-**Key characteristics:**
-- Multi-level organization with parent-child relationships
-- Property inheritance from parent to child nodes
-- Support for complex nested categorization
-
-Hierarchies can be implemented in two ways:
-
-1.  **Explicit Hierarchy**
-    - Parent-child relationships defined directly in configuration
-    - Clear, intentional structure specification
-    - Recommended for complex hierarchies with well-defined levels
-
-2.  **Implicit Hierarchy**
-    - Relationships are inferred dynamically based on data behavior, shared identifiers, feature similarity (like embeddings), or through the chaining of retrievers across different collections.
-    - This is more flexible but requires careful design of features and retriever logic.
-    - It enables powerful **inter-taxonomy relationships** (e.g., linking Faces to Scenes), effectively creating joins across different types of data.
-
-**Use Cases:**
-
-<AccordionGroup>
-  <Accordion title="Multi-Level Data Organization">
-    Model complex, structured relationships like product catalogs (Electronics > TV & Home Theater > TVs > OLED TVs), organizational charts (Company > Department > Team > Employee), or scientific classifications (Biology > Zoology > Mammalia). Properties can be inherited down the hierarchy.
-
-    **Example 1: Product Categorization**
-
-    Create a product taxonomy to automatically classify products and inherit category properties:
-
-    ```python
-    # Create product category taxonomy
-    taxonomy = mp.taxonomies.create(
-        namespace_id="ns_abc123",
-        name="product_hierarchy",
-        description="Product category hierarchy",
-        taxonomy_type="hierarchical",
-        retriever={
-            "retriever_id": "ret_product_matcher"
-        },
-        hierarchical_config={
-            "collection_nodes": [
-                {
-                    "collection_id": "col_categories",
-                    "parent_collection_id": None,
-                    "enrichment_fields": ["category", "tax_group"]
-                },
-                {
-                    "collection_id": "col_subcategories",
-                    "parent_collection_id": "col_categories",
-                    "enrichment_fields": ["subcategory", "warranty_policy"]
-                },
-                {
-                    "collection_id": "col_product_types",
-                    "parent_collection_id": "col_subcategories",
-                    "enrichment_fields": ["product_type", "return_window"]
-                }
-            ]
-        }
-    )
-    ```
-
-    This creates a three-level product hierarchy where each level inherits properties from its parent.
-
-    **Example 2: Personnel Recognition & Hierarchy**
-
-    Create a hierarchical taxonomy for recognizing faces and applying appropriate metadata based on roles within an organization:
-
-    ```python
-    # Create face recognition taxonomy
-    taxonomy = mp.taxonomies.create(
-        namespace_id="ns_abc123",
-        name="personnel_faces",
-        description="Personnel face recognition",
-        taxonomy_type="hierarchical",
-        retriever={
-            "retriever_id": "ret_face_matcher"
-        },
-        hierarchical_config={
-            "collection_nodes": [
-                {
-                    "collection_id": "col_people",
-                    "parent_collection_id": None,
-                    "enrichment_fields": ["name", "id_verified"]
-                },
-                {
-                    "collection_id": "col_employees",
-                    "parent_collection_id": "col_people",
-                    "enrichment_fields": ["employee_id", "department", "title"]
-                },
-                {
-                    "collection_id": "col_visitors",
-                    "parent_collection_id": "col_people",
-                    "enrichment_fields": ["visitor_type", "access_level"]
-                }
-            ]
-        }
-    )
-    ```
-
-    This taxonomy can be used to automatically identify and tag people in images or videos based on their organizational role.
-  </Accordion>
-  <Accordion title="Linking Disparate Datasets">
-    Use implicit relationships, often powered by retriever chaining and embedding similarity, to connect related information across different collections. For example, link faces identified in video frames (`face_collection`) to the scenes they appear in (`scene_collection`), or connect product mentions in customer reviews (`review_collection`) to entries in your official product catalog (`product_collection`). This enables powerful graph-like queries. *Detailed examples typically involve pipeline configurations rather than just taxonomy creation.*
-  </Accordion>
-</AccordionGroup>
-
-## Creating a Taxonomy
-
-### Flat Taxonomy
-
-<CodeGroup>
-  ```python Python
-  from mixpeek import Mixpeek
-  
-  mp = Mixpeek(api_key="YOUR_API_KEY")
-  
-  # Create a flat taxonomy
-  taxonomy = mp.taxonomies.create(
-      namespace_id="ns_abc123",
-      name="product_categories",
-      description="Product category classification",
-      taxonomy_type="flat",
-      retriever={
-          "retriever_id": "ret_def456",  # Existing retriever for matching
-          "threshold": 0.7               # Similarity threshold
-      },
-      source_collections=[
-          {
-              "collection_id": "col_categories",
-              "enrichment_fields": ["category", "department", "tax_rate"]
-          }
-      ]
-  )
-  
-  taxonomy_id = taxonomy["taxonomy_id"]
-  print(f"Created taxonomy: {taxonomy_id}")
-  ```
-
-  ```javascript JavaScript
-  import { Mixpeek } from '@mixpeek/sdk';
-  
-  const mp = new Mixpeek({ apiKey: 'YOUR_API_KEY' });
-  
-  // Create a flat taxonomy
-  const taxonomy = await mp.taxonomies.create({
-    namespace_id: "ns_abc123",
-    name: "product_categories",
-    description: "Product category classification",
-    taxonomy_type: "flat",
-    retriever: {
-      retriever_id: "ret_def456",  // Existing retriever for matching
-      threshold: 0.7               // Similarity threshold
-    },
-    source_collections: [
-      {
-        collection_id: "col_categories",
-        enrichment_fields: ["category", "department", "tax_rate"]
-      }
-    ]
-  });
-  
-  const taxonomyId = taxonomy.taxonomy_id;
-  console.log(`Created taxonomy: ${taxonomyId}`);
-  ```
-</CodeGroup>
-
-### Hierarchical Taxonomy
-
-<CodeGroup>
-  ```python Python
-  # Create a hierarchical taxonomy
-  taxonomy = mp.taxonomies.create(
-      namespace_id="ns_abc123",
-      name="organization_structure",
-      description="Company organizational structure",
-      taxonomy_type="hierarchical",
-      retriever={
-          "retriever_id": "ret_ghi789"
-      },
-      hierarchical_config={
-          "collection_nodes": [
-              {
-                  "collection_id": "col_people",
-                  "parent_collection_id": None,  # Top-level collection
-                  "enrichment_fields": ["name", "basic_access"]
-              },
-              {
-                  "collection_id": "col_employees",
-                  "parent_collection_id": "col_people",  # Child of people
-                  "enrichment_fields": ["employee_id", "department"]
-              },
-              {
-                  "collection_id": "col_executives",
-                  "parent_collection_id": "col_employees",  # Child of employees
-                  "enrichment_fields": ["executive_level", "budget_authority"]
-              }
-          ]
-      }
-  )
-  ```
-
-  ```javascript JavaScript
-  // Create a hierarchical taxonomy
-  const taxonomy = await mp.taxonomies.create({
-    namespace_id: "ns_abc123",
-    name: "organization_structure",
-    description: "Company organizational structure",
-    taxonomy_type: "hierarchical",
-    retriever: {
-      retriever_id: "ret_ghi789"
-    },
-    hierarchical_config: {
-      collection_nodes: [
-        {
-          collection_id: "col_people",
-          parent_collection_id: null,  // Top-level collection
-          enrichment_fields: ["name", "basic_access"]
-        },
-        {
-          collection_id: "col_employees",
-          parent_collection_id: "col_people",  // Child of people
-          enrichment_fields: ["employee_id", "department"]
-        },
-        {
-          collection_id: "col_executives",
-          parent_collection_id: "col_employees",  // Child of employees
-          enrichment_fields: ["executive_level", "budget_authority"]
-        }
-      ]
-    }
-  });
-  ```
-</CodeGroup>
-
-## Applying Taxonomies
-
-Once you've created a taxonomy, you can apply it to enrich documents in your collections.
-
-## Materialization Options
-
-When applying taxonomies, you have two main materialization options:
-
-<CardGroup cols={2}>
-  <Card title="Materialized" icon="database">
-    Creates enriched documents in a specified output collection
-    
-    **Benefits:**
-    - Faster query performance
-    - Pre-computed enrichments
-    - Historical enrichment tracking
-    
-    **Considerations:**
-    - Requires additional storage
-    - Needs re-application when taxonomy changes
-  </Card>
-  
-  <Card title="On-Demand" icon="bolt">
-    Computes enrichments during query execution
-    
-    **Benefits:**
-    - Always uses latest taxonomy
-    - No duplicate storage required
-    - Automatic updates with taxonomy changes
-    
-    **Considerations:**
-    - Higher query-time compute costs
-    - Potentially slower query performance
-    - Cannot track historical enrichment changes
-  </Card>
-</CardGroup>
-
-## Taxonomy Node Structure
-
-In a hierarchical taxonomy, nodes are documents in collections with specific structures:
-
-```json
-// Example: Executive node in a hierarchical taxonomy
-{
-  "document_id": "doc_abc123",
-  "collection_id": "col_executives",
-  // Person properties (inherited from col_people)
-  "name": "Jane Smith",
-  "basic_access": true,
-  
-  // Employee properties (inherited from col_employees)
-  "employee_id": "E12345",
-  "department": "Marketing",
-  
-  // Executive-specific properties
-  "executive_level": "VP",
-  "budget_authority": 5000000,
-  
-  // Embedding for matching
-  "face_embedding": [0.1, 0.2, 0.3, ...]
-}
-```
-
-### Property Inheritance
-
-In hierarchical taxonomies, properties are inherited from parent to child nodes:
-
-- Child nodes inherit all properties from their parent nodes
-- Child nodes can override inherited properties with their own values
-- Inheritance follows the collection hierarchy defined in the taxonomy
-- While explicit hierarchies use defined parent-child links for inheritance, implicit relationships facilitate a similar flow of enrichment data between linked documents identified during the retrieval process (e.g., a Scene document inheriting details from a matched Face document).
-
-### Enrichment and Retrieval Processes
-
-The way taxonomies populate data (**Enrichment**) and how that populated data is subsequently used for filtering and searching (**Retrieval**) differs significantly based on whether the relationships are explicit (intra-taxonomy trees) or implicit (inter-taxonomy links or dynamic connections).
-
-<AccordionGroup>
-  <Accordion title="Explicit Hierarchy Enrichment & Retrieval">
-    Based on structured, declared relationships (like a tree).
-    
-    - **Enrichment Process:**
-      - Happens via rule-based assignment or direct classification within the taxonomy structure.
-      - Documents can be automatically enriched with properties from all ancestor nodes by traversing the defined hierarchy (e.g., `parent` links).
-      - Often uses explicit fields like `parent`, `depth`, or `path` calculated during ingestion.
-      
-      **Example:** A document classified under `Photography` is automatically enriched with `Visual` and `Media` tags if those are its defined ancestors.
-    
-    - **Retrieval Process (Querying with Hierarchy):**
-      - Once documents are enriched with their hierarchical tags (as described above), you can leverage this structure during searches and filtering.
-      - Supports deterministic broad-to-narrow filtering: Querying for a parent term (e.g., `Visual`) retrieves items tagged with its descendants (e.g., `Photography`, `Illustration`).
-      - This filtering relies on the pre-established hierarchical metadata associated with the documents.
-      - Filter expansion is predictable based on the tree structure (e.g., `WHERE category IN subtree('Visual')`).
-      - Ideal for UI tree filters and structured browsing.
-  </Accordion>
-
-  <Accordion title="Implicit Relationship Enrichment & Retrieval">
-    Based on dynamically inferred relationships (shared keys, embeddings, retriever chains).
-    
-    - **Enrichment Process:**
-      - Often happens dynamically during ingestion or retrieval via feature extractors or retriever chaining.
-      - Enrichment flows based on identified connections rather than a static tree (e.g., a Scene document gets enriched with data from a matched Face document via a shared `face_id` or embedding similarity).
-      - Inputs for enrichment are resolved from related data points (e.g., `face_id` from a face detector feeds into a scene taxonomy retriever).
-
-      **Example:** A feature extraction pipeline identifies a face (`face_id: 123`), and a subsequent step uses this ID to query a Scene taxonomy, enriching the original document with relevant scene information associated with `face_id: 123`.
-    
-    - **Retrieval Process:**
-      - Works as multi-step retrieval chains or composite queries (graph traversal).
-      - Enables multi-hop search patterns (e.g., Find Face -> Use Face ID to find Scenes -> Use Scene Info to find Episodes).
-      - Often handled by query pipelines that dynamically chain retrieval stages based on intermediate results.
-  </Accordion>
-</AccordionGroup>
-
-### Comparison Table
-
-| Feature             | Explicit Hierarchy (Intra-Taxonomy) | Implicit Relationships (Inter-Taxonomy / Dynamic) |
-|---------------------|------------------------------------|-------------------------------------------------|
-| **Defined by**      | Schema (`parent`, structure)       | Data behavior, shared IDs, retriever chaining  |
-| **Enrichment**      | Rule-based, tree traversal         | Dynamic, input-driven enrichment chains         |
-| **Retrieval**       | `IN subtree("X")`, static filters  | Chained stages (e.g., Face → Scene → Cluster)     |
-| **Query Composition** | Single query, expanded filters    | Multi-step query pipeline, composite queries    |
-| **Analogy**         | Folder structure / Tree            | SQL JOINs / Graph Traversal                     |
-| **Examples**        | Category trees, org charts         | Face → Scene → Episode links, Product Mentions  |
-
-## Using Enriched Documents
-
-Once you've applied a taxonomy, you can use the enriched fields in searches and filters:
-
-```python
-# Search using enriched taxonomy fields
-results = mp.retrievers.execute(
-    retriever_id="ret_jkl012",
-    query={
-        "text": "marketing presentation"
-    },
-    filters={
-        "department": "Marketing",  # Taxonomy-enriched field
-        "executive_level": {"$exists": True}  # Only match executive content
-    }
-)
-```
-
-## Example Use Cases
-
-<Tabs>
-  <Tab title="Product Categorization">
-    Create a product taxonomy to automatically classify products and inherit category properties:
-    
-    ```python
-    # Create product category taxonomy
-    taxonomy = mp.taxonomies.create(
-        namespace_id="ns_abc123",
-        name="product_hierarchy",
-        description="Product category hierarchy",
-        taxonomy_type="hierarchical",
-        retriever={
-            "retriever_id": "ret_product_matcher"
-        },
-        hierarchical_config={
-            "collection_nodes": [
-                {
-                    "collection_id": "col_categories",
-                    "parent_collection_id": None,
-                    "enrichment_fields": ["category", "tax_group"]
-                },
-                {
-                    "collection_id": "col_subcategories",
-                    "parent_collection_id": "col_categories",
-                    "enrichment_fields": ["subcategory", "warranty_policy"]
-                },
-                {
-                    "collection_id": "col_product_types",
-                    "parent_collection_id": "col_subcategories",
-                    "enrichment_fields": ["product_type", "return_window"]
-                }
-            ]
-        }
-    )
-    ```
-    
-    This creates a three-level product hierarchy where each level inherits properties from its parent.
-  </Tab>
-  
-  <Tab title="Content Tagging">
-    Create a flat taxonomy for automatically tagging content with relevant topics:
-    
-    ```python
-    # Create content tagging taxonomy
-    taxonomy = mp.taxonomies.create(
-        namespace_id="ns_abc123",
-        name="content_topics",
-        description="Content topic classification",
-        taxonomy_type="flat",
-        retriever={
-            "retriever_id": "ret_topic_matcher",
-            "threshold": 0.6
-        },
-        source_collections=[
-            {
-                "collection_id": "col_topics",
-                "enrichment_fields": ["topic", "subtopics", "audience_level"]
-            }
-        ]
-    )
-    ```
-    
-    Apply this taxonomy to automatically tag articles, blog posts, or other content with relevant topics.
-  </Tab>
-  
-  <Tab title="Face Recognition">
-    Create a hierarchical taxonomy for recognizing faces and applying appropriate metadata:
-    
-    ```python
-    # Create face recognition taxonomy
-    taxonomy = mp.taxonomies.create(
-        namespace_id="ns_abc123",
-        name="personnel_faces",
-        description="Personnel face recognition",
-        taxonomy_type="hierarchical",
-        retriever={
-            "retriever_id": "ret_face_matcher"
-        },
-        hierarchical_config={
-            "collection_nodes": [
-                {
-                    "collection_id": "col_people",
-                    "parent_collection_id": None,
-                    "enrichment_fields": ["name", "id_verified"]
-                },
-                {
-                    "collection_id": "col_employees",
-                    "parent_collection_id": "col_people",
-                    "enrichment_fields": ["employee_id", "department", "title"]
-                },
-                {
-                    "collection_id": "col_visitors",
-                    "parent_collection_id": "col_people",
-                    "enrichment_fields": ["visitor_type", "access_level"]
-                }
-            ]
-        }
-    )
-    ```
-    
-    This taxonomy can be used to automatically identify and tag people in images or videos based on their organizational role.
-  </Tab>
-</Tabs>
-
-## Best Practices
+## Quick start
 
 <Steps>
-  <Step title="Design Thoughtful Hierarchies">
-    For hierarchical taxonomies, carefully plan the levels and inheritance relationships to avoid redundancy and maximize usability.
+  <Step title="Create">
+    Define a flat or hierarchical taxonomy with retriever and input mappings
   </Step>
-  <Step title="Optimize Retriever Performance">
-    Create efficient retrievers for taxonomy matching, focusing on the most distinctive features for each node type.
+  <Step title="Attach">
+    - Materialize: add to a collection via <code>taxonomy_applications</code><br/>
+    - On‑Demand: add a taxonomy join stage in a retriever
   </Step>
-  <Step title="Consider Materialization Strategy">
-    Choose between materialized and on-demand enrichment based on your query patterns, update frequency, and storage constraints.
+  <Step title="Run">
+    - Preview with Execute Taxonomy (on‑demand test)<br/>
+    - Or execute the retriever pipeline in production
   </Step>
-  <Step title="Test with Representative Data">
-    Validate taxonomy performance with representative test data before applying to your full collection.
+  <Step title="Inspect">
+    Verify enriched fields on documents or in results
   </Step>
 </Steps>
 
-<Warning>
-  Taxonomies with many nodes or complex hierarchies can impact application performance. Optimize your taxonomy structure and retriever configuration for the best balance of accuracy and performance.
-</Warning>
+## How it works
 
-## Implementation Patterns
+<Frame>
+  ```mermaid
+  graph TD
+    T[Taxonomy Definition] --> A[Attach to Collection or Retriever]
+    A --> M[Materialized Batch]
+    A --> O[On Demand]
+    M --> W[Documents Updated]
+    O --> R[Enriched Results]
+  ```
+</Frame>
+
+<Steps>
+  <Step title="Define">
+    Create a taxonomy (flat or hierarchical) and specify a retriever plus input mappings
+  </Step>
+  <Step title="Attach">
+    Add to a collection (materialize) or a retriever stage (on‑demand)
+  </Step>
+  <Step title="Execute">
+    Run batch enrichment after extraction, or enrich at query‑time during retrieval
+  </Step>
+</Steps>
+
+## Types and modes
+
+<Tabs>
+  <Tab title="Flat">
+    - One source collection
+    - 1:1 join semantics (best match)
+    - Copy configured enrichment fields with replace/append semantics
+  </Tab>
+  
+  <Tab title="Hierarchical (Explicit)">
+    - Multi‑level parent/child tree via `hierarchical_nodes`
+    - Node‑level overrides for retriever, input mappings, enrichment fields
+    - Child results can inherit or override parent enrichments
+  </Tab>
+  
+  <Tab title="Hierarchical (Implicit)">
+    - Infer structure from schema overlap, clustering, or LLM analysis
+    - Combine inference with explicit overrides for a hybrid approach
+  </Tab>
+  
+  <Tab title="Execution Modes">
+    - **Materialized**: Runs post‑extraction; persists updates to documents (in‑place or to target collection)
+      - Tradeoffs: lowest query latency and consistent outputs; requires re‑materialization on source/taxonomy changes, adds batch/compute work and write amplification
+    - **On‑Demand**: Executes inside a retriever pipeline at query time; results are not persisted
+      - Tradeoffs: freshest results and no write/storage cost; adds query‑time latency and per‑request compute, may need caching for high‑QPS paths
+  </Tab>
+</Tabs>
+
+## Create a taxonomy
+
+- **API**: Create Taxonomy
+- **Method**: POST
+- **Path**: `/v1/taxonomies`
+- **Reference**: [API Reference](/api-reference/taxonomies/create-taxonomy)
+
+### Flat example
+```bash
+curl -X POST https://api.mixpeek.com/v1/taxonomies \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: ns_123" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "taxonomy_name": "brands_en",
+    "description": "Enrich documents with brand metadata",
+    "config": {
+      "taxonomy_type": "flat",
+      "retriever_id": "ret_clip_v1",
+      "input_mappings": [
+        {"input_key": "image_vector", "path": "features.clip_vit_l_14", "source_type": "vector"}
+      ],
+      "source_collection": {
+        "collection_id": "col_brands_v1",
+        "enrichment_fields": [
+          {"field_path": "metadata.brand", "merge_mode": "replace"},
+          {"field_path": "metadata.tags",  "merge_mode": "append"}
+        ]
+      }
+    }
+  }'
+```
+
+### Hierarchical (explicit) example
+```bash
+curl -X POST https://api.mixpeek.com/v1/taxonomies \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: ns_123" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "taxonomy_name": "people_hierarchy_v1",
+    "description": "Employees → Executives",
+    "config": {
+      "taxonomy_type": "hierarchical",
+      "retriever_id": "ret_face_v1",
+      "input_mappings": [
+        {"input_key": "face_vec", "path": "features.face", "source_type": "vector"}
+      ],
+      "hierarchical_nodes": [
+        {"collection_id": "col_employees_v1"},
+        {"collection_id": "col_executives_v1", "parent_collection_id": "col_employees_v1"}
+      ]
+    }
+  }'
+```
+
+## Manage taxonomies
 
 <CardGroup cols={2}>
-  <Card title="Dynamic Classification" icon="tag">
-    Apply taxonomies to automatically classify new content as it's ingested, using a pipeline hook to trigger taxonomy application.
-  </Card>
-  
-  <Card title="Enriched Search" icon="magnifying-glass-plus">
-    Use taxonomies to enrich documents with additional metadata that can be leveraged for more precise filtering and faceting in search.
-  </Card>
+  <Card title="Get Taxonomy" icon="magnifying-glass" href="/api-reference/taxonomies/get-taxonomy" />
+  <Card title="List Taxonomies" icon="list" href="/api-reference/taxonomies/list-taxonomies" />
+  <Card title="Create Version" icon="layers" href="/api-reference/taxonomies/create-taxonomy-version" />
+  <Card title="List Versions" icon="clone" href="/api-reference/taxonomies/list-taxonomy-versions" />
+  <Card title="Delete Taxonomy" icon="trash" href="/api-reference/taxonomies/delete-taxonomy" />
+</CardGroup>
 
-  <Card title="Hierarchical Navigation" icon="sitemap">
-    Create user interfaces that leverage hierarchical taxonomy structures for browsing and navigating content collections.
+### Versions
+
+- **Immutable snapshots**: Create versioned snapshots for reproducible enrichment
+- **Manage**: [Create Version]/api-reference/taxonomies/create-taxonomy-version, [List Versions]/api-reference/taxonomies/list-taxonomy-versions, [Get Taxonomy]/api-reference/taxonomies/get-taxonomy
+- **Usage**: Pin a specific version when attaching to collections or executing on‑demand to ensure stable outputs; update the reference to roll forward or roll back as needed
+
+## Attach and execute
+
+### Attach to a collection (materialize)
+
+Include `taxonomy_applications` when creating or updating a collection. The engine materializes enrichment after extraction completes.
+
+```json
+{
+  "collection_name": "ads_v2",
+  "taxonomy_applications": [
+    {
+      "taxonomy_id": "tax_brands_en",
+      "execution_mode": "materialize",
+      "target_collection_id": "col_ads_enriched"
+    },
+    {
+      "taxonomy_id": "tax_people_hierarchy_v1",
+      "execution_mode": "on_demand"
+    }
+  ]
+}
+```
+
+- Collections API: [Create](/api-reference/collections/create-collection), [Update](/api-reference/collections/update-collection)
+
+### Execute on‑demand (test/preview)
+
+Use the execute endpoint to validate configuration and preview enrichment (on‑demand only).
+
+- **API**: Execute Taxonomy
+- **Method**: POST
+- **Path**: `/v1/taxonomies/execute/{taxonomy_identifier}`
+- **Reference**: [API Reference](/api-reference/taxonomies/execute-taxonomy)
+
+```bash
+curl -X POST https://api.mixpeek.com/v1/taxonomies/execute/tax_brands_en \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: ns_123" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "source_documents": [{"document_id": "doc_123", "features": {"clip_vit_l_14": [0.1,0.2,0.3]}}]
+  }'
+```
+
+For production on‑demand usage, add a taxonomy join stage inside a retriever and call the retriever Execute API.
+
+- Retrievers: [Create](/api-reference/retrievers/create-retriever), [Execute](/api-reference/retrievers/execute-retriever)
+
+## Best practices
+
+<Steps>
+  <Step title="Keep mappings precise">
+    Ensure input mappings point to existing fields and types in target documents
+  </Step>
+  <Step title="Minimize copied fields">
+    Copy only required enrichment fields; prefer `append` for arrays
+  </Step>
+  <Step title="Choose the right mode">
+    Use materialize for stable, high‑QPS paths; on‑demand for dynamic or exploratory flows
+  </Step>
+  <Step title="Iterate hierarchies">
+    Start with explicit nodes, then add inference or overrides as needed
+  </Step>
+</Steps>
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="Flat vs hierarchical – when to choose?" icon="circle-question">
+    Use flat when a single reference collection provides all needed fields. Choose hierarchical when enrichment depends on multi‑level concepts (e.g., Employee → Executive → Board).
+  </Accordion>
+  <Accordion title="Materialized vs on‑demand – which is better?" icon="bolt">
+    Materialized is ideal for stable, hot paths and high QPS; on‑demand is better for dynamic reference data or exploratory flows where persistence is not required.
+  </Accordion>
+  <Accordion title="Can I mix explicit nodes with inferred structure?" icon="code-branch">
+    Yes. Hierarchical taxonomies are hybrid by design: infer a base tree via schema/cluster/LLM, then override or extend with explicit nodes as needed.
+  </Accordion>
+</AccordionGroup>
+
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Collections" icon="database" href="/ingestion/collections">
+    Attach taxonomy applications to drive enrichment
   </Card>
   
-  <Card title="Compliance Tagging" icon="clipboard-check">
-    Use taxonomies to automatically apply compliance or policy tags to content based on its characteristics.
+  <Card title="Retrievers" icon="magnifying-glass" href="/retrieval/retrievers">
+    Execute on‑demand taxonomy join stages during retrieval
   </Card>
 </CardGroup>
 
-## API Reference
-
-For complete details on working with taxonomies, see our [Taxonomies API Reference](/api-reference/taxonomies/create-taxonomy).
-
-### 🧩 Where Do Retriever Inputs Get Their Values?
-
-There are two key sources for these inputs, depending on **when** the retriever is being executed:
-
----
-
-### 1. **During Ingestion (a.k.a. feature extraction time)**
-
-Here, values for retriever inputs come from:
-
-- **Raw uploaded data** (e.g., file contents, video frames, text)
-- **Output of previous extractors** (e.g., OCR → text → entity recognition)
-- **Static metadata** from the doc (e.g., file name, timestamp)
-
-You often see this in the config like:
-
-```yaml
-feature_extractors:
-  - type: taxonomy_extraction
-    taxonomy: "scene_taxonomy"
-```
-
-In this case, a retriever associated with the taxonomy might pull its input from:
-
-```json
-{
-  "text": "<output of OCR>",
-  "image": "<scene frame>",
-  ...
-}
-```
-
----
-
-### 2. **During Query / Retrieval Time**
-
-When someone is **searching**, retriever inputs can come from:
-
-- **User query inputs** (text, filters, embeddings)
-- **Intermediate outputs** in the retrieval pipeline (e.g., a `face_id` found from a face query used as input into a `scene_taxonomy` retriever)
-- **Query pipelines** can be pre-defined to wire these together dynamically, as in:
-
-```json
-{
-  "face_input": "img_of_brad_pitt.jpg",
-  "scene_query": "fighting scene"
-}
-```
-
-Then one retriever resolves the face to a canonical ID, which is used as a pre-filter in another retriever's execution.
-
----
-
-### 🔄 Enrichment on Retrieval
-
-When we say "fields get enriched on retrieval execution," it means:
-
-- A taxonomy's retriever will take the inputs and try to compute or resolve field values (like resolving `"John Wick"` → `character_id`)
-- This can happen "on demand" for a query result if the field wasn't stored pre-computed
-
-So the same retriever logic might be used both:
-
-- **During ingestion** (to store the enriched field)
-- **During query** (to enrich or filter results live)
-
----
-
-### 🧠 Bonus Analogy
-
-Think of a taxonomy collection as a **smart join table**:
-
-- Each row is an entity
-- The retrievers act like **lookup functions** that populate columns
-- The inputs to those functions come either from **raw docs**, **previous retrievers**, or **user queries** 
+<CardGroup cols={2}>
+  <Card title="Pipelines & Workflows" icon="diagram-project" href="/processing/pipelines">
+    Chain multi‑stage flows and integrate taxonomies
+  </Card>
+  
+  <Card title="Clusters" icon="object-group" href="/enrichment/clusters">
+    Discover candidate nodes for implicit hierarchies
+  </Card>
+</CardGroup>

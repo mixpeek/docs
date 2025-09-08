@@ -1,166 +1,228 @@
 ---
 title: "Clusters"
+description: "Discover structure, label groups, and enrich collections with clustering"
 ---
 
 <Note>
-  Clustering in Mixpeek serves as the multimodal equivalent of SQL GROUP BY operations, allowing you to group similar documents together based on feature similarity rather than exact field matches.
+  Clustering groups similar documents to power discovery, analytics visuals, and taxonomy bootstrapping. Mixpeek runs clustering as an engine pipeline, stores artifacts (Parquet) for scale, and exposes APIs to create, execute, list, stream, and apply enrichments.
 </Note>
 
 ## Overview
 
-Clustering enables you to organize and group documents based on their feature similarity. Unlike traditional SQL GROUP BY operations that group rows based on exact field matches, clustering uses similarity metrics to group documents that share similar characteristics.
-
-[Watch an Intro Video](/studio/clusters)
-
-
-<Steps>
-  <Step title="Select Clustering Approach">
-    Choose between two clustering methods:
-    
-    **Vector-Based Clustering**
-    Groups documents based on semantic similarity using embedding vectors and clustering algorithms like HDBSCAN or K-Means.
-    
-    **Attribute-Based Grouping**
-    Groups documents based on specific metadata attributes like categories, dates, or custom fields.
-  </Step>
-  
-  <Step title="Configure Options">
-    Set specific parameters for your chosen approach. For vector-based clustering, select the embedding model and algorithm (e.g., HDBSCAN). For attribute-based, select the fields to group by.
-  </Step>
-  
-  <Step title="Configure Cluster Naming">
-    Set up automatic cluster naming:
-    
-    **Automatic Naming**
-    - Enable: Yes/No
-    - Generative Model: GPT-4o
-    - Method: Centroid
-  </Step>
-  
-  <Step title="Select Target Collection">
-    Choose which collection the cluster information will be added to. This determines which documents will be grouped together.
-  </Step>
-  
-  <Step title="Set Execution Schedule">
-    Determine when clustering will run:
-    - One-time execution
-    - Scheduled at a defined cadence (daily, weekly, etc.)
-    - Trigger-based (when new documents are added)
-  </Step>
-</Steps>
-
-## Clustering Types
-
-Mixpeek supports various clustering approaches through the Grouper interface:
-
 <CardGroup cols={2}>
-  <Card title="Vector Clustering" icon="vector-square">
-    Groups documents based on embedding similarity using algorithms like K-means or DBSCAN. Perfect for finding visually or semantically similar content.
+  <Card title="Structure Discovery" icon="diagram-project">
+    Find groups in one or more collections; optional hierarchical metadata
   </Card>
-
-  <Card title="Time-based Clustering" icon="clock">
-    Groups documents based on temporal proximity, such as grouping video scenes by time ranges or documents by creation date.
+  
+  <Card title="Artifacts & Scale" icon="box-archive">
+    Results saved as Parquet (centroids, members) for WebGL/Arrow pipelines
   </Card>
-
-  <Card title="Categorical Clustering" icon="tags">
-    Groups documents based on detected categories, objects, or topics. Useful for organizing content by subject matter.
+  
+  <Card title="LLM Labeling" icon="wand-magic-sparkles">
+    Optionally name clusters, summaries, and keywords
   </Card>
-
-  <Card title="Custom Clustering" icon="code">
-    Supports custom grouping criteria through the Grouper interface for domain-specific clustering needs.
+  
+  <Card title="Enrichment" icon="plus">
+    Write back cluster_id membership or create derived collections
   </Card>
 </CardGroup>
 
-## Implementation Details
-
-### Dimensional Reduction and Visualization
-
-Before applying clustering algorithms, high-dimensional feature vectors (like embeddings) are reduced to lower dimensions using techniques like UMAP or t-SNE. This process serves two important purposes:
-
-1. **Improves Clustering Performance**: Reduces computational complexity and often leads to better cluster separation
-2. **Enables Visual Inspection**: Allows you to visualize feature relationships in 2D or 3D space
+## How it works
 
 <Frame>
-  ![Cluster Visualization Example](https://d8ts56gtwtyh1.cloudfront.net/docs/warehouse/images/cluster-tsne.jpg)
-  *t-SNE visualization showing document clusters by content type and category*
+  ```mermaid
+  graph TD
+    SRC[Source Collections] --> PRE[Preprocess]
+    PRE --> CL[Clustering]
+    CL --> POST[Postprocess]
+    POST --> ART[Artifacts Parquet]
+    POST --> ENR[Optional Enrichment]
+  ```
 </Frame>
 
-This visualization step is crucial for:
-- Validating clustering quality before applying
-- Identifying outliers or unexpected groupings
-- Determining optimal cluster parameters
-- Communicating patterns to stakeholders
-
-### Clustering Process
-
 <Steps>
-  <Step title="Feature Selection">
-    Choose which features to use for clustering (e.g., embeddings, timestamps, categories)
+  <Step title="Preprocess">
+    Optional normalization and dimensionality reduction (UMAP, tSNE, etc.)
   </Step>
-  <Step title="Dimensional Reduction">
-    Apply UMAP or t-SNE to reduce high-dimensional features to 2D or 3D for visualization and improved clustering
+  <Step title="Cluster">
+    Algorithms like KMeans, DBSCAN, HDBSCAN, Agglomerative, Spectral, GMM, Mean Shift, OPTICS
   </Step>
-  <Step title="Algorithm Configuration">
-    Configure clustering parameters (e.g., number of clusters, similarity thresholds)
+  <Step title="Postprocess">
+    Centroids and stats; optional LLM labeling and hierarchical metadata
   </Step>
-  <Step title="Grouping Execution">
-    Apply the clustering algorithm to group similar documents
-  </Step>
-  <Step title="Result Storage">
-    Store cluster assignments and metadata for future retrieval
+  <Step title="Persist">
+    Parquet artifacts saved per run_id; list and stream via API
   </Step>
 </Steps>
 
-## Use Cases
+## Create a cluster definition
+
+- **API**: Create Cluster
+- **Method**: POST
+- **Path**: `/v1/clusters`
+- **Reference**: [API Reference](/api-reference/clusters/create-cluster)
+
+```bash
+curl -X POST https://api.mixpeek.com/v1/clusters \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: ns_123" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "collection_ids": ["col_products_v1"],
+    "cluster_name": "products_clip_hdbscan",
+    "cluster_type": "vector",
+    "vector_config": {
+      "feature_extractor_name": "clip_vit_l_14",
+      "clustering_method": "hdbscan",
+      "hdbscan_parameters": {"min_cluster_size": 10, "min_samples": 5}
+    },
+    "llm_labeling": {"enabled": true, "model_name": "gpt-4"}
+  }'
+```
+
+## Execute clustering
+
+- **API**: Execute Clustering
+- **Method**: POST
+- **Path**: `/v1/clusters/execute`
+- **Reference**: [API Reference](/api-reference/clusters/execute-clustering)
+
+```bash
+curl -X POST https://api.mixpeek.com/v1/clusters/execute \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: ns_123" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "collection_ids": ["col_products_v1"],
+    "config": {
+      "algorithm": "kmeans",
+      "algorithm_params": {"n_clusters": 8, "max_iter": 300},
+      "feature_vector": {"feature_address": {"extractor": "clip_vit_l_14", "version": "1.0.0"}},
+      "normalize_features": true,
+      "dimensionality_reduction": {"method": "umap", "n_components": 2}
+    },
+    "sample_size": 10000,
+    "store_results": true,
+    "include_members": false,
+    "compute_metrics": true,
+    "save_artifacts": true
+  }'
+```
+
+Response includes `run_id`, metrics, and centroid summaries. Artifacts are written under a per‑run S3 prefix.
+
+## Stream artifacts for UI
+
+- **API**: Stream Cluster Data
+- **Method**: POST
+- **Path**: `/v1/clusters/{cluster_id}/data`
+- **Reference**: [API Reference](/api-reference/clusters/stream-cluster-data)
+
+```bash
+curl -X POST https://api.mixpeek.com/v1/clusters/CLUSTER_ID/data \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: ns_123" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "cluster_id": "cl_123",
+    "include_centroids": true,
+    "include_members": true,
+    "limit": 1000,
+    "offset": 0
+  }'
+```
+
+Use this to load centroids and members for visualizations (2D/3D reductions, partitions by cluster_id).
+
+## Apply cluster enrichment
+
+- **API**: Apply Cluster Enrichment
+- **Method**: POST
+- **Path**: `/v1/clusters/enrich`
+- **Reference**: [API Reference](/api-reference/clusters/apply-cluster-enrichment)
+
+```bash
+curl -X POST https://api.mixpeek.com/v1/clusters/enrich \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: ns_123" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "clustering_ids": ["cl_run_abc"],
+    "source_collection_id": "col_products_v1",
+    "target_collection_id": "col_products_enriched_v1",
+    "batch_size": 1000,
+    "parallelism": 4
+  }'
+```
+
+This writes `cluster_id` membership (and optional labels) back to documents.
+
+## Manage clusters
 
 <CardGroup cols={2}>
-  <Card title="Content Organization" icon="folder-tree">
-    Automatically organize large collections of documents into logical groups
-  </Card>
-
-  <Card title="Similar Content Discovery" icon="magnifying-glass">
-    Find related content by exploring documents within the same cluster
-  </Card>
-
-  <Card title="Batch Processing" icon="layer-group">
-    Process similar documents together for efficiency
-  </Card>
-
-  <Card title="Analytics" icon="chart-bar">
-    Analyze patterns and trends within document clusters
-  </Card>
+  <Card title="Get Cluster" icon="magnifying-glass" href="/api-reference/clusters/get-cluster" />
+  <Card title="List Clusters" icon="list" href="/api-reference/clusters/list-clusters" />
+  <Card title="Delete Cluster" icon="trash" href="/api-reference/clusters/delete-cluster" />
+  <Card title="Get Artifacts" icon="box-open" href="/api-reference/clusters/get-cluster-artifacts" />
+  <Card title="Submit Job" icon="paper-plane" href="/api-reference/clusters/submit-clustering-job" />
 </CardGroup>
 
-## Best Practices
+## Config building blocks
+
+<Tabs>
+  <Tab title="Algorithms">
+    kmeans, dbscan, hdbscan, agglomerative, spectral, gaussian_mixture, mean_shift, optics
+  </Tab>
+  
+  <Tab title="Reduction & Normalization">
+    Optional UMAP, tSNE, PCA; set <code>normalize_features</code> to true for L2/standard scaling
+  </Tab>
+  
+  <Tab title="LLM Labeling">
+    Enable labeling with provider/model and parameters to name clusters and extract keywords
+  </Tab>
+  
+  <Tab title="Hierarchy">
+    Set <code>hierarchical</code> and <code>max_hierarchy_depth</code> to compute parent_cluster_id and levels
+  </Tab>
+</Tabs>
+
+## Artifacts (Parquet)
 
 <AccordionGroup>
-  <Accordion title="Feature Selection" icon="check">
-    Choose features that best represent the similarity you want to capture. For example:
-    - Use embeddings for semantic similarity
-    - Use timestamps for temporal grouping
-    - Use categorical features for topic-based grouping
+  <Accordion title="Centroids dataset" icon="bullseye">
+    Columns include: <code>cluster_id</code>, <code>centroid_vector</code>, <code>num_members</code>, <code>variance</code>, <code>label</code>, <code>summary</code>, <code>keywords</code>, <code>feature_name</code>, <code>feature_dimensions</code>, <code>parent_cluster_id</code>, <code>hierarchy_level</code>, <code>reduction_method</code>, <code>parameters</code>, <code>algorithm</code>, <code>run_id</code>, timestamps
   </Accordion>
-
-  <Accordion title="Algorithm Choice" icon="microchip">
-    Select clustering algorithms based on your needs:
-    - K-means for well-defined, spherical clusters
-    - DBSCAN for density-based clustering
-    - Custom algorithms for specialized grouping criteria
-  </Accordion>
-
-  <Accordion title="Performance Considerations" icon="gauge-high">
-    Consider the computational complexity of your chosen algorithm and the size of your document collection when planning clustering operations.
+  <Accordion title="Members dataset" icon="users">
+    Partitioned by <code>cluster_id</code>; includes <code>point_id</code>, reduced coordinates (<code>x</code>, <code>y</code>, optional <code>z</code>), and optional payload slice for filtering
   </Accordion>
 </AccordionGroup>
 
-## Limitations
+## Best practices
 
-- **Document Threshold:** Maximum of 100,000 documents per clustering operation
-- **Algorithm Constraints:** K-means limited to 1,000 clusters; HDBSCAN limited to 50,000 documents
-- **Visualization Limits:** t-SNE and UMAP visualizations limited to 10,000 points for performance reasons
-- **Reclustering Frequency:** Scheduled clustering limited to once per hour at minimum intervals
-- **Feature Compatibility:** Not all feature types can be used for clustering (e.g., some binary features)
-- **Processing Time:** Large-scale clustering operations may take several minutes to complete
-- **Cluster Storage:** Cluster assignments persist for 90 days by default before requiring refresh
-- **Naming Generation:** Automatic cluster naming limited to 50 characters per cluster label
+<Steps>
+  <Step title="Start with samples">
+    Use <code>sample_size</code> for quick exploration before full runs
+  </Step>
+  <Step title="Label pragmatically">
+    Enable LLM labeling after validating cluster separation
+  </Step>
+  <Step title="Persist visuals">
+    Save artifacts and stream reduced coordinates for UI at scale
+  </Step>
+  <Step title="Close the loop">
+    Convert stable clusters into taxonomies to enrich downstream search
+  </Step>
+</Steps>
 
+## See also
+
+<CardGroup cols={2}>
+  <Card title="Taxonomies" icon="sitemap" href="/enrichment/taxonomies">
+    Promote clusters into flat or hierarchical taxonomies
+  </Card>
+  
+  <Card title="Pipelines & Workflows" icon="diagram-project" href="/processing/pipelines">
+    Combine clustering with feature extraction and enrichment
+  </Card>
+</CardGroup>
