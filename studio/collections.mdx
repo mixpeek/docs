@@ -15,3 +15,20 @@ iconType: "solid"
   autoplay
   muted
 ></iframe> 
+
+### Build collections
+
+- **Create**: Click New Collection, name it, provide a source (bucket or collection), and select feature extractors. API: [Create Collection](/api-reference/collections/create-collection).
+- **Features**: Studio shows available feature addresses and vector indexes. Use this to configure retrievers. API: [Describe Features](/api-reference/collections/describe-collection-features).
+- **Update**: Modify description, enablement, and taxonomy applications. API: [Update Collection](/api-reference/collections/update-collection).
+- **List/Get/Delete**: Browse, inspect, or remove collections. API: [List](/api-reference/collections/list-collections), [Get](/api-reference/collections/get-collection), [Delete](/api-reference/collections/delete-collection).
+
+### Documents
+
+- View documents produced by extraction with metadata and vectors.
+- Create or update documents directly for advanced workflows. API: [Create](/api-reference/collection-documents/create-a-document), [Update](/api-reference/collection-documents/update-document), [Get](/api-reference/collection-documents/get-a-document-by-id), [List](/api-reference/collection-documents/list-documents), [Delete](/api-reference/collection-documents/delete-a-document-by-id).
+
+### Tips
+
+- Collections are the searchable view of your data; choose extractors that match your modalities.
+- Ensure `internal_id` and `X-Namespace` context is correct—Studio handles this automatically.

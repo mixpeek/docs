@@ -15,3 +15,18 @@ iconType: "solid"
   autoplay
   muted
 ></iframe> 
+
+### Create and apply taxonomies
+
+- **Create**: Click New Taxonomy, choose flat or hierarchical, and define config. API parity: [Create Taxonomy](/api-reference/taxonomies/create-taxonomy).
+- **Flat**: Join a source collection to a taxonomy collection via a retriever. Configure input mappings and enrichment fields.
+- **Hierarchical**: Define nodes explicitly or infer via schema, clusters, or LLM. Per-node retrievers and input mappings are supported.
+- **Execute on-demand**: Validate configs against sample documents. API: [Execute Taxonomy](/api-reference/taxonomies/execute-taxonomy). Note this is for testing only; on-demand enrichment typically happens inside retrievers.
+- **Materialize**: Attach to collections with `execution_mode` set to materialize so Engine enriches after ingestion. Manage under Collections → Taxonomy Applications. API: [Update Collection](/api-reference/collections/update-collection).
+- **Versions**: Snapshot configurations and browse history. API: [Create Version](/api-reference/taxonomies/create-taxonomy-version), [List Versions](/api-reference/taxonomies/list-taxonomy-versions).
+- **Manage**: Get, list, or delete taxonomies. API: [Get](/api-reference/taxonomies/get-taxonomy), [List](/api-reference/taxonomies/list-taxonomies), [Delete](/api-reference/taxonomies/delete-taxonomy).
+
+### Tips
+
+- Use on-demand for interactive retrieval flows and materialize for post-ingestion enrichment.
+- Keep enrichment fields minimal to avoid payload bloat; prefer app-side joins when possible.

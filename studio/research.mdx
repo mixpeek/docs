@@ -15,3 +15,15 @@ iconType: "solid"
   autoplay
   muted
 ></iframe> 
+
+### Research and debug
+
+- **Ad-hoc retrieval**: Quickly prototype queries against selected retrievers. Tweak inputs, filters, sorts, and grouping to validate pipeline behavior without code.
+- **Inspect stage outputs**: Compare per-stage results, scores, and timings to tune parameters.
+- **Debug inference**: Call inference backends directly to inspect embeddings and model outputs. API: [Debug Inference](/api-reference/retrievers/debug-inference).
+- **Iterate**: Promote successful experiments to saved retrievers and wire them into your apps.
+
+### Tips
+
+- Use small limits and targeted filters while tuning to keep responses fast.
+- Validate feature availability in your collections via `Describe Features` before testing embedding stages.

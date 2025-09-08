@@ -15,3 +15,17 @@ iconType: "solid"
   autoplay
   muted
 ></iframe> 
+
+### Manage buckets and objects
+
+- **Create bucket**: Define a JSON-like schema to validate objects. Required for object registration. API parity: [Create Bucket](/api-reference/buckets/create-bucket).
+- **View bucket**: Inspect schema, object counts, and metadata. API parity: [Get Bucket](/api-reference/buckets/get-bucket).
+- **Update bucket**: Rename or adjust description and metadata. API parity: [Update Bucket](/api-reference/buckets/update-bucket).
+- **Delete bucket**: Enqueues a task to remove bucket and objects. Track under Tasks. API parity: [Delete Bucket](/api-reference/buckets/delete-bucket).
+- **Add objects**: Register raw inputs and blobs without processing. Use single or batch create. API: [Create Object](/api-reference/bucket-objects/create-object), [Create Objects in Batch](/api-reference/bucket-objects/create-objects-in-batch).
+- **Batch flows**: Group object IDs, then submit for processing. Track task status. API: [Create Batch](/api-reference/bucket-batches/create-batch), [Add Objects](/api-reference/bucket-batches/add-objects-to-batch), [Submit Batch](/api-reference/bucket-batches/submit-batch-for-processing).
+
+### Tips
+
+- Object creation does not process files; processing happens when Engine runs extraction based on collections pointing to this bucket.
+- Use batch submit for large ingestions to parallelize Engine work and monitor via Tasks in Studio.

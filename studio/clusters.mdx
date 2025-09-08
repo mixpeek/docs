@@ -15,3 +15,17 @@ iconType: "solid"
   autoplay
   muted
 ></iframe> 
+
+### Create and run clustering jobs
+
+- **Create**: Click New Cluster, select collections, pick vector or attribute clustering, and configure algorithm params. API: [Create Cluster](/api-reference/clusters/create-cluster).
+- **Execute**: Run real-time clustering on the Engine or submit as a job for async processing. API: [Execute Clustering](/api-reference/clusters/execute-clustering) and [Submit Job](/api-reference/clusters/submit-clustering-job).
+- **Inspect**: Review centroids, metrics, and members if saved. Download artifacts like parquet paths under Artifacts. API: [Get Artifacts](/api-reference/clusters/get-cluster-artifacts).
+- **List/Get/Delete**: Manage clustering configurations and results. API: [List](/api-reference/clusters/list-clusters), [Get](/api-reference/clusters/get-cluster), [Delete](/api-reference/clusters/delete-cluster).
+- **Stream data**: Browse cluster centroids and members directly. API: [Stream Data](/api-reference/clusters/stream-cluster-data).
+- **Apply enrichment**: Attach cluster labels back to a source or target collection at scale. API: [Apply Enrichment](/api-reference/clusters/apply-cluster-enrichment).
+
+### Tips
+
+- Start with a sample size to validate parameters before full runs.
+- Use LLM labeling for human-friendly labels when vectors are dense and unlabeled.

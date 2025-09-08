@@ -15,3 +15,16 @@ iconType: "solid"
   autoplay
   muted
 ></iframe> 
+
+### Build and execute retrievers
+
+- **Create**: Click New Retriever, name it, select collections, and add stages from the catalog. API: [Create Retriever](/api-reference/retrievers/create-retriever) and [List Stages](/api-reference/retriever-stages/list-available-retriever-stages).
+- **Stages**: Configure parameters per stage, including pre/post filters. Common stages include KNN search, hybrid fusion, reranking, and grouping.
+- **Test**: Use the Run panel to execute with sample inputs, filters, sorts, and pagination. API parity: [Execute Retriever](/api-reference/retrievers/execute-retriever).
+- **Inspect**: View per-stage results, timing, and final results. Toggle URL presigning when you need asset links.
+- **Manage**: List, view, update, or delete retrievers as they evolve. API: [Get](/api-reference/retrievers/get-retriever), [List](/api-reference/retrievers/list-retrievers), [Delete](/api-reference/retrievers/delete-retriever), [Debug Inference](/api-reference/retrievers/debug-inference).
+
+### Tips
+
+- Ensure your collections expose the vectors you reference; confirm via `Describe Features` on the collection.
+- Use `group_by` to collapse results into logical groups, then control member sorting via stage or final sort.

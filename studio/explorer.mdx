@@ -15,3 +15,16 @@ iconType: "solid"
   autoplay
   muted
 ></iframe> 
+
+### Explore and search your documents
+
+- **Search**: Enter queries that map to your retriever inputs or perform fielded searches using filters. For retriever-backed search, use the `Research` area; Explorer provides ad-hoc discovery across collections.
+- **Filters**: Apply AND/OR/NOT filters, ranges, and keyword matches on metadata. API filter model mirrors [LogicalOperator] fields used across list and execute endpoints.
+- **Sort and paginate**: Order by score or any document field and control page size. Mirrors retriever execution sort behaviour.
+- **Select fields**: Toggle columns to tailor the view. Useful to inspect vector presence, enrichments, and metadata.
+- **Preview assets**: Enable presigned URLs to open media directly from S3-compatible storage.
+
+### Tips
+
+- Switch namespaces to change the collection set you are exploring.
+- For production search UX, prefer saved retrievers; Explorer is ideal for QA and data auditing.

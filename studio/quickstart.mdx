@@ -15,3 +15,19 @@ iconType: "solid"
   autoplay
   muted
 ></iframe> 
+
+### Use the Studio to manage your organization
+
+- **Set active namespace**: Use the top bar namespace switcher. All actions scope to this selection. Namespaces mirror API behavior for `X-Namespace`. Create one in Studio or via [Create Namespace](/api-reference/namespaces/create-namespace).
+- **Create buckets**: Define schemas to validate your objects. Buckets are the entry point for raw data. See [Create Bucket](/api-reference/buckets/create-bucket) and [Create Object](/api-reference/bucket-objects/create-object).
+- **Create collections**: Point to a source and choose feature extractors. Collections produce searchable documents and vectors. See [Create Collection](/api-reference/collections/create-collection) and [Describe Features](/api-reference/collections/describe-collection-features).
+- **Ingest data**: Upload objects to buckets, optionally in batches. Processing runs in the Engine and writes documents to your namespace.
+- **Explore results**: Use `Explorer` to search, filter, and preview documents with presigned URLs.
+- **Build retrievers**: Configure stages, test inputs, and save pipelines to power your apps. See [Create Retriever](/api-reference/retrievers/create-retriever) and [Execute Retriever](/api-reference/retrievers/execute-retriever).
+- **Enrich with taxonomies**: Attach flat or hierarchical taxonomies on-demand or materialized. See [Create Taxonomy](/api-reference/taxonomies/create-taxonomy) and [Execute Taxonomy](/api-reference/taxonomies/execute-taxonomy).
+- **Discover with clusters**: Run clustering jobs and apply enrichment back to collections. See [Create Cluster](/api-reference/clusters/create-cluster) and [Execute Clustering](/api-reference/clusters/execute-clustering).
+
+### Tips
+
+- **Auth is automatic in Studio**: Your API key and `X-Namespace` header are handled for you. When calling APIs directly, include both.
+- **Rate limits and health**: Check `Operations` for service health and limits. API reference: [Healthcheck](/api-reference/health/healthcheck) and [Limits](/troubleshoot/limits).

@@ -15,3 +15,17 @@ iconType: "solid"
   autoplay
   muted
 ></iframe> 
+
+### Manage namespaces in Studio
+
+- **Create**: Click New Namespace, provide a name and optional description. You can attach feature extractors and payload indexes up-front. API parity: [Create Namespace](/api-reference/namespaces/create-namespace).
+- **Switch active namespace**: Use the top bar to scope every page. This sets the `X-Namespace` in API calls made by Studio.
+- **Update**: Edit payload indexes or rename. API parity: [Update Namespace](/api-reference/namespaces/update-namespace).
+- **List and search**: Quickly find namespaces you have access to. API parity: [List Namespaces](/api-reference/namespaces/list-namespaces).
+- **Get details**: Inspect configured feature extractors and indexes. API parity: [Get Namespace](/api-reference/namespaces/get-namespace).
+- **Delete**: Remove a namespace that you no longer need. This deletes the associated Qdrant collection. API parity: [Delete Namespace](/api-reference/namespaces/delete-namespace).
+
+### Tips
+
+- Namespaces map 1 to 1 with Qdrant collections. Choose clear names per environment like `acme_dev`, `acme_prod`.
+- Keep one or more feature extractors attached; Engine ensures the collection is bootstrapped on first ingestion.
