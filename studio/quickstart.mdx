@@ -31,3 +31,28 @@ iconType: "solid"
 
 - **Auth is automatic in Studio**: Your API key and `X-Namespace` header are handled for you. When calling APIs directly, include both.
 - **Rate limits and health**: Check `Operations` for service health and limits. API reference: [Healthcheck](/api-reference/health/healthcheck) and [Limits](/troubleshoot/limits).
+
+<Steps>
+  <Step title="Set active namespace">
+    Use the top bar switcher. This scopes all actions and mirrors the `X-Namespace` header.
+  </Step>
+  <Step title="Create buckets">
+    Define schemas, then register objects. Buckets are your raw input boundary.
+  </Step>
+  <Step title="Create collections">
+    Choose feature extractors and index configs; this produces searchable documents and vectors.
+  </Step>
+  <Step title="Ingest and process">
+    Upload objects or submit batches; the Engine writes vectors and payloads to Qdrant.
+  </Step>
+  <Step title="Explore and retrieve">
+    Use Explorer for ad-hoc discovery and Retrievers for production search.
+  </Step>
+  <Step title="Enrich with taxonomies and clusters">
+    Attach taxonomies on-demand or materialize; run clustering for discovery and analytics.
+  </Step>
+</Steps>
+
+<Callout type="info">
+Studio follows Mintlify component patterns for clarity and scannability; see the Mintlify starter for examples.
+</Callout>

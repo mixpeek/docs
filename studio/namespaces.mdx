@@ -29,3 +29,19 @@ iconType: "solid"
 
 - Namespaces map 1 to 1 with Qdrant collections. Choose clear names per environment like `acme_dev`, `acme_prod`.
 - Keep one or more feature extractors attached; Engine ensures the collection is bootstrapped on first ingestion.
+
+<Steps>
+  <Step title="Create a namespace">
+    Click New Namespace, add details, and optionally attach feature extractors and payload indexes.
+  </Step>
+  <Step title="Switch active namespace">
+    Use the top bar switcher; this sets the `X-Namespace` applied by Studio.
+  </Step>
+  <Step title="Manage and clean up">
+    Update indexes as needs evolve; delete unused namespaces to keep your workspace tidy.
+  </Step>
+</Steps>
+
+<Callout type="warning">
+Deleting a namespace removes its backing Qdrant collection for the org scope. Ensure backups as needed.
+</Callout>

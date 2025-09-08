@@ -29,3 +29,24 @@ iconType: "solid"
 
 - Object creation does not process files; processing happens when Engine runs extraction based on collections pointing to this bucket.
 - Use batch submit for large ingestions to parallelize Engine work and monitor via Tasks in Studio.
+
+<Tabs>
+  <Tab title="Bucket lifecycle">
+    <Steps>
+      <Step title="Create">Define schema and metadata.</Step>
+      <Step title="Update">Adjust name, description, metadata.</Step>
+      <Step title="Delete">Enqueue task; track in Tasks.</Step>
+    </Steps>
+  </Tab>
+  <Tab title="Objects & batches">
+    <Steps>
+      <Step title="Register objects">Single or batch registration without processing.</Step>
+      <Step title="Create batch">Group object IDs for processing.</Step>
+      <Step title="Submit batch">Trigger Engine processing and monitor progress.</Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+<Callout type="info">
+Processing runs in the Engine and writes to your active namespace; ensure it’s set correctly in the top bar.
+</Callout>

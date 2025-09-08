@@ -27,3 +27,19 @@ iconType: "solid"
 
 - Use small limits and targeted filters while tuning to keep responses fast.
 - Validate feature availability in your collections via `Describe Features` before testing embedding stages.
+
+<Steps>
+  <Step title="Pick a retriever">
+    Select the pipeline to test and provide sample inputs.
+  </Step>
+  <Step title="Run and inspect">
+    Compare per-stage results, scores, and timings to tune configs.
+  </Step>
+  <Step title="Debug inference (optional)">
+    Call inference backends to inspect embeddings and raw outputs.
+  </Step>
+</Steps>
+
+<Callout type="success">
+Promote stable experiments to saved retrievers to unlock governance and reuse across environments.
+</Callout>

@@ -30,3 +30,24 @@ iconType: "solid"
 
 - Use on-demand for interactive retrieval flows and materialize for post-ingestion enrichment.
 - Keep enrichment fields minimal to avoid payload bloat; prefer app-side joins when possible.
+
+<Tabs>
+  <Tab title="Flat">
+    <Steps>
+      <Step title="Create">Select retriever, input mappings, and source collection.</Step>
+      <Step title="Validate">Use Execute for on-demand checks with sample docs.</Step>
+      <Step title="Apply">Attach to a collection as on-demand or materialize.</Step>
+    </Steps>
+  </Tab>
+  <Tab title="Hierarchical">
+    <Steps>
+      <Step title="Define or infer">Add nodes or choose schema/cluster/LLM inference.</Step>
+      <Step title="Per-node options">Override retriever and input mappings as needed.</Step>
+      <Step title="Version">Snapshot configs and track changes over time.</Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+<Callout type="info">
+Materialized enrichments are executed by the Engine post-ingestion—no separate API call is needed.
+</Callout>

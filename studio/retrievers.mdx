@@ -28,3 +28,19 @@ iconType: "solid"
 
 - Ensure your collections expose the vectors you reference; confirm via `Describe Features` on the collection.
 - Use `group_by` to collapse results into logical groups, then control member sorting via stage or final sort.
+
+<Steps>
+  <Step title="Create a retriever">
+    Name it, select collections, and add stages from the catalog.
+  </Step>
+  <Step title="Configure stages">
+    Set parameters and optional pre/post filters; chain multiple stages for hybrid or rerank flows.
+  </Step>
+  <Step title="Test and iterate">
+    Run with sample inputs and inspect per-stage timing and results.
+  </Step>
+</Steps>
+
+<Callout type="success">
+Use Debug Inference to inspect raw model outputs and embeddings when tuning parameters.
+</Callout>

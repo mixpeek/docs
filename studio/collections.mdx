@@ -32,3 +32,19 @@ iconType: "solid"
 
 - Collections are the searchable view of your data; choose extractors that match your modalities.
 - Ensure `internal_id` and `X-Namespace` context is correct—Studio handles this automatically.
+
+<Steps>
+  <Step title="Create a collection">
+    Select a source, add feature extractors, and save. Studio bootstraps vector indexes as needed.
+  </Step>
+  <Step title="Inspect features">
+    Use Describe Features to confirm vector names, dimensions, and index metadata for retriever setup.
+  </Step>
+  <Step title="Attach taxonomies (optional)">
+    Configure on-demand or materialized applications from the collection page.
+  </Step>
+</Steps>
+
+<Callout type="info">
+Documents are stored as Qdrant points with payload and vectors; the point ID is the document_id in results.
+</Callout>
