@@ -4,7 +4,7 @@ description: "Enrich documents by joining against reference collections (flat an
 ---
 
 <Note>
-  Taxonomies are reusable enrichment recipes. They join target documents with reference collections using a configured retriever, then copy selected fields into the results. Use flat taxonomies for 1:1 joins, or hierarchical taxonomies for multi‑level trees (explicit nodes and optional implicit inference).
+  Taxonomies specify information you want to add to each document. For each taxonomy field, you choose how it is populated (usually by running a retriever that searches a reference collection). During enrichment, Mixpeek finds the best match and writes the selected fields from the reference document into the target document or the retrieval result.
 </Note>
 
 ## Overview
@@ -46,6 +46,12 @@ description: "Enrich documents by joining against reference collections (flat an
   </Step>
 </Steps>
 
+## What gets copied
+
+- Selected enrichment fields are copied from the matched reference document into your target document or into the retrieval result, depending on execution mode.
+- Use `merge_mode: "replace"` to overwrite a scalar or object field on the target document.
+- Use `merge_mode: "append"` to add values to an array field on the target document.
+
 ## How it works
 
 <Frame>
@@ -77,7 +83,7 @@ description: "Enrich documents by joining against reference collections (flat an
   <Tab title="Flat">
     - One source collection
     - 1:1 join semantics (best match)
-    - Copy configured enrichment fields with replace/append semantics
+    - Copy configured enrichment fields from the reference document into the target document (replace or append)
   </Tab>
   
   <Tab title="Hierarchical (Explicit)">
