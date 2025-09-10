@@ -7,7 +7,7 @@ description: "The Multimodal Pipeline & Retrieval Platform"
   Welcome to the Mixpeek documentation! Use our API to ingest multimodal data, extract features, enrich documents, and retrieve results with hybrid search.
 </Note>
 
-> Mixpeek turns raw media (text, images, video, audio, PDFs) into structured **documents** and optimized **feature stores** you can query with flexible, staged **retrievers**. The API provides clear primitives for isolation, ingestion, enrichment, and retrieval.
+> Mixpeek converts unstructured media files (text, images, video, audio, PDFs) into structured documents and optimized feature stores. Query your data using flexible, multi-stage retrievers through a clean API with primitives for data isolation, ingestion, enrichment, and retrieval.
 
 <CardGroup cols={2}>
   <Card title="Unified Multimodal Platform" icon="gears">
@@ -46,9 +46,12 @@ description: "The Multimodal Pipeline & Retrieval Platform"
   </Card>
 </CardGroup>
 
-<Warning>
-  API authentication uses the `Authorization: Bearer <api_key>` header. For tenant isolation, include `X-Namespace` where supported.
-</Warning>
+## Headers You’ll Use
+
+```bash
+Authorization: Bearer sk_your_api_key
+X-Namespace: your_namespace_or_id  # optional but recommended for isolation
+```
 
 ## How It Works
 
@@ -69,13 +72,6 @@ description: "The Multimodal Pipeline & Retrieval Platform"
     Use [**Retrievers**](/retrieval/retrievers) to combine vector search, filters, grouping, and ranking, optionally generating presigned URLs.
   </Step>
 </Steps>
-
-## Headers You’ll Use
-
-```bash
-Authorization: Bearer sk_your_api_key
-X-Namespace: your_namespace_or_id  # optional but recommended for isolation
-```
 
 ## Getting Started
 
@@ -127,7 +123,15 @@ For ready-to-use multimodal patterns, see [Recipes](http://mixpeek.com/recipes).
 </Tabs>
 
 <Note>
-  Mixpeek’s API gives you typed resources—Namespaces, Buckets/Objects/Batches, Collections/Documents/Feature Extractors, Taxonomies, Clusters, Retrievers, Tasks, and Webhooks—to build reliable multimodal applications end‑to‑end.
+  Mixpeek’s API gives you typed resources to build reliable multimodal applications end‑to‑end:
+  - Namespaces
+  - Buckets, Objects, Batches
+  - Collections, Documents, Feature Extractors
+  - Taxonomies
+  - Clusters
+  - Retrievers
+  - Tasks
+  - Webhooks
 </Note>
 
 Ready to get started? [Create your first project →](/overview/quickstart)

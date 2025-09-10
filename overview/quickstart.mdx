@@ -205,6 +205,36 @@ curl -sS -X POST "$API_URL/v1/retrievers/<retriever_id>/execute" \
   }'
 ```
 
+## (Optional) 10) Create a Flat Taxonomy
+
+Create a simple flat taxonomy using the same collection as your reference. You can attach it to a collection to materialize enrichment or add it as a join stage in a retriever.
+
+```bash
+curl -sS -X POST "$API_URL/v1/taxonomies" \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: <namespace_id>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "taxonomy_name": "quickstart-taxonomy",
+    "description": "Copy selected fields from best-matching documents",
+    "config": {
+      "taxonomy_type": "flat",
+      "retriever_id": "<retriever_id>",
+      "input_mappings": [
+        { "input_key": "image_vector", "path": "features.clip_vit_l_14", "source_type": "vector" }
+      ],
+      "source_collection": {
+        "collection_id": "<collection_id>",
+        "enrichment_fields": [
+          { "field_path": "metadata.category", "merge_mode": "replace" }
+        ]
+      }
+    }
+  }'
+```
+
+Next step: Learn more about Taxonomies including how to attach and execute on-demand [Taxonomies](/enrichment/taxonomies)
+
 ## Next Steps
 
 Congratulations! You've just built a simple multimodal search application with Mixpeek. To continue your journey:
