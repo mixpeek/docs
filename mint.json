@@ -223,7 +223,8 @@
         "/api-reference/bucket-batches/add-objects-to-batch",
         "/api-reference/bucket-batches/submit-batch-for-processing",
         "/api-reference/bucket-batches/list-batches",
-        "/api-reference/bucket-batches/delete-batch"
+        "/api-reference/bucket-batches/delete-batch",
+        "/api-reference/bucket-batches/cancel-batch"
       ]
     },
     {
