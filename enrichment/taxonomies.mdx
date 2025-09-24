@@ -19,18 +19,18 @@ A simple hierarchical product taxonomy for the Electronics category.
 
 ```mermaid
 flowchart TD
-  A[Electronics taxonomy - modalities: multimodal]
-  A --> B[TV and Home Theater - modalities: image, video, text]
-  B --> C[TVs - modalities: image, video, text]
-  C --> D[OLED TVs - modalities: image, video]
-  C --> E[LED TVs - modalities: image, video]
-  B --> F[Projectors - modalities: image, video]
-  A --> G[Audio - modalities: audio, text]
-  G --> H[Headphones - modalities: audio, text]
-  G --> I[Speakers - modalities: audio, text]
+  A[Electronics taxonomy - multimodal: image + video + text]
+  A --> B[TV and Home Theater - doc: category; signals: image + video + text]
+  B --> C[TVs - doc: product category; signals: image + video + text]
+  C --> D[OLED TVs - doc: product subtype; signals: image + video]
+  C --> E[LED TVs - doc: product subtype; signals: image + video]
+  B --> F[Projectors - doc: product subtype; signals: image + video]
+  A --> G[Audio - doc: category; signals: audio + text]
+  G --> H[Headphones - doc: product subtype; signals: audio + text]
+  G --> I[Speakers - doc: product subtype; signals: audio + text]
 ```
 
-_Modality labels indicate the typical data types used to classify and enrich items at each level._
+_Modality labels show the content used to match each node; multimodal means combining image, video, and text signals within one taxonomy for matching._
 
 
 <Steps>
