@@ -55,6 +55,32 @@ description: "Discover structure, label groups, and enrich collections with clus
   </Step>
 </Steps>
 
+## Multimodal example
+
+<Frame>
+  ```mermaid
+  graph TD
+    subgraph Sources
+      IMG[Images]
+      VID[Videos]
+      AUD[Audio]
+      TXT[Text]
+    end
+
+    IMG --> FE[Feature Extraction - CLIP, Wav2Vec, e5]
+    VID --> FE
+    AUD --> FE
+    TXT --> FE
+
+    FE --> VEC[Vectors]
+    VEC --> PRE[Preprocess - normalize and reduce]
+    PRE --> CL[Cluster - KMeans or HDBSCAN]
+    CL --> ART[Artifacts - Parquet]
+    ART --> ENR[Enrich - cluster_id and labels]
+    ENR -. optional .-> TAX[Derived Taxonomy]
+  ```
+</Frame>
+
 ## Create a cluster definition
 
 - **API**: Create Cluster
