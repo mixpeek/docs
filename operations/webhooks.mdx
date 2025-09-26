@@ -1,0 +1,198 @@
+---
+title: "Webhooks"
+description: "Configure, secure, and operate webhooks for event notifications"
+---
+
+<Note>
+  Webhooks let Mixpeek notify your systems when important events happen (e.g., objects created/updated, clusters created, taxonomies created). Use them to trigger workflows without polling.
+</Note>
+
+## What are webhooks?
+
+- **Outbound notifications**: Mixpeek sends HTTP requests to your endpoints when events occur
+- **Low latency**: Receive changes in near real time to kick off downstream jobs
+- **Channel-flexible**: Deliver to URLs (webhook), Slack, Email, or SMS via channel configs
+
+## Event types
+
+The platform supports these core event types (see API enums for authoritative list):
+
+- `object.created`
+- `object.updated`
+- `object.deleted`
+- `cluster.created`
+- `taxonomy.created`
+
+Refer to the API Reference for the latest set and any additions.
+
+## Channels
+
+<CardGroup cols={2}>
+  <Card title="Webhook (HTTP)" icon="link">
+    POST to your HTTPS endpoint with optional custom headers and a JSON body
+  </Card>
+  
+  <Card title="Slack" icon="message">
+    Notify a Slack channel via a webhook URL and template
+  </Card>
+  
+  <Card title="Email" icon="envelope">
+    Send email notifications with a subject/body template
+  </Card>
+  
+  <Card title="SMS" icon="phone">
+    Short text alerts for critical events
+  </Card>
+</CardGroup>
+
+## Delivery model
+
+- **Request**: For webhook channel, Mixpeek issues an HTTP POST to your configured `url`
+- **Headers**: Optional custom headers are included (e.g., shared secret)
+- **Timeout**: Delivery attempts honor a configurable request timeout (default 10s)
+- **Payload**: JSON body, optionally rendered from a Jinja2 `payload_template`
+- **Success**: Any 2xx response code is treated as success
+
+<Note>
+  Keep webhook endpoints idempotent and return quickly (e.g., enqueue work and respond 200). Long processing should happen asynchronously in your system.
+</Note>
+
+## Create a webhook
+
+Use the API to register a webhook with one or more channels and event types:
+
+```bash
+curl -X POST "https://api.mixpeek.com/v1/organizations/webhooks/" \
+  -H "Authorization: Bearer $MIXPEEK_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+        "webhook_name": "prod-events",
+        "event_types": ["object.created", "object.updated", "cluster.created"],
+        "channels": [
+          {
+            "channel": "webhook",
+            "configs": {
+              "url": "https://example.com/hooks/mixpeek",
+              "headers": { "X-Mixpeek-Secret": "${WEBHOOK_SECRET}" },
+              "timeout": 10
+            }
+          }
+        ]
+      }'
+```
+
+## Example payload
+
+Unless you provide a custom `payload_template`, webhook deliveries generally include an envelope like this (fields and structure may vary based on template and event):
+
+```json
+{
+  "event_type": "object.created",
+  "event_id": "evt_123",
+  "occurred_at": "2025-09-26T10:00:00Z",
+  "data": {
+    "object_id": "obj_abc",
+    "bucket_id": "bkt_123",
+    "namespace_id": "ns_123"
+  }
+}
+```
+
+## Receive webhooks (server examples)
+
+<Tabs>
+  <Tab title="Node (Express)">
+
+```javascript
+import express from "express";
+
+const app = express();
+app.use(express.json());
+
+app.post("/hooks/mixpeek", (req, res) => {
+  const signature = req.header("X-Mixpeek-Secret");
+  // Verify shared secret or signature here
+
+  const { event_type, event_id, data } = req.body;
+  // Enqueue work and ack quickly
+  res.sendStatus(200);
+});
+
+app.listen(3000);
+```
+
+  </Tab>
+  <Tab title="Python (Flask)">
+
+```python
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+@app.post("/hooks/mixpeek")
+def mixpeek_hook():
+    signature = request.headers.get("X-Mixpeek-Secret")
+    # Verify shared secret or signature here
+
+    payload = request.get_json(force=True)
+    # Enqueue work and respond quickly
+    return ("", 200)
+
+if __name__ == "__main__":
+    app.run(port=3000)
+```
+
+  </Tab>
+</Tabs>
+
+## Security & reliability
+
+<CardGroup cols={2}>
+  <Card title="Verify origin" icon="shield">
+    Use a shared secret in headers (e.g., <code>X-Mixpeek-Secret</code>) and verify on receipt
+  </Card>
+  
+  <Card title="HTTPS only" icon="lock">
+    Terminate TLS and reject plain HTTP endpoints
+  </Card>
+  
+  <Card title="Idempotency" icon="repeat">
+    Deduplicate using <code>event_id</code> to safely handle retries
+  </Card>
+  
+  <Card title="Fast acks" icon="bolt">
+    Respond 2xx quickly; do heavy work asynchronously
+  </Card>
+</CardGroup>
+
+## Operate & monitor
+
+- **Observability**: Track delivery successes/failures in your logs/metrics; correlate by <code>event_id</code>
+- **Alerting**: Page on sustained non‑2xx rates from your webhook endpoints
+- **Tasks**: Prefer webhooks over tight polling; for long jobs, see [Tasks](/processing/tasks)
+
+## Troubleshooting
+
+<Steps>
+  <Step title="401/403 responses">
+    Ensure your endpoint accepts the request and validates the shared secret correctly
+  </Step>
+  <Step title="Timeouts">
+    Keep processing under the configured timeout; otherwise quickly ack and process async
+  </Step>
+  <Step title="Unexpected payload">
+    If using <code>payload_template</code>, validate your template; otherwise log the raw body for inspection
+  </Step>
+</Steps>
+
+## References
+
+- [List Webhooks](/api-reference/webhooks/list-webhooks)
+- [Create Webhook](/api-reference/webhooks/create-webhook)
+- [Get Webhook](/api-reference/webhooks/get-webhook)
+- [Update Webhook](/api-reference/webhooks/update-webhook)
+- [Delete Webhook](/api-reference/webhooks/delete-webhook)
+- [Observability](/operations/observability)
+- [Security](/operations/security)
+
+

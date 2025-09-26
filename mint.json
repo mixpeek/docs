@@ -132,7 +132,8 @@
       "pages": [
         "operations/security",
         "operations/deployment",
-        "operations/observability"
+        "operations/observability",
+        "operations/webhooks"
       ]
     },
     {

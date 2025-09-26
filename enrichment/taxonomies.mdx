@@ -135,8 +135,10 @@ _Modality labels show the content used to match each node; multimodal means comb
   </Tab>
   
   <Tab title="Hierarchical (Implicit)">
-    - Infer structure from schema overlap, clustering, or LLM analysis
-    - Combine inference with explicit overrides for a hybrid approach
+    - **Schema inferred**: Analyze collection schemas for overlapping fields or feature addresses to propose parent‑child edges
+    - **Cluster inferred**: Use vector clustering across collections to detect nested groupings and containment
+    - **LLM inferred**: Apply language models over names, metadata, and sample contents to suggest semantic hierarchies
+    - **Hybrid**: Start implicit, then override specific nodes with explicit definitions
   </Tab>
   
   <Tab title="Execution Modes">
