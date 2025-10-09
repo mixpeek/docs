@@ -1,449 +1,691 @@
 ---
 title: "Caching"
-description: "Comprehensive caching layer for retriever results with sub-50ms cached responses"
+description: "Per-stage caching architecture that enables partial cache hits and minimizes compute waste"
 ---
 
 <Info>
-  Mixpeek's caching system provides a provider-agnostic caching layer for retriever results and LLM generations, delivering sub-50ms cached responses with webhook-driven invalidation and HTTP semantic support (ETag/304).
+  Mixpeek uses **per-stage caching** where each stage of your retriever pipeline (inference, search, reranking) caches independently. This means you can get partial cache hits even when your pipeline partially changes, dramatically reducing compute costs.
 </Info>
 
 ## Overview
 
-- **What's cached**: Complete retriever results, embeddings, and LLM generations
-- **Performance**: Sub-50ms cached responses (80%+ compute cost reduction at 80% hit rate)
-- **Backend**: Redis (provider-agnostic architecture supports future backends)
-- **Invalidation**: Four-level hierarchical invalidation (KEY/COLLECTION/RETRIEVER/NAMESPACE)
-- **HTTP Semantics**: Full ETag/304 support for client-side caching
+- **Architecture**: Per-stage caching (each stage caches independently)
+- **Key Benefit**: Partial cache hits save compute even when pipeline changes
+- **Memory Management**: [LRU eviction](https://en.wikipedia.org/wiki/Cache_replacement_policies#Least_recently_used_(LRU)) (no TTL tuning needed)
+- **Performance**: Sub-millisecond cached responses, 80%+ cost reduction
+- **Backend**: [Redis](https://redis.io/docs/manual/eviction/) with automatic eviction
 
 <Frame>
   ```mermaid
   graph TD
-    A[Client Request] --> B{Cache Enabled?}
-    B -->|Yes| C{Check Redis}
-    B -->|No| D[Execute Retriever]
-    C -->|HIT| E[Return Cached<br/>X-Cache: HIT<br/>~0.4ms]
-    C -->|MISS| D
-    D --> F[Cache & Return<br/>X-Cache: MISS<br/>~1500ms]
+    A[Client Request] --> B[Stage 1: Inference]
+    B --> C{Embedding Cached?}
+    C -->|HIT| D[Use Cached Embedding]
+    C -->|MISS| E[Generate Embedding]
+    E --> F[Cache Embedding]
+    D --> G[Stage 2: KNN Search]
+    F --> G
+    G --> H{Results Cached?}
+    H -->|HIT| I[Use Cached Results]
+    H -->|MISS| J[Query Vector DB]
+    J --> K[Cache Results]
+    I --> L[Stage 3: Rerank]
+    K --> L
+    L --> M{Ranked Cached?}
+    M -->|HIT| N[Use Cached Ranking]
+    M -->|MISS| O[Rerank Documents]
+    O --> P[Cache Ranking]
+    N --> Q[Return Results]
+    P --> Q
   ```
 </Frame>
 
-## Quick Start
+## How It Works
 
-### Enable Caching for a Retriever
+### The Problem with Traditional Caching
 
-When creating or updating a retriever, add `cache_config`:
+Traditional retriever caching is **all-or-nothing**:
+
+```
+Query: "dogs on skateboards"
+Pipeline: Embed Query → Vector Search → Rerank → Return
+
+Cache Key: hash(entire_pipeline)
+
+❌ Change rerank model?
+   → Full cache miss
+   → Re-embed query (expensive GPU call)
+   → Re-search vectors (expensive DB query)
+   → Re-rerank with new model
+
+Total waste: Embedding + Vector search compute
+```
+
+### The Per-Stage Solution
+
+With **per-stage caching**, each stage manages its own cache:
+
+```
+Query: "dogs on skateboards"
+
+Stage 1: Inference (Embedding)
+  Cache Key: query_text + model_config
+  ✅ HIT → Reuse cached embedding
+
+Stage 2: Vector Search
+  Cache Key: embedding + filters + collection
+  ✅ HIT → Reuse cached search results
+
+Stage 3: Reranking
+  Cache Key: doc_ids + rerank_model
+  ❌ MISS → Only rerank (model changed!)
+
+Result: Saved 95% of compute by reusing stages 1 & 2!
+```
+
+### Automatic Operation
+
+<Note>
+Stage caching happens **automatically** — you don't need to configure anything. Each stage checks its cache before executing and stores results after execution.
+</Note>
+
+```bash
+# Execute a retriever (caching happens transparently)
+curl https://api.mixpeek.com/v1/retrievers/ret_semantic/execute \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: ns_acme" \
+  -d '{
+    "inputs": {"text": "machine learning"},
+    "limit": 10
+  }'
+
+# First request: All stages MISS
+# - Inference: Generate embedding (~100ms)
+# - KNN: Search vectors (~1500ms)
+# - Rerank: Rerank results (~200ms)
+# Total: ~1800ms
+
+# Second request: All stages HIT
+# - Inference: Cached embedding (~0.4ms)
+# - KNN: Cached results (~0.4ms)
+# - Rerank: Cached ranking (~0.4ms)
+# Total: ~1.2ms (1500x faster!)
+```
+
+## Stage-Specific Caching
+
+### Inference Stage (Embeddings)
+
+**What gets cached**: Text, image, and video [embeddings](https://en.wikipedia.org/wiki/Word_embedding)
+
+**Cache key**: `input_data + model_config`
+
+**When to invalidate**: Rarely (only when embedding model changes)
+
+<Tip>
+Embeddings are **[deterministic](https://en.wikipedia.org/wiki/Deterministic_algorithm)** — the same input with the same model always produces the same output. This makes inference caching extremely effective with near-zero invalidation.
+</Tip>
 
 ```json
+// Cache entry examples
 {
-  "retriever_name": "semantic_search",
-  "collection_ids": ["col_articles"],
-  "stages": [...],
-  "cache_config": {
-    "enabled": true,
-    "ttl_seconds": 3600,
-    "stage": "retrieval"
+  "key": "stage:inference:ns_acme:hash_abc123",
+  "value": [0.123, 0.456, 0.789, ...],  // 1536-dim embedding
+  "inputs": {
+    "text": "dogs on skateboards",
+    "modality": "text"
+  },
+  "config": {
+    "model": "text-embedding-3-small",
+    "dimensions": 1536
   }
 }
 ```
 
-### Check Cache Performance
+**Cache hit scenarios:**
+- ✅ Same query text
+- ✅ Same image URL or file
+- ✅ Same video URL or file
+- ✅ Same model configuration
 
-Inspect response headers to see cache status:
+**Cache miss scenarios:**
+- ❌ Different query text
+- ❌ Different model name or version
+- ❌ Different embedding dimensions
 
-```bash
-curl -i https://api.mixpeek.com/v1/retrievers/ret_semantic/execute \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "X-Namespace: ns_acme" \
-  -d '{"inputs": {"text": "machine learning"}}'
-```
+---
 
-Response headers:
-```
-X-Cache: HIT
-ETag: "a7f3b2c1e5d4..."
-Cache-Control: public, max-age=3600
-```
+### Vector Search Stage (KNN)
 
-### Use ETag for Client-Side Caching
+**What gets cached**: Document IDs and similarity scores from [vector search](https://en.wikipedia.org/wiki/Nearest_neighbor_search)
 
-Send the ETag back in subsequent requests:
+**Cache key**: `embedding + filters + collections + limit`
 
-```bash
-curl -i https://api.mixpeek.com/v1/retrievers/ret_semantic/execute \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "X-Namespace: ns_acme" \
-  -H "If-None-Match: a7f3b2c1e5d4..." \
-  -d '{"inputs": {"text": "machine learning"}}'
-```
-
-If content unchanged, receives `304 Not Modified` (no body, sub-10ms).
-
-## Architecture
-
-### Provider-Agnostic Design
-
-The cache follows the same Protocol/Factory pattern as object storage and webhooks:
-
-```python
-# Get cache provider (currently Redis, future: Memcached, DynamoDB)
-from clients.interfaces.cache import get_cache_provider
-
-cache = get_cache_provider(namespace="ns_acme")
-
-# Use provider-agnostic interface
-cache.set("my:key", {"data": "value"}, ttl=60)
-value = cache.get("my:key")
-cache.delete("my:key")
-```
-
-### Cache Key Generation
-
-Cache keys are deterministically generated from:
-
-- **Namespace**: Tenant isolation
-- **Collection**: Which collection being searched
-- **Retriever ID**: Which retriever configuration
-- **Query Hash**: SHA-256 of normalized query inputs
-- **Index Signature**: Fingerprint of index state
-- **Model Version**: Embedding model version
-- **Filters/Sorts/Limits**: Query parameters
-
-**Key structure:**
-```
-mixpeek:{namespace}:{collection}:{retriever_id}:{cache_key_hash}
-
-Example:
-mixpeek:ns_acme:col_articles:ret_semantic:a7f3b2c1e5d4f89a...
-```
-
-### Normalization
-
-Ensures equivalent queries produce the same cache key:
-
-- **Text normalization**: Case-insensitive, whitespace-trimmed
-- **Filter normalization**: Order-independent sorting
-- **JSON canonicalization**: Sorted keys for deterministic hashing
-
-## Configuration
-
-### Per-Retriever Configuration
-
-Configure caching when creating or updating a retriever:
+**When to invalidate**: When documents are added, updated, or deleted
 
 ```json
+// Cache entry example
 {
-  "cache_config": {
-    "enabled": true,
-    "ttl_seconds": 3600,
-    "stage": "retrieval",
-    "exclude_fields": ["pii_field"]
+  "key": "stage:knn_search:ns_acme:hash_def456",
+  "value": [
+    {"document_id": "doc_123", "score": 0.95},
+    {"document_id": "doc_456", "score": 0.87},
+    {"document_id": "doc_789", "score": 0.82}
+  ],
+  "inputs": {
+    "embedding": [0.123, 0.456, ...],
+    "collection_ids": ["col_articles"],
+    "filters": {"category": "tech"},
+    "limit": 10
   }
 }
 ```
 
-| Field | Type | Description | Default |
-|-------|------|-------------|---------|
-| `enabled` | boolean | Enable caching for this retriever | `false` |
-| `ttl_seconds` | integer | Time-to-live in seconds | `3600` |
-| `stage` | string | Cache stage: `retrieval`, `generation`, or `full` | `retrieval` |
-| `exclude_fields` | array | Fields to exclude from caching (PII protection) | `[]` |
+**Cache hit scenarios:**
+- ✅ Same embedding vector
+- ✅ Same filters
+- ✅ Same collection set
+- ✅ Same limit/offset
 
-### TTL Recommendations
+**Cache miss scenarios:**
+- ❌ Different embedding
+- ❌ Documents added/updated/deleted in collection
+- ❌ Different filters
+- ❌ Different limit
 
-| Content Type | TTL | Use Case |
-|--------------|-----|----------|
-| Real-time feeds | 60-300s | News, social media |
-| Frequently updated | 600-1800s | Product catalogs |
-| Stable content | 3600-7200s | Documentation, archives |
-| Static content | 86400s (24h) | Historical data |
+<Warning>
+Vector search cache is automatically invalidated when documents change via webhook events. This ensures you never serve stale results.
+</Warning>
+
+---
+
+### Reranking Stage
+
+**What gets cached**: Reranked document IDs and scores
+
+**Cache key**: `document_ids + query + rerank_model + config`
+
+**When to invalidate**: Rarely (only when rerank model/config changes)
+
+```json
+// Cache entry example
+{
+  "key": "stage:rerank:ns_acme:hash_ghi789",
+  "value": [
+    {"document_id": "doc_789", "score": 0.99},
+    {"document_id": "doc_123", "score": 0.94},
+    {"document_id": "doc_456", "score": 0.88}
+  ],
+  "inputs": {
+    "document_ids": ["doc_123", "doc_456", "doc_789"],
+    "query": "dogs on skateboards",
+    "strategy": "cross_encoder"
+  },
+  "config": {
+    "model": "ms-marco-MiniLM-L-12-v2",
+    "normalize": true
+  }
+}
+```
+
+**Cache hit scenarios:**
+- ✅ Same document set (order-independent)
+- ✅ Same query text
+- ✅ Same rerank strategy and model
+- ✅ Same configuration
+
+**Cache miss scenarios:**
+- ❌ Different documents
+- ❌ Different query
+- ❌ Different rerank model
+- ❌ Different strategy (e.g., cross-encoder → RRF)
+
+## Why Per-Stage Caching Matters
+
+### Scenario 1: Changing Rerank Models
+
+You want to experiment with different reranking models to improve relevance:
+
+```
+Initial Pipeline:
+  Embed → Search → Rerank (ms-marco)
+
+User changes to:
+  Embed → Search → Rerank (bge-reranker)
+
+With Traditional Caching:
+  ❌ Full pipeline cache miss
+  → Re-embed query ($$$)
+  → Re-search vectors ($$)
+  → Rerank with new model ($)
+  Total: 100% compute used
+
+With Per-Stage Caching:
+  ✅ Inference cache HIT (embedding unchanged)
+  ✅ Vector search cache HIT (results unchanged)
+  ❌ Rerank cache MISS (model changed)
+  Total: Only 5% compute used!
+```
+
+---
+
+### Scenario 2: Adding Documents
+
+You ingest new documents into your collection:
+
+```
+Event: User adds 1,000 new documents
+
+With Traditional Caching:
+  ❌ Invalidate ALL cached queries
+  → Every subsequent query is a full miss
+  → Re-embed + re-search + re-rerank
+  Total: 100% compute for every query
+
+With Per-Stage Caching:
+  ✅ Inference cache unchanged (embeddings are deterministic)
+  ❌ Vector search cache invalidated (index changed)
+  ❌ Rerank cache invalidated (document set changed)
+  
+  Next query:
+  ✅ Inference: HIT (saved 60% of cost)
+  ❌ Search: MISS
+  ❌ Rerank: MISS
+  Total: Only 40% compute used
+```
+
+---
+
+### Scenario 3: Cross-Pipeline Reuse
+
+You have multiple retrievers using the same embedding model:
+
+```
+Pipeline A: Embed (e5-small) → Search → Rerank
+Pipeline B: Embed (e5-small) → Search → LLM Generate
+
+Query: "artificial intelligence" via Pipeline A
+  → Inference: MISS → cache embedding
+  → Search: MISS → cache
+  → Rerank: MISS → cache
+
+Same query via Pipeline B:
+  → Inference: ✅ HIT (shared with A!)
+  → Search: ✅ HIT (shared with A!)
+  → LLM Generate: MISS (different stage)
+
+Result: Saved 66% of compute by sharing inference + search cache
+```
 
 ## Cache Invalidation
 
-### Hierarchical Scopes
+### Automatic Invalidation
 
-The cache supports four levels of invalidation:
+Mixpeek automatically invalidates stage caches based on data changes:
 
-| Scope | Description | Use Case | Performance |
-|-------|-------------|----------|-------------|
-| **KEY** | Single cache entry | Document updated | O(1) |
-| **COLLECTION** | All entries for collection | Index rebuilt | O(1) via set tracking |
-| **RETRIEVER** | All entries for retriever | Config changed | O(1) via set tracking |
-| **NAMESPACE** | All entries for namespace | Model deployed | O(N) pattern scan |
+| Event | Stages Invalidated | Reason |
+|-------|-------------------|---------|
+| **Document added** | Vector Search, Rerank | Index contents changed |
+| **Document updated** | Vector Search, Rerank | Document set changed |
+| **Document deleted** | Vector Search, Rerank | Index contents changed |
+| **Embedding model changed** | Inference | Different model = different embeddings |
+| **Rerank model changed** | Rerank | Different model = different scores |
+
+<Note>
+Inference cache is **almost never invalidated** because embeddings are deterministic. The same input always produces the same output for a given model.
+</Note>
 
 ### Webhook-Driven Invalidation
 
-Cache invalidation is automatically triggered by webhook events:
+When you configure [webhooks](/operations/webhooks), [cache invalidation](https://en.wikipedia.org/wiki/Cache_invalidation) happens automatically:
 
-| Event Type | Cache Scope | What Gets Invalidated |
-|------------|-------------|----------------------|
-| `object.updated` | KEY | Specific cache entries for that object |
-| `object.deleted` | KEY | Specific cache entries for that object |
-| `collection.updated` | COLLECTION | All cache entries for that collection |
-| `collection.deleted` | COLLECTION | All cache entries for that collection |
-| `index.rebuilt` | COLLECTION | All entries (index signature changed) |
-| `embedding.regenerated` | COLLECTION | All entries (embeddings changed) |
-| `retriever.updated` | RETRIEVER | All entries for that retriever |
-| `retriever.deleted` | RETRIEVER | All entries for that retriever |
-| `model.deployed` | NAMESPACE | All entries (model version changed) |
+```json
+// Document update webhook
+{
+  "event": "document.updated",
+  "payload": {
+    "namespace_id": "ns_acme",
+    "collection_id": "col_articles",
+    "document_id": "doc_123"
+  }
+}
 
-### O(1) Invalidation Mechanism
-
-Uses Redis sets for efficient bulk invalidation:
-
-```python
-# On cache SET, track in sets:
-collection_set = "mixpeek:cache:collections:ns_acme:col_articles:keys"
-retriever_set = "mixpeek:cache:retrievers:ns_acme:ret_semantic:keys"
-
-# On invalidation, O(1) set lookup + bulk delete:
-cache_keys = redis.smembers(collection_set)  # O(N) where N = set size
-redis.delete(*cache_keys)  # Single operation
+// Automatic cache invalidation:
+// ❌ Vector Search cache: Cleared for col_articles
+// ❌ Rerank cache: Cleared for col_articles
+// ✅ Inference cache: Unchanged (embeddings still valid)
 ```
 
-## HTTP Semantics
+### Invalidation by Stage
 
-### ETag Support
+Each stage has its own invalidation logic:
 
-The cache implements standard HTTP caching semantics:
+**Inference Stage:**
+- ✅ **Never invalidated** (unless model changes)
+- Embeddings are deterministic and model-agnostic
 
-**First Request:**
-```http
-POST /v1/retrievers/ret_semantic/execute
-{ "inputs": {"text": "dogs"}, "limit": 10 }
+**Vector Search Stage:**
+- ❌ **Invalidated on document changes**
+- When: add/update/delete documents
+- Scope: All searches for that collection
 
-Response:
-HTTP/1.1 200 OK
-ETag: "a7f3b2c1e5d4..."
-X-Cache: MISS
-Cache-Control: public, max-age=3600
+**Rerank Stage:**
+- ❌ **Rarely invalidated**
+- When: Rerank model/config changes
+- Scope: All rerank operations with that model
 
-{ "results": [...] }
+## Memory Management (LRU)
+
+### Why LRU Instead of TTL?
+
+Traditional caching uses [TTL (time-to-live)](https://en.wikipedia.org/wiki/Time_to_live#In_networking) where entries expire after a fixed duration. Per-stage caching uses **[LRU (Least Recently Used)](https://en.wikipedia.org/wiki/Cache_replacement_policies#Least_recently_used_(LRU))** eviction instead:
+
+| Approach | Problem | Solution |
+|----------|---------|----------|
+| **TTL** | Popular queries expire arbitrarily | ❌ Wasted cache space |
+| **TTL** | Unpopular queries waste memory | ❌ No automatic cleanup |
+| **TTL** | Hard to tune (1hr? 1day?) | ❌ Guesswork |
+| **LRU** | Most-used stays cached | ✅ Automatic optimization |
+| **LRU** | Least-used auto-evicted | ✅ Self-cleaning |
+| **LRU** | Bounded memory usage | ✅ Predictable costs |
+
+### How LRU Works
+
+```
+Redis Memory: 1GB (maxmemory limit - see Redis eviction policies)
+
+Cache fills up:
+  Inference: 500MB (83K embeddings)
+  Search: 300MB (60K result sets)
+  Rerank: 200MB (200K rankings)
+  Total: 1GB (at limit)
+
+New cache entry needs space:
+  1. Redis identifies least recently used key
+  2. Evicts that key automatically
+  3. Stores new entry
+  4. No manual intervention needed!
+
+Result: Most popular queries stay cached naturally
 ```
 
-**Subsequent Request:**
-```http
-POST /v1/retrievers/ret_semantic/execute
-If-None-Match: "a7f3b2c1e5d4..."
-{ "inputs": {"text": "dogs"}, "limit": 10 }
+### Memory Distribution
 
-Response:
-HTTP/1.1 304 Not Modified
-ETag: "a7f3b2c1e5d4..."
-Cache-Control: public, max-age=3600
+Typical allocation for a retriever pipeline:
 
-(empty body)
+```
+Total Redis: 1GB
+
+Inference cache:   500MB  (50%)  ← Largest (embeddings are big)
+Search cache:      300MB  (30%)  ← Medium (doc IDs + scores)  
+Rerank cache:      200MB  (20%)  ← Smallest (reordered IDs)
 ```
 
-### Response Headers
-
-| Header | Description | Example |
-|--------|-------------|---------|
-| `X-Cache` | Cache hit/miss status | `HIT` or `MISS` |
-| `ETag` | Unique identifier for this result | `"a7f3b2c1..."` |
-| `Cache-Control` | Browser/CDN caching instructions | `public, max-age=3600` |
-| `Vary` | Vary cache by headers | `X-Retriever, X-Namespace` |
-
-### Client Benefits
-
-✅ **No network transfer** - 304 responses have empty body  
-✅ **Sub-10ms responses** - Client validates ETag only  
-✅ **CDN compatible** - Standard HTTP caching headers  
-✅ **Browser caching** - Works with fetch/axios automatically  
+<Tip>
+Adjust memory allocation based on your workload:
+- Heavy embedding usage → allocate more to inference
+- Complex filters → allocate more to search
+- Multiple rerank models → allocate more to rerank
+</Tip>  
 
 ## Performance
 
 ### Benchmarks
 
-| Operation | Latency | Improvement |
-|-----------|---------|-------------|
-| Cache HIT | ~0.39ms | 4.4x faster than MISS |
-| Cache MISS | ~1.72ms | (baseline) |
-| Retriever (uncached) | ~1500ms | 3850x faster with cache |
-| 304 Not Modified | ~10ms | 150x faster than uncached |
+Per-stage cache performance compared to uncached operations:
 
-### Expected Production Impact
+| Stage | Cache HIT | Uncached | Speedup |
+|-------|-----------|----------|---------|
+| Inference (embedding) | ~0.4ms | ~100ms | **250x faster** |
+| Vector Search (KNN) | ~0.4ms | ~1500ms | **3750x faster** |
+| Reranking | ~0.4ms | ~200ms | **500x faster** |
+| **Full Pipeline (all HITs)** | **~1.2ms** | **~1800ms** | **1500x faster** |
 
-- ⚡ **80%+ compute cost reduction** (at 80% cache hit rate)
-- 🚀 **Sub-50ms cached responses** (target: 10-50ms)
-- 💰 **Significant infrastructure savings** (fewer Ray actor invocations)
-- 📉 **Reduced database load** (fewer Qdrant/MongoDB queries)
+### Partial Cache Hit Benefits
 
-## Security & Compliance
+Even when some stages miss, you still save compute:
 
-### PII Protection
+| Scenario | Stages | Time | Savings |
+|----------|--------|------|---------|
+| All cached | ✅✅✅ | 1.2ms | 99.9% |
+| Inference + Search cached | ✅✅❌ | ~201ms | 89% |
+| Only Inference cached | ✅❌❌ | ~1701ms | 6% |
+| Full miss | ❌❌❌ | ~1800ms | 0% (baseline) |
 
-Exclude sensitive fields from caching:
+<Note>
+Even a **single stage cache hit** saves significant compute. Inference caching alone saves ~100ms per query!
+</Note>
 
-```json
-{
-  "cache_config": {
-    "enabled": true,
-    "exclude_fields": ["ssn", "email", "credit_card"]
-  }
-}
-```
+### Cost Savings
 
-### Namespace Isolation
-
-All cache keys include namespace ID for multi-tenancy security:
+Example for 1M queries/day:
 
 ```
-mixpeek:{namespace_id}:{collection}:{retriever}:{hash}
+Without caching:
+  1M queries × $0.002/query = $2,000/day
+
+With 80% hit rate (all stages cached):
+  800K cached queries ≈ $0 (just Redis overhead)
+  200K uncached queries × $0.002 = $400/day
+  
+  Savings: $1,600/day = $48K/month = $576K/year
+
+With partial cache hits (20% full miss, 60% partial hit):
+  200K full hits: ~$0
+  600K partial hits (inference cached): $600/day
+  200K full miss: $400/day
+  
+  Savings: $1,000/day = $30K/month = $360K/year
 ```
 
-Each tenant's cache is completely isolated from other tenants.
+### Memory Efficiency
 
-### TLS Support
-
-Use `rediss://` protocol for encrypted Redis connections:
-
-```bash
-export REDIS_URL="rediss://user:pass@prod-redis:6379"
-```
-
-### GDPR Compliance
-
-Cache invalidation supports right-to-be-forgotten (RTBF):
-- **Automatic expiration**: All cached data expires after TTL
-- **Manual invalidation**: Delete specific user data via KEY-level invalidation
-- **Data retention**: Configure TTL based on retention policies
+| Stage | Entry Size | 1GB Capacity |
+|-------|------------|--------------|
+| Inference | ~6KB (1536-dim embedding) | ~170K embeddings |
+| Vector Search | ~5KB (10 results) | ~200K result sets |
+| Reranking | ~1KB (10 reranked IDs) | ~1M result sets |
 
 ## Best Practices
 
-### Optimization Tips
+### Optimizing Cache Hit Rates
 
-1. **Increase TTL for stable content** - Archives: 24h, Docs: 1h, News: 5min
-2. **Monitor hit rates** - Aim for 80%+ for frequently accessed content
-3. **Use KEY-level invalidation** - More efficient than COLLECTION-level when possible
-4. **Enable caching for all retrievers** - Unless content changes constantly
-5. **Set appropriate memory limits** - Redis should have 2-3x cache size overhead
+**1. Use consistent query formatting**
+```bash
+# These are DIFFERENT cache keys:
+{"text": "dogs"}           # One key
+{"text": "Dogs"}           # Different key (case-sensitive)
+{"text": " dogs "}         # Different key (whitespace)
 
-### When to Disable Caching
+# Normalize queries client-side for better hit rates
+query = text.lower().strip()
+```
 
-Consider disabling caching when:
-- **Content changes constantly** (< 1 minute freshness required)
-- **Queries are always unique** (no repeated patterns)
-- **Results include time-sensitive data** (stock prices, live scores)
-- **Privacy requirements prohibit caching** (sensitive PII)
+**2. Reuse embeddings across pipelines**
+```
+If multiple retrievers use the same embedding model,
+they automatically share inference cache!
 
-### Monitoring
+Pipeline A: embed(text-embedding-3-small) → search → rerank
+Pipeline B: embed(text-embedding-3-small) → search → generate
 
-Check cache performance via response headers:
+Both pipelines share the inference cache ✅
+```
+
+**3. Monitor memory usage**
+```bash
+# Check Redis memory stats
+redis-cli INFO memory
+
+# Key metrics:
+# - used_memory: Current usage
+# - maxmemory: Configured limit
+# - evicted_keys: How many keys were evicted (LRU)
+# - keyspace_hits/keyspace_misses: Hit rate
+```
+
+### When Per-Stage Caching Helps Most
+
+✅ **High query repetition** - Same queries asked frequently  
+✅ **Model experimentation** - Testing different rerank/generation models  
+✅ **Frequent document updates** - Inference cache remains valid  
+✅ **Cross-pipeline workloads** - Shared embeddings across retrievers  
+✅ **Expensive inference** - GPU-based embedding models  
+
+### When It Helps Less
+
+⚠️ **Unique queries every time** - No repeated patterns to cache  
+⚠️ **Real-time data** - Documents change every second  
+⚠️ **Simple pipelines** - Single-stage retrievers (less benefit)  
+
+### Security & Compliance
+
+**Namespace Isolation**
+
+All cache keys include namespace ID for [multi-tenancy](https://en.wikipedia.org/wiki/Multitenancy) security:
+
+```
+stage:inference:ns_acme:hash_abc123
+stage:knn_search:ns_acme:hash_def456
+```
+
+Each tenant's cache is completely isolated.
+
+**TLS Support**
+
+Use [TLS](https://en.wikipedia.org/wiki/Transport_Layer_Security) for encrypted Redis connections:
 
 ```bash
-# Cache hit rate
-curl -i /v1/retrievers/ret_semantic/execute | grep "X-Cache: HIT"
-
-# ETag validation
-curl -i -H "If-None-Match: <etag>" /v1/retrievers/ret_semantic/execute
+# Use rediss:// protocol (note the extra 's')
+export REDIS_URL="rediss://user:pass@prod-redis:6379"
 ```
 
-Alert thresholds:
-- ⚠️ Hit rate < 50% - Investigate cache configuration or TTL
-- ⚠️ Evictions > 10% - Increase Redis memory
-- ⚠️ Redis health != "ok" - Check Redis connection
+**GDPR Compliance**
 
-## Implementation Details
+LRU eviction supports [right-to-be-forgotten](https://en.wikipedia.org/wiki/Right_to_be_forgotten):
+- Cached data expires automatically when evicted
+- No need for manual cleanup
+- Bounded retention (determined by memory limit)
 
-### Request Flow
+## Real-World Examples
 
-1. Client sends request to `/v1/retrievers/{id}/execute`
-2. Controller checks `retriever.cache_config.enabled`
-3. If enabled:
-   - Build cache key from request components
-   - Generate ETag (SHA-256 hash)
-   - Check `If-None-Match` header → return 304 if match
-   - Check Redis cache → return cached result if hit
-4. If cache miss, execute retriever (SearchFlow)
-5. Store result in cache with TTL
-6. Return response with cache headers (`X-Cache`, `ETag`, `Cache-Control`)
-
-### Cache Key Components
-
-```python
-{
-  "namespace": "ns_acme",
-  "collection": "col_articles",
-  "retriever_id": "ret_semantic",
-  "query_inputs": {"text": "machine learning"},
-  "filters": {"category": "tech"},
-  "sorts": [{"field": "date", "order": "desc"}],
-  "limit": 10,
-  "offset": 0,
-  "index_signature": "sig_abc123",
-  "model_version": "v2.0"
-}
-```
-
-### Cache Stages
-
-| Stage | Description | What's Cached |
-|-------|-------------|---------------|
-| `retrieval` | Cache search results only | Document matches, scores, metadata |
-| `generation` | Cache LLM responses only | Generated text, completions |
-| `full` | Cache entire pipeline | End-to-end results |
-
-## Examples
-
-### Enable Caching
-
-```json
-POST /v1/retrievers
-{
-  "retriever_name": "semantic_search",
-  "collection_ids": ["col_articles"],
-  "stages": [
-    {
-      "stage_name": "knn_search",
-      "parameters": {
-        "feature_field_name": "text_embedding",
-        "top_k": 10
-      }
-    }
-  ],
-  "cache_config": {
-    "enabled": true,
-    "ttl_seconds": 3600
-  }
-}
-```
-
-### Execute with Caching
+### Example 1: Simple Query with Full Cache Hit
 
 ```bash
-# First request (MISS)
-curl -i https://api.mixpeek.com/v1/retrievers/ret_semantic/execute \
+# First request - all stages miss
+curl https://api.mixpeek.com/v1/retrievers/ret_semantic/execute \
   -H "Authorization: Bearer $API_KEY" \
   -H "X-Namespace: ns_acme" \
-  -d '{"inputs": {"text": "machine learning"}}'
+  -d '{"inputs": {"text": "machine learning tutorials"}}'
 
-# Response:
-# X-Cache: MISS
-# ETag: "a7f3b2c1e5d4..."
-# (1500ms response time)
+# Internally:
+# Stage 1 (Inference): MISS → Generate embedding (100ms)
+# Stage 2 (Search): MISS → Query vectors (1500ms)
+# Stage 3 (Rerank): MISS → Rerank results (200ms)
+# Total: ~1800ms
 
-# Second request (HIT)
-curl -i https://api.mixpeek.com/v1/retrievers/ret_semantic/execute \
+# Second request (same query)
+curl https://api.mixpeek.com/v1/retrievers/ret_semantic/execute \
   -H "Authorization: Bearer $API_KEY" \
   -H "X-Namespace: ns_acme" \
-  -d '{"inputs": {"text": "machine learning"}}'
+  -d '{"inputs": {"text": "machine learning tutorials"}}'
 
-# Response:
-# X-Cache: HIT
-# ETag: "a7f3b2c1e5d4..."
-# (0.39ms response time - 3850x faster!)
+# Internally:
+# Stage 1 (Inference): HIT → Cached embedding (0.4ms)
+# Stage 2 (Search): HIT → Cached results (0.4ms)
+# Stage 3 (Rerank): HIT → Cached ranking (0.4ms)
+# Total: ~1.2ms (1500x faster!)
 ```
 
-### Use ETag Validation
+---
+
+### Example 2: Partial Cache Hit (Model Change)
 
 ```bash
-curl -i https://api.mixpeek.com/v1/retrievers/ret_semantic/execute \
+# User changes rerank model in retriever configuration
+# Same query as before
+
+curl https://api.mixpeek.com/v1/retrievers/ret_semantic/execute \
   -H "Authorization: Bearer $API_KEY" \
   -H "X-Namespace: ns_acme" \
-  -H "If-None-Match: a7f3b2c1e5d4..." \
-  -d '{"inputs": {"text": "machine learning"}}'
+  -d '{"inputs": {"text": "machine learning tutorials"}}'
 
-# If unchanged:
-# HTTP/1.1 304 Not Modified
-# (10ms response time, empty body)
+# Internally:
+# Stage 1 (Inference): HIT → Cached embedding (0.4ms) ✅
+# Stage 2 (Search): HIT → Cached results (0.4ms) ✅
+# Stage 3 (Rerank): MISS → New model, must rerank (200ms) ❌
+# Total: ~201ms (9x faster than full miss!)
 ```
+
+---
+
+### Example 3: Partial Cache Hit (Document Update)
+
+```bash
+# User adds 100 new documents to collection
+# Webhook triggers cache invalidation for search & rerank stages
+
+curl https://api.mixpeek.com/v1/retrievers/ret_semantic/execute \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: ns_acme" \
+  -d '{"inputs": {"text": "machine learning tutorials"}}'
+
+# Internally:
+# Stage 1 (Inference): HIT → Cached embedding (0.4ms) ✅
+# Stage 2 (Search): MISS → Index changed, must search (1500ms) ❌
+# Stage 3 (Rerank): MISS → Doc set changed (200ms) ❌
+# Total: ~1701ms (but saved 100ms from inference cache!)
+```
+
+---
+
+### Example 4: Cross-Pipeline Cache Sharing
+
+```bash
+# Pipeline A: embed → search → rerank
+# Pipeline B: embed → search → LLM generate
+
+# Execute Pipeline A
+curl https://api.mixpeek.com/v1/retrievers/ret_pipeline_a/execute \
+  -d '{"inputs": {"text": "AI safety"}}'
+
+# Pipeline A:
+# Inference: MISS → cache
+# Search: MISS → cache
+# Rerank: MISS → cache
+
+# Execute Pipeline B (same query, different last stage)
+curl https://api.mixpeek.com/v1/retrievers/ret_pipeline_b/execute \
+  -d '{"inputs": {"text": "AI safety"}}'
+
+# Pipeline B:
+# Inference: HIT → shared with Pipeline A! ✅
+# Search: HIT → shared with Pipeline A! ✅
+# LLM Generate: MISS → different stage ❌
+
+# Result: Saved 89% of compute by sharing 2/3 stages
+```
+
+## Summary
+
+### Key Takeaways
+
+✅ **Per-stage caching** enables partial cache hits  
+✅ **LRU eviction** eliminates TTL tuning  
+✅ **Automatic operation** - no configuration needed  
+✅ **Cross-pipeline sharing** - embeddings reused across retrievers  
+✅ **Smart invalidation** - only affected stages are cleared  
+
+### When to Expect Big Wins
+
+- 🔥 **High query repetition** (80%+ hit rate possible)
+- 🔥 **Model experimentation** (inference cache persists)
+- 🔥 **Frequent updates** (inference cache unaffected)
+- 🔥 **Multiple pipelines** (shared embedding cache)
+
+### Related Documentation
+
+- [Retrievers](/retrieval/retrievers) - How to create and configure retrievers
+- [Collections](/ingestion/collections) - Managing document collections
+- [Webhooks](/operations/webhooks) - Configure automatic cache invalidation
+- [Feature Extractors](/processing/feature-extractors) - Embedding models and configuration
