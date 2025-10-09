@@ -4,26 +4,51 @@ description: "Configure, secure, and operate webhooks for event notifications"
 ---
 
 <Note>
-  Webhooks let Mixpeek notify your systems when important events happen (e.g., objects created/updated, clusters created, taxonomies created). Use them to trigger workflows without polling.
+  Webhooks let Mixpeek notify your systems when events occur in real time. Use them to trigger workflows, invalidate caches, and keep downstream systems in sync without polling.
 </Note>
 
 ## What are webhooks?
 
-- **Outbound notifications**: Mixpeek sends HTTP requests to your endpoints when events occur
+- **Outbound notifications**: Mixpeek sends HTTP POST requests to your endpoints when events occur
 - **Low latency**: Receive changes in near real time to kick off downstream jobs
 - **Channel-flexible**: Deliver to URLs (webhook), Slack, Email, or SMS via channel configs
+- **Cache-aware**: Events include cache invalidation scopes for maintaining consistency
 
 ## Event types
 
-The platform supports these core event types (see API enums for authoritative list):
+Events are grouped into categories based on the resources they track:
 
-- `object.created`
-- `object.updated`
-- `object.deleted`
-- `cluster.created`
-- `taxonomy.created`
+<Tabs>
+  <Tab title="Object Lifecycle">
+    - `object.created` ✅ - New object ingested into bucket
+    - `object.updated` ✅ - Object content or metadata updated
+    - `object.deleted` ✅ - Object permanently deleted
+    - `object.redacted` ⏳ - PII stripped from object (planned)
+  </Tab>
+  
+  <Tab title="Collection Lifecycle">
+    - `collection.created` ✅ - New collection created
+    - `collection.updated` ✅ - Collection configuration updated
+    - `collection.deleted` ✅ - Collection deleted
+  </Tab>
+  
+  <Tab title="Taxonomy Lifecycle">
+    - `taxonomy.created` ✅ - New taxonomy created
+    - `taxonomy.updated` ⏳ - Taxonomy configuration updated (planned)
+    - `taxonomy.deleted` ⏳ - Taxonomy deleted (planned)
+    - `taxonomy.mapping.updated` ⏳ - Taxonomy mappings updated (planned)
+  </Tab>
+  
+  <Tab title="Cluster Lifecycle">
+    - `cluster.created` ✅ - New cluster created
+    - `cluster.updated` ⏳ - Cluster configuration updated (planned)
+    - `cluster.deleted` ⏳ - Cluster deleted (planned)
+  </Tab>
+</Tabs>
 
-Refer to the API Reference for the latest set and any additions.
+<Info>
+  **Status Legend**: ✅ Currently implemented | ⏳ Planned for future release
+</Info>
 
 ## Channels
 
@@ -81,22 +106,50 @@ curl -X POST "https://api.mixpeek.com/v1/organizations/webhooks/" \
       }'
 ```
 
-## Example payload
+## Standard payload structure
 
-Unless you provide a custom `payload_template`, webhook deliveries generally include an envelope like this (fields and structure may vary based on template and event):
+All webhook events follow a consistent structure:
 
 ```json
 {
+  "event_id": "evt_abc123",
   "event_type": "object.created",
-  "event_id": "evt_123",
-  "occurred_at": "2025-09-26T10:00:00Z",
-  "data": {
-    "object_id": "obj_abc",
-    "bucket_id": "bkt_123",
-    "namespace_id": "ns_123"
+  "occurred_at": "2025-10-08T16:09:00Z",
+  "namespace": "acme",
+  "collection": "articles",
+  "actor": "system",
+  "subject": {
+    "type": "object",
+    "id": "obj_abc123"
+  },
+  "version": "v1",
+  "index_signature": "sig_c1f9...",
+  "cache_scope_to_invalidate": {
+    "scope": "key",
+    "keys": ["mixpeek:acme:articles:obj_abc123"]
+  },
+  "metadata": {
+    "object_id": "obj_abc123",
+    "bucket_id": "bkt_xyz",
+    "namespace_id": "ns_acme",
+    "content_type": "video/mp4"
   }
 }
 ```
+
+### Cache invalidation scopes
+
+Events include cache invalidation information to help maintain consistency:
+
+| Scope | When Used | Example |
+|-------|-----------|---------|
+| `KEY` | Document-level changes (create, update, delete) | Single object modified |
+| `COLLECTION` | Collection-wide changes (config, taxonomy, ranker) | Collection settings updated |
+| `NAMESPACE` | Namespace-wide changes (model rollout) | Global model update |
+
+<Info>
+  Use the `cache_scope_to_invalidate` field to intelligently invalidate caches in your application.
+</Info>
 
 ## Receive webhooks (server examples)
 
@@ -145,6 +198,64 @@ if __name__ == "__main__":
   </Tab>
 </Tabs>
 
+## Event-specific examples
+
+<Tabs>
+  <Tab title="Object Created">
+```json
+{
+  "event_type": "object.created",
+  "subject": { "type": "object", "id": "obj_abc123" },
+  "metadata": {
+    "object_id": "obj_abc123",
+    "bucket_id": "bkt_xyz",
+    "namespace_id": "ns_acme",
+    "content_type": "video/mp4"
+  },
+  "cache_scope_to_invalidate": {
+    "scope": "key",
+    "keys": ["mixpeek:ns_acme:col_articles:obj_abc123"]
+  }
+}
+```
+  </Tab>
+
+  <Tab title="Collection Updated">
+```json
+{
+  "event_type": "collection.updated",
+  "subject": { "type": "collection", "id": "col_abc123" },
+  "metadata": {
+    "collection_id": "col_abc123",
+    "collection_name": "articles",
+    "namespace_id": "ns_acme",
+    "updated_fields": ["taxonomy_applications", "metadata"]
+  },
+  "cache_scope_to_invalidate": {
+    "scope": "collection",
+    "collection_id": "col_abc123"
+  }
+}
+```
+  </Tab>
+
+  <Tab title="Taxonomy Created">
+```json
+{
+  "event_type": "taxonomy.created",
+  "subject": { "type": "taxonomy", "id": "tax_abc123" },
+  "metadata": {
+    "taxonomy_id": "tax_abc123",
+    "taxonomy_name": "categories",
+    "taxonomy_type": "flat",
+    "namespace_id": "ns_acme",
+    "version": 1
+  }
+}
+```
+  </Tab>
+</Tabs>
+
 ## Security & reliability
 
 <CardGroup cols={2}>
@@ -165,11 +276,32 @@ if __name__ == "__main__":
   </Card>
 </CardGroup>
 
+## Best practices
+
+<CardGroup cols={2}>
+  <Card title="Store event IDs" icon="database">
+    Persist <code>event_id</code> to deduplicate retries and track event history
+  </Card>
+  
+  <Card title="Use cache scopes" icon="refresh">
+    Leverage <code>cache_scope_to_invalidate</code> to intelligently refresh your caches
+  </Card>
+  
+  <Card title="Subscribe selectively" icon="filter">
+    Only subscribe to event types your application needs to reduce noise
+  </Card>
+  
+  <Card title="Monitor delivery" icon="chart-line">
+    Track webhook delivery success rates and response times in your observability stack
+  </Card>
+</CardGroup>
+
 ## Operate & monitor
 
-- **Observability**: Track delivery successes/failures in your logs/metrics; correlate by <code>event_id</code>
+- **Observability**: Track delivery successes/failures in your logs/metrics; correlate by `event_id`
 - **Alerting**: Page on sustained non‑2xx rates from your webhook endpoints
 - **Tasks**: Prefer webhooks over tight polling; for long jobs, see [Tasks](/processing/tasks)
+- **Testing**: Use the E2E webhook test suite for comprehensive validation
 
 ## Troubleshooting
 
@@ -183,16 +315,47 @@ if __name__ == "__main__":
   <Step title="Unexpected payload">
     If using <code>payload_template</code>, validate your template; otherwise log the raw body for inspection
   </Step>
+  <Step title="Missing events">
+    Verify your webhook subscription includes the expected <code>event_types</code> and is <code>is_active: true</code>
+  </Step>
+  <Step title="Duplicate events">
+    Events may be delivered multiple times on retry; always use <code>event_id</code> for deduplication
+  </Step>
 </Steps>
 
 ## References
 
-- [List Webhooks](/api-reference/webhooks/list-webhooks)
-- [Create Webhook](/api-reference/webhooks/create-webhook)
-- [Get Webhook](/api-reference/webhooks/get-webhook)
-- [Update Webhook](/api-reference/webhooks/update-webhook)
-- [Delete Webhook](/api-reference/webhooks/delete-webhook)
-- [Observability](/operations/observability)
-- [Security](/operations/security)
-
+<CardGroup cols={2}>
+  <Card title="List Webhooks" icon="list" href="/api-reference/webhooks/list-webhooks">
+    View all webhook subscriptions for your organization
+  </Card>
+  
+  <Card title="Create Webhook" icon="plus" href="/api-reference/webhooks/create-webhook">
+    Register a new webhook subscription
+  </Card>
+  
+  <Card title="Get Webhook" icon="file" href="/api-reference/webhooks/get-webhook">
+    Retrieve webhook details by ID
+  </Card>
+  
+  <Card title="Update Webhook" icon="pen" href="/api-reference/webhooks/update-webhook">
+    Modify webhook configuration
+  </Card>
+  
+  <Card title="Delete Webhook" icon="trash" href="/api-reference/webhooks/delete-webhook">
+    Remove a webhook subscription
+  </Card>
+  
+  <Card title="Tasks" icon="list-check" href="/processing/tasks">
+    Monitor asynchronous jobs that trigger webhook events
+  </Card>
+  
+  <Card title="Observability" icon="chart-mixed" href="/operations/observability">
+    Health checks and monitoring for webhook delivery
+  </Card>
+  
+  <Card title="Security" icon="shield" href="/operations/security">
+    Authentication and authorization best practices
+  </Card>
+</CardGroup>
 
