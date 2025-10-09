@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "@mintlify/scraping": "^3.0.179"
+    "@mintlify/scraping": "^3.0.179",
+    "sharp": "^0.34.4"
   }
 }
