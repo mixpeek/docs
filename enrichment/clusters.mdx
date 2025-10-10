@@ -4,7 +4,7 @@ description: "Discover structure, label groups, and enrich collections with clus
 ---
 
 <Note>
-  Clustering groups similar documents to power discovery, analytics visuals, and taxonomy bootstrapping. Mixpeek runs clustering as an engine pipeline, stores artifacts (Parquet) for scale, and exposes APIs to create, execute, list, stream, and apply enrichments.
+  Clustering groups similar documents to power discovery, analytics visuals, and taxonomy bootstrapping. Mixpeek runs clustering as an engine pipeline, stores artifacts (Parquet) for scale, and exposes APIs to create, execute, list, stream, and apply enrichments. **New:** Automated triggers let you schedule clustering with cron expressions, intervals, events, or conditions—keeping your clusters fresh without manual intervention.
 </Note>
 
 ## Overview
@@ -25,6 +25,14 @@ description: "Discover structure, label groups, and enrich collections with clus
   <Card title="Enrichment" icon="plus">
     Write back cluster_id membership or create derived collections
   </Card>
+
+  <Card title="Automated Triggers" icon="clock">
+    Schedule clustering with cron, intervals, events, or conditions
+  </Card>
+  
+  <Card title="Event-Driven" icon="bolt">
+    Auto-recluster when documents added or data changes significantly
+  </Card>
 </CardGroup>
 
 ## How it works
@@ -32,26 +40,43 @@ description: "Discover structure, label groups, and enrich collections with clus
 <Frame>
   ```mermaid
   graph TD
-    SRC[Source Collections] --> PRE[Preprocess]
-    PRE --> CL[Clustering]
-    CL --> POST[Postprocess]
+    subgraph Execution["Execution Modes"]
+      MAN[Manual Execute API]
+      TRIG[Automated Triggers]
+    end
+    
+    MAN --> PRE[Preprocess]
+    TRIG -->|Cron/Interval/Event/Conditional| PRE
+    
+    SRC[Source Collections] --> PRE
+    PRE --> CL[Clustering Algorithm]
+    CL --> POST[Postprocess & LLM Labeling]
     POST --> ART[Artifacts Parquet]
     POST --> ENR[Optional Enrichment]
+    
+    ENR -.->|Write cluster_id| SRC
+    POST -.->|Webhook events| WH[Webhooks]
   ```
 </Frame>
 
 <Steps>
+  <Step title="Trigger or Execute">
+    Start clustering via manual API call or automated trigger (cron, interval, event, conditional)
+  </Step>
   <Step title="Preprocess">
-    Optional normalization and dimensionality reduction (UMAP, tSNE, etc.)
+    Optional normalization and dimensionality reduction (UMAP, tSNE, PCA)
   </Step>
   <Step title="Cluster">
     Algorithms like KMeans, DBSCAN, HDBSCAN, Agglomerative, Spectral, GMM, Mean Shift, OPTICS
   </Step>
   <Step title="Postprocess">
-    Centroids and stats; optional LLM labeling and hierarchical metadata
+    Compute centroids and stats; optional LLM labeling and hierarchical metadata
   </Step>
-  <Step title="Persist">
-    Parquet artifacts saved per run_id; list and stream via API
+  <Step title="Persist & Notify">
+    Parquet artifacts saved per run_id; webhook events emitted for monitoring
+  </Step>
+  <Step title="Enrich (optional)">
+    Write cluster_id membership and labels back to documents
   </Step>
 </Steps>
 
@@ -137,6 +162,380 @@ curl -X POST https://api.mixpeek.com/v1/clusters/execute \
 
 Response includes `run_id`, metrics, and centroid summaries. Artifacts are written under a per‑run S3 prefix.
 
+## Automated clustering with triggers
+
+Instead of manually executing clustering, you can define **triggers** that automatically run clustering jobs based on schedules, events, or conditions. This ensures your clusters stay fresh without manual intervention.
+
+<Info>
+  Triggers are perfect for production workflows where data constantly changes—nightly reclustering, event-driven updates, or condition-based refreshes.
+</Info>
+
+### Why use triggers?
+
+<CardGroup cols={2}>
+  <Card title="Stay Fresh" icon="arrows-rotate">
+    Keep clusters up-to-date as new documents arrive
+  </Card>
+  
+  <Card title="Hands-Off" icon="hand-peace">
+    Set once, runs automatically—no manual execution needed
+  </Card>
+  
+  <Card title="Resource Efficient" icon="gauge-high">
+    Schedule during off-peak hours or when data changes significantly
+  </Card>
+  
+  <Card title="Production Ready" icon="shield-check">
+    Built-in failure handling, webhooks, and execution history
+  </Card>
+</CardGroup>
+
+### Trigger types
+
+Mixpeek supports four trigger types, each suited for different use cases:
+
+<Tabs>
+  <Tab title="Cron Triggers">
+    **Execute clustering at specific times using cron expressions.**
+
+    **Perfect for:**
+    - Nightly reclustering at 2am
+    - Weekly batch processing every Sunday
+    - Month-end analytics
+
+    ```bash
+    curl -X POST https://api.mixpeek.com/v1/clusters/triggers \
+      -H "Authorization: Bearer $API_KEY" \
+      -H "X-Namespace: ns_123" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "execution_config": {
+          "collection_ids": ["col_products"],
+          "config": {
+            "algorithm": "kmeans",
+            "algorithm_params": {"n_clusters": 10}
+          }
+        },
+        "trigger_type": "cron",
+        "schedule_config": {
+          "cron_expression": "0 2 * * *",
+          "timezone": "America/New_York"
+        },
+        "description": "Nightly product clustering at 2am EST"
+      }'
+    ```
+
+    **Common cron expressions:**
+    - `"0 2 * * *"` - Daily at 2:00am
+    - `"0 */6 * * *"` - Every 6 hours
+    - `"0 0 * * 0"` - Every Sunday at midnight
+    - `"30 14 1 * *"` - First day of month at 2:30pm
+
+  </Tab>
+  
+  <Tab title="Interval Triggers">
+    **Execute clustering at fixed time intervals.**
+
+    **Perfect for:**
+    - Continuous monitoring with hourly updates
+    - Regular refresh every 30 minutes
+    - Periodic batch processing
+
+    ```bash
+    curl -X POST https://api.mixpeek.com/v1/clusters/triggers \
+      -H "Authorization: Bearer $API_KEY" \
+      -H "X-Namespace: ns_123" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "cluster_id": "cl_existing_cluster",
+        "trigger_type": "interval",
+        "schedule_config": {
+          "interval_seconds": 3600,
+          "start_immediately": false
+        },
+        "description": "Hourly cluster refresh"
+      }'
+    ```
+
+    **Minimum interval:** 300 seconds (5 minutes)
+
+  </Tab>
+  
+  <Tab title="Event Triggers">
+    **Execute clustering when specific events occur.**
+
+    **Perfect for:**
+    - Cluster after 1,000 new documents added
+    - Re-cluster when batch import completes
+    - Update clusters on significant data changes
+
+    ```bash
+    curl -X POST https://api.mixpeek.com/v1/clusters/triggers \
+      -H "Authorization: Bearer $API_KEY" \
+      -H "X-Namespace: ns_123" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "execution_config": {
+          "collection_ids": ["col_products"],
+          "config": {"algorithm": "hdbscan"}
+        },
+        "trigger_type": "event",
+        "schedule_config": {
+          "event_type": "documents_added",
+          "event_threshold": 1000,
+          "collection_id": "col_products",
+          "cooldown_seconds": 1800
+        },
+        "description": "Cluster after every 1000 new products"
+      }'
+    ```
+
+    **Event types:**
+    - `documents_added` - New documents added to collection
+    - `documents_updated` - Documents updated in collection
+    - `batch_completed` - Batch processing completed
+
+    **Cooldown:** Prevents rapid repeated triggering (default: 300 seconds)
+
+  </Tab>
+  
+  <Tab title="Conditional Triggers">
+    **Execute clustering when conditions are met (advanced).**
+
+    **Perfect for:**
+    - Cluster when embedding drift exceeds threshold
+    - Re-cluster when collection size doubles
+    - Update when cluster quality degrades
+
+    ```bash
+    curl -X POST https://api.mixpeek.com/v1/clusters/triggers \
+      -H "Authorization: Bearer $API_KEY" \
+      -H "X-Namespace: ns_123" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "execution_config": {
+          "collection_ids": ["col_products"],
+          "config": {"algorithm": "kmeans"}
+        },
+        "trigger_type": "conditional",
+        "schedule_config": {
+          "condition_type": "drift",
+          "threshold": 0.15,
+          "metric": "embedding_drift",
+          "check_interval_seconds": 3600
+        },
+        "description": "Cluster when drift exceeds 15%"
+      }'
+    ```
+
+    **Condition types:**
+    - `drift` - Vector embedding drift detection
+    - `volume` - Collection size changes
+    - `quality` - Cluster quality metrics
+    - `custom` - User-defined webhook-based conditions
+
+  </Tab>
+</Tabs>
+
+### Managing triggers
+
+<AccordionGroup>
+  <Accordion title="Pause and resume triggers" icon="pause">
+    Temporarily stop a trigger without deleting it:
+
+    ```bash
+    # Pause trigger
+    curl -X POST https://api.mixpeek.com/v1/clusters/triggers/trig_abc123/pause \
+      -H "Authorization: Bearer $API_KEY" \
+      -H "X-Namespace: ns_123"
+
+    # Resume trigger
+    curl -X POST https://api.mixpeek.com/v1/clusters/triggers/trig_abc123/resume \
+      -H "Authorization: Bearer $API_KEY" \
+      -H "X-Namespace: ns_123"
+    ```
+
+    When resumed, the next execution time is recalculated from the current time.
+  </Accordion>
+  
+  <Accordion title="Update trigger schedules" icon="pen">
+    Modify schedule configuration without recreating the trigger:
+
+    ```bash
+    curl -X PATCH https://api.mixpeek.com/v1/clusters/triggers/trig_abc123 \
+      -H "Authorization: Bearer $API_KEY" \
+      -H "X-Namespace: ns_123" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "schedule_config": {
+          "cron_expression": "0 3 * * *"
+        },
+        "description": "Updated to 3am"
+      }'
+    ```
+
+    **Note:** Trigger type is immutable—delete and recreate to change type.
+  </Accordion>
+  
+  <Accordion title="View execution history" icon="clock-rotate-left">
+    Track all executions of a trigger with detailed metrics:
+
+    ```bash
+    curl -X POST https://api.mixpeek.com/v1/clusters/triggers/trig_abc123/history \
+      -H "Authorization: Bearer $API_KEY" \
+      -H "X-Namespace: ns_123" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "offset": 0,
+        "limit": 50,
+        "status_filter": "completed"
+      }'
+    ```
+
+    Response includes:
+    - Job IDs and execution times
+    - Status (completed/failed)
+    - Execution duration
+    - Cluster count and document count
+  </Accordion>
+  
+  <Accordion title="List and filter triggers" icon="list">
+    Find triggers by cluster, type, or status:
+
+    ```bash
+    curl -X POST https://api.mixpeek.com/v1/clusters/triggers/list \
+      -H "Authorization: Bearer $API_KEY" \
+      -H "X-Namespace: ns_123" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "cluster_id": "cl_xyz789",
+        "trigger_type": "cron",
+        "status": "active",
+        "offset": 0,
+        "limit": 50
+      }'
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Trigger lifecycle and status
+
+<Steps>
+  <Step title="Active">
+    Trigger is enabled and will fire according to schedule. This is the normal operating state.
+  </Step>
+  <Step title="Paused">
+    Trigger is temporarily disabled but retains configuration. Use pause endpoint to enter this state.
+  </Step>
+  <Step title="Failed">
+    Trigger automatically disabled after 5 consecutive failures. Requires manual resume after fixing issues.
+  </Step>
+  <Step title="Disabled">
+    Trigger soft-deleted via DELETE endpoint. No longer executes but history is preserved.
+  </Step>
+</Steps>
+
+### Failure handling and recovery
+
+Triggers include built-in resilience:
+
+- **Single failures:** Logged but trigger continues
+- **Consecutive failures:** Tracked in trigger metadata
+- **5 consecutive failures:** Trigger status changes to `failed`, requires manual resume
+- **Webhook notifications:** Sent for each failure with error details
+
+**Recovery steps:**
+1. Check `last_execution_error` field via GET endpoint
+2. Fix underlying issue (e.g., invalid config, missing resources)
+3. Update trigger if needed with PATCH endpoint
+4. Resume trigger with POST to `/resume` endpoint
+
+### Webhook events
+
+Triggers emit lifecycle events you can subscribe to:
+
+- `trigger.created` - New trigger created
+- `trigger.fired` - Trigger fired and created clustering job
+- `trigger.execution.completed` - Clustering job completed successfully
+- `trigger.execution.failed` - Clustering job failed
+- `trigger.paused` / `trigger.resumed` - State changes
+- `trigger.deleted` - Trigger removed
+
+Subscribe via the [webhooks API](/operations/webhooks) to build custom workflows.
+
+### Example: Complete automation workflow
+
+Here's a production-ready setup for a product catalog:
+
+<Steps>
+  <Step title="Create nightly reclustering">
+    ```bash
+    curl -X POST https://api.mixpeek.com/v1/clusters/triggers \
+      -H "Authorization: Bearer $API_KEY" \
+      -H "X-Namespace: ns_products" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "execution_config": {
+          "collection_ids": ["col_catalog"],
+          "config": {
+            "algorithm": "kmeans",
+            "algorithm_params": {"n_clusters": 20},
+            "normalize_features": true,
+            "llm_labeling": {"enabled": true}
+          }
+        },
+        "trigger_type": "cron",
+        "schedule_config": {
+          "cron_expression": "0 2 * * *",
+          "timezone": "America/New_York"
+        },
+        "description": "Daily product reclustering with labels"
+      }'
+    ```
+  </Step>
+  
+  <Step title="Add event-based trigger for rapid changes">
+    ```bash
+    curl -X POST https://api.mixpeek.com/v1/clusters/triggers \
+      -H "Authorization: Bearer $API_KEY" \
+      -H "X-Namespace: ns_products" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "execution_config": {
+          "collection_ids": ["col_catalog"],
+          "config": {"algorithm": "hdbscan"}
+        },
+        "trigger_type": "event",
+        "schedule_config": {
+          "event_type": "documents_added",
+          "event_threshold": 500,
+          "cooldown_seconds": 3600
+        },
+        "description": "Quick recluster after 500 new products"
+      }'
+    ```
+  </Step>
+  
+  <Step title="Monitor with webhooks">
+    Subscribe to `trigger.execution.completed` events to:
+    - Track clustering performance over time
+    - Alert on cluster count changes
+    - Trigger downstream enrichment pipelines
+  </Step>
+  
+  <Step title="Apply enrichment automatically">
+    When trigger completes, use enrichment API to write `cluster_id` back to documents for filtering and faceting.
+  </Step>
+</Steps>
+
+### Quotas and limits
+
+- **Max active triggers:** 50 per namespace
+- **Min interval:** 300 seconds (5 minutes)
+- **Default cooldown:** 300 seconds (5 minutes)
+- **Polling interval:** 60 seconds
+- **Max consecutive failures:** 5 (auto-disables trigger)
+
 ## Stream artifacts for UI
 
 - **API**: Stream Cluster Data
@@ -185,13 +584,46 @@ This writes `cluster_id` membership (and optional labels) back to documents.
 
 ## Manage clusters
 
-<CardGroup cols={2}>
-  <Card title="Get Cluster" icon="magnifying-glass" href="/api-reference/clusters/get-cluster" />
-  <Card title="List Clusters" icon="list" href="/api-reference/clusters/list-clusters" />
-  <Card title="Delete Cluster" icon="trash" href="/api-reference/clusters/delete-cluster" />
-  <Card title="Get Artifacts" icon="box-open" href="/api-reference/clusters/get-cluster-artifacts" />
-  <Card title="Submit Job" icon="paper-plane" href="/api-reference/clusters/submit-clustering-job" />
-</CardGroup>
+<Tabs>
+  <Tab title="Cluster Operations">
+    <CardGroup cols={2}>
+      <Card title="Get Cluster" icon="magnifying-glass" href="/api-reference/clusters/get-cluster" />
+      <Card title="List Clusters" icon="list" href="/api-reference/clusters/list-clusters" />
+      <Card title="Delete Cluster" icon="trash" href="/api-reference/clusters/delete-cluster" />
+      <Card title="Get Artifacts" icon="box-open" href="/api-reference/clusters/get-cluster-artifacts" />
+      <Card title="Submit Job" icon="paper-plane" href="/api-reference/clusters/submit-clustering-job" />
+    </CardGroup>
+  </Tab>
+  
+  <Tab title="Trigger Management">
+    <CardGroup cols={2}>
+      <Card title="Create Trigger" icon="plus" href="/api-reference/clusters/triggers/create-trigger">
+        Set up automated clustering schedules
+      </Card>
+      <Card title="List Triggers" icon="list" href="/api-reference/clusters/triggers/list-triggers">
+        View all active and paused triggers
+      </Card>
+      <Card title="Get Trigger" icon="magnifying-glass" href="/api-reference/clusters/triggers/get-trigger">
+        View trigger details and next execution
+      </Card>
+      <Card title="Update Trigger" icon="pen" href="/api-reference/clusters/triggers/update-trigger">
+        Modify schedule or configuration
+      </Card>
+      <Card title="Pause Trigger" icon="pause" href="/api-reference/clusters/triggers/pause-trigger">
+        Temporarily disable execution
+      </Card>
+      <Card title="Resume Trigger" icon="play" href="/api-reference/clusters/triggers/resume-trigger">
+        Reactivate paused trigger
+      </Card>
+      <Card title="Delete Trigger" icon="trash" href="/api-reference/clusters/triggers/delete-trigger">
+        Remove trigger permanently
+      </Card>
+      <Card title="Execution History" icon="clock-rotate-left" href="/api-reference/clusters/triggers/get-execution-history">
+        View past runs and metrics
+      </Card>
+    </CardGroup>
+  </Tab>
+</Tabs>
 
 ## Config building blocks
 
@@ -228,27 +660,37 @@ This writes `cluster_id` membership (and optional labels) back to documents.
 
 <Steps>
   <Step title="Start with samples">
-    Use <code>sample_size</code> for quick exploration before full runs
+    Use <code>sample_size</code> for quick exploration before full runs. Test clustering algorithms and parameters on a subset before scaling up.
+  </Step>
+  <Step title="Automate with triggers">
+    Set up cron triggers for nightly reclustering and event triggers for rapid data changes. This keeps clusters fresh without manual work.
   </Step>
   <Step title="Label pragmatically">
-    Enable LLM labeling after validating cluster separation
+    Enable LLM labeling after validating cluster separation. Labels are expensive—ensure your clusters are meaningful first.
+  </Step>
+  <Step title="Monitor with webhooks">
+    Subscribe to trigger execution events to track performance, alert on anomalies, and chain downstream workflows automatically.
   </Step>
   <Step title="Persist visuals">
-    Save artifacts and stream reduced coordinates for UI at scale
+    Save artifacts and stream reduced coordinates for UI at scale. Parquet format enables fast loading in WebGL and data viz tools.
   </Step>
   <Step title="Close the loop">
-    Convert stable clusters into taxonomies to enrich downstream search
+    Convert stable clusters into taxonomies to enrich downstream search. Apply enrichment to write cluster_id back for filtering and faceting.
   </Step>
 </Steps>
 
 ## See also
 
-<CardGroup cols={2}>
+<CardGroup cols={3}>
   <Card title="Taxonomies" icon="sitemap" href="/enrichment/taxonomies">
     Promote clusters into flat or hierarchical taxonomies
   </Card>
   
   <Card title="Pipelines & Workflows" icon="diagram-project" href="/processing/pipelines">
     Combine clustering with feature extraction and enrichment
+  </Card>
+  
+  <Card title="Webhooks" icon="webhook" href="/operations/webhooks">
+    Subscribe to trigger events for monitoring and automation
   </Card>
 </CardGroup>
