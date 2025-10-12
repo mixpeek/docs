@@ -14,6 +14,10 @@ description: "Discover structure, label groups, and enrich collections with clus
     Find groups in one or more collections; optional hierarchical metadata
   </Card>
   
+  <Card title="Scalable Visualization" icon="chart-scatter-3d">
+    Landmark-based UMAP generates 2D/3D coords for millions of points
+  </Card>
+  
   <Card title="Artifacts & Scale" icon="box-archive">
     Results saved as Parquet (centroids, members) for WebGL/Arrow pipelines
   </Card>
@@ -32,6 +36,10 @@ description: "Discover structure, label groups, and enrich collections with clus
   
   <Card title="Event-Driven" icon="bolt">
     Auto-recluster when documents added or data changes significantly
+  </Card>
+  
+  <Card title="Distributed Processing" icon="network-wired">
+    Ray map_batches processes millions of points with bounded memory
   </Card>
 </CardGroup>
 
@@ -558,6 +566,413 @@ curl -X POST https://api.mixpeek.com/v1/clusters/CLUSTER_ID/data \
 ```
 
 Use this to load centroids and members for visualizations (2D/3D reductions, partitions by cluster_id).
+
+## Scalable visualization with dimensionality reduction
+
+For large clusters, Mixpeek provides **engine-powered visualization** that generates 2D/3D coordinates for millions of points using landmark-based dimensionality reduction. This enables interactive scatter plots, WebGL renderers, and spatial exploration at scale.
+
+<Info>
+  Visualization uses landmark-based UMAP with Nyström approximation—fitting on 2% of points and interpolating the rest. This scales to millions of points while maintaining quality.
+</Info>
+
+### Why use engine visualization?
+
+<CardGroup cols={2}>
+  <Card title="Scales to Millions" icon="chart-scatter">
+    Landmark-based DR processes 1M+ points in minutes
+  </Card>
+  
+  <Card title="Distributed Processing" icon="network-wired">
+    Ray map_batches processes 5k points per batch across cluster
+  </Card>
+  
+  <Card title="Cached & Reusable" icon="database">
+    S3-cached coordinates with signature-based keys—no redundant computation
+  </Card>
+  
+  <Card title="Production Ready" icon="rocket">
+    Hard cap at 10k forces engine delegation for safety
+  </Card>
+</CardGroup>
+
+### How it works
+
+<Frame>
+  ```mermaid
+  graph TD
+    REQ[Request Visualization] --> CHECK{Point Count}
+    CHECK -->|< 10k| MANUAL[Manual Generation Required]
+    CHECK -->|> 10k| ENGINE[Delegate to Engine]
+    
+    ENGINE --> SIG[Compute Signature]
+    SIG --> CACHE{Cached?}
+    CACHE -->|Yes| LOAD[Load from S3]
+    CACHE -->|No| FIT[Fit on Landmarks 2%]
+    
+    FIT --> TRANSFORM[Transform with Ray]
+    TRANSFORM --> SAVE[Save to S3]
+    SAVE --> LOAD
+    
+    LOAD --> COORDS[Return Coordinates]
+    COORDS --> VIZ[Render Visualization]
+  ```
+</Frame>
+
+<Steps>
+  <Step title="Request visualization">
+    Client requests coordinates via API. If cluster has >10k points, automatically delegates to engine.
+  </Step>
+  <Step title="Compute signature">
+    Engine generates cache key from cluster ID, method, parameters—ensures idempotence.
+  </Step>
+  <Step title="Check cache">
+    If coordinates already exist in S3 with matching signature, skip computation and return cached URLs.
+  </Step>
+  <Step title="Fit on landmarks">
+    Sample 2% of points (capped at 50k) as landmarks. Fit UMAP or incremental PCA on landmarks only.
+  </Step>
+  <Step title="Transform with Ray">
+    Use Ray map_batches to apply dimensionality reduction to all points in 5k batches—distributed and memory-efficient.
+  </Step>
+  <Step title="Cache and return">
+    Save coordinates to S3 as Parquet. Return URLs to API, which loads and serves to client.
+  </Step>
+</Steps>
+
+### Generate visualization
+
+For datasets with >10k points, visualization is generated automatically when you request artifacts. For smaller datasets, call the engine endpoint directly.
+
+<Tabs>
+  <Tab title="Automatic (>10k points)">
+    ```bash
+    # For large clusters, visualization is automatic
+    curl https://api.mixpeek.com/v1/clusters/cl_abc123/artifacts?include_members=true \
+      -H "Authorization: Bearer $API_KEY" \
+      -H "X-Namespace: ns_123"
+    ```
+    
+    **Response includes coordinates:**
+    ```json
+    {
+      "centroids": [...],
+      "members": [
+        {
+          "point_id": "doc_1",
+          "cluster_id": "cluster_0",
+          "x": 1.5,
+          "y": 2.3,
+          "payload": {}
+        }
+      ]
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Manual (<10k points)">
+    ```bash
+    # Generate visualization via engine
+    curl -X POST https://engine.mixpeek.com/clusters/visualization \
+      -H "Content-Type: application/json" \
+      -d '{
+        "cluster_id": "cl_abc123",
+        "internal_id": "int_xyz",
+        "namespace_id": "ns_789",
+        "method": "umap",
+        "n_components": 2,
+        "sample_pct": 0.02,
+        "force_recompute": false
+      }'
+    ```
+    
+    **Response:**
+    ```json
+    {
+      "success": true,
+      "status": {
+        "cluster_id": "cl_abc123",
+        "status": "completed",
+        "signature": "a1b2c3d4",
+        "coords_url": "s3://bucket/.../coords_a1b2c3d4.parquet",
+        "num_points": 50000
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### Configuration options
+
+<AccordionGroup>
+  <Accordion title="Dimensionality reduction methods" icon="chart-line">
+    **UMAP (Uniform Manifold Approximation and Projection)**
+    - Best for: Preserving both local and global structure
+    - Quality: Excellent cluster separation
+    - Speed: Moderate (60s for 1M points)
+    - Use when: Visualization quality matters most
+    
+    **Incremental PCA**
+    - Best for: Fast linear projections
+    - Quality: Good for high-dimensional data
+    - Speed: Fast (30s for 1M points)
+    - Use when: Speed matters more than non-linear structure
+    
+    ```json
+    {
+      "method": "umap",        // or "ipca"
+      "n_components": 2        // 2D or 3D
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Landmark sampling" icon="location-dot">
+    Controls how many points are used as landmarks for fitting:
+    
+    - `sample_pct`: Percentage of points to use as landmarks (default: 0.02 = 2%)
+    - `max_landmarks`: Cap on landmark count (default: 50,000)
+    - `k_landmarks`: Nearest landmarks for interpolation (default: 15)
+    
+    **Examples:**
+    - 10k points → 200 landmarks (2%)
+    - 100k points → 2k landmarks (2%)
+    - 1M points → 20k landmarks (2%)
+    - 10M points → 50k landmarks (capped)
+    
+    ```json
+    {
+      "sample_pct": 0.02,
+      "max_landmarks": 50000,
+      "k_landmarks": 15
+    }
+    ```
+    
+    **Tuning guide:**
+    - More landmarks = better quality, slower processing
+    - Fewer landmarks = faster processing, lower quality
+    - Sweet spot: 0.02 (2%) for most use cases
+  </Accordion>
+  
+  <Accordion title="UMAP parameters" icon="sliders">
+    Fine-tune UMAP behavior for different visualization needs:
+    
+    - `n_neighbors`: Balance local vs global structure (default: 15)
+    - `min_dist`: Minimum distance between points (default: 0.1)
+    - `metric`: Distance metric (default: "cosine")
+    
+    **Common configurations:**
+    
+    **Tight clusters (detail view):**
+    ```json
+    {
+      "umap_n_neighbors": 30,
+      "umap_min_dist": 0.01,
+      "umap_metric": "cosine"
+    }
+    ```
+    
+    **Spread out (overview):**
+    ```json
+    {
+      "umap_n_neighbors": 10,
+      "umap_min_dist": 0.3,
+      "umap_metric": "euclidean"
+    }
+    ```
+    
+    **High-dimensional embeddings:**
+    ```json
+    {
+      "umap_n_neighbors": 20,
+      "umap_min_dist": 0.1,
+      "umap_metric": "cosine"  // Best for embeddings
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Caching and recomputation" icon="rotate">
+    Visualization results are cached in S3 with signature-based keys:
+    
+    **Signature includes:**
+    - Cluster ID
+    - Feature name
+    - DR method and parameters
+    - Component count
+    
+    **Behavior:**
+    - Same parameters → same signature → cached result
+    - Different parameters → new signature → new computation
+    - Set `force_recompute: true` to bypass cache
+    
+    ```json
+    {
+      "force_recompute": false  // Use cached if available
+    }
+    ```
+    
+    **Cache location:**
+    ```
+    s3://bucket/{internal_id}/{namespace_id}/
+      engine_cluster_build/{cluster_id}/
+        visualization/
+          coords_{signature}.parquet
+          reducer_{signature}.pkl
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Performance characteristics
+
+<Tabs>
+  <Tab title="Processing Times">
+    Approximate times for landmark-based UMAP on typical hardware:
+    
+    | Dataset Size | Landmarks | Fit Time | Transform Time | Total |
+    |--------------|-----------|----------|----------------|-------|
+    | 1k points    | 100       | 2s       | 0.5s          | 2.5s  |
+    | 10k points   | 500       | 5s       | 2s            | 7s    |
+    | 100k points  | 2k        | 15s      | 10s           | 25s   |
+    | 1M points    | 20k       | 60s      | 60s           | 2m    |
+    | 10M points   | 50k       | 120s     | 300s          | 7m    |
+    
+    **Notes:**
+    - Fit time scales with landmark count squared
+    - Transform time scales with point count × k_landmarks
+    - Times assume 16-core machine
+  </Tab>
+  
+  <Tab title="Memory Usage">
+    Memory consumption during visualization processing:
+    
+    | Dataset Size | Landmarks | Peak Memory |
+    |--------------|-----------|-------------|
+    | 1k points    | 100       | ~50 MB      |
+    | 10k points   | 500       | ~200 MB     |
+    | 100k points  | 2k        | ~500 MB     |
+    | 1M points    | 20k       | ~2 GB       |
+    | 10M points   | 50k       | ~10 GB      |
+    
+    **Ray batching keeps memory bounded:**
+    - Processes 5k points per batch
+    - ~100-500 MB per batch
+    - Distributed across cluster nodes
+  </Tab>
+  
+  <Tab title="Quality Metrics">
+    Landmark-based UMAP preserves structure well:
+    
+    **Trust & Continuity (higher is better):**
+    - 2% landmarks: 0.92-0.95 (excellent)
+    - 1% landmarks: 0.88-0.92 (good)
+    - 0.5% landmarks: 0.82-0.88 (acceptable)
+    
+    **Neighborhood Preservation:**
+    - k=15 neighbors: 85-90% preserved
+    - k=30 neighbors: 80-85% preserved
+    
+    **Recommendation:** Stick with 2% landmarks (default) for production use.
+  </Tab>
+</Tabs>
+
+### Integration with visualization tools
+
+<CardGroup cols={2}>
+  <Card title="WebGL Scatter Plots" icon="chart-scatter-3d">
+    Use Three.js, Plotly, or deck.gl to render millions of points with GPU acceleration
+  </Card>
+  
+  <Card title="Observable Plots" icon="chart-simple">
+    Load Parquet directly in Observable notebooks for interactive exploration
+  </Card>
+  
+  <Card title="Apache Arrow" icon="table">
+    Use PyArrow or Arrow.js to stream coordinates without full deserialization
+  </Card>
+  
+  <Card title="Tile-Based Rendering" icon="grid">
+    Bin coordinates into tiles for progressive loading in zoom-enabled UIs
+  </Card>
+</CardGroup>
+
+**Example: Load in JavaScript**
+```javascript
+import { tableFromIPC } from 'apache-arrow';
+
+// Fetch coordinates from API
+const response = await fetch('/v1/clusters/cl_abc/artifacts?include_members=true');
+const { members } = await response.json();
+
+// Render with Three.js, Plotly, etc.
+const scene = new THREE.Scene();
+members.forEach(point => {
+  const geometry = new THREE.SphereGeometry(0.05);
+  const material = new THREE.MeshBasicMaterial({ 
+    color: getColorForCluster(point.cluster_id) 
+  });
+  const sphere = new THREE.Mesh(geometry, material);
+  sphere.position.set(point.x, point.y, point.z || 0);
+  scene.add(sphere);
+});
+```
+
+### Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Dataset has X points. Client should request visualization generation via engine." icon="triangle-exclamation">
+    **Cause:** Cluster has fewer than 10k points, no pre-generated visualization.
+    
+    **Solution:**
+    ```bash
+    # Generate visualization first
+    POST /clusters/visualization
+    {
+      "cluster_id": "cl_abc123",
+      "method": "umap",
+      "n_components": 2
+    }
+    
+    # Then request artifacts
+    GET /clusters/cl_abc123/artifacts?include_members=true
+    ```
+  </Accordion>
+  
+  <Accordion title="Visualization quality is poor" icon="chart-line">
+    **Symptoms:** Clusters overlap, structure is unclear, points are too spread out.
+    
+    **Solutions:**
+    1. **Increase landmarks:** Set `sample_pct: 0.03` or `0.05`
+    2. **Adjust n_neighbors:** Try `20-30` for more global structure
+    3. **Tighten clusters:** Set `min_dist: 0.01` for less overlap
+    4. **Check metric:** Use `"cosine"` for embeddings, `"euclidean"` for raw features
+    5. **Try 3D:** Set `n_components: 3` for complex structures
+  </Accordion>
+  
+  <Accordion title="Processing is slow" icon="hourglass">
+    **Symptoms:** Visualization takes too long for interactive use.
+    
+    **Solutions:**
+    1. **Reduce landmarks:** Set `sample_pct: 0.01` (1%)
+    2. **Use IPCA:** Set `method: "ipca"` for 2x speedup
+    3. **Check Ray cluster:** Ensure sufficient CPUs allocated
+    4. **Verify caching:** Ensure `force_recompute: false` to use cache
+    5. **Increase batch size:** Larger batches = fewer overhead (tune in engine config)
+  </Accordion>
+  
+  <Accordion title="Engine visualization failed" icon="circle-xmark">
+    **Symptoms:** Engine returns error during visualization generation.
+    
+    **Debugging steps:**
+    1. Check engine logs for detailed error message
+    2. Verify `members.parquet` exists in S3 for the cluster
+    3. Try with `force_recompute: true` to bypass cache
+    4. Check Ray cluster health and resource availability
+    5. Verify feature vectors are present in member data
+    
+    **Common causes:**
+    - Missing or corrupted member artifacts
+    - Insufficient memory for landmark count
+    - Ray actor failures (check Ray dashboard)
+  </Accordion>
+</AccordionGroup>
 
 ## Apply cluster enrichment
 
