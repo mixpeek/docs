@@ -2,7 +2,7 @@
   "name": "Mixpeek",
   "layout": "sidenav",
   "favicon": "/favicon.png",
-  "openapi": "https://server-xb24.onrender.com/docs/openapi.json",
+  "openapi": "https://api.mixpeek.com/docs/openapi.json",
   "logo": {
     "dark": "/logo/dark.png",
     "light": "/logo/light.png"
