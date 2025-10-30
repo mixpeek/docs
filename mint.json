@@ -176,145 +176,288 @@
     {
       "group": "Health",
       "pages": [
-        "/api-reference/health/healthcheck"
+        "api-reference/health/healthcheck"
       ]
     },
     {
       "group": "Organizations",
       "pages": [
-        "/api-reference/organizations/get-organization",
-        "/api-reference/organizations/get-user",
-        "/api-reference/organizations/delete-user",
-        "/api-reference/organizations/create-api-key",
-        "/api-reference/organizations/delete-api-key",
-        "/api-reference/organizations/update-api-key"
+        "api-reference/organizations/get-organization",
+        "api-reference/organizations/update-organization",
+        "api-reference/organizations/add-credits",
+        {
+          "group": "Users",
+          "pages": [
+            "api-reference/organization-users/list-users",
+            "api-reference/organization-users/create-user",
+            "api-reference/organization-users/get-user",
+            "api-reference/organization-users/update-user",
+            "api-reference/organization-users/delete-user"
+          ]
+        },
+        {
+          "group": "API Keys",
+          "pages": [
+            "api-reference/organization-api-keys/list-api-keys",
+            "api-reference/organization-api-keys/create-api-key",
+            "api-reference/organization-api-keys/update-api-key",
+            "api-reference/organization-api-keys/rotate-api-key",
+            "api-reference/organization-api-keys/delete-api-key"
+          ]
+        },
+        {
+          "group": "Connections",
+          "pages": [
+            "api-reference/organization-connections/list-storage-connections",
+            "api-reference/organization-connections/create-storage-connection",
+            "api-reference/organization-connections/get-storage-connection",
+            "api-reference/organization-connections/update-storage-connection",
+            "api-reference/organization-connections/test-storage-connection",
+            "api-reference/organization-connections/list-google-drive-folders",
+            "api-reference/organization-connections/delete-storage-connection"
+          ]
+        },
+        {
+          "group": "Usage",
+          "pages": [
+            "api-reference/organization-usage/get-org-usage",
+            "api-reference/organization-usage/get-api-key-usage",
+            "api-reference/organization-usage/get-api-key-endpoint-breakdown"
+          ]
+        }
       ]
     },
     {
       "group": "Namespaces",
       "pages": [
-        "/api-reference/namespaces/create-namespace",
-        "/api-reference/namespaces/get-namespace",
-        "/api-reference/namespaces/update-namespace",
-        "/api-reference/namespaces/delete-namespace",
-        "/api-reference/namespaces/list-namespaces"
+        "api-reference/namespaces/create-namespace",
+        "api-reference/namespaces/get-namespace",
+        "api-reference/namespaces/update-namespace",
+        "api-reference/namespaces/partially-update-namespace",
+        "api-reference/namespaces/list-namespaces",
+        "api-reference/namespaces/delete-namespace"
       ]
     },
     {
       "group": "Buckets",
       "pages": [
-        "/api-reference/buckets/create-bucket",
-        "/api-reference/buckets/get-bucket",
-        "/api-reference/buckets/update-bucket",
-        "/api-reference/buckets/delete-bucket",
-        "/api-reference/buckets/list-buckets"
-      ]
-    },
-    {
-      "group": "Bucket Objects",
-      "pages": [
-        "/api-reference/bucket-objects/create-object",
-        "/api-reference/bucket-objects/create-objects-in-batch"
-      ]
-    },
-    {
-      "group": "Bucket Batches",
-      "pages": [
-        "/api-reference/bucket-batches/create-batch",
-        "/api-reference/bucket-batches/add-objects-to-batch",
-        "/api-reference/bucket-batches/submit-batch-for-processing",
-        "/api-reference/bucket-batches/list-batches",
-        "/api-reference/bucket-batches/delete-batch",
-        "/api-reference/bucket-batches/cancel-batch"
+        "api-reference/buckets/create-bucket",
+        "api-reference/buckets/get-bucket",
+        "api-reference/buckets/update-bucket",
+        "api-reference/buckets/partially-update-bucket",
+        "api-reference/buckets/list-buckets",
+        "api-reference/buckets/delete-bucket",
+        {
+          "group": "Syncs",
+          "pages": [
+            "api-reference/bucket-syncs/list-sync-configurations",
+            "api-reference/bucket-syncs/create-sync-configuration",
+            "api-reference/bucket-syncs/get-sync-configuration",
+            "api-reference/bucket-syncs/update-sync-configuration",
+            "api-reference/bucket-syncs/pause-sync-configuration",
+            "api-reference/bucket-syncs/resume-sync-configuration",
+            "api-reference/bucket-syncs/delete-sync-configuration"
+          ]
+        },
+        {
+          "group": "Objects",
+          "pages": [
+            "api-reference/bucket-objects/create-object",
+            "api-reference/bucket-objects/create-objects-in-batch",
+            "api-reference/bucket-objects/get-object",
+            "api-reference/bucket-objects/update-object",
+            "api-reference/bucket-objects/partially-update-object",
+            "api-reference/bucket-objects/list-objects",
+            "api-reference/bucket-objects/aggregate-objects",
+            "api-reference/bucket-objects/delete-object"
+          ]
+        },
+        {
+          "group": "Uploads",
+          "pages": [
+            "api-reference/bucket-uploads/create-upload",
+            "api-reference/bucket-uploads/batch-create-uploads",
+            "api-reference/bucket-uploads/get-upload",
+            "api-reference/bucket-uploads/confirm-upload",
+            "api-reference/bucket-uploads/batch-confirm-uploads",
+            "api-reference/bucket-uploads/list-uploads",
+            "api-reference/bucket-uploads/delete-upload"
+          ]
+        },
+        {
+          "group": "Batches",
+          "pages": [
+            "api-reference/bucket-batches/create-batch",
+            "api-reference/bucket-batches/add-objects-to-batch",
+            "api-reference/bucket-batches/get-batch",
+            "api-reference/bucket-batches/partially-update-batch",
+            "api-reference/bucket-batches/submit-batch-for-processing",
+            "api-reference/bucket-batches/list-batches",
+            "api-reference/bucket-batches/cancel-batch",
+            "api-reference/bucket-batches/delete-batch"
+          ]
+        }
       ]
     },
     {
       "group": "Feature Extractors",
       "pages": [
-        "/api-reference/feature-extractors/list-feature-extractors",
-        "/api-reference/feature-extractors/get-feature-extractor-by-name"
+        "api-reference/feature-extractors/list-feature-extractors",
+        "api-reference/feature-extractors/get-feature-extractor-by-name"
       ]
     },
     {
       "group": "Collections",
       "pages": [
-        "/api-reference/collections/create-collection",
-        "/api-reference/collections/get-collection",
-        "/api-reference/collections/delete-collection",
-        "/api-reference/collections/update-collection",
-        "/api-reference/collections/describe-collection-features",
-        "/api-reference/collections/list-collections"
-      ]
-    },
-    {
-      "group": "Collection Documents",
-      "pages": [
-        "/api-reference/collection-documents/get-a-document-by-id",
-        "/api-reference/collection-documents/update-document",
-        "/api-reference/collection-documents/delete-a-document-by-id",
-        "/api-reference/collection-documents/list-documents",
-        "/api-reference/collection-documents/create-a-document"
+        "api-reference/collections/create-collection",
+        "api-reference/collections/get-collection",
+        "api-reference/collections/update-collection",
+        "api-reference/collections/describe-collection-features",
+        "api-reference/collections/list-collections",
+        "api-reference/collections/delete-collection",
+        {
+          "group": "Documents",
+          "pages": [
+            "api-reference/collection-documents/create-a-document",
+            "api-reference/collection-documents/get-a-document-by-id",
+            "api-reference/collection-documents/update-document",
+            "api-reference/collection-documents/patch-document",
+            "api-reference/collection-documents/list-documents",
+            "api-reference/collection-documents/aggregate-documents",
+            "api-reference/collection-documents/bulk-update-documents",
+            "api-reference/collection-documents/batch-update-documents",
+            "api-reference/collection-documents/batch-delete-documents",
+            "api-reference/collection-documents/delete-a-document-by-id"
+          ]
+        },
+        {
+          "group": "Lineage",
+          "pages": [
+            "api-reference/document-lineage/get-document-lineage",
+            "api-reference/document-lineage/get-all-documents-derived-from-an-object",
+            "api-reference/document-lineage/get-decomposition-tree-visualization"
+          ]
+        }
       ]
     },
     {
       "group": "Retrievers",
       "pages": [
-        "/api-reference/retrievers/create-retriever",
-        "/api-reference/retrievers/get-retriever",
-        "/api-reference/retrievers/delete-retriever",
-        "/api-reference/retrievers/execute-retriever",
-        "/api-reference/retrievers/debug-inference",
-        "/api-reference/retrievers/list-retrievers"
-      ]
-    },
-    {
-      "group": "Retriever Stages",
-      "pages": [
-        "/api-reference/retriever-stages/list-available-retriever-stages"
+        "api-reference/retrievers/list-retrievers",
+        "api-reference/retrievers/create-retriever",
+        "api-reference/retrievers/get-retriever",
+        "api-reference/retrievers/delete-retriever",
+        "api-reference/retrievers/patch-retriever",
+        "api-reference/retrievers/execute-retriever",
+        "api-reference/retrievers/list-executions",
+        "api-reference/retrievers/get-execution",
+        "api-reference/retrievers/explain-retriever",
+        {
+          "group": "Stages",
+          "pages": [
+            "api-reference/retriever-stages/list-available-retriever-stages"
+          ]
+        },
+        {
+          "group": "Interactions",
+          "pages": [
+            "api-reference/retriever-interactions/create-interaction",
+            "api-reference/retriever-interactions/list-interactions",
+            "api-reference/retriever-interactions/get-interaction",
+            "api-reference/retriever-interactions/delete-interaction"
+          ]
+        },
+        {
+          "group": "Evaluations",
+          "pages": [
+            "api-reference/retriever-evaluations/start-retriever-evaluation-task"
+          ]
+        }
       ]
     },
     {
       "group": "Taxonomies",
       "pages": [
-        "/api-reference/taxonomies/create-taxonomy",
-        "/api-reference/taxonomies/get-taxonomy",
-        "/api-reference/taxonomies/delete-taxonomy",
-        "/api-reference/taxonomies/list-taxonomy-versions",
-        "/api-reference/taxonomies/create-taxonomy-version",
-        "/api-reference/taxonomies/list-taxonomies",
-        "/api-reference/taxonomies/execute-taxonomy"
+        "api-reference/taxonomies/create-taxonomy",
+        "api-reference/taxonomies/get-taxonomy",
+        "api-reference/taxonomies/partially-update-taxonomy",
+        "api-reference/taxonomies/list-taxonomies",
+        "api-reference/taxonomies/test-taxonomy-configuration-validation-only",
+        "api-reference/taxonomies/list-taxonomy-versions",
+        "api-reference/taxonomies/create-taxonomy-version",
+        "api-reference/taxonomies/delete-taxonomy"
       ]
     },
     {
       "group": "Clusters",
       "pages": [
-        "/api-reference/clusters/create-cluster",
-        "/api-reference/clusters/execute-clustering",
-        "/api-reference/clusters/get-cluster",
-        "/api-reference/clusters/delete-cluster",
-        "/api-reference/clusters/list-clusters",
-        "/api-reference/clusters/stream-cluster-data",
-        "/api-reference/clusters/apply-cluster-enrichment",
-        "/api-reference/clusters/get-cluster-artifacts",
-        "/api-reference/clusters/submit-clustering-job"
+        "api-reference/clusters/create-cluster",
+        "api-reference/clusters/get-cluster",
+        "api-reference/clusters/partially-update-cluster",
+        "api-reference/clusters/list-clusters",
+        "api-reference/clusters/execute-clustering",
+        "api-reference/clusters/submit-clustering-job",
+        "api-reference/clusters/stream-cluster-data",
+        "api-reference/clusters/apply-cluster-enrichment",
+        "api-reference/clusters/get-cluster-artifacts",
+        "api-reference/clusters/delete-cluster",
+        {
+          "group": "Triggers",
+          "pages": [
+            "api-reference/cluster-triggers/create-cluster-trigger",
+            "api-reference/cluster-triggers/list-cluster-triggers",
+            "api-reference/cluster-triggers/get-cluster-trigger",
+            "api-reference/cluster-triggers/update-cluster-trigger",
+            "api-reference/cluster-triggers/pause-cluster-trigger",
+            "api-reference/cluster-triggers/resume-cluster-trigger",
+            "api-reference/cluster-triggers/get-trigger-execution-history",
+            "api-reference/cluster-triggers/delete-cluster-trigger"
+          ]
+        },
+        {
+          "group": "Executions",
+          "pages": [
+            "api-reference/cluster-executions/get-latest-cluster-execution",
+            "api-reference/cluster-executions/get-specific-cluster-execution",
+            "api-reference/cluster-executions/list-cluster-execution-history",
+            "api-reference/cluster-executions/get-execution-artifacts",
+            "api-reference/cluster-executions/stream-execution-data"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Analytics",
+      "pages": [
+        "api-reference/analytics/get-retriever-performance",
+        "api-reference/analytics/get-stage-breakdown",
+        "api-reference/analytics/get-retriever-signals",
+        "api-reference/analytics/get-cache-performance",
+        "api-reference/analytics/analyze-for-tuning",
+        "api-reference/analytics/get-slowest-queries",
+        "api-reference/analytics/get-api-performance",
+        "api-reference/analytics/get-engine-performance",
+        "api-reference/analytics/get-usage-summary",
+        "api-reference/analytics/get-extractor-performance",
+        "api-reference/analytics/get-inference-performance"
       ]
     },
     {
       "group": "Tasks",
       "pages": [
-        "/api-reference/tasks/get-task-information",
-        "/api-reference/tasks/kill-task",
-        "/api-reference/tasks/list-active-tasks"
+        "api-reference/tasks/get-task-information",
+        "api-reference/tasks/list-active-tasks",
+        "api-reference/tasks/kill-task"
       ]
     },
     {
       "group": "Webhooks",
       "pages": [
-        "/api-reference/webhooks/list-webhooks",
-        "/api-reference/webhooks/create-webhook",
-        "/api-reference/webhooks/get-webhook",
-        "/api-reference/webhooks/update-webhook",
-        "/api-reference/webhooks/delete-webhook"
+        "api-reference/webhooks/list-webhooks",
+        "api-reference/webhooks/create-webhook",
+        "api-reference/webhooks/get-webhook",
+        "api-reference/webhooks/update-webhook",
+        "api-reference/webhooks/delete-webhook"
       ]
     }
   ],
