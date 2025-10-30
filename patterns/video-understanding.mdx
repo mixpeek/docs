@@ -27,21 +27,34 @@ Video understanding combines multiple feature extractors to transform raw video 
   **Key Differentiator:** Process scenes, audio, faces, and on-screen text in parallel with one API call. Ray handles distribution, GPU scheduling, and retries—you just configure extractors and query results.
 </Tip>
 
-## Architecture Overview
+## Object Decomposition
 
 ```mermaid
-graph LR
-  V[Video Object] --> B[Batch Processing]
-  B --> E1[Video Extractor]
-  B --> E2[Audio Extractor]
-  B --> E3[Text Extractor]
-  E1 --> D1[Scene Documents]
-  E2 --> D2[Transcript Documents]
-  E3 --> D3[Caption Documents]
-  D1 --> Q[Qdrant Collection]
-  D2 --> Q
-  D3 --> Q
-  Q --> R[Retriever Pipeline]
+graph TD
+  V[Video] --> S[Split by Scene]
+  
+  S --> S1[Scene 1]
+  S --> S2[Scene 2]
+  S --> S3[Scene 3]
+  
+  S1 --> F1[Face Detected]
+  S2 --> F2[Face Detected]
+  S3 --> F3[Face Detected]
+  
+  F1 --> E1[Expression: Happy]
+  F2 --> E2[Expression: Speaking]
+  F3 --> E3[Expression: Focused]
+  
+  S1 --> A1[Audio: Transcript]
+  S2 --> A2[Audio: Transcript]
+  S3 --> A3[Audio: Transcript]
+  
+  E1 --> R[Retriever Joins at Query Time]
+  E2 --> R
+  E3 --> R
+  A1 --> R
+  A2 --> R
+  A3 --> R
 ```
 
 ## Feature Extractors
@@ -247,6 +260,80 @@ POST /v1/retrievers/{retriever_id}/execute
   "limit": 10
 }
 ```
+
+## Model Evolution & A/B Testing
+
+Test different scene detection thresholds, transcription models, and embedding versions without rebuilding your entire video catalog.
+
+### Test Scene Detection Parameters
+
+```bash
+# Production: Conservative scene detection
+POST /v1/collections
+{
+  "collection_name": "video-scenes-v1",
+  "feature_extractor": {
+    "feature_extractor_name": "video_extractor",
+    "parameters": { "scene_detection_threshold": 0.4 }
+  }
+}
+
+# Staging: More granular scenes
+POST /v1/collections
+{
+  "collection_name": "video-scenes-v2",
+  "feature_extractor": {
+    "parameters": { "scene_detection_threshold": 0.2 }
+  }
+}
+```
+
+### Compare Transcription Models
+
+```bash
+# Baseline: Fast transcription
+POST /v1/collections
+{
+  "collection_name": "video-transcripts-v1",
+  "feature_extractor": {
+    "feature_extractor_name": "audio_extractor",
+    "parameters": { "transcription_model": "whisper-base" }
+  }
+}
+
+# Candidate: Higher accuracy
+POST /v1/collections
+{
+  "collection_name": "video-transcripts-v2",
+  "feature_extractor": {
+    "parameters": { "transcription_model": "whisper-large-v3" }
+  }
+}
+```
+
+### Measure Impact
+
+```bash
+GET /v1/analytics/retrievers/compare?baseline=ret_v1&candidate=ret_v2
+```
+
+**Results:**
+- Scenes per video: v1 (12) vs v2 (28) → better granularity
+- Transcription accuracy: v1 (92%) vs v2 (97%) → fewer search misses
+- Processing cost: v1 (0.05 credits) vs v2 (0.12 credits) → 2.4x cost
+- User satisfaction: v1 (3.2/5) vs v2 (4.1/5) → worth the upgrade
+
+### Seamless Migration
+
+```bash
+# Point retriever to new collections
+PATCH /v1/retrievers/{retriever_id}
+{
+  "collection_ids": ["col_video_scenes_v2", "col_video_transcripts_v2"]
+}
+```
+
+**No reprocessing of old videos. New uploads use v2. Gradual rollover.**
 
 ## Advanced Patterns
 

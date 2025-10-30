@@ -27,21 +27,35 @@ Document intelligence transforms unstructured files (PDFs, images, scanned docum
   **Key Differentiator:** Process native PDFs, scanned documents, and images with the same API. Extractors detect document type and apply OCR only when needed. Query by semantic meaning ("termination clauses") or exact entities (dollar amounts, company names).
 </Tip>
 
-## Architecture Overview
+## Object Decomposition
 
 ```mermaid
 graph TD
-  D[Document File] --> P[Pre-Processing]
-  P --> O[OCR / Text Extract]
-  P --> L[Layout Analysis]
-  P --> T[Table Detection]
-  O --> E[Embedding]
-  L --> M[Metadata]
-  T --> S[Structured Data]
-  E --> V[Vector Store]
-  M --> V
-  S --> V
-  V --> Q[Queryable Documents]
+  D[PDF Contract] --> P[Split by Page]
+  
+  P --> P1[Page 1]
+  P --> P2[Page 2]
+  P --> P3[Page 3]
+  
+  P1 --> T1[Table: Line Items]
+  P2 --> T2[Table: Payment Schedule]
+  
+  P1 --> C1[Clause: Scope]
+  P2 --> C2[Clause: Termination]
+  P3 --> C3[Clause: Liability]
+  
+  C1 --> E1[Entities: Acme Corp, $50K]
+  C2 --> E2[Entities: 30-day notice]
+  C3 --> E3[Entities: California]
+  
+  T1 --> R[Retriever Joins at Query Time]
+  T2 --> R
+  C1 --> R
+  C2 --> R
+  C3 --> R
+  E1 --> R
+  E2 --> R
+  E3 --> R
 ```
 
 ## Feature Extractors
@@ -253,6 +267,99 @@ POST /v1/collections/col_contracts_tables/documents/list
   }
 }
 ```
+
+## Model Evolution & A/B Testing
+
+Experiment with OCR models, chunking strategies, and NER configurations without reprocessing your entire document archive.
+
+### Test OCR Models
+
+```bash
+# Production: Fast OCR
+POST /v1/collections
+{
+  "collection_name": "contracts-text-v1",
+  "feature_extractor": {
+    "feature_extractor_name": "pdf_extractor",
+    "parameters": { 
+      "ocr_model": "tesseract-v5",
+      "chunk_strategy": "page"
+    }
+  }
+}
+
+# Staging: Higher accuracy for scanned docs
+POST /v1/collections
+{
+  "collection_name": "contracts-text-v2",
+  "feature_extractor": {
+    "parameters": { 
+      "ocr_model": "cloud-vision",
+      "chunk_strategy": "paragraph"
+    }
+  }
+}
+```
+
+### Test Chunking Strategies
+
+```bash
+# Baseline: Page-level chunks
+POST /v1/collections
+{
+  "collection_name": "contracts-v1",
+  "feature_extractor": {
+    "parameters": { 
+      "chunk_strategy": "page",
+      "chunk_size": 2048
+    }
+  }
+}
+
+# Candidate: Clause-level chunks
+POST /v1/collections
+{
+  "collection_name": "contracts-v2",
+  "feature_extractor": {
+    "parameters": { 
+      "chunk_strategy": "paragraph",
+      "chunk_size": 512,
+      "chunk_overlap": 100
+    }
+  }
+}
+```
+
+### Compare Results
+
+```bash
+GET /v1/analytics/retrievers/compare?baseline=ret_v1&candidate=ret_v2
+```
+
+**Impact:**
+- Clause detection: v1 (72%) vs v2 (89%) → better precision
+- OCR accuracy: v1 (94%) vs v2 (98%) → fewer misreads
+- Cost per page: v1 (0.01 credits) vs v2 (0.04 credits) → 4x cost
+- Query success rate: v1 (68%) vs v2 (84%) → justified investment
+
+### Migrate Incrementally
+
+```bash
+# New documents use v2, old remain in v1
+PATCH /v1/retrievers/{retriever_id}
+{
+  "collection_ids": ["col_contracts_v1", "col_contracts_v2"]
+}
+
+# Reprocess high-value documents only
+POST /v1/buckets/{bucket_id}/batches
+{
+  "object_ids": ["obj_top_100_contracts"],
+  "target_collection_id": "col_contracts_v2"
+}
+```
+
+**Query both collections simultaneously. Retire v1 when ready.**
 
 ## Advanced Patterns
 

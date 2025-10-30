@@ -37,20 +37,37 @@ Semantic search solves these by mapping text to high-dimensional vectors where s
   **Key Differentiator:** Hot-swap embedding models without rebuilding indexes. Test `text-embedding-3-small` vs `multilingual-e5-large` on the same data, compare retrieval quality, and switch in minutes—not weeks.
 </Tip>
 
-## Architecture Overview
+## Object Decomposition
 
 ```mermaid
 graph TD
-  Q[User Query] --> E[Embed Query]
-  E --> VS[Vector Search]
-  VS --> R1[Top-K Results]
-  R1 --> F[Apply Filters]
-  F --> RR[Rerank]
-  RR --> R2[Final Results]
+  Q[Query: 'best laptop for coding'] --> P[Parallel Search]
   
-  D[Documents] --> FE[Feature Extractor]
-  FE --> V[Vector Store]
-  V --> VS
+  P --> V[Vector Search]
+  P --> B[BM25 Search]
+  P --> H[Hybrid Search]
+  
+  V --> V1[Result 1]
+  V --> V2[Result 2]
+  V --> V3[Result 3]
+  
+  B --> B1[Result 4]
+  B --> B2[Result 5]
+  B --> B3[Result 6]
+  
+  H --> H1[Result 7]
+  H --> H2[Result 8]
+  
+  V1 --> F[Fusion Layer]
+  V2 --> F
+  V3 --> F
+  B1 --> F
+  B2 --> F
+  B3 --> F
+  H1 --> F
+  H2 --> F
+  
+  F --> R[Rerank: Top 10]
 ```
 
 ## Implementation Steps
@@ -207,6 +224,64 @@ POST /v1/retrievers/{retriever_id}/execute
   }
 }
 ```
+
+## Model Evolution & A/B Testing
+
+Mixpeek lets you test new models without disrupting production. Create parallel collections, compare results, and migrate seamlessly.
+
+### Test New Embedding Models
+
+```bash
+# Production: Current model
+POST /v1/collections
+{
+  "collection_name": "docs-search-v1",
+  "feature_extractor": {
+    "parameters": { "model": "multilingual-e5-base" }
+  }
+}
+
+# Staging: Test larger model
+POST /v1/collections
+{
+  "collection_name": "docs-search-v2",
+  "feature_extractor": {
+    "parameters": { "model": "multilingual-e5-large-instruct" }
+  }
+}
+```
+
+### Compare Retrieval Quality
+
+```bash
+# Query both collections
+POST /v1/retrievers/ret_v1/execute
+{ "inputs": { "query": "authentication guide" } }
+
+POST /v1/retrievers/ret_v2/execute
+{ "inputs": { "query": "authentication guide" } }
+
+# Compare metrics
+GET /v1/analytics/retrievers/compare?baseline=ret_v1&candidate=ret_v2
+```
+
+**Returns:**
+- Precision@10: v1 (0.72) vs v2 (0.84) → +16% improvement
+- Latency P95: v1 (45ms) vs v2 (68ms) → acceptable tradeoff
+- User CTR: v1 (34%) vs v2 (41%) → +7% engagement
+
+### Migrate When Ready
+
+```bash
+# Switch retriever to new collection
+PATCH /v1/retrievers/{retriever_id}
+{ "collection_ids": ["col_docs_v2"] }
+
+# Archive old collection
+DELETE /v1/collections/col_docs_v1
+```
+
+**Zero downtime. No index rebuild. Production stays live.**
 
 ## Advanced Patterns
 
