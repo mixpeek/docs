@@ -1,0 +1,390 @@
+---
+title: "Frequently Asked Questions"
+description: "Quick answers to common questions about Mixpeek"
+---
+
+## General
+
+<AccordionGroup>
+  <Accordion title="What is Mixpeek?">
+    Mixpeek is a multimodal data processing and retrieval platform. It ingests raw files (video, images, audio, PDFs, text), extracts features (embeddings, transcriptions, structured data), and enables semantic search across all modalities through a unified API.
+  </Accordion>
+
+  <Accordion title="What's the difference between Objects and Documents?">
+    **Objects** are raw inputs registered in buckets (e.g., a video file, PDF, JSON payload). They're validated but not processed.
+
+    **Documents** are processed outputs created by feature extractors. They live in collections, include vectors/embeddings, and are queryable via retrievers.
+
+    Flow: `Object → Batch → Engine → Document`
+  </Accordion>
+
+  <Accordion title="Do I need to know machine learning to use Mixpeek?">
+    No. Mixpeek abstracts away model selection, infrastructure, and scaling. You declare what features you want (e.g., text embeddings, scene detection) via simple JSON configurations. We handle training, hosting, and optimization.
+  </Accordion>
+
+  <Accordion title="Can I bring my own models?">
+    Custom models are available for Enterprise customers. Contact us via "Talk to Engineers" to discuss integration options.
+  </Accordion>
+</AccordionGroup>
+
+## Ingestion & Processing
+
+<AccordionGroup>
+  <Accordion title="How long does batch processing take?">
+    Depends on:
+    - **Object count:** 100 objects typically process in 1-5 minutes
+    - **File size:** Large videos (>1GB) take longer
+    - **Extractors:** Video/audio extractors are slower than text
+    - **Ray cluster size:** More workers = faster throughput
+
+    Monitor progress via Task API:
+    ```bash
+    GET /v1/tasks/{task_id}
+    ```
+  </Accordion>
+
+  <Accordion title="What happens if processing fails mid-batch?">
+    Partial results are written to Qdrant. Documents will have:
+    - `__fully_enriched: false`
+    - `__missing_features: ["list", "of", "failed", "features"]`
+
+    You can:
+    1. Query partial results (filter by `__fully_enriched: true`)
+    2. Reprocess failed objects individually
+    3. Inspect Engine logs for failure reasons
+  </Accordion>
+
+  <Accordion title="Can I update documents after creation?">
+    Yes. Use the Collection Documents API:
+    ```bash
+    PATCH /v1/collections/{collection_id}/documents/{document_id}
+    { "metadata": { "status": "reviewed" } }
+    ```
+
+    Or batch update:
+    ```bash
+    POST /v1/collections/{collection_id}/documents/batch-update
+    ```
+
+    **Note:** Updating metadata doesn't re-run feature extractors. To reprocess, create a new batch with the source object.
+  </Accordion>
+
+  <Accordion title="How do I delete documents?">
+    Two approaches:
+
+    **1. Delete specific documents:**
+    ```bash
+    DELETE /v1/collections/{collection_id}/documents/{document_id}
+    ```
+
+    **2. Delete all documents from an object:**
+    ```bash
+    DELETE /v1/buckets/{bucket_id}/objects/{object_id}?cascade=true
+    ```
+
+    This removes the object and all derived documents across collections.
+  </Accordion>
+
+  <Accordion title="What file formats are supported?">
+    | Type | Formats |
+    |------|---------|
+    | **Video** | MP4, MOV, AVI, MKV, WebM |
+    | **Image** | JPEG, PNG, GIF, WebP, TIFF |
+    | **Audio** | MP3, WAV, FLAC, OGG, M4A |
+    | **Document** | PDF, DOCX, TXT, Markdown |
+    | **Structured** | JSON, CSV |
+
+    For unsupported formats, pre-convert or contact support for custom extractors.
+  </Accordion>
+</AccordionGroup>
+
+## Search & Retrieval
+
+<AccordionGroup>
+  <Accordion title="What's the difference between KNN search and hybrid search?">
+    **KNN (K-Nearest Neighbors):** Pure vector similarity using dense embeddings.
+    - Best for: Semantic search, natural language queries
+    - Example: "Find articles about climate change"
+
+    **Hybrid Search:** Combines dense vectors + sparse (BM25) keyword matching via RRF fusion.
+    - Best for: Queries mixing semantics + exact terms
+    - Example: "React hooks API reference" (needs both concept and keyword matching)
+  </Accordion>
+
+  <Accordion title="How many collections can a retriever query?">
+    Unlimited. Specify multiple collection IDs:
+    ```json
+    { "collection_ids": ["col_text", "col_images", "col_videos"] }
+    ```
+
+    Results are fused across collections based on stage configurations.
+  </Accordion>
+
+  <Accordion title="Can I search across multiple namespaces?">
+    No. The `X-Namespace` header enforces hard isolation. Each request operates within a single namespace.
+
+    **Workaround:** Make separate requests per namespace and merge results client-side.
+  </Accordion>
+
+  <Accordion title="How do I search by image?">
+    1. Create a collection with `image_extractor`
+    2. Build a retriever with KNN search on `clip_embedding`
+    3. Pass image URL in `inputs`:
+
+    ```bash
+    POST /v1/retrievers/{retriever_id}/execute
+    {
+      "inputs": {
+        "query_image": "s3://my-bucket/sample.jpg"
+      }
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="What's the max result limit?">
+    **Per query:** 10,000 documents (pagination required for larger result sets)
+
+    **Per stage:** Configurable `limit` parameter (e.g., retrieve 100 candidates, rerank top 20)
+
+    **Best practice:** Use filters and sorts to narrow results before pagination.
+  </Accordion>
+
+  <Accordion title="Can I use Mixpeek for real-time search?">
+    Yes. Typical latency:
+    - Simple KNN: 20-50ms
+    - Hybrid search: 50-150ms
+    - With reranking: 100-300ms
+    - With LLM generation: 500-2000ms
+
+    Enable caching for repeated queries to achieve <10ms latency.
+  </Accordion>
+</AccordionGroup>
+
+## Taxonomies & Enrichment
+
+<AccordionGroup>
+  <Accordion title="What's the difference between flat and hierarchical taxonomies?">
+    **Flat:** Single-level classification. Each document maps to one or more nodes.
+    - Example: Product categories (Electronics, Clothing, Home)
+
+    **Hierarchical:** Multi-level tree structure with inheritance.
+    - Example: Animal taxonomy (Kingdom → Phylum → Class → Order)
+
+    Hierarchical taxonomies require compatible features at each level (e.g., coarse vs fine-grained embeddings).
+  </Accordion>
+
+  <Accordion title="When should I use materialized vs on-demand taxonomies?">
+    **Materialized (post-ingestion):**
+    - Taxonomy stable, changes infrequently
+    - Enrichment cost amortized across many queries
+    - Low-latency retrieval required
+
+    **On-demand (query-time):**
+    - Taxonomy updates frequently
+    - Personalized enrichment per query
+    - Cost-sensitive (only pay when enrichment used)
+  </Accordion>
+
+  <Accordion title="Can I update a taxonomy without reprocessing documents?">
+    Yes, for minor changes:
+    1. Create a new taxonomy version
+    2. Update collection's `taxonomy_applications` to reference new version
+    3. New queries use updated taxonomy; existing documents unchanged
+
+    For major changes (e.g., new hierarchy levels), reprocess affected collections.
+  </Accordion>
+</AccordionGroup>
+
+## Namespaces & Multi-Tenancy
+
+<AccordionGroup>
+  <Accordion title="Do I need multiple namespaces?">
+    Use separate namespaces for:
+    - **Multi-tenancy:** Isolate customer data
+    - **Environments:** dev, staging, production
+    - **Access control:** Restrict team/service access
+
+    Single namespace is sufficient for simple use cases.
+  </Accordion>
+
+  <Accordion title="Can namespaces share collections?">
+    No. Collections are namespace-scoped. To share data across namespaces:
+    1. Replicate objects to both namespaces
+    2. Process into identical collections
+    3. Query via namespace-specific retrievers
+
+    **Enterprise:** Contact us for cross-namespace join capabilities.
+  </Accordion>
+
+  <Accordion title="What's the performance impact of many namespaces?">
+    Minimal. Namespaces map 1:1 to Qdrant collections, which are optimized for isolation. Overhead is primarily storage (each namespace has its own vectors/payloads).
+  </Accordion>
+</AccordionGroup>
+
+## Cost & Billing
+
+<AccordionGroup>
+  <Accordion title="How are credits calculated?">
+    Credits are consumed by:
+    - **Document creation:** 1 credit per document
+    - **Inference:** 1-500 credits depending on model (embeddings, LLMs, OCR)
+    - **Search:** 0.1-10 credits per query (vector search, web search)
+    - **Storage:** 100 credits per GB/month
+
+    See [Rate Limits & Quotas](/operations/rate-limits-quotas) for full breakdown.
+  </Accordion>
+
+  <Accordion title="Do cached results consume credits?">
+    No. Cache hits are free. This includes:
+    - Retriever-level caching
+    - Stage-level caching
+    - Document reads (after initial creation)
+
+    **Optimization tip:** Aggressive caching can reduce costs by 5-10x.
+  </Accordion>
+
+  <Accordion title="What happens if I exceed my credit quota?">
+    Operations are blocked until:
+    1. Monthly quota resets (1st of month)
+    2. You upgrade tier
+    3. You purchase additional credits
+
+    Set up alerts at 80% usage:
+    ```bash
+    POST /v1/organizations/webhooks
+    {
+      "event_types": ["usage.threshold_exceeded"],
+      "filters": { "threshold_percentage": 80 }
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Can I get a refund for unused credits?">
+    Credits are non-refundable but roll over month-to-month within the same tier. Downgrades forfeit unused credits.
+  </Accordion>
+</AccordionGroup>
+
+## Security & Compliance
+
+<AccordionGroup>
+  <Accordion title="Is my data encrypted?">
+    Yes.
+    - **In transit:** TLS 1.3 for all API calls
+    - **At rest:** AES-256 encryption for Qdrant, MongoDB, Redis, S3
+
+    **Enterprise:** Bring-your-own-key (BYOK) available.
+  </Accordion>
+
+  <Accordion title="Can I control data residency?">
+    Yes (Enterprise only). Choose deployment region:
+    - US East (Virginia)
+    - US West (Oregon)
+    - EU (Frankfurt)
+    - Custom (contact us)
+
+    See [Deployment](/operations/deployment) for regional options.
+  </Accordion>
+
+  <Accordion title="Is Mixpeek SOC 2 compliant?">
+    SOC 2 Type II in progress. Expected certification: Q1 2026.
+
+    Currently available: GDPR compliance, HIPAA-ready architecture (BAA upon request).
+  </Accordion>
+
+  <Accordion title="How long is data retained?">
+    **Default retention:**
+    - Objects: Indefinitely (or until deleted)
+    - Documents: Indefinitely
+    - Tasks: 24 hours in Redis, 90 days in MongoDB
+    - Cache: TTL-based (default 5 minutes)
+
+    **Custom retention:** Configure per-bucket or per-collection.
+  </Accordion>
+</AccordionGroup>
+
+## Advanced Use Cases
+
+<AccordionGroup>
+  <Accordion title="Can I fine-tune models on my data?">
+    Yes (Enterprise). We support:
+    - Fine-tuning embedding models (text, image)
+    - Custom classification heads
+    - Domain-specific NER models
+
+    Requires minimum 10K labeled examples. Contact us for pricing.
+  </Accordion>
+
+  <Accordion title="Can I run Mixpeek on-premises?">
+    Yes (Enterprise). We provide:
+    - Docker Compose deployment
+    - Kubernetes Helm charts
+    - Full source code access (with license)
+
+    See [Deployment](/operations/deployment) for self-hosted options.
+  </Accordion>
+
+  <Accordion title="Does Mixpeek support GraphQL?">
+    No, only REST API. GraphQL support planned for 2026.
+
+    **Workaround:** Build a GraphQL wrapper around REST endpoints.
+  </Accordion>
+
+  <Accordion title="Can I export data to my own vector database?">
+    Yes. Use the Documents API to export vectors and metadata:
+    ```bash
+    POST /v1/collections/{collection_id}/documents/list
+    { "return_vectors": true, "limit": 10000 }
+    ```
+
+    Paginate through full collection and load into your database.
+  </Accordion>
+</AccordionGroup>
+
+## Support & Community
+
+<AccordionGroup>
+  <Accordion title="How do I get help?">
+    1. **Documentation:** You're here! Start with [Quickstart](/overview/quickstart)
+    2. **Talk to Engineers:** Use CTA in top bar for 1:1 support
+    3. **GitHub Issues:** For bug reports and feature requests
+    4. **Discord:** Community support and discussions (link in footer)
+  </Accordion>
+
+  <Accordion title="What's the SLA for support response?">
+    | Tier | Response Time |
+    |------|---------------|
+    | **Free** | Best effort, 48-72 hours |
+    | **Pro** | <24 hours business days |
+    | **Enterprise** | <4 hours, 24/7 |
+
+    **Critical issues (P0):** Escalated immediately for Enterprise.
+  </Accordion>
+
+  <Accordion title="Do you offer onboarding or consulting?">
+    Yes.
+    - **Pro:** 2-hour onboarding call included
+    - **Enterprise:** Dedicated solutions architect, quarterly reviews
+
+    Paid consulting available for:
+    - Custom integration development
+    - Performance optimization audits
+    - Training for internal teams
+  </Accordion>
+</AccordionGroup>
+
+## Still have questions?
+
+Can't find what you're looking for? Reach out:
+
+<CardGroup cols={3}>
+  <Card title="Talk to Engineers" icon="comments" href="https://mixpeek.com/contact">
+    Get 1:1 support from our team
+  </Card>
+  <Card title="Join Discord" icon="discord" href="https://mixpeek.com/discord">
+    Community support and discussions
+  </Card>
+  <Card title="Email Support" icon="envelope" href="mailto:support@mixpeek.com">
+    support@mixpeek.com
+  </Card>
+</CardGroup>
+

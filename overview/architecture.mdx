@@ -7,9 +7,18 @@ The Mixpeek platform is intentionally split across an API layer, an Engine layer
 
 ## System Overview
 
+<Frame>
+```mermaid
+graph TD
+  C[Clients] --> API[FastAPI HTTP]
+  API --> CT[Celery Tasks]
+  CT --> SS[Shared Storage]
+  SS --> RJ[Ray Jobs]
+  RJ --> QS[Qdrant & S3]
+  QS --> WH[Webhooks]
+  WH --> C
 ```
-Clients → FastAPI (HTTP) → Celery Tasks → Shared Storage → Ray Jobs → Qdrant/S3 → Webhooks → Clients
-```
+</Frame>
 
 - **API Layer (FastAPI + Celery)** handles HTTP requests, validation, authorization, transactional metadata updates, task creation, and webhook dispatch.
 - **Engine Layer (Ray)** performs distributed feature extraction, inference, taxonomy materialization, clustering, and long-running compute.
@@ -17,23 +26,31 @@ Clients → FastAPI (HTTP) → Celery Tasks → Shared Storage → Ray Jobs → 
 
 ## Service Architecture
 
+<Frame>
+```mermaid
+graph TB
+  FastAPI[FastAPI<br/>REST + auth]
+  Celery[Celery Worker]
+  Redis[(Redis<br/>Tasks)]
+  Mongo[(MongoDB<br/>metadata)]
+  RayHead[Ray Head<br/>+ Pollers]
+  RayWorkers[Ray Workers<br/>CPU/GPU/Serve]
+  Qdrant[(Qdrant)]
+  S3[(S3<br/>objects/artifacts)]
+  Webhooks[External Webhooks]
+  
+  FastAPI --> Celery
+  FastAPI --> Mongo
+  Celery --> Redis
+  Celery --> RayHead
+  Mongo --> RayHead
+  Mongo --> Qdrant
+  RayHead --> RayWorkers
+  RayWorkers --> Qdrant
+  RayWorkers --> S3
+  RayWorkers --> Webhooks
 ```
-┌───────────────┐       ┌───────────────┐        ┌────────────────┐
-│ FastAPI       │───┬──▶│ Celery Worker │──┬────▶│ Redis (Tasks)  │
-│ (REST + auth) │   │   └───────────────┘  │     └────────────────┘
-└──────┬────────┘   │                     │
-       │            │                     │               ┌──────────────┐
-       │   ┌────────▼───────┐             │──────────────▶│ Ray Head     │
-       └──▶│ MongoDB        │◀────────────┘               │  + Pollers   │
-           │ (metadata)     │                             └────┬─────────┘
-           └─────┬──────────┘                                  │
-                 │                     ┌───────────────────────▼────────────┐
-                 │                     │ Ray Workers (CPU / GPU, Serve)     │
-                 │                     └──────┬───────────────┬─────────────┘
-        ┌────────▼────────┐   ┌──────────────▼──────┐   ┌─────▼─────────────┐
-        │ Qdrant           │   │ S3 (objects/artifacts)│ │ External Webhooks │
-        └──────────────────┘   └──────────────────────┘ └───────────────────┘
-```
+</Frame>
 
 - Ray pollers read `batches` and `clustering_jobs` from MongoDB, submit jobs, and update status.
 - Ray Serve hosts embedding, reranking, audio, and video models.

@@ -1,0 +1,460 @@
+---
+title: "Schema Design"
+description: "Design effective bucket schemas and collection mappings for maintainability and flexibility"
+---
+
+Well-designed schemas balance validation, flexibility, and performance. This guide covers bucket schema patterns, collection field mappings, and evolution strategies to keep your data model clean and scalable.
+
+## Bucket Schema Principles
+
+### 1. Validate Inputs, Don't Over-Constrain
+
+Bucket schemas enforce object registration shape but shouldn't replicate downstream processing logic.
+
+**Good:**
+```json
+{
+  "schema": {
+    "properties": {
+      "title": { "type": "text", "required": true },
+      "content": { "type": "text", "required": true },
+      "category": { "type": "text" },
+      "published_at": { "type": "datetime" }
+    }
+  }
+}
+```
+
+**Avoid:**
+```json
+{
+  "schema": {
+    "properties": {
+      "title": { "type": "text", "required": true, "min_length": 10, "max_length": 200 },
+      "content": { "type": "text", "required": true, "must_contain": ["keyword"] },
+      "category": { "type": "text", "enum": ["tech", "business"] }  // Hard to extend
+    }
+  }
+}
+```
+
+**Why:** Collections can apply transformations and filters. Bucket schemas should validate data integrity, not business rules.
+
+### 2. Use Nested Objects for Grouping
+
+Group related fields to improve readability and support partial updates:
+
+```json
+{
+  "schema": {
+    "properties": {
+      "content": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "text" },
+          "body": { "type": "text" },
+          "summary": { "type": "text" }
+        }
+      },
+      "metadata": {
+        "type": "object",
+        "properties": {
+          "author": { "type": "text" },
+          "tags": { "type": "array" },
+          "published_at": { "type": "datetime" }
+        }
+      }
+    }
+  }
+}
+```
+
+### 3. Arrays for Multi-Valued Fields
+
+Use arrays for fields that naturally have multiple values:
+
+```json
+{
+  "tags": { "type": "array", "items": { "type": "text" } },
+  "authors": { "type": "array", "items": { "type": "text" } },
+  "images": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "properties": {
+        "url": { "type": "url" },
+        "caption": { "type": "text" }
+      }
+    }
+  }
+}
+```
+
+### 4. Separate Mutable and Immutable Fields
+
+Structure schemas to distinguish fields that change vs remain constant:
+
+```json
+{
+  "immutable": {
+    "created_at": { "type": "datetime" },
+    "source_system": { "type": "text" },
+    "original_filename": { "type": "text" }
+  },
+  "mutable": {
+    "status": { "type": "text" },
+    "assignee": { "type": "text" },
+    "priority": { "type": "number" }
+  }
+}
+```
+
+This pattern clarifies which fields can be updated via `PATCH` operations.
+
+## Collection Mapping Patterns
+
+### 1. Use Explicit Input Mappings
+
+Always specify `input_mappings` explicitly rather than relying on defaults:
+
+**Good:**
+```json
+{
+  "feature_extractor": {
+    "feature_extractor_name": "text_extractor",
+    "input_mappings": {
+      "text": "content.body"  // Clear source path
+    }
+  }
+}
+```
+
+**Avoid:**
+```json
+{
+  "feature_extractor": {
+    "feature_extractor_name": "text_extractor"
+    // Implicitly maps "text" field - fragile if bucket schema changes
+  }
+}
+```
+
+### 2. Passthrough Only What's Needed
+
+Use `field_passthrough` to selectively propagate metadata:
+
+```json
+{
+  "field_passthrough": [
+    { "source_path": "metadata.category" },
+    { "source_path": "metadata.tags" },
+    { "source_path": "metadata.published_at" }
+  ]
+}
+```
+
+**Don't passthrough:**
+- Large text blobs (duplicate storage)
+- Sensitive fields not needed for retrieval
+- Computed fields that can be derived on-demand
+
+### 3. Namespace Feature Outputs
+
+If multiple extractors produce similar outputs, use unique names:
+
+```json
+{
+  "feature_extractor": {
+    "feature_extractor_name": "text_extractor",
+    "version": "v1",
+    "output_namespace": "en"  // Produces mixpeek://text_extractor@v1/en/text_embedding
+  }
+}
+
+{
+  "feature_extractor": {
+    "feature_extractor_name": "text_extractor",
+    "version": "v1",
+    "output_namespace": "es",
+    "parameters": { "model": "multilingual-e5-large-instruct", "language": "es" }
+  }
+}
+```
+
+This enables language-specific retrievers without collection duplication.
+
+### 4. Leverage Chunking Strategies
+
+Match chunking to content type:
+
+| Content Type | Strategy | Rationale |
+|--------------|----------|-----------|
+| **Blog posts** | `paragraph` | Preserves narrative flow |
+| **Documentation** | `sentence` | Precise Q&A matching |
+| **Transcripts** | `time_window` (60s) | Natural speech boundaries |
+| **Code** | `function` | Semantic units |
+
+```json
+{
+  "parameters": {
+    "chunk_strategy": "paragraph",
+    "chunk_size": 512,
+    "chunk_overlap": 50
+  }
+}
+```
+
+## Schema Evolution
+
+### Adding Fields (Non-Breaking)
+
+New optional fields are safe:
+
+```json
+// Before
+{
+  "schema": {
+    "properties": {
+      "title": { "type": "text" }
+    }
+  }
+}
+
+// After (safe)
+{
+  "schema": {
+    "properties": {
+      "title": { "type": "text" },
+      "subtitle": { "type": "text" }  // Optional, non-breaking
+    }
+  }
+}
+```
+
+Existing objects remain valid; new objects can include `subtitle`.
+
+### Making Fields Required (Breaking)
+
+Requires migration:
+
+```json
+// Step 1: Add field as optional
+{ "description": { "type": "text" } }
+
+// Step 2: Backfill existing objects
+PATCH /v1/buckets/{bucket_id}/objects/{object_id}
+{ "metadata": { "description": "Default description" } }
+
+// Step 3: Make required
+{ "description": { "type": "text", "required": true } }
+```
+
+### Changing Field Types (Breaking)
+
+Create a new field instead of mutating:
+
+```json
+// Before
+{ "price": { "type": "text" } }  // "19.99"
+
+// Migration (add new field)
+{ "price_numeric": { "type": "number" } }  // 19.99
+
+// Deprecate old field
+{ "price": { "type": "text", "deprecated": true } }
+```
+
+### Versioning Collections
+
+For major schema changes, create a new collection:
+
+```bash
+POST /v1/collections
+{
+  "collection_name": "products-v2",
+  "source": { "type": "bucket", "bucket_id": "bkt_products" },
+  "feature_extractor": {
+    // Updated mappings and extractors
+  }
+}
+```
+
+Migrate documents:
+1. Keep `products-v1` read-only
+2. Process new batches into `products-v2`
+3. Update retrievers to query both collections during transition
+4. Archive `products-v1` after migration
+
+## Common Anti-Patterns
+
+### ❌ Storing Computed Values in Bucket Metadata
+
+**Problem:**
+```json
+{
+  "metadata": {
+    "content": "Sample text...",
+    "word_count": 150,  // Computed from content
+    "embedding": [0.1, 0.2, ...]  // Computed by extractor
+  }
+}
+```
+
+**Solution:** Store only source data in buckets; let extractors compute derived values.
+
+### ❌ Inconsistent Naming Conventions
+
+**Problem:**
+```json
+{
+  "CreatedDate": "...",  // PascalCase
+  "updated_at": "...",   // snake_case
+  "PublishTime": "..."   // Mixed
+}
+```
+
+**Solution:** Enforce consistent naming (prefer `snake_case` for compatibility).
+
+### ❌ Overusing Nested Objects
+
+**Problem:**
+```json
+{
+  "data": {
+    "content": {
+      "main": {
+        "text": {
+          "body": "..."  // 5 levels deep
+        }
+      }
+    }
+  }
+}
+```
+
+**Solution:** Flatten to 2-3 levels max for readability and query simplicity.
+
+### ❌ Missing Timestamps
+
+**Problem:** No `created_at` or `updated_at` fields.
+
+**Solution:** Always include audit timestamps:
+
+```json
+{
+  "created_at": { "type": "datetime", "required": true },
+  "updated_at": { "type": "datetime" }
+}
+```
+
+### ❌ Hardcoding Enum Values
+
+**Problem:**
+```json
+{
+  "status": { "type": "text", "enum": ["draft", "published"] }
+}
+```
+
+Adding `"archived"` requires schema migration.
+
+**Solution:** Use flexible text field + application-level validation or taxonomy enrichment.
+
+## Validation Best Practices
+
+### Use Required Fields Sparingly
+
+Mark fields required only if absolutely necessary for downstream processing:
+
+```json
+{
+  "title": { "type": "text", "required": true },  // Extractors need this
+  "tags": { "type": "array" }  // Optional, but useful
+}
+```
+
+### Validate Externally
+
+For complex validation (e.g., "URL must be from allowed domains"), validate in your application before calling Mixpeek.
+
+### Enable Schema Linting
+
+Check schemas before deployment:
+
+```bash
+# Validate schema before creating bucket
+POST /v1/buckets/validate
+{
+  "schema": { ... }
+}
+```
+
+## Multi-Collection Strategies
+
+### Separate by Modality
+
+Create distinct collections per feature type:
+
+- `products-text` → text embeddings
+- `products-images` → visual embeddings
+- `products-metadata` → structured data only
+
+Query multiple collections via retrievers for cross-modal search.
+
+### Separate by Language
+
+For multilingual content:
+
+- `docs-en` → English embeddings
+- `docs-es` → Spanish embeddings
+- `docs-fr` → French embeddings
+
+Use retriever stages to route queries by detected language.
+
+### Separate by Lifecycle
+
+For content with different retention policies:
+
+- `logs-hot` → last 7 days (fast storage)
+- `logs-warm` → 8-30 days (slower storage)
+- `logs-cold` → 30+ days (archive)
+
+## Checklist
+
+<Steps>
+  <Step title="Design bucket schema">
+    - Include required source fields only
+    - Add audit timestamps (`created_at`, `updated_at`)
+    - Group related fields in nested objects
+    - Use arrays for multi-valued fields
+  </Step>
+
+  <Step title="Define collection mappings">
+    - Explicit `input_mappings` for all extractors
+    - Selective `field_passthrough` (no large blobs)
+    - Choose appropriate `chunk_strategy`
+    - Namespace outputs if extracting multiple times
+  </Step>
+
+  <Step title="Plan for evolution">
+    - Add optional fields for new requirements
+    - Version collections for breaking changes
+    - Migrate data with backfill scripts
+    - Deprecate old fields gracefully
+  </Step>
+
+  <Step title="Validate and test">
+    - Lint schemas before deployment
+    - Test with representative sample data
+    - Monitor `__fully_enriched` rates
+    - Review document payloads in Qdrant
+  </Step>
+</Steps>
+
+## Next Steps
+
+- Review [Collections](/ingestion/collections) for full configuration options
+- Explore [Feature Extractors](/processing/feature-extractors) capabilities
+- Learn [Data Model](/overview/data-model) for entity relationships
+- Check [Buckets](/ingestion/buckets) API for schema management
+

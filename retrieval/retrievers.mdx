@@ -65,29 +65,48 @@ Retrievers combine feature-aware search stages, structured filters, enrichment j
 
 ## Stage Catalog
 
-Mixpeek exposes retriever stages through `GET /v1/retrievers/stages`. Each stage definition includes its `stage_id`, category, icon, and JSON Schema for parameters. The current registry includes:
+<Note>
+  Retrieve the live registry with `GET /v1/retrievers/stages`. Each entry includes `stage_id`, category, icon, and parameter schema so you can dynamically build configuration UIs or validations.
+</Note>
 
-### Search
+<CodeGroup>
+```bash
+curl -s --request GET \
+  --url "$MP_API_URL/v1/retrievers/stages" \
+  --header "Authorization: Bearer $MP_API_KEY" \
+  --header "X-Namespace: $MP_NAMESPACE"
+```
 
-- `hybrid_search` – Dense + lexical retrieval with reciprocal-rank fusion, weighted-score fusion, score thresholds, and per-stage caching.
+```json
+[
+  {
+    "stage_id": "hybrid_search",
+    "description": "Hybrid lexical + vector retrieval with score fusion",
+    "category": "search",
+    "icon": "search"
+  },
+  {
+    "stage_id": "attribute_filter",
+    "description": "Filter documents by attribute values",
+    "category": "reduce",
+    "icon": "list-filter"
+  }
+]
+```
+</CodeGroup>
 
-### Reduce
+| Category | Stage ID | Description |
+|----------|----------|-------------|
+| search | `hybrid_search` | Dense + lexical retrieval with reciprocal-rank and weighted-score fusion, plus score thresholds. |
+| reduce | `attribute_filter` | Structured filtering with boolean logic, projections, and template-aware batch sizing. |
+| reduce | `llm_filter` | LLM-powered screening that keeps or discards documents based on prompt-defined criteria. |
+| rank | `sort_attribute` | Sort in-flight results by any payload field with case-insensitive and null handling options. |
+| rank | `sort_relevance` | Sort by relevance score (or custom numeric field) with graceful fallbacks for missing scores. |
+| enrich | `document_enrichment` | Join documents with another collection and merge selected fields. |
+| enrich | `taxonomy_enrichment` | Attach taxonomy assignments via feature URIs and copy enrichment fields. |
+| enrich | `llm_enrichment` | Generate new fields with an LLM, respecting per-document conditions, batching, and schemas. |
 
-- `attribute_filter` – Structured filtering with simple or boolean expressions, projections, and batch sizing.
-- `llm_filter` – LLM-powered classification that keeps or discards documents based on prompt criteria.
-
-### Rank
-
-- `sort_attribute` – Sort in-flight results by any payload field, with case-insensitive options and null handling.
-- `sort_relevance` – Sort by `score` or another numeric field, with fallbacks for missing scores.
-
-### Enrich
-
-- `document_enrichment` – Join documents with another collection (direct field match) and merge selected fields.
-- `taxonomy_enrichment` – Attach taxonomy assignments via feature URIs and copy enrichment fields.
-- `llm_enrichment` – Generate new fields with an LLM, respecting per-document conditions, batching, and schemas.
-
-Call `GET /v1/retrievers/stages` to inspect the parameter schema for each stage before configuring it in a retriever.
+Call `GET /v1/retrievers/stages` whenever you need the latest metadata or parameter schemas.
 
 ## Execution Lifecycle
 

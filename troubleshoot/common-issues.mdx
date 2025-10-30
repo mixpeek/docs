@@ -1,0 +1,478 @@
+---
+title: "Common Issues"
+description: "Quick solutions to frequently encountered problems"
+---
+
+This guide covers the most common issues users encounter when using Mixpeek, with immediate troubleshooting steps and resolutions.
+
+## Ingestion Issues
+
+### Objects Not Processing
+
+**Symptoms:**
+- Batch submitted but documents never appear in collection
+- Task shows `COMPLETED` but `__fully_enriched: false`
+
+**Diagnosis:**
+```bash
+# Check task status
+GET /v1/tasks/{task_id}
+
+# Inspect documents
+POST /v1/collections/{collection_id}/documents/list
+{
+  "filters": {
+    "field": "__fully_enriched",
+    "operator": "eq",
+    "value": false
+  }
+}
+```
+
+**Common Causes & Fixes:**
+
+<AccordionGroup>
+  <Accordion title="1. Invalid Input Mappings">
+    **Problem:** Extractor expects field that doesn't exist in object metadata.
+
+    ```json
+    // Object
+    { "metadata": { "description": "..." } }
+
+    // Collection (WRONG)
+    { "input_mappings": { "text": "content" } }  // Field doesn't exist
+    ```
+
+    **Fix:** Correct input mapping to match object schema:
+    ```json
+    { "input_mappings": { "text": "description" } }
+    ```
+  </Accordion>
+
+  <Accordion title="2. Missing Blob URLs">
+    **Problem:** Object references S3 URLs that don't exist or are inaccessible.
+
+    **Fix:**
+    - Verify S3 URLs are accessible from Engine
+    - Check S3 connection credentials
+    - Ensure bucket CORS/permissions allow Engine access
+    
+    ```bash
+    # Test connection
+    POST /v1/organizations/connections/{connection_id}/test
+    ```
+  </Accordion>
+
+  <Accordion title="3. Extractor Failures">
+    **Problem:** Feature extractor crashed or timed out.
+
+    **Check:** `__missing_features` field in documents:
+    ```json
+    {
+      "__missing_features": ["mixpeek://text_extractor@v1/text_embedding"]
+    }
+    ```
+
+    **Fix:**
+    - Check Engine logs for OOM errors (reduce batch size)
+    - Verify model is available in registry
+    - Retry processing for affected objects
+  </Accordion>
+
+  <Accordion title="4. Schema Validation Failures">
+    **Problem:** Object doesn't match bucket schema.
+
+    **Check:**
+    ```bash
+    POST /v1/buckets/{bucket_id}/objects/validate
+    { "metadata": { ... } }
+    ```
+
+    **Fix:** Update object metadata or relax bucket schema
+  </Accordion>
+</AccordionGroup>
+
+### Slow Batch Processing
+
+**Symptoms:**
+- Batches take hours to process
+- Task stuck in `PROCESSING` state
+
+**Diagnosis:**
+```bash
+GET /v1/analytics/engine/performance
+GET /v1/analytics/extractors/{extractor_name}/performance
+```
+
+**Fixes:**
+
+| Cause | Solution |
+|-------|----------|
+| **Large batch size** | Reduce to 100-1000 objects per batch |
+| **Heavy extractors** | Switch to lighter models (e.g., `whisper-base` vs `large`) |
+| **Ray worker saturation** | Scale workers or process during off-peak |
+| **S3 download bottleneck** | Increase `max_concurrent_downloads` in Engine config |
+| **GPU unavailable** | Check Ray cluster GPU allocation |
+
+## Retrieval Issues
+
+### Zero Results
+
+**Symptoms:**
+- Retriever returns empty results for valid queries
+- Works in one namespace but not another
+
+**Diagnosis:**
+```bash
+# Check document count
+GET /v1/collections/{collection_id}/documents/count
+
+# Test without filters
+POST /v1/retrievers/{retriever_id}/execute
+{
+  "inputs": { "query": "test" },
+  "filters": {}  // Remove all filters
+}
+```
+
+**Common Causes:**
+
+<AccordionGroup>
+  <Accordion title="1. No Documents in Collection">
+    **Check:** Collection is empty or batch processing incomplete.
+
+    **Fix:**
+    - Verify batch was submitted and completed
+    - Check `__fully_enriched` document count
+  </Accordion>
+
+  <Accordion title="2. Overly Restrictive Filters">
+    **Problem:** Filters exclude all documents.
+
+    ```json
+    {
+      "filters": {
+        "field": "metadata.category",
+        "operator": "eq",
+        "value": "electronics"  // No documents have this value
+      }
+    }
+    ```
+
+    **Fix:** Remove filters temporarily to test, then adjust filter values.
+  </Accordion>
+
+  <Accordion title="3. Feature Address Mismatch">
+    **Problem:** Retriever queries feature that doesn't exist.
+
+    ```json
+    {
+      "feature_address": "mixpeek://text_extractor@v1/embedding"
+    }
+    // Correct: "...@v1/text_embedding"
+    ```
+
+    **Fix:** Verify feature address matches collection output schema:
+    ```bash
+    GET /v1/collections/{collection_id}/features
+    ```
+  </Accordion>
+
+  <Accordion title="4. Namespace Mismatch">
+    **Problem:** Querying wrong namespace.
+
+    **Check:** Ensure `X-Namespace` header matches collection namespace.
+  </Accordion>
+</AccordionGroup>
+
+### Poor Result Quality
+
+**Symptoms:**
+- Irrelevant results appear at top
+- Known-good documents missing from results
+
+**Diagnosis:**
+```bash
+# Get execution details with scoring
+POST /v1/retrievers/{retriever_id}/execute
+{
+  "inputs": { "query": "sample query" },
+  "explain": true  // Returns per-result score breakdown
+}
+```
+
+**Fixes:**
+
+| Issue | Solution |
+|-------|----------|
+| **Semantic mismatch** | Use hybrid search (dense + sparse) |
+| **Wrong model** | A/B test with different embedding models |
+| **Missing reranking** | Add rerank stage after initial search |
+| **Stale cache** | Invalidate retriever cache after reindexing |
+| **Low `limit` value** | Increase `limit` in search stage |
+
+## Authentication & Authorization
+
+### 401 Unauthorized
+
+**Symptoms:**
+- All API calls return 401
+- "Invalid API key" error
+
+**Fixes:**
+
+```bash
+# Verify key format
+Authorization: Bearer sk_live_...  # Must start with "sk_"
+
+# Check key status
+GET /v1/organizations/api-keys
+```
+
+**Common mistakes:**
+- Missing `Bearer` prefix
+- Expired or deleted key
+- Key belongs to different organization
+- Using test key in production
+
+### 403 Forbidden
+
+**Symptoms:**
+- Some operations work, others return 403
+- "Insufficient permissions" error
+
+**Diagnosis:**
+```bash
+# Check key permissions
+GET /v1/organizations/api-keys/{key_id}
+```
+
+**Fix:** Create key with required permissions:
+```bash
+POST /v1/organizations/api-keys
+{
+  "key_name": "production-key",
+  "permissions": ["collections:read", "collections:write", "retrievers:execute"]
+}
+```
+
+### 429 Too Many Requests
+
+**Symptoms:**
+- Requests start failing after sustained traffic
+- `Retry-After` header present
+
+**Fix:** Implement exponential backoff:
+```python
+import time
+
+def api_call_with_retry(url, max_retries=5):
+    for attempt in range(max_retries):
+        resp = requests.post(url, ...)
+        if resp.status_code == 429:
+            retry_after = int(resp.headers.get("Retry-After", 2 ** attempt))
+            time.sleep(retry_after)
+            continue
+        return resp
+```
+
+See [Rate Limits & Quotas](/operations/rate-limits-quotas) for optimization strategies.
+
+## Performance Issues
+
+### High Latency
+
+**Symptoms:**
+- p95 latency >2s
+- Users complain about slow searches
+
+**Diagnosis:**
+```bash
+GET /v1/analytics/retrievers/{retriever_id}/performance
+GET /v1/analytics/retrievers/{retriever_id}/stages
+```
+
+**Identify bottleneck stages:**
+
+| Stage | Typical Latency | If Slow, Check |
+|-------|----------------|----------------|
+| `knn_search` | <50ms | Qdrant health, index size, `limit` value |
+| `filter` | <10ms | Filter complexity, indexed fields |
+| `rerank` | 50-200ms | Reranking model, `top_k` value |
+| `llm_generation` | 500-2000ms | Model size, `max_tokens`, prompt length |
+| `web_search` | 200-500ms | External API latency, cache hit rate |
+
+**Fixes:**
+- Enable caching (TTL=300s+)
+- Reduce `limit` values in early stages
+- Use smaller/faster models
+- Move filters before expensive stages
+- Scale Qdrant replicas
+
+### Cache Not Working
+
+**Symptoms:**
+- Cache hit rate <10% despite repetitive queries
+- `cache_hit: false` in all responses
+
+**Diagnosis:**
+```bash
+GET /v1/analytics/cache/performance
+```
+
+**Common causes:**
+
+<AccordionGroup>
+  <Accordion title="1. Cache Disabled">
+    **Check:** `cache_config.enabled: false`
+
+    **Fix:**
+    ```bash
+    PATCH /v1/retrievers/{retriever_id}
+    {
+      "cache_config": { "enabled": true, "ttl_seconds": 300 }
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="2. High Query Variability">
+    **Problem:** Every query is unique (includes session IDs, timestamps, etc.)
+
+    **Fix:** Exclude variable fields from cache key:
+    ```json
+    {
+      "cache_config": {
+        "cache_key_fields": ["inputs.query"],
+        "ignore_fields": ["inputs.session_id", "return_urls"]
+      }
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="3. TTL Too Short">
+    **Problem:** Cache entries expire before reuse.
+
+    **Fix:** Increase TTL based on update frequency:
+    ```json
+    { "ttl_seconds": 900 }  // 15 minutes
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Data Integrity Issues
+
+### Missing Documents
+
+**Symptoms:**
+- Documents created but not queryable
+- Lineage broken (can't find source object)
+
+**Diagnosis:**
+```bash
+# Check Qdrant directly
+GET /v1/collections/{collection_id}/documents/{document_id}
+
+# Verify lineage
+GET /v1/documents/by-object/{object_id}
+```
+
+**Fixes:**
+- Ensure `internal_id` filter is correct
+- Check namespace isolation
+- Verify Qdrant collection wasn't manually deleted
+- Reprocess affected objects
+
+### Duplicate Documents
+
+**Symptoms:**
+- Same content appears multiple times
+- `source_object_id` differs but content identical
+
+**Cause:** Object created multiple times or reprocessed without deduplication.
+
+**Fix:**
+```python
+# Deduplicate before ingestion
+import hashlib
+
+def content_hash(metadata):
+    return hashlib.sha256(json.dumps(metadata, sort_keys=True).encode()).hexdigest()
+
+existing_hashes = set()
+
+for obj in objects:
+    obj_hash = content_hash(obj["metadata"])
+    if obj_hash not in existing_hashes:
+        mixpeek.objects.create(...)
+        existing_hashes.add(obj_hash)
+```
+
+## Integration Issues
+
+### S3 Connection Failures
+
+**Symptoms:**
+- Objects fail to process
+- "Unable to download blob" errors
+
+**Diagnosis:**
+```bash
+POST /v1/organizations/connections/{connection_id}/test
+```
+
+**Fixes:**
+- Verify AWS credentials (access key, secret key)
+- Check bucket CORS policy allows Engine IP
+- Ensure bucket region matches connection config
+- For LocalStack (dev), verify endpoint URL
+
+### Webhook Not Triggering
+
+**Symptoms:**
+- Events occur but webhook not called
+- No webhook delivery logs
+
+**Diagnosis:**
+```bash
+GET /v1/organizations/webhooks/{webhook_id}/deliveries
+```
+
+**Common causes:**
+- Webhook URL unreachable from Mixpeek (firewall, DNS)
+- Endpoint returns non-2xx status (webhook disabled after failures)
+- Event type filter too restrictive
+- HTTPS certificate issues
+
+**Fix:**
+```bash
+# Test webhook manually
+POST /v1/organizations/webhooks/{webhook_id}/test
+```
+
+## Getting Help
+
+If issues persist:
+
+1. **Check service health:**
+   ```bash
+   GET /v1/health
+   ```
+
+2. **Collect diagnostics:**
+   - Task ID
+   - Execution ID
+   - Collection/Retriever IDs
+   - Request payloads (sanitized)
+
+3. **Contact support:**
+   - Use "Talk to Engineers" CTA
+   - Include error messages and timestamps
+   - Share curl commands (with API key redacted)
+
+## Next Steps
+
+- Review [Errors](/troubleshoot/errors) for error code reference
+- Check [Limits](/troubleshoot/limits) for quota constraints
+- Monitor with [Analytics](/operations/analytics-overview)
+- Optimize with [Best Practices](/best-practices/schema-design)
+

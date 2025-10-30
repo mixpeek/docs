@@ -73,11 +73,15 @@
       "url": "api-reference"
     },
     {
+      "name": "Use Cases",
+      "url": "patterns"
+    },
+    {
       "name": "Integrations",
       "url": "integrations"
     },
     {
-      "name": "Studio Overview",
+      "name": "Studio",
       "url": "studio"
     }
   ],
@@ -89,7 +93,16 @@
         "overview/quickstart",
         "overview/concepts",
         "overview/architecture",
+        "overview/data-model",
         "overview/caching"
+      ]
+    },
+    {
+      "group": "Use Cases & Patterns",
+      "pages": [
+        "patterns/video-understanding",
+        "patterns/semantic-search",
+        "patterns/document-intelligence"
       ]
     },
     {
@@ -131,16 +144,30 @@
     {
       "group": "Operate in Production",
       "pages": [
+        "operations/deployment",
         "operations/security",
         "operations/observability",
-        "operations/webhooks"
+        "operations/webhooks",
+        "operations/analytics-overview",
+        "operations/rate-limits-quotas"
+      ]
+    },
+    {
+      "group": "Best Practices",
+      "pages": [
+        "best-practices/schema-design",
+        "best-practices/feature-selection",
+        "best-practices/caching-strategies",
+        "best-practices/cost-optimization"
       ]
     },
     {
       "group": "Troubleshoot",
       "pages": [
         "troubleshoot/errors",
-        "troubleshoot/limits"
+        "troubleshoot/limits",
+        "troubleshoot/common-issues",
+        "troubleshoot/faq"
       ]
     },
     {

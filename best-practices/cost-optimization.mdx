@@ -1,0 +1,533 @@
+---
+title: "Cost Optimization"
+description: "Reduce credit consumption and maximize value across ingestion, retrieval, and storage"
+---
+
+Mixpeek credits are consumed by document creation, inference calls, vector searches, storage, and LLM operations. This guide covers strategies to reduce costs while maintaining performance and quality.
+
+## Credit Consumption Model
+
+<CardGroup cols={2}>
+  <Card title="Ingestion Costs" icon="file-import">
+    Feature extraction (embeddings, OCR, transcription) and document writes
+  </Card>
+  <Card title="Retrieval Costs" icon="magnifying-glass">
+    Vector searches, hybrid fusion, reranking, and LLM generation stages
+  </Card>
+  <Card title="Storage Costs" icon="database">
+    Document payloads, vectors, and cached results in Qdrant/Redis
+  </Card>
+  <Card title="External Costs" icon="globe">
+    Web search API calls, third-party model inference (OpenAI, Cohere)
+  </Card>
+</CardGroup>
+
+## Cost Breakdown by Operation
+
+| Operation | Credit Cost | Optimization Leverage |
+|-----------|-------------|----------------------|
+| **Document creation** | 1 credit | Low (required) |
+| **Text embedding (base)** | 1 credit | Medium (model choice) |
+| **Text embedding (large)** | 5 credits | High (model choice) |
+| **LLM generation (small)** | 10-50 credits | High (prompt optimization) |
+| **LLM generation (large)** | 50-500 credits | Very High (model, tokens) |
+| **KNN vector search** | 0.1 credits | Low (efficient) |
+| **Hybrid search (RRF)** | 0.2 credits | Low (efficient) |
+| **Reranking (cross-encoder)** | 2-5 credits per doc | High (limit top-K) |
+| **Web search** | 10 credits per query | High (cache aggressively) |
+| **OCR (per page)** | 2-5 credits | Medium (resolution, model) |
+| **Video transcription (per min)** | 5-10 credits | Medium (model choice) |
+| **Storage (per GB/month)** | 100 credits | Medium (retention policies) |
+
+## Ingestion Optimization
+
+### 1. Choose Efficient Models
+
+**Embeddings:**
+
+| Model | Credits | Use Case |
+|-------|---------|----------|
+| `multilingual-e5-base` | 1 | High-volume, cost-sensitive |
+| `multilingual-e5-large` | 5 | Balanced accuracy/cost |
+| `openai/text-embedding-3-large` | 10 | Premium quality only |
+
+**Strategy:**
+```json
+{
+  "feature_extractor": {
+    "feature_extractor_name": "text_extractor",
+    "parameters": {
+      "model": "multilingual-e5-base"  // 5x cheaper than large
+    }
+  }
+}
+```
+
+**Video/Audio:**
+
+| Model | Credits/min | Use Case |
+|-------|-------------|----------|
+| `whisper-base` | 3 | Fast, moderate accuracy |
+| `whisper-large-v3` | 10 | High accuracy, slower |
+
+### 2. Deduplicate Before Ingestion
+
+Avoid processing identical content:
+
+```python
+import hashlib
+
+def should_ingest(content: str, seen_hashes: set) -> bool:
+    content_hash = hashlib.sha256(content.encode()).hexdigest()
+    if content_hash in seen_hashes:
+        return False
+    seen_hashes.add(content_hash)
+    return True
+
+# Before creating objects
+if should_ingest(document_text, seen_hashes):
+    mixpeek.objects.create(...)
+```
+
+### 3. Optimize Chunking
+
+**Fewer chunks = lower cost:**
+
+```json
+// Expensive (100 chunks per document)
+{
+  "chunk_strategy": "sentence",
+  "chunk_size": 128
+}
+
+// Optimized (20 chunks per document)
+{
+  "chunk_strategy": "paragraph",
+  "chunk_size": 512
+}
+```
+
+**Trade-off:** Larger chunks reduce granularity but cut costs by 5x.
+
+### 4. Selective Feature Extraction
+
+Only extract features you'll query:
+
+```json
+// Expensive (3 extractors per object)
+{
+  "feature_extractors": [
+    "text_extractor",
+    "image_extractor",
+    "video_extractor"
+  ]
+}
+
+// Optimized (1 extractor if only text search needed)
+{
+  "feature_extractors": [
+    "text_extractor"
+  ]
+}
+```
+
+### 5. Batch Efficiently
+
+Larger batches amortize overhead:
+
+```python
+# Inefficient: 100 batches of 10 objects
+for i in range(100):
+    mixpeek.batches.create(object_ids=objects[i*10:(i+1)*10])
+
+# Efficient: 1 batch of 1000 objects
+mixpeek.batches.create(object_ids=objects[:1000])
+```
+
+**Optimal batch size:** 100-1000 objects depending on object size.
+
+### 6. Incremental Updates
+
+Re-extract only changed content:
+
+```python
+# Track processed objects
+processed_ids = redis_client.smembers("processed_objects")
+
+new_objects = [obj for obj in objects if obj["id"] not in processed_ids]
+
+if new_objects:
+    mixpeek.batches.create(object_ids=[o["id"] for o in new_objects])
+```
+
+## Retrieval Optimization
+
+### 1. Cache Aggressively
+
+Cache expensive stages to avoid re-execution:
+
+```json
+{
+  "cache_config": {
+    "enabled": true,
+    "ttl_seconds": 600,
+    "cache_stage_names": ["llm_generation", "web_search", "rerank"]
+  }
+}
+```
+
+**Impact:** 80% cache hit rate = 5x cost reduction for cached stages.
+
+### 2. Limit LLM Token Usage
+
+**Expensive:**
+```json
+{
+  "stage_name": "llm_generation",
+  "parameters": {
+    "model": "gpt-4o",
+    "max_tokens": 2000,  // High cost
+    "prompt": "Write a detailed 500-word essay about {{DOCUMENT.text}}"
+  }
+}
+```
+
+**Optimized:**
+```json
+{
+  "stage_name": "llm_generation",
+  "parameters": {
+    "model": "gpt-4o-mini",  // 10x cheaper
+    "max_tokens": 200,
+    "prompt": "Summarize in 3 sentences: {{DOCUMENT.text | truncate(500)}}"
+  }
+}
+```
+
+**Cost reduction:** 50x (smaller model + fewer tokens + truncated input)
+
+### 3. Rerank Only Top Candidates
+
+**Expensive:**
+```json
+{
+  "stages": [
+    { "stage_name": "knn_search", "parameters": { "limit": 100 } },
+    { "stage_name": "rerank", "parameters": { "top_k": 100 } }  // Rerank all 100
+  ]
+}
+```
+
+**Optimized:**
+```json
+{
+  "stages": [
+    { "stage_name": "knn_search", "parameters": { "limit": 100 } },
+    { "stage_name": "rerank", "parameters": { "top_k": 20 } }  // Rerank only top 20
+  ]
+}
+```
+
+**Cost reduction:** 5x on reranking credits
+
+### 4. Filter Before Search
+
+Apply cheap filters before expensive vector operations:
+
+```json
+{
+  "stages": [
+    {
+      "stage_name": "filter",
+      "parameters": {
+        "filters": {
+          "field": "metadata.category",
+          "operator": "eq",
+          "value": "electronics"
+        }
+      }
+    },
+    {
+      "stage_name": "knn_search",  // Searches smaller subset
+      "parameters": { "limit": 50 }
+    }
+  ]
+}
+```
+
+**Impact:** Reduces search space by 90% → proportional cost reduction
+
+### 5. Use Budget Limits
+
+Prevent runaway costs:
+
+```json
+{
+  "budget_limits": {
+    "max_inference_calls": 10,
+    "max_llm_tokens": 2000,
+    "max_execution_time_ms": 5000
+  }
+}
+```
+
+Execution halts when limits hit, returning partial results.
+
+### 6. Avoid Web Search for Common Queries
+
+**Expensive:**
+```json
+{
+  "stages": [
+    { "stage_name": "web_search", "parameters": { "query": "{{inputs.query}}" } }
+  ]
+}
+```
+
+**Optimized:**
+```python
+# Check internal KB first
+internal_results = mixpeek.retrievers.execute("internal-kb", inputs={"query": query})
+
+if len(internal_results["results"]) < 3:
+    # Fallback to web search
+    web_results = mixpeek.retrievers.execute("web-search", inputs={"query": query})
+```
+
+## Storage Optimization
+
+### 1. Enable Payload Selection
+
+Don't store full text in Qdrant if only metadata is needed for filtering:
+
+```json
+{
+  "field_passthrough": [
+    { "source_path": "title" },
+    { "source_path": "category" }
+    // Don't passthrough large "content" field
+  ]
+}
+```
+
+Fetch full content from source objects on-demand.
+
+### 2. Set Retention Policies
+
+Auto-delete old documents:
+
+```bash
+POST /v1/collections/{collection_id}/retention-policy
+{
+  "delete_after_days": 90,
+  "archive_to_cold_storage_after_days": 30
+}
+```
+
+### 3. Compress Metadata
+
+Store compact representations:
+
+```json
+// Expensive (1KB per document)
+{
+  "metadata": {
+    "full_text": "The quick brown fox jumps over the lazy dog...",
+    "author_bio": "John Doe is a writer..."
+  }
+}
+
+// Optimized (100 bytes per document)
+{
+  "metadata": {
+    "summary": "Fox story",
+    "author_id": "usr_123"  // Lookup full bio externally
+  }
+}
+```
+
+### 4. Use Sparse Vectors Selectively
+
+Hybrid search requires both dense and sparse vectors:
+
+```json
+// Expensive (store both)
+{
+  "vector_indexes": [
+    { "name": "dense_embedding", "dimension": 1024 },
+    { "name": "bm25_sparse", "dimension": 5000 }
+  ]
+}
+
+// Optimized (dense only if keyword matching not critical)
+{
+  "vector_indexes": [
+    { "name": "dense_embedding", "dimension": 1024 }
+  ]
+}
+```
+
+**Storage savings:** 5x reduction
+
+## Monitoring & Optimization
+
+### 1. Track Credit Consumption
+
+```bash
+GET /v1/organizations/usage
+```
+
+```json
+{
+  "breakdown": {
+    "inference": 32000,  // 64% of spend
+    "search": 8500,
+    "storage": 3200,
+    "documents": 1530
+  }
+}
+```
+
+**Focus optimization on highest categories.**
+
+### 2. Identify High-Cost Retrievers
+
+```bash
+GET /v1/analytics/usage/summary?group_by=retriever_id
+```
+
+```json
+{
+  "retrievers": [
+    { "retriever_id": "ret_research", "credits": 25000 },  // Optimize this
+    { "retriever_id": "ret_product_search", "credits": 5000 }
+  ]
+}
+```
+
+### 3. Audit Extractor Performance
+
+```bash
+GET /v1/analytics/extractors/text_extractor/performance
+```
+
+```json
+{
+  "avg_credits_per_object": 15,
+  "total_objects_processed": 10000,
+  "total_credits": 150000
+}
+```
+
+**High per-object cost?** Switch to cheaper model or optimize chunk size.
+
+### 4. Set Cost Alerts
+
+Configure webhooks to alert at 80% budget:
+
+```bash
+POST /v1/organizations/webhooks
+{
+  "event_types": ["usage.threshold_exceeded"],
+  "url": "https://your-app.com/webhooks/cost-alert",
+  "filters": {
+    "threshold_percentage": 80
+  }
+}
+```
+
+## Cost-Performance Trade-Offs
+
+### Scenario 1: High-Volume Product Search
+
+**Goal:** 1M searches/month, <500ms p95 latency, $1000 budget
+
+**Strategy:**
+- Use `multilingual-e5-base` embeddings (1 credit vs 5)
+- Enable aggressive caching (TTL=900s)
+- Limit to 50 results, no reranking
+- Pre-filter by category to reduce search scope
+
+**Result:** 200K credits/month, 300ms p95 latency
+
+### Scenario 2: Research Assistant
+
+**Goal:** Best accuracy, 10K queries/month, $2000 budget
+
+**Strategy:**
+- Use `openai/text-embedding-3-large` (10 credits)
+- Rerank top 20 with cross-encoder (5 credits each)
+- Generate summaries with `gpt-4o-mini` (20 credits)
+- Cache LLM outputs (TTL=3600s)
+
+**Result:** 150K credits/month, high user satisfaction
+
+### Scenario 3: Document Ingestion (1TB)
+
+**Goal:** Index 1TB of PDFs, $5000 budget
+
+**Strategy:**
+- Deduplicate by content hash (reduce by 30%)
+- Use `whisper-base` for scanned pages
+- Chunk at 512 tokens (paragraph-level)
+- Process in batches of 1000 documents
+- Disable image extraction if not needed
+
+**Result:** 450K credits, 2-week processing time
+
+## ROI Analysis
+
+Track cost vs business value:
+
+```python
+# Measure cost per retriever execution
+cost_per_execution = credits_used * cost_per_credit / executions
+
+# Compare to business metrics
+conversion_rate = conversions / executions
+cost_per_conversion = cost_per_execution / conversion_rate
+
+# Optimize retrievers with poor ROI
+if cost_per_conversion > target_cpa:
+    # Reduce LLM usage, increase caching, etc.
+```
+
+## Quick Wins Checklist
+
+<Steps>
+  <Step title="Enable caching on all retrievers">
+    Start with TTL=300s, adjust based on hit rate
+  </Step>
+
+  <Step title="Switch to base models for non-critical workloads">
+    Use `multilingual-e5-base` instead of `large` where accuracy delta is <5%
+  </Step>
+
+  <Step title="Set budget limits on exploratory retrievers">
+    Prevent runaway LLM costs from research/debugging queries
+  </Step>
+
+  <Step title="Deduplicate objects before ingestion">
+    Hash content and skip processing identical documents
+  </Step>
+
+  <Step title="Optimize LLM prompts">
+    Reduce `max_tokens`, truncate inputs, use smaller models
+  </Step>
+
+  <Step title="Filter before search">
+    Apply metadata filters before vector operations
+  </Step>
+
+  <Step title="Review top credit consumers monthly">
+    Use analytics to identify and optimize high-cost operations
+  </Step>
+</Steps>
+
+## Next Steps
+
+- Monitor with [Analytics Overview](/operations/analytics-overview)
+- Understand limits via [Rate Limits & Quotas](/operations/rate-limits-quotas)
+- Optimize caching with [Caching Strategies](/best-practices/caching-strategies)
+- Review [Feature Extractors](/processing/feature-extractors) model options
+

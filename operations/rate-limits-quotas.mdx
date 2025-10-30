@@ -1,0 +1,385 @@
+---
+title: "Rate Limits & Quotas"
+description: "Understand API rate limits, credit quotas, and strategies for scaling under constraints"
+---
+
+Mixpeek enforces rate limits and quotas to ensure fair resource allocation and system stability. Limits vary by tier (free, pro, enterprise) and are applied per organization, API key, and endpoint.
+
+## Rate Limiting Model
+
+Mixpeek uses **token bucket** rate limiting with per-minute and per-second windows:
+
+<CardGroup cols={2}>
+  <Card title="Request Rate Limits" icon="gauge-high">
+    Maximum requests per second (RPS) or per minute (RPM) per API key.
+  </Card>
+  <Card title="Credit Quotas" icon="coins">
+    Monthly credit allocation for inference, storage, and compute operations.
+  </Card>
+  <Card title="Concurrent Requests" icon="layer-group">
+    Maximum simultaneous in-flight requests per organization.
+  </Card>
+  <Card title="Resource Quotas" icon="database">
+    Limits on collections, documents, feature extractors, and batch sizes.
+  </Card>
+</CardGroup>
+
+## Rate Limit Tiers
+
+| Tier | Requests/Min (RPM) | Requests/Sec (RPS) | Concurrent | Burst Allowance |
+|------|--------------------|--------------------|------------|-----------------|
+| **Free** | 60 | 10 | 5 | 20 requests |
+| **Pro** | 600 | 100 | 50 | 200 requests |
+| **Enterprise** | Custom | Custom | Custom | Custom |
+
+**Burst Allowance:** Short spikes above the sustained rate are permitted using banked tokens (refill at steady rate).
+
+## Rate Limit Headers
+
+Every API response includes rate limit metadata:
+
+```http
+X-RateLimit-Limit: 600          # Max requests per window
+X-RateLimit-Remaining: 542       # Requests left in current window
+X-RateLimit-Reset: 1698765432    # Unix timestamp when limit resets
+X-RateLimit-Window: 60           # Window duration in seconds
+```
+
+**When rate limited:**
+
+```http
+HTTP/1.1 429 Too Many Requests
+Retry-After: 15                  # Seconds until retry is safe
+X-RateLimit-Remaining: 0
+
+{
+  "success": false,
+  "status": 429,
+  "error": {
+    "message": "Rate limit exceeded",
+    "type": "TooManyRequestsError",
+    "details": {
+      "limit": 600,
+      "window": "1m",
+      "retry_after": 15
+    }
+  }
+}
+```
+
+## Credit Quotas
+
+Credits are consumed by:
+
+| Operation | Credit Cost |
+|-----------|-------------|
+| **Document creation** | 1 credit per document |
+| **Inference call** (embedding) | 1-5 credits depending on model |
+| **Inference call** (LLM generation) | 10-100 credits based on tokens |
+| **Vector search** (KNN) | 0.1 credits per query |
+| **Hybrid search** (RRF) | 0.2 credits per query (multiple vectors) |
+| **Web search** (external API) | 10 credits per query |
+| **Clustering execution** | 50-500 credits based on dataset size |
+| **Storage** (per GB/month) | 100 credits |
+
+### Monitoring Credit Usage
+
+Check remaining credits via the Usage API:
+
+```bash
+GET /v1/organizations/usage
+```
+
+**Response:**
+```json
+{
+  "credits": {
+    "total": 100000,
+    "used": 45230,
+    "remaining": 54770,
+    "reset_date": "2025-11-01T00:00:00Z"
+  },
+  "breakdown": {
+    "inference": 32000,
+    "search": 8500,
+    "storage": 3200,
+    "documents": 1530
+  }
+}
+```
+
+**Set alerts:**
+- 80% usage → warning
+- 95% usage → critical
+- 100% usage → operations blocked until reset or upgrade
+
+## Resource Quotas
+
+### Per-Organization Limits
+
+| Resource | Free Tier | Pro Tier | Enterprise |
+|----------|-----------|----------|------------|
+| **Namespaces** | 1 | 10 | Unlimited |
+| **Collections** | 5 | 50 | Unlimited |
+| **Buckets** | 5 | 50 | Unlimited |
+| **Documents** | 10,000 | 1,000,000 | Unlimited |
+| **Retrievers** | 3 | 50 | Unlimited |
+| **Taxonomies** | 2 | 20 | Unlimited |
+| **Clusters** | 1 | 10 | Unlimited |
+| **API Keys** | 2 | 10 | Unlimited |
+| **Batch Size** | 100 objects | 10,000 objects | Custom |
+
+### Enforcement
+
+When a quota is exceeded:
+
+```http
+HTTP/1.1 403 Forbidden
+
+{
+  "success": false,
+  "status": 403,
+  "error": {
+    "message": "Collection quota exceeded",
+    "type": "QuotaExceededError",
+    "details": {
+      "resource": "collections",
+      "current": 5,
+      "limit": 5,
+      "tier": "free"
+    }
+  }
+}
+```
+
+## Scaling Strategies
+
+### 1. Optimize Request Patterns
+
+**Problem:** Hitting RPM limits during peak traffic
+
+**Solutions:**
+- **Batch operations** – use `/batch` endpoints to group objects/documents
+- **Cache aggressively** – enable `cache_config` on retrievers to reduce redundant searches
+- **Async processing** – submit batches asynchronously, poll task status instead of blocking
+- **Load shedding** – deprioritize non-critical operations during peak hours
+
+### 2. Distribute Load Across API Keys
+
+**Problem:** Single API key hitting concurrency limit
+
+**Solutions:**
+- Issue separate API keys per service/team
+- Use key rotation for different application environments (staging, prod)
+- Monitor per-key usage: `GET /v1/organizations/usage/api-keys/{key_id}`
+
+### 3. Reduce Credit Consumption
+
+**Problem:** Exceeding monthly credit quota
+
+**Solutions:**
+
+| High-Cost Operation | Optimization |
+|---------------------|--------------|
+| **LLM generation stages** | Use smaller models (GPT-3.5 Turbo vs GPT-4), reduce `max_tokens` |
+| **Frequent reprocessing** | Implement incremental updates instead of full reindexing |
+| **Large batch ingestion** | Deduplicate objects before processing, filter out low-value content |
+| **Exploratory searches** | Apply pre-filters to reduce search scope, lower `limit` values |
+| **Web search stages** | Cache results with long TTL, fallback to internal collections |
+
+### 4. Upgrade Tier
+
+**When to upgrade:**
+- Consistently hitting rate limits (>3 429 errors per hour)
+- Credit usage >90% with 10+ days left in billing cycle
+- Need for higher concurrency or batch sizes
+- Require custom SLAs or dedicated infrastructure
+
+Contact sales via "Talk to Engineers" CTA for enterprise pricing.
+
+## Handling Rate Limit Errors
+
+### Exponential Backoff
+
+Implement retry logic with exponential backoff:
+
+```python
+import time
+import requests
+
+def api_call_with_retry(url, headers, max_retries=5):
+    for attempt in range(max_retries):
+        resp = requests.post(url, headers=headers, json=payload)
+        
+        if resp.status_code == 429:
+            retry_after = int(resp.headers.get("Retry-After", 2 ** attempt))
+            print(f"Rate limited. Retrying in {retry_after}s...")
+            time.sleep(retry_after)
+            continue
+        
+        return resp
+    
+    raise Exception("Max retries exceeded")
+```
+
+### Circuit Breaker Pattern
+
+Prevent cascading failures when rate limits are sustained:
+
+```python
+class CircuitBreaker:
+    def __init__(self, failure_threshold=5, timeout=60):
+        self.failure_count = 0
+        self.failure_threshold = failure_threshold
+        self.timeout = timeout
+        self.last_failure_time = None
+        self.state = "CLOSED"  # CLOSED, OPEN, HALF_OPEN
+    
+    def call(self, func, *args, **kwargs):
+        if self.state == "OPEN":
+            if time.time() - self.last_failure_time > self.timeout:
+                self.state = "HALF_OPEN"
+            else:
+                raise Exception("Circuit breaker is OPEN")
+        
+        try:
+            result = func(*args, **kwargs)
+            if self.state == "HALF_OPEN":
+                self.state = "CLOSED"
+                self.failure_count = 0
+            return result
+        except RateLimitError:
+            self.failure_count += 1
+            self.last_failure_time = time.time()
+            if self.failure_count >= self.failure_threshold:
+                self.state = "OPEN"
+            raise
+```
+
+### Graceful Degradation
+
+When rate limited, fall back to cached or reduced-quality results:
+
+```python
+def search_with_fallback(query):
+    try:
+        return mixpeek.retrievers.execute(retriever_id, inputs={"query": query})
+    except RateLimitError:
+        # Fallback to cached results or simpler search
+        return cached_search(query) or simplified_search(query)
+```
+
+## Endpoint-Specific Limits
+
+Some endpoints have additional constraints:
+
+| Endpoint | Special Limit | Reason |
+|----------|---------------|--------|
+| **Batch Submit** | 1 submission per batch every 60s | Prevents duplicate processing |
+| **Cluster Execution** | 1 concurrent execution per cluster | Resource-intensive operation |
+| **Web Search Stages** | 10 queries per minute (external API limit) | Third-party rate limit passthrough |
+| **LLM Generation** | 100K tokens per minute | Model provider constraint |
+| **Document List** | Max 10,000 results per query | Pagination required for large collections |
+
+## Monitoring & Alerting
+
+### Proactive Monitoring
+
+Track these metrics to avoid surprises:
+
+1. **Rate limit utilization** – alert at 80% of RPM limit
+2. **Credit burn rate** – project end-of-month usage based on current trend
+3. **Concurrent request count** – alert when approaching tier limit
+4. **429 error frequency** – spike indicates need for optimization or upgrade
+
+### Recommended Alerts
+
+```yaml
+- name: "Rate Limit Warning"
+  condition: rate_limit_remaining < 20% of limit
+  action: Log warning, consider caching/batching
+
+- name: "Credit Quota Critical"
+  condition: credits_remaining < 5% AND days_left > 5
+  action: Upgrade tier or optimize high-cost operations
+
+- name: "Sustained Rate Limiting"
+  condition: 429_errors > 10 in 5 minutes
+  action: Activate circuit breaker, alert on-call engineer
+
+- name: "Quota Breach"
+  condition: Resource creation fails with QuotaExceededError
+  action: Archive unused resources or upgrade tier
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Implement client-side rate limiting">
+    Don't rely solely on server enforcement. Implement token bucket or leaky bucket algorithms in your client to smooth request distribution and avoid bursts.
+  </Accordion>
+
+  <Accordion title="Cache responses aggressively">
+    Enable retriever-level caching with appropriate TTLs. For exploratory queries, cache for 5-15 minutes. For stable queries (e.g., product search), cache for hours.
+  </Accordion>
+
+  <Accordion title="Use batch operations">
+    Single-object operations consume rate limit budget faster. Batch 10-100 operations per request when possible.
+  </Accordion>
+
+  <Accordion title="Monitor per-API-key usage">
+    Isolate noisy services by assigning separate API keys. Throttle or upgrade only the high-volume keys instead of affecting the entire org.
+  </Accordion>
+
+  <Accordion title="Set budget limits on retrievers">
+    Configure `budget_limits` to prevent runaway costs from exploratory or LLM-heavy pipelines.
+  </Accordion>
+
+  <Accordion title="Paginate large result sets">
+    Use `offset` and `limit` parameters instead of requesting thousands of documents at once. This reduces latency and credit consumption.
+  </Accordion>
+</AccordionGroup>
+
+## Enterprise Options
+
+For organizations with sustained high volume:
+
+- **Custom rate limits** – negotiate RPM/RPS based on traffic patterns
+- **Reserved capacity** – pre-allocate Engine workers and inference quota
+- **Dedicated infrastructure** – isolated Qdrant cluster, Redis, and Ray head nodes
+- **Credit pooling** – share quota across multiple sub-organizations
+- **SLA guarantees** – contractual uptime and p99 latency commitments
+
+Contact sales for custom pricing and limits.
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="Do rate limits apply per API key or per organization?">
+    Rate limits are enforced at the **API key level**, but concurrent request limits apply at the **organization level**. This allows you to distribute load across multiple keys while respecting org-wide concurrency caps.
+  </Accordion>
+
+  <Accordion title="Are retries counted against rate limits?">
+    Yes. Every request, including retries, counts toward your RPM/RPS limits. Implement exponential backoff to avoid wasting quota on rapid retries.
+  </Accordion>
+
+  <Accordion title="Can I request a temporary quota increase?">
+    Yes. Contact support with your use case (e.g., annual reindexing, event-driven spike). We can provision temporary credit boosts or rate limit exemptions.
+  </Accordion>
+
+  <Accordion title="What happens if I exceed storage quota?">
+    New document creation fails with a `QuotaExceededError`. Existing documents remain queryable. Delete unused documents or upgrade tier to restore write access.
+  </Accordion>
+
+  <Accordion title="Do cached retriever responses consume credits?">
+    No. Cache hits are free and don't count toward inference or search credits. Maximize cache hit rate to reduce costs.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+- Monitor usage via [Organization Usage API](/api-reference/organization-usage/get-org-usage)
+- Review [Analytics Overview](/operations/analytics-overview) for cost optimization strategies
+- Configure [Webhooks](/operations/webhooks) to alert on quota thresholds
+- Optimize retriever performance with [Caching Strategies](/overview/caching)
+

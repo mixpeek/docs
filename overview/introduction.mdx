@@ -4,33 +4,57 @@ description: "Meet the Mixpeek multimodal data processing and retrieval platform
 ---
 
 <Note>
-  Mixpeek turns raw multimodal inputs—text, images, video, audio, PDFs—into structured documents, reusable features, and query-ready indexes. A strict separation between API and Engine layers lets you ingest, enrich, and retrieve at scale without coupling application logic to heavy compute.
+  Mixpeek turns raw multimodal inputs—text, images, video, audio, PDFs—into structured documents, reusable features, and query-ready indexes. **Skip 6-12 months of infrastructure work**: Mixpeek replaces 15+ tools (vector DBs, ML orchestration, feature stores, search infrastructure) with a single API. No ops, no ML deployment, no pipeline code—just configuration.
 </Note>
 
-## Platform at a Glance
+## What Mixpeek Replaces
 
-<CardGroup cols={2}>
-  <Card title="Layered Architecture" icon="server">
-  - **API layer (FastAPI + Celery)** orchestrates object intake, enrichment, and retrieval
-  - **Engine layer (Ray)** executes distributed feature extraction and inference on CPU/GPU workers
-  - **Shared storage** (MongoDB, Qdrant, Redis, S3) keeps metadata, vectors, and artifacts consistent
+<CardGroup cols={3}>
+  <Card title="ML Orchestration" icon="diagram-project">
+    Airflow, Prefect, Temporal, Kubeflow
   </Card>
-  <Card title="Hard Isolation" icon="shield-check">
-  - Every request authenticates with an organization-scoped API key
-  - The `X-Namespace` header enforces namespace-scoped queries and writes
-  - Qdrant collections, MongoDB queries, and task execution are namespaced by default
+  <Card title="Vector & Search" icon="magnifying-glass">
+    Qdrant, Pinecone, Weaviate, Elasticsearch
   </Card>
-  <Card title="Composable Pipelines" icon="layer-group">
-  - Configure extraction pipelines with [Feature Extractors](/processing/feature-extractors)
-  - Chain multi-stage [Retrievers](/retrieval/retrievers) to search, filter, rank, enrich, and transform
-  - Reuse retrievers inside other retrievers for modular, reusable search flows
-  </Card>
-  <Card title="Operational Guardrails" icon="bolt">
-  - Materialized taxonomies, clustering jobs, and caching deliver low-latency responses
-  - Task status, webhooks, and analytics offer production-grade observability
-  - Autoscaling Ray workers match ingestion and retrieval workloads automatically
+  <Card title="Feature Infrastructure" icon="database">
+    Feast, Tecton, custom feature stores
   </Card>
 </CardGroup>
+
+## Zero Infrastructure, Maximum Power
+
+<CardGroup cols={2}>
+  <Card title="No ML Ops Required" icon="robot">
+    Deploy CLIP, Whisper, LayoutLM, or custom models **without infrastructure**. Mix extractors across collections. [Model Registry](/processing/model-registry) handles versions, GPU allocation, and autoscaling. You write JSON configs, not Kubernetes manifests.
+  </Card>
+  <Card title="Retrievers = Semantic JOINs" icon="link">
+    Search is a **JOIN operation** using vector similarity instead of foreign keys. Chain stages (search → filter → rank → enrich → transform) into [multi-hop graphs](/retrieval/retrievers). Connect documents across collections—no ETL code required.
+  </Card>
+  <Card title="Versioned & Immutable" icon="code-branch">
+    Taxonomies, extractors, and pipelines are versioned snapshots. A/B test retrieval strategies, roll back configs, and track complete lineage from result → document → object → source file.
+  </Card>
+  <Card title="Production-Grade Observability" icon="chart-line">
+    **ClickHouse analytics**, multi-channel notifications (email, Slack, SMS, webhooks), audit logs, and real-time task monitoring. Built-in caching delivers sub-100ms retrieval latency.
+  </Card>
+  <Card title="Multi-Database Orchestration" icon="database">
+    One API, five databases underneath: MongoDB (metadata), Qdrant (vectors), ClickHouse (analytics), Redis (cache), S3 (files). Cross-database queries, transactions, and routing handled automatically.
+  </Card>
+  <Card title="Parallel Enrichment at Scale" icon="gauge-high">
+    [Taxonomy enrichment](/enrichment/taxonomies) runs as parallel joins across Qdrant collections. Process thousands of documents concurrently. Hierarchical taxonomies and flat tags use the same JOIN stage—just configuration.
+  </Card>
+</CardGroup>
+
+## Time Saved
+
+| Task | Without Mixpeek | With Mixpeek |
+|------|----------------|--------------|
+| Setup vector search | 2-4 weeks | 5 minutes |
+| Build feature extraction pipeline | 4-8 weeks | 1 hour |
+| Implement multi-modal search | 6-12 weeks | 30 minutes |
+| Add new ML model | 2-4 weeks | Config change |
+| Multi-tenant architecture | 4-8 weeks | Built-in |
+| Taxonomies & semantic joins | 4-8 weeks | 1 hour |
+| **Total engineering effort** | **6-12 months** | **Days** |
 
 ## Core Workflows
 
@@ -62,8 +86,8 @@ graph TD
     CeleryBeat(Celery Beat Scheduler)
   end
   subgraph Engine Layer
-    RayHead[Ray Head Node] --> RayWorkers[Ray Workers (CPU/GPU)]
-    RayServe[Ray Serve Models]
+    RayHead[Ray Head Node] --> RayWorkers[Ray Workers CPU/GPU]
+    RayHead --> RayServe[Ray Serve Models]
   end
   FastAPI -->|Tasks| Redis[(Redis)]
   FastAPI -->|Metadata| Mongo[(MongoDB)]

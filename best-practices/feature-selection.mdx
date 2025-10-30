@@ -1,0 +1,433 @@
+---
+title: "Feature Selection"
+description: "Choose the right feature extractors and models for your use case"
+---
+
+Feature extractors transform raw objects into queryable embeddings and structured outputs. Selecting the right combination of extractors, models, and parameters is critical for accuracy, performance, and cost.
+
+## Feature Extractor Categories
+
+<CardGroup cols={2}>
+  <Card title="Text Extractors" icon="font">
+    Dense/sparse embeddings, NER, summarization, sentiment analysis
+  </Card>
+  <Card title="Vision Extractors" icon="image">
+    Image embeddings (CLIP), object detection, OCR, scene analysis
+  </Card>
+  <Card title="Audio Extractors" icon="waveform">
+    Transcription (Whisper), speaker diarization, audio embeddings
+  </Card>
+  <Card title="Multimodal Extractors" icon="layer-group">
+    Video scene detection, PDF layout analysis, document understanding
+  </Card>
+</CardGroup>
+
+## Decision Framework
+
+### 1. Start with Your Query Intent
+
+**What will users search for?**
+
+| Query Type | Required Extractors | Example |
+|------------|---------------------|---------|
+| **Text search** | `text_extractor` (dense + sparse) | "Find articles about machine learning" |
+| **Image similarity** | `image_extractor` (CLIP) | "Find similar product photos" |
+| **Video moment search** | `video_extractor` + `audio_extractor` | "Find scenes where someone mentions pricing" |
+| **Document QA** | `pdf_extractor` + `text_extractor` | "Which contracts have termination clauses?" |
+| **Face search** | `face_extractor` (ArcFace) | "Find all videos featuring this person" |
+
+### 2. Consider Modality Combinations
+
+**Single-Modality Search:**
+```json
+{
+  "feature_extractor": {
+    "feature_extractor_name": "text_extractor",
+    "input_mappings": { "text": "content" }
+  }
+}
+```
+
+**Hybrid Text Search (Dense + Sparse):**
+```json
+{
+  "feature_extractor": {
+    "feature_extractor_name": "text_extractor",
+    "parameters": {
+      "enable_sparse": true,  // Adds BM25 features
+      "model": "multilingual-e5-large-instruct"
+    }
+  }
+}
+```
+
+**Multi-Modal Search (Text + Image):**
+```json
+// Collection 1: Text embeddings
+{
+  "feature_extractor": {
+    "feature_extractor_name": "text_extractor",
+    "input_mappings": { "text": "description" }
+  }
+}
+
+// Collection 2: Image embeddings
+{
+  "feature_extractor": {
+    "feature_extractor_name": "image_extractor",
+    "input_mappings": { "image_url": "product_image" }
+  }
+}
+```
+
+Retriever queries both collections via `collection_ids: ["col_text", "col_image"]`.
+
+## Model Selection Guide
+
+### Text Embeddings
+
+| Model | Dimensions | Languages | Accuracy | Latency | Cost | Best For |
+|-------|-----------|-----------|----------|---------|------|----------|
+| `multilingual-e5-base` | 768 | 100+ | Good | Fast | Low | High-volume, cost-sensitive |
+| `multilingual-e5-large-instruct` | 1024 | 100+ | Excellent | Medium | Medium | General-purpose semantic search |
+| `bge-large-en-v1.5` | 1024 | English | Excellent | Medium | Medium | English-only, high accuracy |
+| `openai/text-embedding-3-large` | 3072 | 100+ | Best | Slow | High | Premium quality, multilingual |
+| `cohere/embed-english-v3` | 1024 | English | Excellent | Medium | Medium | Domain adaptation |
+
+**Selection criteria:**
+- **Multilingual?** → `multilingual-e5-*` or `openai/text-embedding-3-*`
+- **Budget-constrained?** → `multilingual-e5-base`
+- **English-only, high accuracy?** → `bge-large-en-v1.5`
+- **Best possible quality?** → `openai/text-embedding-3-large`
+
+### Vision Embeddings
+
+| Model | Use Case | Accuracy | Latency | Cost |
+|-------|----------|----------|---------|------|
+| `clip-vit-base-patch32` | General image similarity | Good | Fast | Low |
+| `clip-vit-large-patch14` | High-quality visual search | Excellent | Medium | Medium |
+| `dinov2-large` | Fine-grained object distinction | Excellent | Slow | High |
+
+**Selection criteria:**
+- **Product images?** → `clip-vit-large-patch14` (handles varied backgrounds)
+- **Medical/satellite imagery?** → `dinov2-large` (fine-grained features)
+- **High volume?** → `clip-vit-base-patch32` (cost-effective)
+
+### Audio Transcription
+
+| Model | Accuracy | Latency | Cost | Languages |
+|-------|----------|---------|------|-----------|
+| `whisper-base` | Moderate | Fast | Low | 100+ |
+| `whisper-large-v3` | Excellent | Slow | High | 100+ |
+| `azure-speech-to-text` | Excellent | Medium | Medium | 85 |
+
+**Selection criteria:**
+- **Clear audio, cost-sensitive?** → `whisper-base`
+- **Accents, noisy audio?** → `whisper-large-v3`
+- **Real-time transcription?** → `azure-speech-to-text` (streaming)
+
+## Feature Combinations
+
+### Scenario 1: E-Commerce Product Search
+
+**Objective:** Search by text ("red shoes") or image (upload photo)
+
+**Collections:**
+1. **Text collection** – product descriptions
+   - Extractor: `text_extractor@v1`
+   - Model: `multilingual-e5-large-instruct`
+   - Enable sparse: `true` (for exact SKU matches)
+
+2. **Image collection** – product photos
+   - Extractor: `image_extractor@v1`
+   - Model: `clip-vit-large-patch14`
+
+**Retriever:**
+```json
+{
+  "stages": [
+    {
+      "stage_name": "hybrid_search",
+      "parameters": {
+        "queries": [
+          { "feature_address": "mixpeek://text_extractor@v1/text_embedding", "weight": 0.5 },
+          { "feature_address": "mixpeek://image_extractor@v1/clip_embedding", "weight": 0.5 }
+        ]
+      }
+    }
+  ]
+}
+```
+
+### Scenario 2: Video Content Moderation
+
+**Objective:** Detect inappropriate content in uploaded videos
+
+**Collections:**
+1. **Visual scenes** – keyframe analysis
+   - Extractor: `video_extractor@v1`
+   - Parameters: `scene_detection_threshold: 0.3`
+
+2. **Audio content** – transcription for hate speech detection
+   - Extractor: `audio_extractor@v1`
+   - Model: `whisper-large-v3` (accuracy critical)
+   - Enable diarization: `true`
+
+3. **On-screen text** – detect inappropriate text overlays
+   - Extractor: `text_extractor@v1`
+   - Source: OCR from `video_extractor` outputs
+
+**Taxonomy:**
+Apply `content-safety-taxonomy` to flag:
+- Violence
+- Adult content
+- Hate speech
+- Graphic imagery
+
+### Scenario 3: Legal Contract Analysis
+
+**Objective:** Extract clauses, entities, and find similar contracts
+
+**Collections:**
+1. **Full-text embeddings** – semantic clause search
+   - Extractor: `pdf_extractor@v1` + `text_extractor@v1`
+   - Chunk strategy: `paragraph` (preserves clause structure)
+   - Model: `bge-large-en-v1.5` (English legal language)
+
+2. **Entity extraction** – parties, dates, amounts
+   - Extractor: `text_extractor@v1`
+   - Enable NER: `true`
+   - Entity types: `["PERSON", "ORG", "DATE", "MONEY", "GPE"]`
+
+3. **Table extraction** – financial schedules, payment terms
+   - Extractor: `table_extractor@v1`
+   - Detection model: `table-transformer`
+
+**Retriever:**
+- Stage 1: Filter by entity (e.g., "Acme Corp")
+- Stage 2: Semantic search for clause type
+- Stage 3: LLM generation for summarization
+
+## Feature-Specific Parameters
+
+### Text Chunking
+
+| Content Type | Chunk Strategy | Chunk Size | Overlap |
+|--------------|---------------|------------|---------|
+| **Tweets/short posts** | `fixed` | 256 tokens | 0 |
+| **Blog articles** | `paragraph` | 512 tokens | 50 |
+| **Documentation** | `sentence` | 256 tokens | 25 |
+| **Legal contracts** | `paragraph` | 1024 tokens | 100 |
+| **Transcripts** | `time_window` (60s) | Variable | 5s |
+
+### Video Processing
+
+```json
+{
+  "parameters": {
+    "scene_detection_threshold": 0.3,  // Lower = more scenes
+    "keyframe_interval": 30,  // Extract 1 frame per 30 frames
+    "max_scenes": 100,  // Cap for very long videos
+    "extract_audio": true,  // Separate audio for transcription
+    "resolution": "720p"  // Lower = faster, cheaper
+  }
+}
+```
+
+### OCR Configuration
+
+```json
+{
+  "parameters": {
+    "ocr_model": "tesseract-v5",  // Fast, moderate accuracy
+    // "ocr_model": "cloud-vision",  // Slower, high accuracy
+    "languages": ["en", "es"],
+    "deskew": true,  // Straighten rotated text
+    "denoise": true  // Improve scanned document quality
+  }
+}
+```
+
+## Avoiding Over-Extraction
+
+### Anti-Pattern: Extract Everything
+
+```json
+{
+  "feature_extractors": [
+    "text_extractor",
+    "image_extractor",
+    "video_extractor",
+    "audio_extractor",
+    "face_extractor",
+    "table_extractor"
+  ]
+}
+```
+
+**Problems:**
+- High processing cost (6x extractors)
+- Slow ingestion
+- Storage bloat
+- Most features unused
+
+### Best Practice: Extract Selectively
+
+```json
+{
+  "feature_extractor": {
+    "feature_extractor_name": "text_extractor",  // Only what you'll query
+    "input_mappings": { "text": "content" }
+  }
+}
+```
+
+Add more extractors only when:
+1. You have a concrete query use case
+2. You've tested alternatives
+3. The cost/benefit justifies it
+
+## Testing & Validation
+
+### Offline Evaluation
+
+Test extractor outputs before production:
+
+```bash
+POST /v1/collections/{collection_id}/debug-extraction
+{
+  "object_id": "obj_sample_001",
+  "return_embeddings": true,
+  "return_metadata": true
+}
+```
+
+Review:
+- Embedding quality (clustering, visualization)
+- Metadata accuracy (NER entities, OCR text)
+- Processing time
+- Credit consumption
+
+### A/B Testing Models
+
+Create parallel collections with different models:
+
+```bash
+# Collection A: base model
+POST /v1/collections
+{
+  "collection_name": "products-base",
+  "feature_extractor": {
+    "parameters": { "model": "multilingual-e5-base" }
+  }
+}
+
+# Collection B: large model
+POST /v1/collections
+{
+  "collection_name": "products-large",
+  "feature_extractor": {
+    "parameters": { "model": "multilingual-e5-large-instruct" }
+  }
+}
+```
+
+Compare retriever performance:
+- Precision@10, Recall@10
+- User click-through rate
+- Latency
+- Cost per query
+
+### Query Analysis
+
+Identify which features contribute to results:
+
+```bash
+POST /v1/retrievers/{retriever_id}/execute
+{
+  "inputs": { "query": "sample query" },
+  "explain": true  // Returns feature contribution scores
+}
+```
+
+```json
+{
+  "results": [
+    {
+      "document_id": "doc_123",
+      "score": 0.89,
+      "feature_scores": {
+        "text_embedding": 0.75,
+        "bm25_sparse": 0.14
+      }
+    }
+  ]
+}
+```
+
+## Migration & Reprocessing
+
+### Adding New Extractors
+
+1. Create new collection with additional extractor
+2. Process recent objects into new collection
+3. Update retriever to query both collections
+4. Archive old collection after validation
+
+### Changing Models
+
+1. Create new collection with updated model
+2. Reprocess objects in batches
+3. Compare retrieval quality (A/B test)
+4. Switch retriever to new collection
+5. Delete old collection after transition period
+
+### Incremental Updates
+
+For large archives, prioritize reprocessing:
+
+```python
+# Reprocess most-queried documents first
+top_docs = mixpeek.analytics.get_top_documents(collection_id, limit=1000)
+
+for doc in top_docs:
+    source_object_id = doc["source_object_id"]
+    # Reprocess object into new collection
+    mixpeek.batches.create(object_ids=[source_object_id])
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Start simple, add complexity iteratively">
+    Begin with a single text or image extractor. Add multimodal extractors only when you have a clear use case and test data.
+  </Accordion>
+
+  <Accordion title="Match model size to use case">
+    Use base models for high-volume, cost-sensitive workloads. Reserve large models for accuracy-critical applications.
+  </Accordion>
+
+  <Accordion title="Enable sparse features for exact matching">
+    Hybrid search (dense + sparse) handles both semantic and keyword queries. Enable `enable_sparse: true` for text extractors.
+  </Accordion>
+
+  <Accordion title="Test with real user queries">
+    Offline metrics (NDCG, MRR) don't always correlate with user satisfaction. A/B test with live traffic.
+  </Accordion>
+
+  <Accordion title="Monitor feature utilization">
+    Track which features contribute to top results. Disable unused extractors to reduce cost.
+  </Accordion>
+
+  <Accordion title="Version collections explicitly">
+    When changing extractors, create new collections rather than mutating existing ones. This preserves reproducibility.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+- Explore [Feature Extractors](/processing/feature-extractors) catalog
+- Review [Model Registry](/processing/model-registry) for available models
+- Learn [Cost Optimization](/best-practices/cost-optimization) for feature selection impact
+- Check [Schema Design](/best-practices/schema-design) for input mapping patterns
+

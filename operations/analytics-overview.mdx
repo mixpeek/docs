@@ -1,0 +1,287 @@
+---
+title: "Analytics & Performance Monitoring"
+description: "Interpret metrics, optimize pipelines, and tune retriever performance"
+---
+
+Mixpeek's Analytics API provides granular visibility into retrieval performance, cache efficiency, feature extraction throughput, and inference latency. Use these metrics to identify bottlenecks, validate optimizations, and allocate budgets effectively.
+
+## Analytics Categories
+
+<CardGroup cols={2}>
+  <Card title="Retrieval Performance" icon="magnifying-glass-chart">
+    Track latency, cache hit rates, and stage-level breakdowns for retrievers.
+  </Card>
+  <Card title="Infrastructure Metrics" icon="server">
+    Monitor API response times, Engine throughput, and inference service health.
+  </Card>
+  <Card title="Feature Extraction" icon="microchip">
+    Measure extractor execution time, failure rates, and batch processing efficiency.
+  </Card>
+  <Card title="User Signals" icon="chart-line">
+    Analyze interaction patterns (clicks, long views, feedback) to tune relevance.
+  </Card>
+</CardGroup>
+
+## Key Metrics Explained
+
+### Retrieval Metrics
+
+| Metric | API Endpoint | Use Case |
+|--------|--------------|----------|
+| **Retriever Performance** | `GET /v1/analytics/retrievers/{retriever_id}/performance` | Overall latency percentiles (p50, p95, p99), cache hit rate, error rate |
+| **Stage Breakdown** | `GET /v1/analytics/retrievers/{retriever_id}/stages` | Per-stage execution time to identify slow stages (e.g., LLM generation vs vector search) |
+| **Retriever Signals** | `GET /v1/analytics/retrievers/{retriever_id}/signals` | User interactions aggregated by result position, document, or session |
+| **Slowest Queries** | `GET /v1/analytics/retrievers/{retriever_id}/slowest` | Identify outlier executions with full input payloads for debugging |
+
+### Infrastructure Metrics
+
+| Metric | API Endpoint | Use Case |
+|--------|--------------|----------|
+| **API Performance** | `GET /v1/analytics/api/performance` | Request latency by endpoint and status code |
+| **Engine Performance** | `GET /v1/analytics/engine/performance` | Ray task execution time, queue depth, worker utilization |
+| **Inference Performance** | `GET /v1/analytics/inference/performance` | Model latency (embedding, LLM, classification) and throughput |
+
+### Extraction Metrics
+
+| Metric | API Endpoint | Use Case |
+|--------|--------------|----------|
+| **Extractor Performance** | `GET /v1/analytics/extractors/{extractor_name}/performance` | Avg processing time per object, failure rate, retry count |
+| **Batch Efficiency** | Derived from extractor + engine metrics | Compare batch sizes vs throughput to optimize batching strategy |
+
+### Cache Metrics
+
+| Metric | API Endpoint | Use Case |
+|--------|--------------|----------|
+| **Cache Performance** | `GET /v1/analytics/cache/performance` | Hit rate, average TTL, eviction rate, memory usage |
+
+### Usage & Cost Metrics
+
+| Metric | API Endpoint | Use Case |
+|--------|--------------|----------|
+| **Usage Summary** | `GET /v1/analytics/usage/summary` | Credit consumption by resource type (API calls, inference, storage) |
+| **Org Usage** | `GET /v1/organizations/usage` | Per-org breakdown for billing and quota enforcement |
+| **API Key Usage** | `GET /v1/organizations/usage/api-keys/{key_id}` | Attribute costs to specific services or teams |
+
+## Optimization Workflows
+
+### 1. Diagnose Slow Retrievers
+
+**Symptoms:** High p95/p99 latency, user complaints about wait times
+
+**Steps:**
+1. Call `/analytics/retrievers/{retriever_id}/performance` to get overall latency distribution
+2. Check `cache_hit_rate` – if low, consider increasing `cache_config.ttl_seconds` or caching more stages
+3. Call `/analytics/retrievers/{retriever_id}/stages` to identify the bottleneck stage
+4. Common culprits:
+   - **LLM generation stages** – consider smaller models, prompt caching, or async processing
+   - **Large limit values** – reduce `limit` in early stages and use rerankers
+   - **Complex filters** – move structured filters before expensive search stages
+5. Call `/analytics/retrievers/{retriever_id}/slowest` to inspect outlier queries with full inputs
+
+### 2. Improve Cache Hit Rates
+
+**Target:** >70% cache hit rate for common queries
+
+**Strategies:**
+- Enable caching at the retriever level: `cache_config.enabled = true`
+- Increase TTL for stable queries: `cache_config.ttl_seconds = 3600`
+- Use `cache_stage_names` to selectively cache expensive stages (e.g., web search, LLM)
+- Normalize inputs (lowercase, trim whitespace) before hashing for cache keys
+- Monitor `/analytics/cache/performance` to track hit rate trends
+
+### 3. Optimize Feature Extraction
+
+**Symptoms:** Batch processing takes hours, high extractor failure rate
+
+**Steps:**
+1. Check `/analytics/extractors/{extractor_name}/performance` for avg execution time
+2. Compare across extractors – identify if one is significantly slower
+3. Strategies:
+   - **Batch sizing** – 100-1000 objects optimal; adjust based on object size
+   - **Parallelism** – increase Ray workers or use GPU instances for vision/LLM extractors
+   - **Retry logic** – review `__missing_features` in documents to identify flaky extractors
+   - **Model selection** – swap heavy models for distilled versions (e.g., `distilbert` vs `bert-large`)
+4. Monitor `/analytics/engine/performance` for worker saturation
+
+### 4. Tune Inference Budgets
+
+**Goal:** Balance cost and latency
+
+**Steps:**
+1. Review `/analytics/usage/summary` to see inference credit consumption by model
+2. Identify high-volume, low-value queries (e.g., exploratory searches)
+3. Apply budget limits at the retriever level:
+   ```json
+   {
+     "budget_limits": {
+       "max_inference_calls": 10,
+       "max_llm_tokens": 2000,
+       "max_execution_time_ms": 5000
+     }
+   }
+   ```
+4. Use cheaper models for initial ranking (e.g., `multilingual-e5-base`) and expensive rerankers only for top-K results
+
+### 5. Leverage User Signals for Relevance Tuning
+
+**Workflow:**
+1. Instrument your app to send interactions via `/v1/retrievers/{retriever_id}/interactions`
+   - `click`, `long_view`, `positive_feedback`, `negative_feedback`
+2. Query `/analytics/retrievers/{retriever_id}/signals` to see:
+   - Click-through rate by result position
+   - Documents with high negative feedback
+   - Queries with zero engagement
+3. Use insights to:
+   - Adjust stage ordering (e.g., move filters earlier to reduce noise)
+   - Update taxonomy mappings or cluster definitions
+   - Fine-tune reranker prompts or scoring functions
+4. A/B test changes by creating retriever variants and comparing signal distributions
+
+## Recommended Dashboards
+
+### Production Health Dashboard
+
+**Metrics to display:**
+- API p95 latency (target: <500ms)
+- Cache hit rate (target: >70%)
+- Error rate by endpoint (target: <1%)
+- Engine queue depth (alert if >100 pending tasks)
+- Inference quota remaining (% of plan)
+
+**Refresh interval:** 1 minute
+
+### Retriever Performance Dashboard
+
+**Metrics to display:**
+- Per-retriever p95 latency (grouped by retriever_id)
+- Cache hit rate by retriever
+- Top 5 slowest queries (with input previews)
+- Stage breakdown for critical retrievers
+- Click-through rate trends (weekly aggregation)
+
+**Refresh interval:** 5 minutes
+
+### Cost Optimization Dashboard
+
+**Metrics to display:**
+- Inference cost per retriever execution (derived: `inference_calls * model_cost`)
+- Storage growth rate (documents + features + cache)
+- API key usage breakdown (top consumers)
+- Batch processing cost per object (extractor time * worker cost)
+
+**Refresh interval:** Daily
+
+## Alerting Recommendations
+
+<AccordionGroup>
+  <Accordion title="Critical: API Error Rate >5%">
+    **Trigger:** `/analytics/api/performance` shows error rate >5% over 5 min  
+    **Action:** Check health endpoint `/v1/health`, inspect logs for Qdrant/Mongo connectivity issues
+  </Accordion>
+
+  <Accordion title="Warning: Retriever p95 Latency >2s">
+    **Trigger:** Specific retriever p95 >2000ms for 10 min  
+    **Action:** Review stage breakdown, disable non-critical stages temporarily, increase cache TTL
+  </Accordion>
+
+  <Accordion title="Warning: Cache Hit Rate <50%">
+    **Trigger:** Cache hit rate drops below 50% for 30 min  
+    **Action:** Review cache config, check if query patterns changed (seasonality, A/B tests)
+  </Accordion>
+
+  <Accordion title="Info: High Inference Quota Usage">
+    **Trigger:** 80% of monthly inference quota consumed  
+    **Action:** Review top consumers via `/analytics/usage/summary`, throttle exploratory retrievers
+  </Accordion>
+
+  <Accordion title="Critical: Engine Queue Depth >500">
+    **Trigger:** Ray queue depth exceeds 500 pending tasks  
+    **Action:** Scale Ray workers, pause batch submissions, investigate slow extractors
+  </Accordion>
+</AccordionGroup>
+
+## Analytics API Patterns
+
+### Time-Windowed Queries
+
+Most endpoints accept `start_time` and `end_time` filters (ISO 8601):
+
+```bash
+GET /v1/analytics/retrievers/{retriever_id}/performance?start_time=2025-10-01T00:00:00Z&end_time=2025-10-31T23:59:59Z
+```
+
+### Aggregation Levels
+
+Control granularity with `group_by`:
+
+```bash
+# Group by day
+GET /v1/analytics/api/performance?group_by=day
+
+# Group by retriever_id
+GET /v1/analytics/usage/summary?group_by=retriever_id
+```
+
+### Tuning Recommendations
+
+The `/analytics/analyze-for-tuning` endpoint provides automated suggestions:
+
+```bash
+POST /v1/analytics/retrievers/{retriever_id}/analyze
+```
+
+**Response includes:**
+- Recommended stage order changes
+- Cache config suggestions (TTL, stage-level caching)
+- Budget limit recommendations
+- Model swap suggestions (cost vs latency trade-offs)
+
+## Best Practices
+
+1. **Baseline before optimizing** – capture 7 days of metrics before making changes
+2. **Change one variable at a time** – isolate the impact of each optimization
+3. **Monitor post-deployment** – use execution IDs to compare before/after distributions
+4. **Set SLOs early** – define p95 latency and cache hit targets per retriever tier
+5. **Correlate signals with changes** – timestamp config updates and overlay on metric charts
+6. **Automate reporting** – schedule weekly summaries via webhooks or export to your BI tool
+
+## Integration with External Tools
+
+### Export to Datadog / Grafana
+
+Use the Analytics API to pull metrics into your existing observability stack:
+
+```python
+import requests
+
+resp = requests.get(
+    "https://api.mixpeek.com/v1/analytics/retrievers/ret_123/performance",
+    headers={"Authorization": "Bearer sk_live_...", "X-Namespace": "ns_prod"}
+)
+data = resp.json()
+
+# Push to Datadog
+statsd.gauge("mixpeek.retriever.p95_latency", data["p95_latency_ms"])
+statsd.gauge("mixpeek.retriever.cache_hit_rate", data["cache_hit_rate"])
+```
+
+### Webhook Alerts
+
+Configure webhooks to push anomaly alerts:
+
+```bash
+POST /v1/organizations/webhooks
+{
+  "event_types": ["retriever.slow_query", "extractor.failure", "cache.low_hit_rate"],
+  "url": "https://your-app.com/webhooks/mixpeek",
+  "secret": "whsec_..."
+}
+```
+
+## Next Steps
+
+- Explore all analytics endpoints in the [API Reference](/api-reference/analytics/get-retriever-performance)
+- Learn how to record [Interactions](/retrieval/interactions) for signal tracking
+- Review [Caching Strategies](/overview/caching) for hit rate optimization
+- Set up [Webhooks](/operations/webhooks) for automated alerting
+
