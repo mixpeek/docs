@@ -1,103 +1,183 @@
 ---
 title: "Interactions"
-description: "Capture user feedback to improve retrieval"
+description: "Turn user behavior into better retrieval through automated feedback loops"
 ---
 
-Interactions record how users engage with retriever results. Store clicks, long views, purchases, skips, and other signals to power learning-to-rank, collaborative filtering, or analytics.
+Interactions capture how users engage with search results—clicks, purchases, skips, dwell time. This feedback automatically improves your retrievers through fine-tuning, personalization, and analytics.
 
-## Interaction Model
+## Why Track Interactions
 
-```json
+**Automatic Quality Improvement**: User behavior becomes training data for fine-tuning embedding models and ranking algorithms—no manual labeling required.
+
+**Measure Real Performance**: Traditional IR metrics (precision, recall) use test sets. Interactions reveal actual user satisfaction through click-through rates, conversion, and engagement.
+
+**Personalization at Scale**: Build user preference profiles from interaction history to deliver personalized results without managing separate recommendation systems.
+
+**Identify Blind Spots**: Find queries with low engagement, results that users skip despite high rankings, and content gaps causing zero-result queries.
+
+## What You Get
+
+<CardGroup cols={2}>
+  <Card title="Training Data Generation" icon="brain">
+    Interactions format into contrastive pairs (query, clicked_doc) for embedding fine-tuning with automatic position bias correction.
+  </Card>
+  <Card title="Relevance Analytics" icon="chart-line">
+    CTR by position, documents with high skip rates, queries needing tuning, time-to-first-click—all without custom infrastructure.
+  </Card>
+  <Card title="Result Deduplication" icon="filter">
+    Exclude previously purchased, viewed, or consumed content automatically by filtering on past interactions.
+  </Card>
+  <Card title="Popularity Boosting" icon="arrow-trend-up">
+    Rerank results based on recent interaction signals (clicks, conversions) to surface trending content.
+  </Card>
+</CardGroup>
+
+## Capture Interactions
+
+Record user behavior with a single API call:
+
+```bash
+POST /v1/retrievers/interactions
 {
-  "interaction_id": "int_abc123",
-  "feature_id": "doc_xyz789",
-  "interaction_type": ["click", "long_view"],
-  "position": 2,
+  "feature_id": "doc_xyz789",        # Document ID from retriever results
+  "interaction_type": ["click"],     # One or more signal types
+  "position": 3,                      # 0-based position in results (critical for bias correction)
   "metadata": {
-    "duration_ms": 12000,
-    "device": "mobile"
+    "duration_ms": 4500,              # Optional: dwell time, device, query text
+    "query": "wireless earbuds"
   },
-  "user_id": "user_456",
-  "session_id": "sess_xyz789",
-  "created_at": "2025-10-28T10:15:23Z"
+  "user_id": "user_123",              # For personalization and session tracking
+  "session_id": "sess_456"
 }
 ```
 
-- `feature_id` should match a `document_id` returned by a retriever execution.
-- `interaction_type` accepts multiple labels per event (e.g., `["click", "long_view"]`).
-- `position` is the 0-based position in the result set.
-- `metadata` stores arbitrary context.
+### Signal Types
 
-## Capture an Interaction
+| Type | Strength | Use Case |
+|------|----------|----------|
+| `click` | Moderate positive | User clicked result |
+| `long_view` | Strong positive | Sustained engagement (track via `duration_ms`) |
+| `purchase`, `add_to_cart` | Conversion | E-commerce actions |
+| `positive_feedback` / `negative_feedback` | Explicit | Thumbs up/down votes |
+| `skip`, `return_to_results` | Negative | User ignored or bounced back |
+| Custom types | Variable | Define domain-specific signals |
 
-```bash
-curl -sS -X POST "$MP_API_URL/v1/retrievers/interactions" \
-  -H "Authorization: Bearer $MP_API_KEY" \
-  -H "X-Namespace: $MP_NAMESPACE" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "feature_id": "doc_xyz789",
-    "interaction_type": ["click"],
-    "position": 3,
-    "metadata": {
-      "duration_ms": 4500,
-      "query": "wireless earbuds"
-    },
-    "user_id": "user_123",
-    "session_id": "sess_456"
-  }'
+<Tip>
+  Combine multiple types per event: `["click", "long_view"]` when a user clicks *and* stays engaged.
+</Tip>
+
+## Outcomes & Use Cases
+
+### 1. Fine-Tune Embedding Models
+
+```python
+# Collect 30 days of interaction data as training pairs
+training_data = analytics.get_query_document_pairs(
+    date_range="last_30_days",
+    min_interactions=2  # Only docs with real engagement
+)
+
+# System formats as contrastive pairs:
+# Positive: (query, clicked_doc)
+# Hard negative: (query, high_ranked_but_skipped_doc)
+# Position bias automatically corrected
+
+fine_tuned_model = training.fine_tune(
+    base_model="text-embedding-3-small",
+    training_data=training_data
+)
 ```
 
-## Supported Interaction Types
+**Outcome**: 10-30% improvement in relevance metrics from domain-specific fine-tuning using real user preferences.
 
-| Type | Signal | Description |
-|------|--------|-------------|
-| `click` | Positive (moderate) | User clicked the result |
-| `view` | Neutral | Result was viewed |
-| `long_view` | Positive (engagement) | User spent significant time on the result |
-| `positive_feedback` | Positive | Thumbs up / helpful vote |
-| `negative_feedback` | Negative | Thumbs down / not helpful |
-| `add_to_cart`, `purchase`, `wishlist` | Positive | Conversion-focused events |
-| `skip`, `return_to_results` | Negative | User ignored or bounced |
-| `query_refinement`, `zero_results` | Query signal | User refined query or saw no results |
+### 2. Identify & Fix Ranking Issues
 
-You can also define custom interaction types. Keep naming consistent to unlock downstream analytics.
-
-## Query Interactions
-
-```bash
-curl -sS -X GET "$MP_API_URL/v1/retrievers/interactions?feature_id=doc_xyz789&limit=20" \
-  -H "Authorization: Bearer $MP_API_KEY" \
-  -H "X-Namespace: $MP_NAMESPACE"
+```python
+# Find queries where top results are skipped
+signals = analytics.get_retriever_signals(retriever_id="ret_123")
+# Returns:
+# - Documents ranked high but skipped (ranking issues)
+# - Queries with <5% CTR (need tuning)
+# - Average position of first click (relevance proxy)
 ```
 
-Use filters to slice by `interaction_type`, `user_id`, or `session_id`. For bulk exports, paginate using `page` and `page_size`.
+**Outcome**: Data-driven decisions on which retrievers need adjustment, which taxonomy mappings to update, or which filters to refine.
 
-## Delete an Interaction
+### 3. Personalize Without Recommendation Infrastructure
 
-```bash
-curl -sS -X DELETE "$MP_API_URL/v1/retrievers/interactions/<interaction_id>" \
-  -H "Authorization: Bearer $MP_API_KEY" \
-  -H "X-Namespace: $MP_NAMESPACE"
+```python
+# Exclude content user already consumed
+previous_purchases = interactions.list(
+    user_id="user_123",
+    interaction_type=["purchase"],
+    days=90
+)
+
+retriever.execute(
+    query="new arrivals",
+    filters={
+        "document_id": {"$nin": [i.feature_id for i in previous_purchases]}
+    }
+)
 ```
 
-Supports GDPR-style removal or deduplication workflows.
+**Outcome**: Improved user experience (no duplicate suggestions) without building separate collaborative filtering or recommendation systems.
 
-## Integrating with Retrievers
+### 4. Boost Trending Content
 
-Use interactions to:
+Configure retrievers to automatically boost recently popular items:
 
-- **Exclude consumed results**: pass a filter referencing previous `feature_id`s.
-- **Boost popular content**: feed click/conversion signals into reranking or score fusion stages.
-- **Personalize**: build user preference vectors externally and inject them via retriever inputs or joins.
-- **Measure quality**: correlate `interaction_type` frequency with retriever executions using execution IDs.
+```json
+{
+  "stages": [
+    {"type": "vector_search", "top_k": 100},
+    {
+      "type": "rerank",
+      "boost_by_interaction_count": {
+        "interaction_types": ["click", "purchase"],
+        "time_window_days": 7,
+        "boost_multiplier": 1.2
+      }
+    }
+  ]
+}
+```
+
+**Outcome**: Real-time popularity signals influence ranking without manual updates.
+
+## Query & Export
+
+Retrieve interactions for analysis or external ML pipelines:
+
+```bash
+# Get all interactions for a document
+GET /v1/retrievers/interactions?feature_id=doc_xyz789
+
+# Get user interaction history
+GET /v1/retrievers/interactions?user_id=user_123&limit=50
+
+# Export for training (bulk pagination)
+GET /v1/retrievers/interactions?page=1&page_size=1000
+```
+
+## Privacy & Compliance
+
+**GDPR Deletion**: Remove all interactions for a user to honor right-to-deletion requests.
+
+```bash
+DELETE /v1/retrievers/interactions/<interaction_id>
+```
+
+**Anonymization**: Hash `user_id` before sending if you need consistent tracking without PII.
 
 ## Best Practices
 
-1. **Capture context** – record `query_text`, device, or surface in the `metadata` field.
-2. **Store position** – position data is critical for correcting rank bias in learning-to-rank.
-3. **Batch or stream** – interactions can be sent synchronously or aggregated and submitted in batches.
-4. **Respect privacy** – hash or tokenize `user_id` if you need anonymization; honour deletion requests via the DELETE endpoint.
-5. **Analyze regularly** – pipe interactions into your analytics warehouse to spot relevance regressions or new personalization opportunities.
+1. **Always capture position** – essential for correcting position bias in learning-to-rank models
+2. **Store query text in metadata** – enables query-document pair export for fine-tuning
+3. **Track dwell time** – separates genuine engagement (`long_view`) from accidental clicks
+4. **Batch when possible** – reduce API calls by aggregating interactions and sending in bulk
+5. **Monitor weekly** – set up dashboards to track CTR trends and catch relevance regressions early
 
-The Interactions API gives you a canonical stream of user feedback—perfect for closing the loop between retrieval quality and real-world behavior.
+<Info>
+  See the [Analytics Overview](/operations/analytics-overview) for dashboards and alerting on interaction-driven metrics like CTR, engagement rates, and query quality.
+</Info>

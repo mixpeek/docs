@@ -4,6 +4,10 @@ description: "Build intelligent search experiences with vector embeddings and hy
 icon: 'magnifying-glass'
 ---
 
+<Note>
+  **Business Impact:** Enable users to find what they mean, not just what they type. Reduce zero-result queries by 60-80%, increase conversion rates, and surface relevant content even with typos, synonyms, or questions.
+</Note>
+
 Semantic search goes beyond keyword matching to understand query intent and find conceptually relevant results. This pattern combines dense vector embeddings, sparse representations (BM25), and optional reranking for state-of-the-art retrieval accuracy.
 
 ## Why Semantic Search?
@@ -15,6 +19,23 @@ Traditional keyword search fails when:
 - Multilingual content requires cross-language matching
 
 Semantic search solves these by mapping text to high-dimensional vectors where semantically similar content clusters together, regardless of exact word matches.
+
+## vs Building It Yourself
+
+| Task | Without Mixpeek | With Mixpeek |
+|------|-----------------|--------------|
+| Deploy embedding models (CPU/GPU) | 4-6 weeks | Instant |
+| Setup vector database (Qdrant/Pinecone) | 2-3 weeks | Instant |
+| Build hybrid search (dense + sparse) | 3-4 weeks | 30 minutes |
+| Implement reranking pipeline | 2-3 weeks | Config change |
+| A/B test different models | 2-4 weeks | 15 minutes |
+| Production monitoring & caching | 2-3 weeks | Built-in |
+
+**Engineering time saved: 3-4 months** • **Infrastructure complexity: Zero**
+
+<Tip>
+  **Key Differentiator:** Hot-swap embedding models without rebuilding indexes. Test `text-embedding-3-small` vs `multilingual-e5-large` on the same data, compare retrieval quality, and switch in minutes—not weeks.
+</Tip>
 
 ## Architecture Overview
 

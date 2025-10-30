@@ -4,7 +4,28 @@ description: "Extract, structure, and query insights from PDFs, images, and unst
 icon: 'file-lines'
 ---
 
+<Note>
+  **Business Impact:** Make 100,000 PDFs searchable like a database. Find "all contracts with 30-day termination clauses" or "invoices over $10K mentioning Acme Corp" in seconds. Extract tables, entities, and clauses automatically—no manual data entry.
+</Note>
+
 Document intelligence transforms unstructured files (PDFs, images, scanned documents) into queryable, analyzable data. This pattern combines OCR, layout analysis, table extraction, and semantic embeddings to unlock insights from document archives.
+
+## vs Building It Yourself
+
+| Task | Without Mixpeek | With Mixpeek |
+|------|-----------------|--------------|
+| OCR pipeline (Tesseract/Cloud Vision) | 3-4 weeks | Instant |
+| PDF text extraction & layout analysis | 4-5 weeks | Instant |
+| Table detection & structure extraction | 5-6 weeks | Config change |
+| NER (Named Entity Recognition) | 3-4 weeks | Config change |
+| Semantic search across documents | 6-8 weeks | 1 hour |
+| Multi-page document reassembly | 2-3 weeks | Built-in lineage |
+
+**Engineering time saved: 5-7 months** • **ML Ops: Zero**
+
+<Tip>
+  **Key Differentiator:** Process native PDFs, scanned documents, and images with the same API. Extractors detect document type and apply OCR only when needed. Query by semantic meaning ("termination clauses") or exact entities (dollar amounts, company names).
+</Tip>
 
 ## Architecture Overview
 
