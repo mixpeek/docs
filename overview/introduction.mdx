@@ -1,137 +1,93 @@
 ---
 title: "Introduction"
-description: "The Multimodal Pipeline & Retrieval Platform"
+description: "Meet the Mixpeek multimodal data processing and retrieval platform"
 ---
 
 <Note>
-  Welcome to the Mixpeek documentation! Use our API to ingest multimodal data, extract features, enrich documents, and retrieve results with hybrid search.
+  Mixpeek turns raw multimodal inputs—text, images, video, audio, PDFs—into structured documents, reusable features, and query-ready indexes. A strict separation between API and Engine layers lets you ingest, enrich, and retrieve at scale without coupling application logic to heavy compute.
 </Note>
 
-> Mixpeek converts unstructured media files (text, images, video, audio, PDFs) into structured documents and optimized feature stores. Query your data using flexible, multi-stage retrievers through a clean API with primitives for data isolation, ingestion, enrichment, and retrieval.
+## Platform at a Glance
 
 <CardGroup cols={2}>
-  <Card title="Unified Multimodal Platform" icon="gears">
-  - Store raw files as [**Objects**](/ingestion/objects) in [**Buckets**](/ingestion/buckets)
-  - Generate **Documents** in [**Collections**](/ingestion/collections) with configured [**Feature Extractors**](/processing/feature-extractors)
-  - Track lineage from object → features → document → query
+  <Card title="Layered Architecture" icon="server">
+  - **API layer (FastAPI + Celery)** orchestrates object intake, enrichment, and retrieval
+  - **Engine layer (Ray)** executes distributed feature extraction and inference on CPU/GPU workers
+  - **Shared storage** (MongoDB, Qdrant, Redis, S3) keeps metadata, vectors, and artifacts consistent
   </Card>
-  
-  <Card title="Programmable Feature Extraction" icon="magnifying-glass">
-  - Define [**Collections**](/ingestion/collections) with input/output schemas and [**Feature Extractors**](/processing/feature-extractors)
-  - Ingest in bulk with [**Batches**](/processing/batching) and [bulk uploads](/ingestion/uploads)
+  <Card title="Hard Isolation" icon="shield-check">
+  - Every request authenticates with an organization-scoped API key
+  - The `X-Namespace` header enforces namespace-scoped queries and writes
+  - Qdrant collections, MongoDB queries, and task execution are namespaced by default
   </Card>
-
-  <Card title="Advanced Retrieval" icon="layer-group">
-  - Compose [**Retrievers**](/retrieval/retrievers) from stages (KNN, filters, reranking, LLM gen, etc.)
-  - Execute with filters, grouping, and URL generation via [**Retrievers**](/retrieval/retrievers)
-  - Learn about stage building blocks on [**Retrievers**](/retrieval/retrievers)
+  <Card title="Composable Pipelines" icon="layer-group">
+  - Configure extraction pipelines with [Feature Extractors](/processing/feature-extractors)
+  - Chain multi-stage [Retrievers](/retrieval/retrievers) to search, filter, rank, enrich, and transform
+  - Reuse retrievers inside other retrievers for modular, reusable search flows
   </Card>
-  
-  <Card title="Organization & Isolation" icon="server">
-  - Multi-tenant isolation via [**Namespaces**](/ingestion/namespaces) and the `X-Namespace` header
-  - Manage API keys under Organizations (see Quickstart for setup)
-  - Notify external systems with webhooks (see Quickstart for setup)
+  <Card title="Operational Guardrails" icon="bolt">
+  - Materialized taxonomies, clustering jobs, and caching deliver low-latency responses
+  - Task status, webhooks, and analytics offer production-grade observability
+  - Autoscaling Ray workers match ingestion and retrieval workloads automatically
   </Card>
 </CardGroup>
 
-### Data Organization & Enrichment
-
-<CardGroup cols={2}>
-  <Card title="Taxonomies (Similarity Joins)" icon="diagram-project">
-    Attach or validate [**Taxonomies**](/enrichment/taxonomies) to enrich documents with versioning support.
-  </Card>
-  
-  <Card title="Clustering (Grouping)" icon="object-group">
-    Build [**Clusters**](/enrichment/clusters) over features with multiple algorithms and apply enrichments.
-  </Card>
-</CardGroup>
-
-## Headers You’ll Use
-
-```bash
-Authorization: Bearer sk_your_api_key
-X-Namespace: your_namespace_or_id  # optional but recommended for isolation
-```
-
-## How It Works
+## Core Workflows
 
 <Steps>
-  <Step title="Create a Namespace (optional)">
-    Use [**Namespaces**](/ingestion/namespaces) to establish isolation boundaries for data and queries. Pass `X-Namespace` on subsequent calls.
+  <Step title="Isolate tenants with namespaces">
+    Provision namespaces (or use the default) to keep tenants and environments separate. Pass `X-Namespace` on every authenticated request.
   </Step>
-  <Step title="Upload Objects to Buckets">
-    Create a [**Bucket**](/ingestion/buckets) and add [**Objects**](/ingestion/objects) single or batch. Group work with [**Batches**](/processing/batching) and submit for processing.
+  <Step title="Register raw objects">
+    Store files or JSON payloads as [Objects](/ingestion/objects) inside schema-backed [Buckets](/ingestion/buckets). Mixpeek tracks blobs, metadata, and lineage without processing yet.
   </Step>
-  <Step title="Define Collections & Feature Extractors">
-    Create a [**Collection**](/ingestion/collections) with input/output schemas and [**Feature Extractors**](/processing/feature-extractors). Describe available features to understand addresses and indexes.
+  <Step title="Define collections and extract features">
+    Create [Collections](/ingestion/collections) to map object fields into feature extractor inputs. The Engine downloads per-extractor artifacts, runs Ray tasks, and writes documents plus vectors to Qdrant.
   </Step>
-  <Step title="Enrich with Taxonomies & Clustering">
-    Configure [**Taxonomies**](/enrichment/taxonomies) and [**Clusters**](/enrichment/clusters) to enrich and organize documents.
+  <Step title="Enrich with taxonomies and clustering">
+    Apply [Taxonomies](/enrichment/taxonomies) (flat or hierarchical) or [Clusters](/enrichment/clusters) to attach structured metadata. Both reuse the JOIN stage for fast, parallel enrichment.
   </Step>
-  <Step title="Retrieve & Analyze">
-    Use [**Retrievers**](/retrieval/retrievers) to combine vector search, filters, grouping, and ranking, optionally generating presigned URLs.
+  <Step title="Retrieve with multi-stage pipelines">
+    Compose [Retrievers](/retrieval/retrievers) from search, filter, rank, enrich, transform, and compose stages. Fetch presigned URLs, execution metrics, and cache-aware responses in a single API call.
   </Step>
 </Steps>
 
-## Getting Started
-
-The fastest path is the [Quickstart Guide](/overview/quickstart): create a namespace, bucket, collection, upload objects, and run your first retriever.
-
-For platform concepts, see [Core Concepts](/overview/concepts).
+## Architecture Snapshot
 
 <Frame>
-  ```mermaid
-  graph TD
-    A[Objects in Buckets] --> B[Collections + Feature Extractors]
-    A --> A2[Batches]
-    B --> C[Documents + Feature Stores]
-    C --> D[Taxonomies & Clustering]
-    D --> E[Retrievers Stages → Execute]
-    style A fill:#FC5185,stroke:#333
-    style E fill:#FC5185,stroke:#333
-  ```
+```mermaid
+graph TD
+  subgraph API Layer
+    FastAPI[FastAPI] --> Celery(Celery Workers)
+    CeleryBeat(Celery Beat Scheduler)
+  end
+  subgraph Engine Layer
+    RayHead[Ray Head Node] --> RayWorkers[Ray Workers (CPU/GPU)]
+    RayServe[Ray Serve Models]
+  end
+  FastAPI -->|Tasks| Redis[(Redis)]
+  FastAPI -->|Metadata| Mongo[(MongoDB)]
+  RayHead -->|Job submit| Mongo
+  RayWorkers -->|Vectors| Qdrant[(Qdrant)]
+  RayWorkers -->|Artifacts| S3[(S3)]
+  RayServe --> FastAPI
+  Mongo --> CeleryBeat
+  CeleryBeat -->|Webhooks| External[External Systems]
+```
 </Frame>
 
-## Common Use Cases
+## Request Headers
 
-For ready-to-use multimodal patterns, see [Recipes](http://mixpeek.com/recipes).
+```bash
+Authorization: Bearer sk_live_xxx
+X-Namespace: ns_production  # required when multi-tenancy is enabled
+```
 
-<Tabs>
-  <Tab title="Multimodal Search">
-    - Index images, PDFs, video, and text into **Collections** with appropriate **feature_extractors**
-    - Execute a **Retriever** that combines vector similarity, metadata filters, and reranking
-    - Optional: return presigned URLs for assets in results (`return_urls=true`)
-  </Tab>
-  
-  <Tab title="Content Analytics">
-    - Use **Batches** for large-scale ingestion and processing
-    - Apply **Clustering** for grouping, and **Taxonomies** for structured tagging
-    - Stream cluster artifacts or members as needed in [Clusters](/enrichment/clusters)
-  </Tab>
-  
-  <Tab title="Training Data">
-    - Organize paired multimodal examples as **Objects**
-    - Persist derived annotations as **Documents** with lineage to source objects
-    - Retrieve subsets with filters and grouping for training pipelines
-  </Tab>
-  
-  <Tab title="Operational Workflows">
-    - Track long-running jobs via Tasks and integrate Webhooks for eventing
-    - Manage API keys and permissions under **Organizations**
-    - Partition environments by **Namespaces** (dev/staging/prod)
-  </Tab>
-</Tabs>
+## Next Steps
 
-<Note>
-  Mixpeek’s API gives you typed resources to build reliable multimodal applications end‑to‑end:
-  - Namespaces
-  - Buckets, Objects, Batches
-  - Collections, Documents, Feature Extractors
-  - Taxonomies
-  - Clusters
-  - Retrievers
-  - Tasks
-  - Webhooks
-</Note>
+- Follow the [Quickstart](/overview/quickstart) to stand up Mixpeek locally or in the cloud
+- Review [Core Concepts](/overview/concepts) for namespaces, objects, documents, and lineage patterns
+- Study the complete [Architecture](/overview/architecture) and [Caching](/overview/caching) strategies
+- Explore ready-made [Recipes](https://mixpeek.com/recipes) or jump straight into the [API Reference](/api-reference/introduction)
 
-Ready to get started? [Create your first project →](/overview/quickstart)
+Looking for real-world help? Use the “Talk to Engineers” CTA in the top bar and we’ll walk you through deployment or integration planning.

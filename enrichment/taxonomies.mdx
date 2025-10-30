@@ -1,323 +1,155 @@
 ---
 title: "Taxonomies"
-description: "Enrich documents by joining against reference collections (flat and hierarchical)"
+description: "Enrich documents with similarity-based joins"
 ---
 
-<Note>
-  Taxonomies specify information you want to add to each document. For each taxonomy field, you choose how it is populated (usually by running a retriever that searches a reference collection). During enrichment, Mixpeek finds the best match and writes the selected fields from the reference document into the target document or the retrieval result.
-</Note>
+Taxonomies let you attach structured metadata to documents by matching them against a reference collection. They are implemented as retriever-powered joins and can run on demand or be materialized into collections.
 
-## Overview
+## Taxonomy Types
 
-Taxonomies in Mixpeek are specialized structures that allow you to classify, organize, and enrich your data with structured metadata. They function similarly to JOIN operations in traditional databases, but operate on feature similarity rather than exact key matches, making them ideal for multimodal content. Conceptually, each taxonomy functions as a specialized collection with a defined schema. Associated retrievers handle the logic for looking up and enriching documents based on this taxonomy.
+| Type | Structure | When to Use |
+|------|-----------|-------------|
+| Flat | Single-level reference collection | Face enrollment, entity linking, simple lookups |
+| Hierarchical | Parent/child nodes with inheritance | Org charts, product categories, multi-level labeling |
 
-[Watch an Intro Video](/studio/taxonomies)
+Each node references a collection, retriever, and list of enrichment fields. Child nodes inherit parent properties automatically.
 
-## Example: Product Taxonomy
+## Execution Modes
 
-A simple hierarchical product taxonomy for the Electronics category.
+| Mode | Description | Use Case |
+|------|-------------|----------|
+| `on_demand` | Enrich documents at query time inside a retriever (`taxonomy@v1` stage) | Exploratory workflows, testing, dynamic reference data |
+| `materialize` | Batch enrichment after extraction; results persisted in the collection | Production search, low-latency retrieval, analytics |
 
-```mermaid
-flowchart TD
-  A[Electronics taxonomy - multimodal: image + video + text]
-  A --> B[TV and Home Theater - doc: category; signals: image + video + text]
-  B --> C[TVs - doc: product category; signals: image + video + text]
-  C --> D[OLED TVs - doc: product subtype; signals: image + video]
-  C --> E[LED TVs - doc: product subtype; signals: image + video]
-  B --> F[Projectors - doc: product subtype; signals: image + video]
-  A --> G[Audio - doc: category; signals: audio + text]
-  G --> H[Headphones - doc: product subtype; signals: audio + text]
-  G --> I[Speakers - doc: product subtype; signals: audio + text]
-```
+Configure execution mode via a collection’s `taxonomy_applications` array or by adding a taxonomy stage to a retriever.
 
-_Modality labels show the content used to match each node; multimodal means combining image, video, and text signals within one taxonomy for matching._
+## Internals: JOIN Stage
 
+Taxonomies reuse the `join@v1` stage under the hood:
 
-<Steps>
-  <Step title="Select Taxonomy Type">
-    Choose between flat or hierarchical taxonomy structure based on your organizational needs and data relationships.
-  </Step>
-  <Step title="Select Source Collection">
-    Select the collection containing the reference data that will be used to enrich your documents.
-  </Step>
-  <Step title="Select Enrichment Fields">
-    Choose which fields from the source collection will be added to enrich your target documents.
-  </Step>
-  <Step title="Select Retriever">
-    Choose the retriever that will match documents from your target collection with the appropriate reference data.
-  </Step>
-  <Step title="Configure Input Fields">
-    Define how the retriever gets its input data. This might involve mapping fields from source data, using outputs from previous processing steps, or incorporating query-time information.
-  </Step>
-</Steps> 
+- **Direct join** – key-based match (`join_type: "direct"`).
+- **Retriever join** – similarity match using a nested retriever (`join_type: "retriever"`).
+- **Join strategies** – `replace`, `enrich`, `left`, or `append` control how fields merge.
 
-<CardGroup cols={2}>
-  <Card title="Flat vs Hierarchical" icon="diagram-project">
-    Single‑level joins or multi‑level trees with inheritance
-  </Card>
-  
-  <Card title="Explicit & Implicit" icon="code-branch">
-    Define nodes manually or infer structure (schema/cluster/LLM)
-  </Card>
-  
-  <Card title="Execution Modes" icon="bolt">
-    Materialized (batch) or On‑Demand (query‑time)
-  </Card>
-  
-  <Card title="Retriever‑powered" icon="magnifying-glass">
-    Matching is driven by a configured retriever and input mappings
-  </Card>
-</CardGroup>
+Parallel execution (`asyncio.gather`) makes retrieval joins 10–50× faster than sequential lookups.
 
-## Quick start
+## Create a Flat Taxonomy
 
-<Steps>
-  <Step title="Create">
-    Define a flat or hierarchical taxonomy with retriever and input mappings
-  </Step>
-  <Step title="Attach">
-    - Materialize: add to a collection via <code>taxonomy_applications</code><br/>
-    - On‑Demand: add a taxonomy join stage in a retriever
-  </Step>
-  <Step title="Run">
-    - Preview with Execute Taxonomy (on‑demand test)<br/>
-    - Or execute the retriever pipeline in production
-  </Step>
-  <Step title="Inspect">
-    Verify enriched fields on documents or in results
-  </Step>
-</Steps>
-
-## What gets copied
-
-- Selected enrichment fields are copied from the matched reference document into your target document or into the retrieval result, depending on execution mode.
-- Use `merge_mode: "replace"` to overwrite a scalar or object field on the target document.
-- Use `merge_mode: "append"` to add values to an array field on the target document.
-
-## How it works
-
-<Frame>
-  ```mermaid
-  graph TD
-    T[Taxonomy Definition] --> A[Attach to Collection or Retriever]
-    A --> M[Materialized Batch]
-    A --> O[On Demand]
-    M --> W[Documents Updated]
-    O --> R[Enriched Results]
-  ```
-</Frame>
-
-<Steps>
-  <Step title="Define">
-    Create a taxonomy (flat or hierarchical) and specify a retriever plus input mappings
-  </Step>
-  <Step title="Attach">
-    Add to a collection (materialize) or a retriever stage (on‑demand)
-  </Step>
-  <Step title="Execute">
-    Run batch enrichment after extraction, or enrich at query‑time during retrieval
-  </Step>
-</Steps>
-
-## Types and modes
-
-<Tabs>
-  <Tab title="Flat">
-    - One source collection
-    - 1:1 join semantics (best match)
-    - Copy configured enrichment fields from the reference document into the target document (replace or append)
-  </Tab>
-  
-  <Tab title="Hierarchical (Explicit)">
-    - Multi‑level parent/child tree via `hierarchical_nodes`
-    - Node‑level overrides for retriever, input mappings, enrichment fields
-    - Child results can inherit or override parent enrichments
-  </Tab>
-  
-  <Tab title="Hierarchical (Implicit)">
-    - **Schema inferred**: Analyze collection schemas for overlapping fields or feature addresses to propose parent‑child edges
-    - **Cluster inferred**: Use vector clustering across collections to detect nested groupings and containment
-    - **LLM inferred**: Apply language models over names, metadata, and sample contents to suggest semantic hierarchies
-    - **Hybrid**: Start implicit, then override specific nodes with explicit definitions
-  </Tab>
-  
-  <Tab title="Execution Modes">
-    - **Materialized**: Runs post‑extraction; persists updates to documents (in‑place or to target collection)
-      - Tradeoffs: lowest query latency and consistent outputs; requires re‑materialization on source/taxonomy changes, adds batch/compute work and write amplification
-    - **On‑Demand**: Executes inside a retriever pipeline at query time; results are not persisted
-      - Tradeoffs: freshest results and no write/storage cost; adds query‑time latency and per‑request compute, may need caching for high‑QPS paths
-  </Tab>
-</Tabs>
-
-## Create a taxonomy
-
-- **API**: Create Taxonomy
-- **Method**: POST
-- **Path**: `/v1/taxonomies`
-- **Reference**: [API Reference](/api-reference/taxonomies/create-taxonomy)
-
-### Flat example
 ```bash
-curl -X POST https://api.mixpeek.com/v1/taxonomies \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "X-Namespace: ns_123" \
+curl -sS -X POST "$MP_API_URL/v1/taxonomies" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
   -H "Content-Type: application/json" \
   -d '{
-    "taxonomy_name": "brands_en",
-    "description": "Enrich documents with brand metadata",
-    "config": {
-      "taxonomy_type": "flat",
-      "retriever_id": "ret_clip_v1",
-      "input_mappings": [
-        {"input_key": "image_vector", "path": "features.clip_vit_l_14", "source_type": "vector"}
-      ],
-      "source_collection": {
-        "collection_id": "col_brands_v1",
-        "enrichment_fields": [
-          {"field_path": "metadata.brand", "merge_mode": "replace"},
-          {"field_path": "metadata.tags",  "merge_mode": "append"}
-        ]
-      }
-    }
-  }'
-```
-
-### Hierarchical (explicit) example
-```bash
-curl -X POST https://api.mixpeek.com/v1/taxonomies \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "X-Namespace: ns_123" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "taxonomy_name": "people_hierarchy_v1",
-    "description": "Employees → Executives",
-    "config": {
-      "taxonomy_type": "hierarchical",
-      "retriever_id": "ret_face_v1",
-      "input_mappings": [
-        {"input_key": "face_vec", "path": "features.face", "source_type": "vector"}
-      ],
-      "hierarchical_nodes": [
-        {"collection_id": "col_employees_v1"},
-        {"collection_id": "col_executives_v1", "parent_collection_id": "col_employees_v1"}
+    "taxonomy_name": "employee_faces",
+    "taxonomy_type": "flat",
+    "retriever_id": "ret_face_matcher",
+    "input_mappings": {
+      "query_embedding": "mixpeek://face_detector@v2/face_embedding"
+    },
+    "source_collection": {
+      "collection_id": "col_employee_embeddings",
+      "enrichment_fields": [
+        { "field_path": "metadata.name", "merge_mode": "enrich" },
+        { "field_path": "metadata.department", "merge_mode": "enrich" }
       ]
     }
   }'
 ```
 
-## Manage taxonomies
+## Create a Hierarchical Taxonomy
 
-<CardGroup cols={2}>
-  <Card title="Get Taxonomy" icon="magnifying-glass" href="/api-reference/taxonomies/get-taxonomy" />
-  <Card title="List Taxonomies" icon="list" href="/api-reference/taxonomies/list-taxonomies" />
-  <Card title="Create Version" icon="layers" href="/api-reference/taxonomies/create-taxonomy-version" />
-  <Card title="List Versions" icon="clone" href="/api-reference/taxonomies/list-taxonomy-versions" />
-  <Card title="Delete Taxonomy" icon="trash" href="/api-reference/taxonomies/delete-taxonomy" />
-</CardGroup>
+```bash
+curl -sS -X POST "$MP_API_URL/v1/taxonomies" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "taxonomy_name": "org_roles",
+    "taxonomy_type": "hierarchical",
+    "retriever_id": "ret_face_matcher",
+    "input_mappings": {
+      "query_embedding": "mixpeek://face_detector@v2/face_embedding"
+    },
+    "hierarchy": [
+      {
+        "node_id": "employees",
+        "collection_id": "col_employee_embeddings",
+        "enrichment_fields": ["metadata.employee_id", "metadata.department"]
+      },
+      {
+        "node_id": "executives",
+        "collection_id": "col_executives",
+        "retriever_id": "ret_executive_face",
+        "parent_node_id": "employees",
+        "enrichment_fields": ["metadata.executive_level", "metadata.budget_authority"]
+      }
+    ]
+  }'
+```
 
-### Versions
+Hierarchical nodes inherit parent enrichment properties; children can override or extend them.
 
-- **Immutable snapshots**: Create versioned snapshots for reproducible enrichment
-- **Manage**: [Create Version]/api-reference/taxonomies/create-taxonomy-version, [List Versions]/api-reference/taxonomies/list-taxonomy-versions, [Get Taxonomy]/api-reference/taxonomies/get-taxonomy
-- **Usage**: Pin a specific version when attaching to collections or executing on‑demand to ensure stable outputs; update the reference to roll forward or roll back as needed
-
-## Attach and execute
-
-### Attach to a collection (materialize)
-
-Include `taxonomy_applications` when creating or updating a collection. The engine materializes enrichment after extraction completes.
+## Attach to a Collection
 
 ```json
 {
-  "collection_name": "ads_v2",
   "taxonomy_applications": [
     {
-      "taxonomy_id": "tax_brands_en",
-      "execution_mode": "materialize",
-      "target_collection_id": "col_ads_enriched"
+      "taxonomy_id": "tax_employee_faces",
+      "execution_mode": "materialize"
     },
     {
-      "taxonomy_id": "tax_people_hierarchy_v1",
+      "taxonomy_id": "tax_org_roles",
       "execution_mode": "on_demand"
     }
   ]
 }
 ```
 
-- Collections API: [Create](/api-reference/collections/create-collection), [Update](/api-reference/collections/update-collection)
+- Materialized enrichment updates documents ~30 seconds after ingestion completes (debounced to avoid thrashing).
+- On-demand enrichment keeps documents untouched; retrievers call the taxonomy join at query time.
 
-### Execute on‑demand (test/preview)
-
-Use the execute endpoint to validate configuration and preview enrichment (on‑demand only).
-
-- **API**: Execute Taxonomy
-- **Method**: POST
-- **Path**: `/v1/taxonomies/execute/{taxonomy_identifier}`
-- **Reference**: [API Reference](/api-reference/taxonomies/execute-taxonomy)
+## Test On Demand
 
 ```bash
-curl -X POST https://api.mixpeek.com/v1/taxonomies/execute/tax_brands_en \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "X-Namespace: ns_123" \
+curl -sS -X POST "$MP_API_URL/v1/taxonomies/<taxonomy_id>/enrich" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
   -H "Content-Type: application/json" \
   -d '{
-    "source_documents": [{"document_id": "doc_123", "features": {"clip_vit_l_14": [0.1,0.2,0.3]}}]
+    "source_documents": [
+      {
+        "document_id": "doc_scene_123",
+        "mixpeek://face_detector@v2/face_embedding": [0.12, 0.34, ...]
+      }
+    ],
+    "mode": "on_demand"
   }'
 ```
 
-For production on‑demand usage, add a taxonomy join stage inside a retriever and call the retriever Execute API.
+## Inference Strategies
 
-- Retrievers: [Create](/api-reference/retrievers/create-retriever), [Execute](/api-reference/retrievers/execute-retriever)
+- **Manual** – Define nodes explicitly (IDs, collections, retrievers).
+- **Schema-based** – Infer nodes from existing collection schemas (planned).
+- **Cluster-based** – Create nodes from clustering output.
+- **LLM-based** – Generate hierarchical structure from sample documents.
 
-## Best practices
+Combining strategies is encouraged: bootstrap via inference, then fine-tune manually.
 
-<Steps>
-  <Step title="Keep mappings precise">
-    Ensure input mappings point to existing fields and types in target documents
-  </Step>
-  <Step title="Minimize copied fields">
-    Copy only required enrichment fields; prefer `append` for arrays
-  </Step>
-  <Step title="Choose the right mode">
-    Use materialize for stable, high‑QPS paths; on‑demand for dynamic or exploratory flows
-  </Step>
-  <Step title="Iterate hierarchies">
-    Start with explicit nodes, then add inference or overrides as needed
-  </Step>
-</Steps>
+## Monitoring
 
-## FAQ
+- List taxonomies: `POST /v1/taxonomies/list`
+- Inspect hierarchy and node metadata: `GET /v1/taxonomies/{id}?expand_nodes=true`
+- Track materialized enrichment progress via webhook events (`collection.documents.written`)
+- Use retriever analytics to ensure taxonomy stages don’t dominate latency.
 
-<AccordionGroup>
-  <Accordion title="Flat vs hierarchical – when to choose?" icon="circle-question">
-    Use flat when a single reference collection provides all needed fields. Choose hierarchical when enrichment depends on multi‑level concepts (e.g., Employee → Executive → Board).
-  </Accordion>
-  <Accordion title="Materialized vs on‑demand – which is better?" icon="bolt">
-    Materialized is ideal for stable, hot paths and high QPS; on‑demand is better for dynamic reference data or exploratory flows where persistence is not required.
-  </Accordion>
-  <Accordion title="Can I mix explicit nodes with inferred structure?" icon="code-branch">
-    Yes. Hierarchical taxonomies are hybrid by design: infer a base tree via schema/cluster/LLM, then override or extend with explicit nodes as needed.
-  </Accordion>
-</AccordionGroup>
+## Best Practices
 
-## See also
+1. **Start flat** for quick wins; layer hierarchies once value is proven.
+2. **Keep enrichment minimal**—copy only fields needed at query time.
+3. **Cache taxonomy stages** in retrievers when reference collections rarely change.
+4. **Version taxonomies** (via snapshots) before major structural changes.
+5. **Combine with clusters** to discover candidate nodes and measure coverage.
 
-<CardGroup cols={2}>
-  <Card title="Collections" icon="database" href="/ingestion/collections">
-    Attach taxonomy applications to drive enrichment
-  </Card>
-  
-  <Card title="Retrievers" icon="magnifying-glass" href="/retrieval/retrievers">
-    Execute on‑demand taxonomy join stages during retrieval
-  </Card>
-</CardGroup>
-
-<CardGroup cols={2}>
-  <Card title="Pipelines & Workflows" icon="diagram-project" href="/processing/pipelines">
-    Chain multi‑stage flows and integrate taxonomies
-  </Card>
-  
-  <Card title="Clusters" icon="object-group" href="/enrichment/clusters">
-    Discover candidate nodes for implicit hierarchies
-  </Card>
-</CardGroup>
+Taxonomies let you inject domain knowledge into multimodal search—link documents to canonical entities without relying on brittle key joins.

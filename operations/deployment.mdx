@@ -1,116 +1,108 @@
 ---
 title: "Deployment"
-description: "Run Mixpeek API and Engine reliably across environments"
+description: "Run Mixpeek locally, in Kubernetes, or on managed Ray"
 ---
 
-<Note>
-  Mixpeek consists of an API service and an Engine service (Ray). It depends on MongoDB, Qdrant, Redis, and S3‑compatible storage. This guide outlines common topologies, configuration, health, and scaling.
-</Note>
+Mixpeek is split into two deployable components:
 
-## Overview
+- **API Layer** – FastAPI + Celery + Redis connection (HTTP endpoints, task orchestration, webhooks).
+- **Engine Layer** – Ray cluster + Ray Serve (extractors, inference, clustering, taxonomy runs).
 
-<CardGroup cols={2}>
-  <Card title="API" icon="server">
-    FastAPI app with auth, tenancy, routes, and orchestration
-  </Card>
-  
-  <Card title="Engine" icon="gears">
-    Ray Serve app for extractors, clustering, and taxonomy execution
-  </Card>
-  
-  <Card title="Datastores" icon="database">
-    MongoDB (metadata), Qdrant (vectors), Redis (rate limit/tasks), S3 (artifacts)
-  </Card>
-  
-  <Card title="Observability" icon="chart-line">
-    Health checks, logs, metrics, and tasks status
-  </Card>
-</CardGroup>
+Shared dependencies: MongoDB, Qdrant, Redis, and S3-compatible object storage.
 
-## Architecture
+## Local Development
 
-<Frame>
-  ```mermaid
-  graph TD
-    C[Clients] --> API[API Service]
-    API --> ENG[Engine Service]
-    API --> M[MongoDB]
-    API --> R[Redis]
-    API --> Q[Qdrant]
-    ENG --> Q
-    ENG --> S3[S3 Artifacts]
-  ```
-</Frame>
+`./start.sh` scripts spin up a full stack with Docker Compose:
 
-## Configuration
-
-<Tabs>
-  <Tab title="Core">
-    - <code>ENV</code>, <code>DEBUG</code>, <code>LOG_LEVEL</code><br/>
-    - <code>QDRANT_URL</code>, <code>QDRANT_API_KEY</code><br/>
-    - <code>MONGO_URI</code>, <code>MONGODB_API_DB</code><br/>
-    - <code>REDIS_URL</code><br/>
-    - <code>AWS_BUCKET</code>, <code>AWS_REGION</code>
-  </Tab>
-  
-  <Tab title="Engine">
-    - <code>ENGINE_API_HOST</code>, <code>ENGINE_API_PORT</code> (derived <code>ENGINE_API_URL</code>)<br/>
-    - Ray runtime (\`RAY_*\`) and serve settings (\`ENGINE_SERVE_*\`)
-  </Tab>
-  
-  <Tab title="External">
-    - <code>HUGGING_FACE_TOKEN</code>, <code>OPENAI_API_KEY</code>, <code>GEMINI_API_KEY</code> (optional)
-  </Tab>
-</Tabs>
-
-## Health and readiness
-
-- **Route**: /v1/health — checks Redis, MongoDB, Qdrant, Celery, Engine
-- **Reference**: [Health API](/api-reference/health/healthcheck)
-
-```bash
-curl -s https://api.mixpeek.com/v1/health | jq
+```
+./start.sh api      # FastAPI + Celery
+./start.sh celery   # Celery Beat
+./start.sh engine   # Ray head + workers
 ```
 
-## Deploy steps (typical)
+Docker Compose services:
 
-<Steps>
-  <Step title="Provision deps">
-    Managed MongoDB, Qdrant, Redis, and S3 bucket with IAM
-  </Step>
-  <Step title="Deploy Engine">
-    Start Ray Serve with configured workers and resource limits
-  </Step>
-  <Step title="Deploy API">
-    Start FastAPI app; point to Engine and datastores via env vars
-  </Step>
-  <Step title="Verify">
-    Call /v1/health and run a smoke: create namespace → collection → retriever → execute
-  </Step>
-</Steps>
+- `mongodb` – metadata (`mongodb://localhost:27017`)
+- `qdrant` – vector storage (`http://localhost:6333`)
+- `redis` – task queue/cache (`redis://localhost:6379`)
+- `localstack` – S3 emulator (`http://localhost:4566`)
 
-## Scaling and upgrades
+Run `curl http://localhost:8000/v1/health` to confirm readiness, then follow the [Quickstart](/overview/quickstart).
 
-<CardGroup cols={2}>
-  <Card title="Scale Engine" icon="gauge-high">
-    Add Ray workers for extractor and clustering throughput
-  </Card>
-  
-  <Card title="Scale Qdrant" icon="cubes-stacked">
-    Increase memory/IO; shard by namespace if needed
-  </Card>
-  
-  <Card title="API Autoscale" icon="arrows-up-down-left-right">
-    Horizontally scale API; rate limit via Redis to protect backends
-  </Card>
-  
-  <Card title="Zero‑downtime" icon="rotate">
-    Blue/green or rolling restarts; confirm /v1/health before cutover
-  </Card>
-</CardGroup>
+## Production Topology (Kubernetes)
 
-## Operations references
+```
+Namespace: mixpeek-api
+  ├─ fastapi-deployment (ReplicaSet + HPA)
+  ├─ celery-worker-deployment (process tasks)
+  └─ celery-beat-deployment (1 replica scheduler)
 
-- Observability: [Logs, Metrics, Tasks](/operations/observability)
-- Security: [Auth, tenancy, rate limiting](/operations/security)
-- Tasks: [Monitor jobs](/processing/tasks)
+Namespace: mixpeek-engine
+  ├─ ray-head (StatefulSet)
+  ├─ ray-worker-cpu (Autoscaled Deployment)
+  └─ ray-worker-gpu (Autoscaled Deployment)
+
+Namespace: mixpeek-data
+  ├─ mongodb (StatefulSet, replica set)
+  ├─ qdrant (StatefulSet or distributed cluster)
+  └─ redis (Deployment or Redis Cluster)
+```
+
+Recommended node pools:
+
+- **API nodes** – general purpose (e.g., `t3.xlarge`), scale FastAPI/Celery horizontally.
+- **CPU workers** – compute-optimized (e.g., `c5.4xlarge`) for text extraction, clustering.
+- **GPU workers** – GPU instances (e.g., `p3.2xlarge`) for embeddings, rerankers, video processing.
+
+Expose the API via an ingress or load balancer; keep Ray Serve internal unless exposing custom inference endpoints.
+
+## Managed Ray (Anyscale / Ray Service)
+
+- Deploy the Engine layer via a managed Ray service.
+- Point the API layer to the Ray cluster using `ENGINE_API_URL` and Ray job submission credentials.
+- Managed Ray handles autoscaling, node health, and GPU provisioning; you manage API + data stores.
+
+## Core Environment Variables
+
+| Service | Key | Description |
+|---------|-----|-------------|
+| API | `MONGO_URI`, `QDRANT_URL`, `REDIS_URL`, `S3_BUCKET`, `ENGINE_API_URL` | Connectivity |
+| Engine | `MONGO_URI`, `QDRANT_URL`, `S3_BUCKET`, `RAY_memory`, `RAY_num_gpus` | Runtime config |
+| Shared | `ENABLE_ANALYTICS`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, etc. | Optional providers |
+
+Secrets should be injected via Kubernetes secrets, environment managers, or cloud secret stores.
+
+## Health & Verification
+
+- **Endpoint**: `GET /v1/health` – checks Redis, MongoDB, Qdrant, Celery, Engine, ClickHouse (if enabled).
+- **Smoke test**: create namespace → bucket → collection → upload object → submit batch → execute retriever.
+- **Tasks**: ensure Celery workers process webhook events, cache invalidations, and maintenance tasks.
+
+## Scaling Guidelines
+
+| Component | Scaling Strategy | Notes |
+|-----------|------------------|-------|
+| FastAPI | Horizontal autoscale on CPU/utilization | Stateless, use HPA |
+| Celery workers | Scale with queue depth | Prefork pool supports task termination |
+| Ray workers | Autoscale CPU/GPU pools | Use Ray autoscaler or managed Ray policies |
+| Qdrant | Scale vertically (RAM) or shard by namespace | Monitor vector count and query latency |
+| MongoDB | Use managed cluster (Atlas, DocumentDB) | Ensure indexes on `namespace_id`, `internal_id` |
+| Redis | Scale vertically or cluster | Used for task queue + caching |
+
+Monitor Ray dashboard (port 8265) for job status, resource utilization, and Serve deployments.
+
+## Deployment Checklist
+
+1. Provision MongoDB, Qdrant, Redis, and S3/GCS buckets (with IAM roles).
+2. Deploy Ray cluster (head + workers) and confirm job submission works.
+3. Deploy FastAPI + Celery services; configure environment variables to point to Ray + data stores.
+4. Configure ingress/HTTPS, secrets, and network policies.
+5. Run health checks and quickstart workflow to verify end-to-end functionality.
+6. Set up observability (logs, metrics, webhooks) and configure backups for MongoDB/Qdrant.
+
+## References
+
+- [Architecture](/overview/architecture) – full system design
+- [Observability](/operations/observability) – metrics, logs, dashboards
+- [Security](/operations/security) – tenancy, auth, secret management
+- [Webhooks](/operations/webhooks) – event processing pipeline

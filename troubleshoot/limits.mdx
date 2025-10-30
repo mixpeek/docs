@@ -1,99 +1,90 @@
 ---
-title: "Limits"
-description: "Understand account tiers, permissions, and rate limits"
+title: "Limits & Quotas"
+description: "Manage rate limits, credits, and budget controls"
 ---
 
-<Note>
-  Requests are governed by account tier, per‑route permissions, and Redis‑backed rate limits. This guide explains tiers, defaults, and how to resolve 429 Too Many Requests.
-</Note>
+Mixpeek enforces limits at multiple layers—API rate limits, credit consumption, retriever budgets, and infrastructure quotas. Understanding each layer helps you avoid `429` errors and unexpected costs.
 
-## Account tiers
+## API Rate Limits
 
-<CardGroup cols={3}>
-  <Card title="Free" icon="seedling">
-    Base limits; good for evaluation and small workloads
-  </Card>
-  
-  <Card title="Pro" icon="bolt">
-    Higher rate limits for growth and production pilots
-  </Card>
-  
-  <Card title="Enterprise" icon="building">
-    Very high limits and custom SLAs
-  </Card>
-</CardGroup>
+- **Per-route counters** backed by Redis (SlowAPI).  
+- Tier defaults (requests/minute):
+  - **Free**: 10 (general), 10 (retriever execute, uploads)
+  - **Pro**: 60
+  - **Enterprise**: configurable (contact support)
+- Responses include `details.api_name` to identify which bucket tripped the limit.
 
-## Base rate limits (per minute)
+**Recommendations**
 
-<Tabs>
-  <Tab title="Free">
-    - default: 10<br/>
-    - search: 10<br/>
-    - upload: 10<br/>
-    - delete: 10
-  </Tab>
-  
-  <Tab title="Pro">
-    - default: 60<br/>
-    - search: 60<br/>
-    - upload: 60<br/>
-    - delete: 60
-  </Tab>
-  
-  <Tab title="Enterprise">
-    - default: 99999<br/>
-    - search: 99999<br/>
-    - upload: 99999<br/>
-    - delete: 99999
-  </Tab>
-</Tabs>
+1. Implement exponential backoff with jitter (`1s`, `2s`, `4s`, …).
+2. Batch uploads using `/objects/batch` and process via batches instead of hot loops.
+3. Enable retriever caching to reduce duplicate execute calls.
 
-## Permissions
+## Credits & Usage
 
-- API keys carry permissions such as <code>view</code>, <code>create</code>, <code>update</code>, <code>delete</code>
-- Admin levels: <code>admin</code>, <code>super</code>
-- Data scopes: <code>read_public</code>, <code>read_private</code>, <code>write_public</code>, <code>write_private</code>
+Credits measure compute-intensive activity (extractions, retriever execution, LLM stages). Track usage with analytics endpoints:
 
-If a route requires permissions you lack, calls may return 403 Unauthorized.
+```bash
+curl -sS -X GET "$MP_API_URL/v1/analytics/usage/summary?start_date=2025-10-01&end_date=2025-10-31" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE"
+```
 
-## 429 Too Many Requests
+Monitor retriever cost with the `budget` section in execution responses:
 
-<Steps>
-  <Step title="Identify the route">
-    The <code>details.api_name</code> field indicates which bucket exceeded limits
-  </Step>
-  <Step title="Back off">
-    Apply exponential backoff (e.g., 1s, 2s, 4s, jitter)
-  </Step>
-  <Step title="Reduce concurrency">
-    Lower parallel calls to the route; batch where possible
-  </Step>
-  <Step title="Upgrade tier">
-    Consider Pro/Enterprise for higher limits if usage is sustained
-  </Step>
-</Steps>
+```json
+"budget": {
+  "credits_used": 18.75,
+  "credits_limit": 100,
+  "time_elapsed_ms": 5250
+}
+```
 
-## Best practices
+Set `budget_limits` on retrievers to cap runtime and credit spend.
 
-<CardGroup cols={2}>
-  <Card title="Queue writes" icon="inbox">
-    Buffer high‑volume uploads to smooth bursts
-  </Card>
-  
-  <Card title="Cache reads" icon="floppy-disk">
-    Use application caching for hot reads to avoid duplicate calls
-  </Card>
-  
-  <Card title="Batch operations" icon="boxes-stacked">
-    Prefer batch endpoints for objects and tasks where applicable
-  </Card>
-  
-  <Card title="Monitor usage" icon="chart-line">
-    Track 429s and latency; adjust client concurrency dynamically
-  </Card>
-</CardGroup>
+## Task Backlog Limits
 
-## See also
+- Celery queues and Redis memory impose soft limits on concurrent tasks.
+- Monitor queue depth; auto-scale workers or throttle submissions if tasks pile up.
+- Use batch sizes that match available Ray worker capacity.
 
-- Errors: [/troubleshoot/errors](/troubleshoot/errors)
-- Organizations: [/api-reference/organizations/get-organization](/api-reference/organizations/get-organization)
+## Ray Serve & Model Quotas
+
+- Each model deployment has `min_replicas`/`max_replicas` and per-request concurrency targets.
+- For LLM providers (OpenAI, Anthropic, etc.), respect provider-side rate limits; Mixpeek surfaces provider errors directly.
+
+## Storage Considerations
+
+| Component | Limit | Mitigation |
+|-----------|-------|------------|
+| S3 | Object count/size | Enable lifecycle policies, compress artifacts |
+| MongoDB | Document size (16 MB) | Keep metadata lean; store large payloads in S3 |
+| Qdrant | Memory | Shard by namespace, prune stale documents, upgrade memory |
+
+## Handling 429 Too Many Requests
+
+1. Inspect `error.details.api_name`.
+2. Back off and retry later (respect Retry-After headers if supplied).
+3. Reduce concurrency from your client or cache repeated reads.
+4. Consider upgrading your tier if usage is sustained.
+
+## Monitoring Usage
+
+- Log API responses for `429`, `403`, and `NotEnabledError` to detect limit issues.
+- Build dashboards using analytics endpoints (retriever performance, cache hit rate, slow queries) to see when workloads approach limits.
+- Use webhook events to trigger scaling actions (e.g., new batch submitted → scale Ray workers).
+
+## When to Contact Support
+
+- You need higher rate limits or custom credit pools.
+- You plan to run batch workloads that exceed current quotas.
+- Provider-specific limits (LLM APIs) block your workflow even after retries.
+
+Include namespace, organization, relevant request IDs, and desired limits when reaching out.
+
+## References
+
+- [Error Guide](/troubleshoot/errors)
+- [Retrievers → Budget Limits](/retrieval/retrievers)
+- [Analytics → Usage Summary](/api-reference/analytics/get-usage-summary)
+- [Observability](/operations/observability)

@@ -1,85 +1,108 @@
 ---
-title: "Features"
-description: "Model outputs stored inside documents for retrieval"
+title: "Features & Feature URIs"
+description: "Understand the outputs created by feature extractors"
 ---
 
-<Note>
-  Features are fields inside documents produced by feature extractors. They include vectors and payload attributes that power retrieval, enrichment, and analytics.
-</Note>
+Features are the model outputs produced when collections run their configured extractors. They live inside documents, power retrieval and enrichment, and are always referenced with a stable URI.
 
-## Overview
+## Feature URIs
 
-- **Where features live**: Inside collection documents (not standalone). Documents are written by extractors during processing.
-- **What features are**: Model outputs such as vectors (dense/sparse/multi) and structured payload fields.
-- **Configured by**: The collection’s feature extractors and index definitions.
+```
+mixpeek://{extractor_name}@{version}/{output_name}
+```
 
-## Feature anatomy (in a document)
+Examples:
 
-A document stores features as payload fields and vectors. Exact paths depend on the collection’s extractor configuration and feature addresses.
+- `mixpeek://text_extractor@v1/text_embedding`
+- `mixpeek://clip_vit_l_14@v1/image_embedding`
+- `mixpeek://splade_extractor@v1/splade_vector`
+- `mixpeek://colbert_extractor@v1/colbert_embeddings`
+
+Use feature URIs when:
+
+- Defining retriever stages (`feature_address`)
+- Configuring taxonomy input mappings
+- Building clustering jobs
+- Inspecting collection output schemas
+
+## Feature Anatomy
+
+Documents store features as regular fields plus vector payloads:
 
 ```json
 {
   "document_id": "doc_123",
-  "collection_id": "col_products_v1",
-  "metadata": {"category": "shoes"},
-  "features": {
-    "text_embedding": {"vector": [0.12, 0.03, ...]},
-    "clip_image": {"vector": [0.09, 0.41, ...]},
-    "entities": ["shoe", "sneaker"],
-    "title": "Red Sneaker"
+  "collection_id": "col_products",
+  "metadata": {
+    "category": "audio",
+    "brand": "Acme"
+  },
+  "text_extractor_v1_embedding": [0.12, 0.03, ...],
+  "splade_extractor_v1_vector": {
+    "indices": [345, 912],
+    "values": [0.82, 0.54]
+  },
+  "clip_vit_l_14_v1_embedding": [0.09, 0.41, ...],
+  "source_blobs": [...],
+  "internal_metadata": {
+    "processing_history": [...]
   }
 }
 ```
 
-- Vectors are stored under configured vector field names and indexed per the collection’s vector indexes.
-- Non-vector outputs (payload) are stored as normal document fields under `features` or other configured paths.
+Vector fields are automatically written to Qdrant as named vectors; payload fields stay in MongoDB and Qdrant payloads for filtering and enrichment.
 
-## Describe features for a collection
+## Inspect Available Features
 
-Get feature addresses and metadata available in a collection.
+- `GET /v1/collections/{collection_id}` – returns the deterministic `output_schema`.
+- `GET /v1/collections/{collection_id}/features` – enumerates feature URIs, dimensions, and metadata.
+- `GET /v1/feature-extractors` – discover available extractors, versions, and output fields.
 
-- **API**: Describe Collection Features
-- **Method**: GET
-- **Path**: `/v1/collections/{collection_identifier}/features`
-- **Reference**: [API Reference](/api-reference/collections/describe-collection-features)
+## Feature Types
 
-## Discover feature extractors
+| Extractor | Feature Type | Typical Use |
+|-----------|--------------|-------------|
+| `text_extractor` | Dense embedding (1024–1536 dims) | Semantic text search |
+| `splade_extractor` | Sparse vector (indices + weights) | Lexical / hybrid search |
+| `colbert_extractor` | Multi-vector (per-token) | Late interaction search |
+| `clip_vit_l_14` | Dense multimodal embedding | Image & text similarity |
+| `video_extractor` | Scene embeddings + metadata | Video retrieval & analytics |
+| `whisper_large_v3` | Transcription + timestamps | Audio search & diarization |
 
-Browse supported extractors and their input/output schemas.
+Refer to [Feature Extractors](/processing/feature-extractors) for full schemas and parameters.
 
-- **List Extractors**: [API Reference](/api-reference/feature-extractors/list-feature-extractors)
-- **Get Extractor by Name**: [API Reference](/api-reference/feature-extractors/get-feature-extractor-by-name)
+## Working with Feature URIs
 
-## Used by
+```json
+{
+  "stage_name": "knn_search",
+  "version": "v1",
+  "parameters": {
+    "feature_address": "mixpeek://text_extractor@v1/text_embedding",
+    "input_mapping": { "text": "query_text" },
+    "limit": 20
+  }
+}
+```
 
-- **Retrievers**: Execute vector/payload search over features in documents ([Retrievers](/retrieval/retrievers)).
-- **Taxonomies**: Join/enrich using configured feature fields ([Taxonomies](/enrichment/taxonomies)).
-- **Clusters**: Build similarity groups over feature vectors ([Clusters](/enrichment/clusters)).
+Taxonomy example:
 
-## Best practices
+```json
+{
+  "taxonomy_type": "flat",
+  "retriever_id": "ret_face_matcher",
+  "input_mappings": {
+    "query_embedding": "mixpeek://face_detector@v2/face_embedding"
+  }
+}
+```
 
-- **Pick extractors per modality**: Text, images, audio, and video often need different models.
-- **Version your models**: Prefer new collections or reprocessing when changing model versions.
-- **Name feature fields clearly**: Stable field names simplify retriever and taxonomy configs.
+## Best Practices
 
-## See also
+1. **Version carefully** – upgrading an extractor version creates new feature URIs. Re-index collections or create new ones for breaking changes.
+2. **Name consistently** – stick to canonical URIs in retrievers and enrichment jobs to avoid mismatches.
+3. **Store passthrough metadata** – combine features with metadata fields (category, locale) for precise filters and joins.
+4. **Monitor extractor performance** – Analytics endpoints (`/v1/analytics/extractors/performance`) help validate throughput and latency.
+5. **Leverage inference caching** – repeated calls to the same feature URI benefit from the Engine’s inference cache.
 
-<CardGroup cols={2}>
-  <Card title="Collections" icon="database" href="/ingestion/collections">
-    Configure extractors and index definitions
-  </Card>
-  
-  <Card title="Feature Extractors" icon="wand-magic-sparkles" href="/processing/feature-extractors">
-    Supported extractors and configurations
-  </Card>
-</CardGroup>
-
-<CardGroup cols={2}>
-  <Card title="Retrievers" icon="magnifying-glass" href="/retrieval/retrievers">
-    Search across feature vectors and payloads
-  </Card>
-  
-  <Card title="Taxonomies" icon="diagram-project" href="/enrichment/taxonomies">
-    Enrich documents using feature-based joins
-  </Card>
-</CardGroup>
+With feature URIs, you always know which model (and version) populated a document field, ensuring queries remain compatible with ingestion pipelines.

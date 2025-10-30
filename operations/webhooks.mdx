@@ -1,361 +1,105 @@
 ---
 title: "Webhooks"
-description: "Configure, secure, and operate webhooks for event notifications"
+description: "Respond to Mixpeek events without polling"
 ---
 
-<Note>
-  Webhooks let Mixpeek notify your systems when events occur in real time. Use them to trigger workflows, invalidate caches, and keep downstream systems in sync without polling.
-</Note>
+Webhooks notify your systems when ingestion, enrichment, or retrieval events occur. The Engine writes events to MongoDB, Celery Beat dispatches them, and Mixpeek delivers HTTP POST requests (or channel-specific messages) until acknowledged.
 
-## What are webhooks?
+## Event Flow
 
-- **Outbound notifications**: Mixpeek sends HTTP POST requests to your endpoints when events occur
-- **Low latency**: Receive changes in near real time to kick off downstream jobs
-- **Channel-flexible**: Deliver to URLs (webhook), Slack, Email, or SMS via channel configs
-- **Cache-aware**: Events include cache invalidation scopes for maintaining consistency
+```
+Engine → MongoDB (webhook_events) → Celery Beat → Celery Worker → HTTP POST → Your endpoint
+```
 
-## Event types
+- Events persist until the worker receives a 2xx response.
+- Retries use exponential backoff; failures remain in MongoDB for inspection.
+- Delivery includes cache scopes so you can invalidate selectively.
 
-Events are grouped into categories based on the resources they track:
+## Common Event Types
 
-<Tabs>
-  <Tab title="Object Lifecycle">
-    - `object.created` ✅ - New object ingested into bucket
-    - `object.updated` ✅ - Object content or metadata updated
-    - `object.deleted` ✅ - Object permanently deleted
-    - `object.redacted` ⏳ - PII stripped from object (planned)
-  </Tab>
-  
-  <Tab title="Collection Lifecycle">
-    - `collection.created` ✅ - New collection created
-    - `collection.updated` ✅ - Collection configuration updated
-    - `collection.deleted` ✅ - Collection deleted
-  </Tab>
-  
-  <Tab title="Taxonomy Lifecycle">
-    - `taxonomy.created` ✅ - New taxonomy created
-    - `taxonomy.updated` ⏳ - Taxonomy configuration updated (planned)
-    - `taxonomy.deleted` ⏳ - Taxonomy deleted (planned)
-    - `taxonomy.mapping.updated` ⏳ - Taxonomy mappings updated (planned)
-  </Tab>
-  
-  <Tab title="Cluster Lifecycle">
-    - `cluster.created` ✅ - New cluster created
-    - `cluster.updated` ⏳ - Cluster configuration updated (planned)
-    - `cluster.deleted` ⏳ - Cluster deleted (planned)
-  </Tab>
-</Tabs>
+| Event | Trigger | Payload Highlights |
+|-------|---------|--------------------|
+| `collection.documents.written` | Engine finishes writing documents to Qdrant | `collection_id`, `document_ids`, `index_signature` |
+| `object.created` | Object registered in a bucket | `bucket_id`, `object_id`, metadata snapshot |
+| `batch.completed` | Batch processing succeeded | `batch_id`, `collection_ids`, counts |
+| `cluster.completed` | Clustering run finished | `cluster_id`, `run_id`, artifact URIs |
+| `taxonomy.materialized` | Taxonomy enrichment completed | `taxonomy_id`, `collection_id`, `updated_document_count` |
 
-<Info>
-  **Status Legend**: ✅ Currently implemented | ⏳ Planned for future release
-</Info>
+Use `/api-reference/webhooks/list-webhooks` to see the full catalog.
 
-## Channels
-
-<CardGroup cols={2}>
-  <Card title="Webhook (HTTP)" icon="link">
-    POST to your HTTPS endpoint with optional custom headers and a JSON body
-  </Card>
-  
-  <Card title="Slack" icon="message">
-    Notify a Slack channel via a webhook URL and template
-  </Card>
-  
-  <Card title="Email" icon="envelope">
-    Send email notifications with a subject/body template
-  </Card>
-  
-  <Card title="SMS" icon="phone">
-    Short text alerts for critical events
-  </Card>
-</CardGroup>
-
-## Delivery model
-
-- **Request**: For webhook channel, Mixpeek issues an HTTP POST to your configured `url`
-- **Headers**: Optional custom headers are included (e.g., shared secret)
-- **Timeout**: Delivery attempts honor a configurable request timeout (default 10s)
-- **Payload**: JSON body, optionally rendered from a Jinja2 `payload_template`
-- **Success**: Any 2xx response code is treated as success
-
-<Note>
-  Keep webhook endpoints idempotent and return quickly (e.g., enqueue work and respond 200). Long processing should happen asynchronously in your system.
-</Note>
-
-## Create a webhook
-
-Use the API to register a webhook with one or more channels and event types:
+## Create a Webhook
 
 ```bash
-curl -X POST "https://api.mixpeek.com/v1/organizations/webhooks/" \
-  -H "Authorization: Bearer $MIXPEEK_API_KEY" \
+curl -sS -X POST "$MP_API_URL/v1/organizations/webhooks" \
+  -H "Authorization: Bearer $MP_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-        "webhook_name": "prod-events",
-        "event_types": ["object.created", "object.updated", "cluster.created"],
-        "channels": [
-          {
-            "channel": "webhook",
-            "configs": {
-              "url": "https://example.com/hooks/mixpeek",
-              "headers": { "X-Mixpeek-Secret": "${WEBHOOK_SECRET}" },
-              "timeout": 10
-            }
-          }
-        ]
-      }'
+    "webhook_name": "prod-notifications",
+    "event_types": [
+      "collection.documents.written",
+      "cluster.completed"
+    ],
+    "channels": [
+      {
+        "channel": "webhook",
+        "configs": {
+          "url": "https://hooks.example.com/mixpeek",
+          "headers": { "X-Mixpeek-Secret": "super-secret"},
+          "timeout": 10
+        }
+      }
+    ]
+  }'
 ```
 
-## Standard payload structure
+Mixpeek also supports Slack, email, and SMS channels via channel-specific configs.
 
-All webhook events follow a consistent structure:
+## Payload Structure
 
 ```json
 {
-  "event_id": "evt_abc123",
-  "event_type": "object.created",
-  "occurred_at": "2025-10-08T16:09:00Z",
-  "namespace": "acme",
-  "collection": "articles",
-  "actor": "system",
+  "event_id": "evt_123",
+  "event_type": "collection.documents.written",
+  "occurred_at": "2025-10-28T10:03:22Z",
+  "namespace_id": "ns_prod",
   "subject": {
-    "type": "object",
-    "id": "obj_abc123"
-  },
-  "version": "v1",
-  "index_signature": "sig_c1f9...",
-  "cache_scope_to_invalidate": {
-    "scope": "key",
-    "keys": ["mixpeek:acme:articles:obj_abc123"]
+    "type": "collection",
+    "id": "col_products"
   },
   "metadata": {
-    "object_id": "obj_abc123",
-    "bucket_id": "bkt_xyz",
-    "namespace_id": "ns_acme",
-    "content_type": "video/mp4"
-  }
-}
-```
-
-### Cache invalidation scopes
-
-Events include cache invalidation information to help maintain consistency:
-
-| Scope | When Used | Example |
-|-------|-----------|---------|
-| `KEY` | Document-level changes (create, update, delete) | Single object modified |
-| `COLLECTION` | Collection-wide changes (config, taxonomy, ranker) | Collection settings updated |
-| `NAMESPACE` | Namespace-wide changes (model rollout) | Global model update |
-
-<Info>
-  Use the `cache_scope_to_invalidate` field to intelligently invalidate caches in your application.
-</Info>
-
-## Receive webhooks (server examples)
-
-<Tabs>
-  <Tab title="Node (Express)">
-
-```javascript
-import express from "express";
-
-const app = express();
-app.use(express.json());
-
-app.post("/hooks/mixpeek", (req, res) => {
-  const signature = req.header("X-Mixpeek-Secret");
-  // Verify shared secret or signature here
-
-  const { event_type, event_id, data } = req.body;
-  // Enqueue work and ack quickly
-  res.sendStatus(200);
-});
-
-app.listen(3000);
-```
-
-  </Tab>
-  <Tab title="Python (Flask)">
-
-```python
-from flask import Flask, request, jsonify
-
-app = Flask(__name__)
-
-@app.post("/hooks/mixpeek")
-def mixpeek_hook():
-    signature = request.headers.get("X-Mixpeek-Secret")
-    # Verify shared secret or signature here
-
-    payload = request.get_json(force=True)
-    # Enqueue work and respond quickly
-    return ("", 200)
-
-if __name__ == "__main__":
-    app.run(port=3000)
-```
-
-  </Tab>
-</Tabs>
-
-## Event-specific examples
-
-<Tabs>
-  <Tab title="Object Created">
-```json
-{
-  "event_type": "object.created",
-  "subject": { "type": "object", "id": "obj_abc123" },
-  "metadata": {
-    "object_id": "obj_abc123",
-    "bucket_id": "bkt_xyz",
-    "namespace_id": "ns_acme",
-    "content_type": "video/mp4"
+    "document_count": 100,
+    "collection_id": "col_products",
+    "index_signature": "sig_xyz789"
   },
-  "cache_scope_to_invalidate": {
-    "scope": "key",
-    "keys": ["mixpeek:ns_acme:col_articles:obj_abc123"]
-  }
-}
-```
-  </Tab>
-
-  <Tab title="Collection Updated">
-```json
-{
-  "event_type": "collection.updated",
-  "subject": { "type": "collection", "id": "col_abc123" },
-  "metadata": {
-    "collection_id": "col_abc123",
-    "collection_name": "articles",
-    "namespace_id": "ns_acme",
-    "updated_fields": ["taxonomy_applications", "metadata"]
-  },
-  "cache_scope_to_invalidate": {
+  "cache_scope": {
     "scope": "collection",
-    "collection_id": "col_abc123"
+    "collection_id": "col_products"
   }
 }
 ```
-  </Tab>
 
-  <Tab title="Taxonomy Created">
-```json
-{
-  "event_type": "taxonomy.created",
-  "subject": { "type": "taxonomy", "id": "tax_abc123" },
-  "metadata": {
-    "taxonomy_id": "tax_abc123",
-    "taxonomy_name": "categories",
-    "taxonomy_type": "flat",
-    "namespace_id": "ns_acme",
-    "version": 1
-  }
-}
-```
-  </Tab>
-</Tabs>
+Use `event_id` for deduplication and store payloads for auditing.
 
-## Security & reliability
+## Security & Reliability
 
-<CardGroup cols={2}>
-  <Card title="Verify origin" icon="shield">
-    Use a shared secret in headers (e.g., <code>X-Mixpeek-Secret</code>) and verify on receipt
-  </Card>
-  
-  <Card title="HTTPS only" icon="lock">
-    Terminate TLS and reject plain HTTP endpoints
-  </Card>
-  
-  <Card title="Idempotency" icon="repeat">
-    Deduplicate using <code>event_id</code> to safely handle retries
-  </Card>
-  
-  <Card title="Fast acks" icon="bolt">
-    Respond 2xx quickly; do heavy work asynchronously
-  </Card>
-</CardGroup>
+- Require HTTPS endpoints; reject plaintext URLs.
+- Include a shared secret header (`X-Mixpeek-Secret`) and verify before processing.
+- Respond quickly (<10s). Offload heavy work to background jobs and return `200`.
+- Use idempotent handlers; Mixpeek may retry on failure or timeout.
+- Monitor webhook delivery with your logging pipeline; correlate by `event_id`.
 
-## Best practices
+## Operational Tips
 
-<CardGroup cols={2}>
-  <Card title="Store event IDs" icon="database">
-    Persist <code>event_id</code> to deduplicate retries and track event history
-  </Card>
-  
-  <Card title="Use cache scopes" icon="refresh">
-    Leverage <code>cache_scope_to_invalidate</code> to intelligently refresh your caches
-  </Card>
-  
-  <Card title="Subscribe selectively" icon="filter">
-    Only subscribe to event types your application needs to reduce noise
-  </Card>
-  
-  <Card title="Monitor delivery" icon="chart-line">
-    Track webhook delivery success rates and response times in your observability stack
-  </Card>
-</CardGroup>
-
-## Operate & monitor
-
-- **Observability**: Track delivery successes/failures in your logs/metrics; correlate by `event_id`
-- **Alerting**: Page on sustained non‑2xx rates from your webhook endpoints
-- **Tasks**: Prefer webhooks over tight polling; for long jobs, see [Tasks](/processing/tasks)
-- **Testing**: Use the E2E webhook test suite for comprehensive validation
-
-## Troubleshooting
-
-<Steps>
-  <Step title="401/403 responses">
-    Ensure your endpoint accepts the request and validates the shared secret correctly
-  </Step>
-  <Step title="Timeouts">
-    Keep processing under the configured timeout; otherwise quickly ack and process async
-  </Step>
-  <Step title="Unexpected payload">
-    If using <code>payload_template</code>, validate your template; otherwise log the raw body for inspection
-  </Step>
-  <Step title="Missing events">
-    Verify your webhook subscription includes the expected <code>event_types</code> and is <code>is_active: true</code>
-  </Step>
-  <Step title="Duplicate events">
-    Events may be delivered multiple times on retry; always use <code>event_id</code> for deduplication
-  </Step>
-</Steps>
+1. Subscribe only to the events you need to reduce noise.
+2. Combine webhook notifications with the Tasks API for full status context.
+3. Use cache scopes to invalidate retriever caches efficiently (`collection`, `namespace`, or `key`).
+4. Store webhook definitions in infrastructure-as-code so environments stay consistent.
+5. Alert on sustained non-2xx responses—Mixpeek will keep retrying, but you should fix endpoint issues quickly.
 
 ## References
 
-<CardGroup cols={2}>
-  <Card title="List Webhooks" icon="list" href="/api-reference/webhooks/list-webhooks">
-    View all webhook subscriptions for your organization
-  </Card>
-  
-  <Card title="Create Webhook" icon="plus" href="/api-reference/webhooks/create-webhook">
-    Register a new webhook subscription
-  </Card>
-  
-  <Card title="Get Webhook" icon="file" href="/api-reference/webhooks/get-webhook">
-    Retrieve webhook details by ID
-  </Card>
-  
-  <Card title="Update Webhook" icon="pen" href="/api-reference/webhooks/update-webhook">
-    Modify webhook configuration
-  </Card>
-  
-  <Card title="Delete Webhook" icon="trash" href="/api-reference/webhooks/delete-webhook">
-    Remove a webhook subscription
-  </Card>
-  
-  <Card title="Tasks" icon="list-check" href="/processing/tasks">
-    Monitor asynchronous jobs that trigger webhook events
-  </Card>
-  
-  <Card title="Observability" icon="chart-mixed" href="/operations/observability">
-    Health checks and monitoring for webhook delivery
-  </Card>
-  
-  <Card title="Security" icon="shield" href="/operations/security">
-    Authentication and authorization best practices
-  </Card>
-</CardGroup>
-
+- [Create Webhook](/api-reference/webhooks/create-webhook)
+- [List Webhooks](/api-reference/webhooks/list-webhooks)
+- [Delete Webhook](/api-reference/webhooks/delete-webhook)
+- [Tasks](/processing/tasks) – track the jobs that trigger webhook events
+- [Security](/operations/security) – authentication, tenancy, and secret management

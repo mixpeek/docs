@@ -1,93 +1,91 @@
 ---
 title: "Tasks"
-description: "Monitor and manage asynchronous processing jobs"
+description: "Track asynchronous jobs across Mixpeek"
 ---
 
-<Note>
-  Tasks represent asynchronous jobs in Mixpeek (e.g., batch submissions, extraction runs). Use tasks to track status, progress, and results without blocking requests.
-</Note>
+Tasks provide a uniform way to monitor long-running operations (batch processing, clustering, taxonomy materialization, namespace migrations, etc.). Every task exposes a status from the shared `TaskStatusEnum`.
 
-## Overview
+## TaskStatusEnum
 
-- **What they are**: Records of long-running operations (ingestion, enrichment, clustering, etc.).
-- **When created**: Automatically when you submit batches or trigger other long-running operations.
-- **How used**: Poll or list tasks to monitor execution; optionally cancel when supported.
+```
+PENDING → PROCESSING → COMPLETED
+            ↘
+            FAILED
+```
 
-## Lifecycle
+Additional values include `IN_PROGRESS`, `CANCELED`, `SKIPPED`, `UNKNOWN`, `DRAFT`, `ACTIVE`, `ARCHIVED`, and `SUSPENDED`. All async resources in Mixpeek adopt this enum, so your polling logic works everywhere.
+
+## Anatomy of a Task
+
+```json
+{
+  "task_id": "tsk_processing_123",
+  "task_type": "api_buckets_batches_process",
+  "status": "PROCESSING",
+  "inputs": ["batch_xyz789"],
+  "outputs": null,
+  "additional_data": {
+    "batch_id": "batch_xyz789",
+    "bucket_id": "bkt_products",
+    "job_id": "ray_job_123"
+  },
+  "error_message": null
+}
+```
+
+- Cached in Redis for ~24 hours (fast lookup).
+- Persisted in MongoDB for historical auditing.
+- `additional_data` stores resource-specific details (e.g., Ray job IDs).
+
+## Polling Strategy
 
 <Steps>
-  <Step title="Created">
-    The task is created by the API when you start an async operation
+  <Step title="Poll the task">
+    Query `/v1/tasks/{task_id}` with exponential backoff (start at 1s, cap at 30s).
   </Step>
-  <Step title="Queued">
-    Waiting for a worker to pick up
+  <Step title="Handle 404 gracefully">
+    After Redis TTL expires you may receive `404`; fall back to the underlying resource (batch, cluster, etc.).
   </Step>
-  <Step title="Processing">
-    Actively running
-  </Step>
-  <Step title="Completed/Failed/Canceled">
-    Finishes successfully, errors, or is canceled
+  <Step title="Switch to resource polling">
+    Use `/v1/buckets/{bucket_id}/batches/{batch_id}`, `/v1/clusters/{cluster_id}`, etc., for long-running operations.
   </Step>
 </Steps>
 
-<Frame>
-  ```mermaid
-  graph TD
-    A[Created] --> B[Queued]
-    B --> C[Processing]
-    C --> D[Completed]
-    C --> E[Failed]
-    B --> F[Canceled]
-    C --> F
-    style A fill:#FC5185,stroke:#333
-    style D fill:#4CAF50,stroke:#333
-    style E fill:#F44336,stroke:#333
-    style F fill:#9E9E9E,stroke:#333
-  ```
-</Frame>
+Example hybrid poller:
 
-## Statuses (API enum)
+```python
+while True:
+    try:
+        task = get_task(task_id)
+    except NotFound:
+        task = get_batch(bucket_id, batch_id)
 
-- **DRAFT**: Initial state for draft tasks (e.g., batch created but not submitted)
-- **PENDING**: Accepted and waiting to be picked up (queued)
-- **IN_PROGRESS**: Transitioning to active execution
-- **PROCESSING**: Actively executing the task
-- **COMPLETED**: Finished successfully; results available
-- **FAILED**: Error occurred during execution
-- **CANCELED**: Stopped before completion by user/system
-- **SKIPPED**: Intentionally not executed as part of a larger workflow
-- **UNKNOWN**: State could not be determined
+    if task.status == "COMPLETED":
+        break
+    if task.status == "FAILED":
+        raise RuntimeError(task.error_message)
+    time.sleep(delay)
+    delay = min(delay * 1.5, 30)
+```
 
-<Note>
-  UI/logs may show conceptual states like Created/Queued/Processing. These map roughly to DRAFT/PENDING/PROCESSING in the API enum.
-</Note>
+## Webhooks & Notifications
 
-## How tasks are created
+- Engine emits webhook events (e.g., `collection.documents.written`) when tasks complete relevant work.
+- Celery Beat dispatches those events to invalidate caches, update schemas, and notify external systems.
+- Prefer webhooks for near-real-time updates instead of aggressive polling.
 
-- Submitting a batch for processing creates a task
-- Other long-running routes may also create tasks depending on the operation
+## Managing Tasks
 
-## Manage tasks
+- `GET /v1/tasks/{task_id}` – fetch the latest status.
+- `POST /v1/tasks/list` – filter by type, status, namespace, or creation time.
+- `POST /v1/tasks/{task_id}/kill` – request cancellation (supported for batches and clustering jobs using Celery’s `AbortableAsyncResult`).
 
-- [Get Task Information](/api-reference/tasks/get-task-information)
-- [List Active Tasks](/api-reference/tasks/list-active-tasks)
-- [Kill Task](/api-reference/tasks/kill-task)
+## Best Practices
 
-## Best practices
+1. **Store task IDs** returned by submit endpoints.
+2. **Use exponential backoff** to avoid hammering the API.
+3. **Respect terminal states** (`COMPLETED`, `FAILED`, `CANCELED`) and surface errors to operators.
+4. **Leverage webhooks** for side-effects like cache invalidation or notifications.
+5. **Instrument monitoring**—task history in MongoDB plus webhook logs provide a full audit trail.
 
-- **Store task IDs**: Keep the returned `task_id` for later checks
-- **Timeouts**: Use timeouts/backoff when polling
-- **Error handling**: Handle `FAILED` and `CANCELED` states explicitly
-- **Webhooks**: Prefer webhooks for notifications over tight polling
-
-## See also
-
-<CardGroup cols={2}>
-  <Card title="Batching" icon="layer-group" href="/processing/batching">
-    Create batches and submit processing jobs
-  </Card>
-  
-  <Card title="Collections" icon="database" href="/ingestion/collections">
-    Where processed documents are written
-  </Card>
-</CardGroup> 
+Tasks keep the asynchronous parts of Mixpeek manageable—treat them as durable receipts for every long-running job.

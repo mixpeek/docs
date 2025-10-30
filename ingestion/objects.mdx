@@ -1,112 +1,100 @@
 ---
 title: "Objects & Blobs"
-description: "Structure, schema, and metadata for registered inputs"
+description: "Register raw multimodal assets inside buckets"
 ---
 
+Objects are the ingestion entry point. They live inside buckets, reference one or more blobs (files or JSON), and carry metadata that downstream collections preserve in lineage.
+
 <Note>
-  Objects are registered records inside a bucket that reference one or more blobs (files or JSON). Objects are validated against the bucket schema. Creating an object does not execute processing; collections handle processing later.
+  Creating an object does **not** trigger feature extraction. Processing happens when you create and submit a batch.
 </Note>
 
-## Overview
-
-- **Object**: Logical container you create in a bucket; holds one or more blobs and optional metadata.
-- **Blob**: A single file or JSON payload referenced by an object; must match the bucket schema field type.
-- **Lineage**: Downstream documents keep lineage to each object and blob.
-- **Processing**: Use batches or collection pipelines to process after registration.
-
-## Object shape
-
-Object creation uses this request body shape. See the full endpoint at [Create Object](/api-reference/bucket-objects/create-object).
+## Object Schema
 
 ```json
 {
   "key_prefix": "/products/red-sneaker",
-  "metadata": {"category": "shoes", "year": 2024},
-  "skip_duplicates": true,
+  "metadata": {
+    "category": "footwear",
+    "brand": "Acme"
+  },
   "blobs": [
     {
-      "property": "image_main",
-      "type": "image",
-      "data": "https://example.com/images/red-sneaker-front.jpg",
-      "metadata": {"mimetype": "image/jpeg"}
+      "property": "product_text",
+      "type": "text",
+      "data": "Comfortable sneaker with foam sole.",
+      "metadata": {
+        "language": "en"
+      }
     },
     {
-      "property": "specs",
-      "type": "json",
-      "data": {"title": "Red Sneaker", "sizes": [7,8,9,10]}
+      "property": "hero_image",
+      "type": "image",
+      "data": "https://cdn.example.com/red-sneaker.jpg"
     }
   ]
 }
 ```
 
-- `key_prefix` (optional): Logical path prefix applied to the object; helps organize downstream documents.
-- `metadata` (optional): Arbitrary JSON. Propagates to documents produced by collections.
-- `skip_duplicates` (optional): When true, identical blobs (by content hash) are skipped.
-- `blobs` (required): One or more blob entries.
+- **`key_prefix`** (optional) – Logical path to help organize downstream documents.
+- **`metadata`** (optional) – Arbitrary JSON copied into documents through field passthrough.
+- **`blobs`** (required) – Each entry must match a property defined in the bucket schema.
 
-## Blob shape
+Supported blob types: `text`, `json`, `image`, `video`, `audio`, `binary`. Blob `data` can be raw content, a base64 payload, or a URL Mixpeek can fetch.
 
-Blobs map to fields in your bucket schema. See field types in your bucket definition.
+## Create an Object
 
-```json
-{
-  "property": "image_main",
-  "key_prefix": "/images", 
-  "type": "image",
-  "data": "https://example.com/images/red-sneaker-front.jpg",
-  "metadata": {"mimetype": "image/jpeg"}
-}
+```bash
+curl -sS -X POST "$MP_API_URL/v1/buckets/<bucket_id>/objects" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
+  -H "Content-Type: application/json" \
+  -d '{ ... }'
 ```
 
-- `property` (required): Schema field name in the bucket.
-- `key_prefix` (optional): Path segment for this blob (appended to the object's prefix if provided).
-- `type` (required): Must match the schema field type (e.g., `image`, `video`, `pdf`, `json`).
-- `data` (required): The payload. For files, a URL; for JSON fields, inline JSON.
-- `metadata` (optional): Blob-level metadata; merged into downstream processing context.
+Useful options:
 
-## Batch create
+- `skip_duplicates`: avoid reprocessing identical blobs by content hash.
+- `key_prefix`: namespacing for logical groupings.
+- `metadata`: provide information used later by taxonomies or retrievers.
 
-Register multiple objects in a single request using [Create Objects in Batch](/api-reference/bucket-objects/create-objects-in-batch).
+## Retrieve Objects
+
+```bash
+curl -sS -X GET "$MP_API_URL/v1/buckets/<bucket_id>/objects/<object_id>?return_url=true" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE"
+```
+
+- `return_url=true` generates presigned URLs for blobs (expires ≈ 1 hour).
+- Listing objects supports rich filtering and pagination: `POST /v1/buckets/<bucket_id>/objects/list`.
+
+## Lineage
+
+Downstream documents retain:
 
 ```json
 {
-  "objects": [
-    { "key_prefix": "/products/red-sneaker", "blobs": [ {"property": "image_main", "type": "image", "data": "https://example.com/red.jpg"} ] },
-    { "key_prefix": "/products/blue-sneaker", "blobs": [ {"property": "image_main", "type": "image", "data": "https://example.com/blue.jpg"} ] }
+  "root_object_id": "obj_123",
+  "root_bucket_id": "bkt_catalog",
+  "source_type": "bucket",
+  "source_object_id": "obj_123",
+  "source_blobs": [
+    { "blob_id": "blob_abc", "blob_property": "product_text", "blob_type": "text" }
   ]
 }
 ```
 
-## Behavior & validation
+- `source_blobs` link back to object blobs (without duplicating large content).
+- `document_blobs` contain extractor-generated artifacts (e.g., thumbnails).
+- To inspect the entire decomposition tree for an object, call `/v1/objects/{object_id}/decomposition-tree`.
 
-- **Schema enforcement**: Each blob’s `property` and `type` must match the bucket schema; invalid objects are rejected.
-- **Prefixes**: `object.key_prefix` and `blob.key_prefix` combine to form a logical path carried into downstream documents.
-- **Metadata propagation**: `object.metadata` is copied to downstream documents (collections may add more).
-- **Idempotence**: Use `skip_duplicates` to avoid re-registering the same content.
+## Best Practices
 
-## Related endpoints
+- **Define bucket schemas** up front so object validation fails fast.
+- **Set metadata** that retrievers or taxonomies will use for filtering.
+- **Chunk large uploads** into multiple objects instead of massive blobs for better parallelism.
+- **Use batches** (`/v1/buckets/{bucket}/batches`) to process groups of objects efficiently.
+- **Track key prefixes** to simplify downstream grouping or deduplication during retrieval.
 
-- [Create Object](/api-reference/bucket-objects/create-object)
-- [Create Objects in Batch](/api-reference/bucket-objects/create-objects-in-batch)
-
-## See also
-
-<CardGroup cols={2}>
-  <Card title="Uploads" icon="arrow-up-from-bracket" href="/ingestion/uploads">
-    How to submit single and batch object registrations
-  </Card>
-  
-  <Card title="Buckets" icon="bucket" href="/ingestion/buckets">
-    Define schemas and organize objects
-  </Card>
-</CardGroup>
-
-<CardGroup cols={2}>
-  <Card title="Collections" icon="database" href="/ingestion/collections">
-    Configure feature extractors and outputs
-  </Card>
-  
-  <Card title="Batching" icon="layer-group" href="/processing/batching">
-    Submit grouped objects for asynchronous processing
-  </Card>
-</CardGroup>
+Objects are the immutable source of truth. Once registered, they can feed any number of collections, extractors, and enrichment pipelines without re-uploading files.

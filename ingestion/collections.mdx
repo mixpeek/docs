@@ -1,120 +1,99 @@
 ---
 title: "Collections"
-description: "Store processed documents with consistent schemas for retrieval"
+description: "Transform objects into query-ready documents"
 ---
 
-<Note>
-  Collections are where processed documents live. They define how outputs are stored after feature extraction and serve as the main retrieval surface.
-</Note>
+Collections convert objects into documents by running configured feature extractors on the Engine. They define input mappings, passthrough fields, and enrichment hooks. Documents inherit lineage back to the original object no matter how many tiers of collections you chain together.
 
-## Overview
-
-- **What they store**: Structured documents produced by feature extractors.
-- **Inputs**: Typically ingest from a bucket (raw objects) or another collection.
-- **Consistency**: All documents in a collection share a schema determined by configured feature extractors.
-- **Retrieval**: Retrievers query one or more collections to return ranked results.
-
-## Collection model
-
-Minimum fields when creating a collection. See the endpoint at [Create Collection](/api-reference/collections/create-collection).
-
-```json
-{
-  "collection_name": "products_v1",
-  "description": "Product catalog (images + text)",
-  "source": {"type": "BUCKET", "bucket_id": "bkt_123"},
-  "feature_extractors": [
-    {
-      "feature_extractor_name": "gte_modernbert_base",
-      "version": "1.0.0"
-    }
-  ],
-  "metadata": {"env": "prod"}
-}
-```
-
-- `source.type`: `BUCKET` or `COLLECTION`.
-- `feature_extractors`: Which models generate vectors/fields for documents.
-- `metadata`: User-defined metadata attached to the collection record.
-
-## Create a collection
-
-- API: Create Collection
-- Method: POST
-- Path: `/v1/collections`
-- Reference: [API Reference](/api-reference/collections/create-collection)
+## Create a Collection
 
 ```bash
-curl -X POST https://api.mixpeek.com/v1/collections \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "X-Namespace: ns_123" \
+curl -sS -X POST "$MP_API_URL/v1/collections" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
   -H "Content-Type: application/json" \
   -d '{
-    "collection_name": "products_v1",
-    "description": "Product catalog (images + text)",
-    "source": {"type": "BUCKET", "bucket_id": "bkt_123"},
-    "feature_extractors": [
-      {"feature_extractor_name": "gte_modernbert_base", "version": "1.0.0"}
+    "collection_name": "product-documents",
+    "description": "Semantic embeddings for product copy",
+    "source": {
+      "type": "bucket",
+      "bucket_id": "<bucket_id>"
+    },
+    "feature_extractor": {
+      "feature_extractor_name": "text_extractor",
+      "version": "v1",
+      "input_mappings": {
+        "text": "product_text"
+      },
+      "field_passthrough": [
+        { "source_path": "metadata.category" },
+        { "source_path": "metadata.brand" }
+      ],
+      "parameters": {
+        "model": "multilingual-e5-large-instruct",
+        "normalize": true
+      }
+    },
+    "taxonomy_applications": [
+      {
+        "taxonomy_id": "tax_product_categories",
+        "execution_mode": "materialize"
+      }
     ]
   }'
 ```
 
-## Describe available features
+Key fields:
 
-List configured feature addresses and metadata for a collection.
+- `source` – either `{ "type": "bucket", "bucket_id": ... }` or `{ "type": "collection", "collection_id": ... }`.
+- `feature_extractor` – singular object in v2 (breaking change from v1). Configure model, input mappings, passthrough fields, and runtime parameters.
+- `taxonomy_applications` – optional list of taxonomies to materialize (`materialize`) or attach on demand (`on_demand`).
 
-- **API**: Describe Collection Features
-- **Method**: GET
-- **Path**: `/v1/collections/{collection_identifier}/features`
-- **Reference**: [API Reference](/api-reference/collections/describe-collection-features)
+## Deterministic Output Schema
 
-## Manage collections
+Collections compute an `output_schema` immediately upon creation based on:
 
-- [Get Collection](/api-reference/collections/get-collection)
-- [Update Collection](/api-reference/collections/update-collection)
-- [Delete Collection](/api-reference/collections/delete-collection)
-- [List Collections](/api-reference/collections/list-collections)
+1. Field passthrough definitions
+2. Feature extractor output schema
 
-## Documents in collections
+You can query it via `GET /v1/collections/{collection_id}` before any documents exists—perfect for setting up downstream systems.
 
-Documents are created by pipelines and stored in the target collection. Use Collection Documents APIs to read/update.
+## Multi-Tier Processing
 
-- [Get a Document by ID](/api-reference/collection-documents/get-a-document-by-id)
-- [Update Document](/api-reference/collection-documents/update-document)
-- [Delete a Document by ID](/api-reference/collection-documents/delete-a-document-by-id)
-- [List Documents](/api-reference/collection-documents/list-documents)
-- [Create a Document](/api-reference/collection-documents/create-a-document)
+Collections can reference other collections as sources to build decomposition trees:
 
-## Used by
+```
+Bucket (videos) ──▶ Collection A (frames)
+                    └─▶ Collection B (scenes)
+                           └─▶ Collection C (scene embeddings)
+```
 
-- [Retrievers](/retrieval/retrievers): Query collections for search results.
-- [Taxonomies](/enrichment/taxonomies): Enrich documents using similarity joins; configured against collection IDs.
-- [Clusters](/enrichment/clusters): Build and analyze clusters over vectors from one or more collections.
+- Tiered processing respects dependencies. Ray processes a tier only after upstream tiers finish.
+- Every document stores `root_object_id`, `source_collection_id`, `source_document_id`, `lineage_path`, and `processing_tier`.
 
-## Behavior & validation
+## Collection Operations
 
-- **Schema**: Determined by feature extractor outputs; documents must conform.
-- **Lineage**: Documents maintain references to the source object and processing metadata.
-- **Enablement**: Collections can be enabled/disabled via the update endpoint.
+- **Get collection**: `GET /v1/collections/{id}`
+- **List collections**: `POST /v1/collections/list` (filter by document count, taxonomy count, etc.)
+- **Update taxonomy applications / metadata / enabled flag**: `PATCH /v1/collections/{id}`
+- **Delete collection**: `DELETE /v1/collections/{id}`
 
-## See also
+## Documents Produced
 
-<CardGroup cols={2}>
-  <Card title="Buckets" icon="bucket" href="/ingestion/buckets">
-    Define schemas for raw objects and register uploads
-  </Card>
-  
-  <Card title="Feature Extractors" icon="wand-magic-sparkles" href="/processing/feature-extractors">
-    Supported extractors and configurations
-  </Card>
-</CardGroup>
+Each document includes:
 
-<CardGroup cols={2}>
-  <Card title="Retrievers" icon="magnifying-glass" href="/retrieval/retrievers">
-    Compose staged pipelines to search collections
-  </Card>
-  
-  <Card title="Collection Documents" icon="table" href="/api-reference/collection-documents/list-documents">
-    APIs to query and manage documents
-  </Card>
-</CardGroup>
+- Passthrough metadata (`metadata.category`, `metadata.brand`, etc.)
+- Feature URI outputs (e.g., `text_extractor_v1_embedding`)
+- `source_blobs` referencing original object blobs
+- Optional `document_blobs` with extractor artifacts (thumbnails, intermediate results)
+- `internal_metadata.processing_history` when `include_processing_history` is set on batch submission
+
+Use `/v1/collections/{collection_id}/documents/list` for structured filters, pagination, and presigned URLs, or `/v1/retrievers` for pipeline-based retrieval.
+
+## Best Practices
+
+1. **Keep collections focused**—one extractor per collection (v2) encourages composable pipelines.
+2. **Use passthrough fields** to expose object metadata for taxonomy joins and retriever filters.
+3. **Leverage `source.type=collection`** for multi-tier workflows (e.g., video → frames → scenes).
+4. **Attach taxonomies** either as materialized enrichments or retriever stages, depending on latency and cost requirements.
+5. **Monitor document counts** with `GET /v1/collections/{id}` to plan Qdrant shard sizing.

@@ -1,254 +1,283 @@
 ---
 title: "Quickstart"
-description: "Get up and running with Mixpeek in minutes"
+description: "Ingest data, extract features, and run your first retriever"
 ---
 
 <Note>
-  This quickstart guide will walk you through creating a simple multimodal search application with Mixpeek. You'll learn how to ingest content, extract features, and build a search endpoint.
+  This guide spins up the end-to-end Mixpeek workflow: create an isolated namespace, register raw objects, materialize features through the Engine, and query results with a stage-based retriever. Every request matches the current OpenAPI specification.
 </Note>
 
-[Watch an Intro Video](/studio/quickstart)
+[Prefer video? Watch the walkthrough →](/studio/quickstart)
 
 ## Prerequisites
 
-Before you begin, make sure you have:
-
-- A Mixpeek account (sign up at [mixpeek.com/start](https://mixpeek.com/start))
-- Your API key (found in your dashboard)
-- Basic familiarity with REST APIs
-
-## Base URL and Headers
-
-All requests use the base URL `https://api.mixpeek.com` and require an API key. Most endpoints also require a namespace header.
+- A Mixpeek account and API key (obtain one at [mixpeek.com/start](https://mixpeek.com/start))
+- `curl` (or an HTTP client of your choice)
+- Basic familiarity with JSON payloads
 
 ```bash
-export API_URL="https://api.mixpeek.com"
-export API_KEY="YOUR_API_KEY"
-
-# Common headers (example usage shown in each step)
-# Authorization: Bearer $API_KEY
-# X-Namespace: <namespace_id>
+export MP_API_URL="https://api.mixpeek.com"
+export MP_API_KEY="sk_live_replace_me"
 ```
 
-## 1) Create a Namespace
-
-Namespaces isolate data and queries. You can also use an existing namespace if you have one.
+All subsequent examples send two headers:
 
 ```bash
-curl -sS -X POST "$API_URL/v1/namespaces" \
-  -H "Authorization: Bearer $API_KEY" \
+-H "Authorization: Bearer $MP_API_KEY"
+-H "X-Namespace: ns_quickstart"   # replace with your namespace id once created
+```
+
+## 1. Create (or Choose) a Namespace
+
+Namespaces guarantee tenant isolation across MongoDB, Qdrant, Redis, and task execution. If you already have one, skip to step 2.
+
+```bash
+curl -sS -X POST "$MP_API_URL/v1/namespaces" \
+  -H "Authorization: Bearer $MP_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "namespace_name": "quickstart",
-    "description": "My first Mixpeek project",
+    "description": "Docs quickstart namespace",
     "feature_extractors": [
-      { "feature_extractor_name": "video_extractor", "version": "1.0.0" }
+      { "feature_extractor_name": "text_extractor", "version": "v1" }
     ]
   }'
 ```
 
-Note the returned `namespace_id` and use it in `X-Namespace` for subsequent calls.
-
-## 2) Create a Bucket
+Copy the returned `namespace_id` and export it:
 
 ```bash
-curl -sS -X POST "$API_URL/v1/buckets" \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "X-Namespace: <namespace_id>" \
+export MP_NAMESPACE="ns_quickstart"
+```
+
+## 2. Create a Bucket
+
+Buckets validate object shape and track blobs in S3-compatible storage.
+
+```bash
+curl -sS -X POST "$MP_API_URL/v1/buckets" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
   -H "Content-Type: application/json" \
   -d '{
-    "bucket_name": "content-bucket",
-    "description": "Storage for our content",
-    "bucket_schema": {
+    "bucket_name": "quickstart-bucket",
+    "description": "Sample product descriptions",
+    "schema": {
       "properties": {
-        "my_img": { "type": "image" }
+        "product_text": { "type": "text", "required": true }
       }
     }
   }'
 ```
 
-Capture the `bucket_id` from the response.
+Set an environment variable for the `bucket_id` returned above.
 
-## 3) Create a Collection
+## 3. Define a Collection with a Feature Extractor
 
-Collections define processing lineage and (optionally) feature extractors.
+Collections map bucket objects into documents by running feature extractors on the Engine. In v2 the `feature_extractor` field is singular.
 
 ```bash
-curl -sS -X POST "$API_URL/v1/collections" \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "X-Namespace: <namespace_id>" \
+curl -sS -X POST "$MP_API_URL/v1/collections" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
   -H "Content-Type: application/json" \
   -d '{
-    "collection_name": "content-collection",
-    "description": "Processed content documents",
-    "source": { "type": "bucket", "bucket_id": "<bucket_id>" }
+    "collection_name": "quickstart-docs",
+    "description": "Embeddings for product text",
+    "source": {
+      "type": "bucket",
+      "bucket_id": "<bucket_id>"
+    },
+    "feature_extractor": {
+      "feature_extractor_name": "text_extractor",
+      "version": "v1",
+      "input_mappings": {
+        "text": "product_text"
+      },
+      "field_passthrough": [
+        { "source_path": "metadata.category" }
+      ],
+      "parameters": {
+        "model": "multilingual-e5-large-instruct"
+      }
+    }
   }'
 ```
 
-Capture the `collection_id`.
+Collections immediately expose their deterministic `output_schema`, so you can build integrations before any documents are processed.
 
-## 4) Upload an Object
+## 4. Register an Object
 
-Creating an object registers the files but does not start processing.
-
-Processing requires creating and submitting a batch.
+Objects simply register blobs and metadata in the bucket. Processing happens later.
 
 ```bash
-curl -sS -X POST "$API_URL/v1/buckets/<bucket_id>/objects" \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "X-Namespace: <namespace_id>" \
+curl -sS -X POST "$MP_API_URL/v1/buckets/<bucket_id>/objects" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
   -H "Content-Type: application/json" \
   -d '{
-    "key_prefix": "/sample",
+    "key_prefix": "/catalog",
+    "metadata": { "category": "headphones" },
     "blobs": [
       {
-        "property": "my_img",
-        "type": "image",
-        "data": "https://example.com/sample-image.jpg"
+        "property": "product_text",
+        "type": "text",
+        "data": "Lightweight wireless headphones with active noise cancellation."
       }
-    ],
-    "metadata": { "category": "demo" }
+    ]
   }'
 ```
 
-Capture the `object_id` from the response.
+Store the returned `object_id`.
 
-## 5) Create a Batch
+## 5. Create and Submit a Batch
+
+Flatten objects into per-extractor artifacts and dispatch the Engine.
 
 ```bash
-curl -sS -X POST "$API_URL/v1/buckets/<bucket_id>/batches" \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "X-Namespace: <namespace_id>" \
+curl -sS -X POST "$MP_API_URL/v1/buckets/<bucket_id>/batches" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
   -H "Content-Type: application/json" \
   -d '{
     "object_ids": ["<object_id>"]
   }'
 ```
 
-Capture the `batch_id` from the response.
-
-## 6) Submit the Batch for Processing
+Submit the batch for processing (note the returned `task_id`):
 
 ```bash
-curl -sS -X POST "$API_URL/v1/buckets/<bucket_id>/batches/<batch_id>/submit" \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "X-Namespace: <namespace_id>"
+curl -sS -X POST "$MP_API_URL/v1/buckets/<bucket_id>/batches/<batch_id>/submit" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
+  -H "Content-Type: application/json" \
+  -d '{ "include_processing_history": true }'
 ```
 
-This returns a `task_id` you can poll.
+## 6. Track Task Progress
 
-## 7) Check Task Status
+Task metadata lives in Redis with MongoDB persistence. Poll until `status` is `COMPLETED` (fallback to the batch resource if the task ages out after 24h).
 
 ```bash
-curl -sS -X GET "$API_URL/v1/tasks/<task_id>" \
-  -H "Authorization: Bearer $API_KEY"
+curl -sS -X GET "$MP_API_URL/v1/tasks/<task_id>" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE"
 ```
 
-Wait for `status` to become `COMPLETED`.
-
-## 8) List Documents in the Collection
+## 7. Inspect Documents
 
 ```bash
-curl -sS -X POST "$API_URL/v1/collections/<collection_id>/documents/list" \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "X-Namespace: <namespace_id>" \
+curl -sS -X POST "$MP_API_URL/v1/collections/<collection_id>/documents/list" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
   -H "Content-Type: application/json" \
   -d '{
     "limit": 10,
-    "return_url": true
+    "filters": {
+      "field": "metadata.category",
+      "operator": "eq",
+      "value": "headphones"
+    },
+    "return_url": false
   }'
 ```
 
-## (Optional) 9) Create and Execute a Retriever
+Every document includes lineage back to the root object (`root_object_id`) and feature URIs you can query later.
 
-First, inspect available stages:
+## 8. Create a Retriever
 
-```bash
-curl -sS -X GET "$API_URL/v1/retrievers/stages" \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "X-Namespace: <namespace_id>"
-```
-
-Then create a simple retriever (adapt parameters to the stages you choose):
+Retrievers combine stage-based pipelines and cache-aware execution. The example below performs semantic search with stage-level sorting.
 
 ```bash
-curl -sS -X POST "$API_URL/v1/retrievers" \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "X-Namespace: <namespace_id>" \
+curl -sS -X POST "$MP_API_URL/v1/retrievers" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
   -H "Content-Type: application/json" \
   -d '{
-    "retriever_name": "content-retriever",
-    "description": "Search across processed content",
-    "input_schema": { "properties": { "query_text": { "type": "string" } } },
+    "retriever_name": "quickstart-search",
+    "description": "Semantic search over product descriptions",
+    "input_schema": {
+      "properties": {
+        "query_text": { "type": "text", "required": true }
+      }
+    },
     "collection_ids": ["<collection_id>"],
     "stages": [
       {
         "stage_name": "knn_search",
-        "version": "1.0.0",
-        "parameters": { "k": 10 }
+        "version": "v1",
+        "parameters": {
+          "feature_address": "mixpeek://text_extractor@v1/text_embedding",
+          "input_mapping": { "text": "query_text" },
+          "limit": 20,
+          "sort_by": [
+            { "field": "score", "direction": "desc" }
+          ]
+        }
       }
-    ]
-  }'
-```
-
-Execute it:
-
-```bash
-curl -sS -X POST "$API_URL/v1/retrievers/<retriever_id>/execute" \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "X-Namespace: <namespace_id>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "inputs": { "query_text": "show me images with people" },
-    "limit": 10,
-    "return_urls": true
-  }'
-```
-
-## (Optional) 10) Create a Flat Taxonomy
-
-Create a simple flat taxonomy using the same collection as your reference. You can attach it to a collection to materialize enrichment or add it as a join stage in a retriever.
-
-```bash
-curl -sS -X POST "$API_URL/v1/taxonomies" \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "X-Namespace: <namespace_id>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "taxonomy_name": "quickstart-taxonomy",
-    "description": "Copy selected fields from best-matching documents",
-    "config": {
-      "taxonomy_type": "flat",
-      "retriever_id": "<retriever_id>",
-      "input_mappings": [
-        { "input_key": "image_vector", "path": "features.clip_vit_l_14", "source_type": "vector" }
-      ],
-      "source_collection": {
-        "collection_id": "<collection_id>",
-        "enrichment_fields": [
-          { "field_path": "metadata.category", "merge_mode": "replace" }
-        ]
-      }
+    ],
+    "cache_config": {
+      "enabled": true,
+      "ttl_seconds": 300
     }
   }'
 ```
 
-Next step: Learn more about Taxonomies including how to attach and execute on-demand [Taxonomies](/enrichment/taxonomies)
+Execute the retriever:
 
-## Next Steps
+```bash
+curl -sS -X POST "$MP_API_URL/v1/retrievers/<retriever_id>/execute" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "inputs": { "query_text": "wireless headphones with noise cancelling" },
+    "limit": 5,
+    "return_urls": false
+  }'
+```
 
-Congratulations! You've just built a simple multimodal search application with Mixpeek. To continue your journey:
+Responses include execution telemetry (`stage_statistics`, `budget`, `execution_id`) so you can troubleshoot latency or cache behavior.
+
+## 9. (Optional) Enrich with a Taxonomy
+
+Taxonomies reuse retrievers under the hood to enrich documents via JOIN stages.
+
+```bash
+curl -sS -X POST "$MP_API_URL/v1/taxonomies" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "taxonomy_name": "product-categories",
+    "taxonomy_type": "flat",
+    "retriever_id": "<retriever_id>",
+    "input_mappings": {
+      "query_embedding": "mixpeek://text_extractor@v1/text_embedding"
+    },
+    "source_collection": {
+      "collection_id": "<collection_id>",
+      "enrichment_fields": [
+        { "field_path": "metadata.category", "merge_mode": "replace" }
+      ]
+    }
+  }'
+```
+
+Attach the taxonomy to your collection’s `taxonomy_applications` for materialized enrichment, or add a `taxonomy` stage to the retriever for on-demand enrichment.
+
+## Where to Go Next
 
 <CardGroup cols={3}>
-  <Card title="Learn about Namespaces" icon="folder-tree" href="/ingestion/namespaces">
-    Organize your data into isolated environments
+  <Card title="Namespaces & Isolation" icon="folder-tree" href="/overview/concepts#multi-tenancy-and-namespaces">
+    Learn how Mixpeek enforces tenant boundaries across storage and compute.
   </Card>
-  
-  <Card title="Explore Feature Extractors" icon="microchip" href="/processing/feature-extractors">
-    Discover advanced extraction capabilities
+  <Card title="Feature Extractors & Feature URIs" icon="cpu" href="/processing/feature-extractors">
+    Explore dense, sparse, multimodal, and inference models available out of the box.
   </Card>
+  <Card title="Retriever Pipelines" icon="route" href="/retrieval/retrievers">
+    Build multi-stage search experiences with joins, reranking, and LLM-powered transformations.
+  </Card>
+</CardGroup>
 
-  <Card title="Build Powerful Retrievers" icon="magnifying-glass" href="/retrieval/retrievers">
-    Create sophisticated search experiences
-  </Card>
-</CardGroup> 
+Need help? Click “Talk to Engineers” in the top bar and we’ll assist with deployment, scaling, or integration design.

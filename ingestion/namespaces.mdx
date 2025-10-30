@@ -1,98 +1,96 @@
 ---
 title: "Namespaces"
-description: "Isolated environments that scope data and API operations"
+description: "Tenant isolation and environment management"
 ---
 
-<Note>
-  Namespaces are isolation boundaries. They scope buckets, objects, collections, documents, and searches so organizations can separate environments and tenants. Most API calls accept the `X-Namespace` header to operate within a namespace.
-</Note>
+Namespaces are Mixpeek’s primary isolation boundary. Every request runs inside a namespace, ensuring that objects, collections, retrievers, taxonomies, caches, and Ray jobs cannot bleed into other tenants or environments.
 
-## Overview
+## Dual ID System
 
-- **Isolation**: Buckets, Objects, Collections, Documents, Tasks live within a namespace.
-- **Required header**: Pass `X-Namespace` on most resource calls (see API reference pages for specifics).
-- **Indexes**: Selected feature extractors add required vector/payload index definitions; you may also add custom payload indexes.
-- **Immutability**: Feature extractor choices set capabilities; payload indexes are mutable.
+- **Organization / API Key** – Authentication boundary; API responses surface `organization_id`.
+- **Namespace (`namespace_id`)** – Authorization boundary; passed through the `X-Namespace` header.
+- Internally, MongoDB documents also reference `internal_id` (organization key) for indexing.
 
-## Namespace model
-
-Minimum fields when creating a namespace. See [Create Namespace](/api-reference/namespaces/create-namespace).
-
-```json
-{
-  "namespace_name": "spotify_playlists_dev",
-  "description": "This namespace contains playlists from Spotify",
-  "feature_extractors": [
-    {"feature_extractor_name": "video_extractor", "version": "1.0.0"}
-  ],
-  "payload_indexes": [
-    {
-      "field_name": "metadata.title",
-      "type": "text",
-      "field_schema": {"type": "text", "tokenizer": "word", "min_token_len": 2, "max_token_len": 15, "lowercase": true}
-    }
-  ]
-}
+```
+Authorization: Bearer sk_live_...
+X-Namespace: ns_production
 ```
 
-- `feature_extractors` (required): Enables associated features; required indexes are added automatically.
-- `payload_indexes` (optional): Additional payload indexes for common filters/sorts.
-
-## Create a namespace
-
-- **API**: Create Namespace
-- **Method**: POST
-- **Path**: `/v1/namespaces`
-- **Reference**: [API Reference](/api-reference/namespaces/create-namespace)
+## Create a Namespace
 
 ```bash
-curl -X POST https://api.mixpeek.com/v1/namespaces \
-  -H "Authorization: Bearer $API_KEY" \
+curl -sS -X POST "$MP_API_URL/v1/namespaces" \
+  -H "Authorization: Bearer $MP_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "namespace_name": "spotify_playlists_dev",
-    "description": "This namespace contains playlists from Spotify",
+    "namespace_name": "production",
+    "description": "Live tenant data",
     "feature_extractors": [
-      {"feature_extractor_name": "video_extractor", "version": "1.0.0"}
+      { "feature_extractor_name": "text_extractor", "version": "v1" },
+      { "feature_extractor_name": "clip_vit_l_14", "version": "v1" }
     ],
     "payload_indexes": [
-      {"field_name": "metadata.title", "type": "text"}
+      { "field_name": "metadata.category", "type": "keyword" },
+      { "field_name": "metadata.published_at", "type": "datetime" }
     ]
   }'
 ```
 
-## Manage namespaces
+Response fields include:
 
-- [Get Namespace](/api-reference/namespaces/get-namespace)
-- [Update Namespace](/api-reference/namespaces/update-namespace)
-- [Delete Namespace](/api-reference/namespaces/delete-namespace)
-- [List Namespaces](/api-reference/namespaces/list-namespaces)
+- `namespace_id` and `namespace_name`
+- `feature_extractors` registered for this namespace
+- `payload_indexes` applied to Qdrant collections
+- `document_count` (if collections already exist)
 
-## Behavior & validation
+List namespaces with filtering, search, and pagination: `POST /v1/namespaces/list`.
 
-- **Header usage**: Pass `X-Namespace` on most routes after creation to scope reads/writes.
-- **Feature availability**: Selected `feature_extractors` constrain what can be used in collections within this namespace.
-- **Payload indexes**: Mutable; tune over time as query patterns evolve.
-- **Tenant filter**: All writes/read filters include tenant scoping automatically.
+## Isolation Guarantees
 
-## See also
+- All MongoDB collections include a `namespace_id` index (e.g., `collections`, `retrievers`, `taxonomies`).
+- Qdrant creates a single HNSW-backed collection per namespace (`ns_<namespace_id>`); payload filters keep collection boundaries intact.
+- Redis cache keys are prefixed with `namespace_id`.
+- Ray jobs, tasks, and webhook events embed the namespace so pollers never cross boundaries.
+- API requests missing `X-Namespace` are rejected once multitenancy is enabled.
 
-<CardGroup cols={2}>
-  <Card title="Buckets" icon="bucket" href="/ingestion/buckets">
-    Define schemas and register objects in a namespace
-  </Card>
-  
-  <Card title="Collections" icon="database" href="/ingestion/collections">
-    Store processed documents for retrieval
-  </Card>
-</CardGroup>
+## Namespace Templates
 
-<CardGroup cols={2}>
-  <Card title="Feature Extractors" icon="wand-magic-sparkles" href="/processing/feature-extractors">
-    Configure available features and model outputs
-  </Card>
-  
-  <Card title="Retrievers" icon="magnifying-glass" href="/retrieval/retrievers">
-    Query one or more collections within a namespace
-  </Card>
-</CardGroup>
+Bootstrapping a namespace can be automated with templates:
+
+```
+POST /v1/namespaces
+{
+  "name": "Video Search Demo",
+  "template": "video_search",
+  "template_config": {
+    "scene_detection": true,
+    "include_taxonomy": "faces_v1"
+  }
+}
+```
+
+Templates provision buckets, collections, retrievers, feature extractors, taxonomies, and sample data in a single request. Explore available templates in `api/namespaces/templates/`.
+
+## Migrations
+
+Namespaces carry a `schema_version`. The API upgrades namespaces automatically on startup or via explicit migration requests:
+
+```bash
+curl -sS -X POST "$MP_API_URL/v1/namespaces/<namespace_id>/migrate" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "target_version": "v3", "dry_run": false }'
+```
+
+- Migration scripts live in `api/namespaces/migrations/`.
+- Rollback scripts are optional but recommended for major changes.
+
+## Best Practices
+
+1. **One namespace per environment** (dev, staging, prod). Use templates to keep them aligned.
+2. **Pass `X-Namespace` everywhere** including webhooks and retriever requests.
+3. **Grant least-privilege access** by issuing API keys scoped to specific namespaces when possible.
+4. **Segment analytics** by namespace using the Analytics endpoints (`/v1/analytics/...`) to understand tenant-specific performance.
+5. **Monitor document counts** with `GET /v1/namespaces/{id}` to track growth and adjust Qdrant shard planning.
+
+Namespaces give you cloud-scale tenancy without rewriting your queries—just add `X-Namespace` and Mixpeek handles the isolation across storage, cache, and compute.

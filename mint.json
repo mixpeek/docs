@@ -96,6 +96,7 @@
       "group": "Ingest Data",
       "pages": [
         "ingestion/objects",
+        "ingestion/uploads",
         "ingestion/buckets",
         "ingestion/collections",
         "ingestion/namespaces",
@@ -107,7 +108,7 @@
       "pages": [
         "processing/feature-extractors",
         "processing/batching",
-        "processing/model-tuning",
+        "processing/model-registry",
         "processing/tasks",
         "processing/pipelines"
       ]
@@ -116,8 +117,8 @@
       "group": "Search & Retrieve",
       "pages": [
         "retrieval/retrievers",
-        "retrieval/interactions",
-        "retrieval/research"
+        "retrieval/filters",
+        "retrieval/interactions"
       ]
     },
     {
@@ -131,7 +132,6 @@
       "group": "Operate in Production",
       "pages": [
         "operations/security",
-        "operations/deployment",
         "operations/observability",
         "operations/webhooks"
       ]

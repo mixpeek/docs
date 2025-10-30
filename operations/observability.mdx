@@ -1,82 +1,78 @@
 ---
 title: "Observability"
-description: "Health, logs, metrics, and task visibility for Mixpeek"
+description: "Monitor API, Engine, storage, and asynchronous jobs"
 ---
 
-<Note>
-  Observe API and Engine health, track background jobs via Tasks, and integrate logs/metrics to keep the platform healthy at scale.
-</Note>
+Mixpeek provides multiple observability surfaces: health endpoints, task metadata, Ray dashboards, analytics APIs, and webhook histories. Combine them to detect regressions early and debug production issues quickly.
 
-## Health checks
+## Health & Status
 
-- **API**: `/v1/health` returns status for Redis, MongoDB, Qdrant, Celery, and Engine
-- **Reference**: [Health API](/api-reference/health/healthcheck)
+- **`GET /v1/health`** – checks MongoDB, Qdrant, Redis, Celery, Engine, and ClickHouse (if analytics enabled). Returns `OK` or `DEGRADED` with per-service errors.
+- **Tasks API** – `/v1/tasks/{task_id}` and `/v1/tasks/list` expose status for batches, clustering jobs, taxonomy materialization, and migrations. All tasks use `TaskStatusEnum`.
+- **Webhooks** – webhook events recorded in MongoDB provide a durable log of ingestion and enrichment milestones (`collection.documents.written`, etc.).
 
-```bash
-curl -s https://api.mixpeek.com/v1/health | jq
-```
+## Engine Monitoring
 
-## Logs & tracing
+- **Ray Dashboard (port 8265)** – view worker health, task timelines, Serve deployments, resource utilization, and logs.
+- **Ray logs** – pod logs (Kubernetes) or Ray CLI provide detailed extractor and clustering output (`ray logs <job_id>`).
+- **Serve metrics** – per-model latency and request counts; scrape via Prometheus or Ray metrics endpoint.
 
-<CardGroup cols={2}>
-  <Card title="API logs" icon="server">
-    Structured logs for requests, exceptions, and rate limits
-  </Card>
-  
-  <Card title="Engine logs" icon="gears">
-    Ray task logs for extractors, clustering, and taxonomy flows
-  </Card>
-  
-  <Card title="Correlation" icon="link">
-    Propagate request IDs across API → Engine calls for traceability
-  </Card>
-  
-  <Card title="Errors" icon="triangle-exclamation">
-    Centralized error models; alert on spikes and repeated failures
-  </Card>
-</CardGroup>
+## Analytics APIs
 
-## Metrics
+Enable analytics (`ENABLE_ANALYTICS=true`) to populate ClickHouse-backed metrics:
 
-<Tabs>
-  <Tab title="API">
-    - Request throughput, latency percentiles, error rates
-    - Rate limit hits per route and namespace
-  </Tab>
-  
-  <Tab title="Engine">
-    - Task queue depth, execution time, success/failure counts
-    - Extractor runtimes, clustering metrics, GPU/CPU utilization
-  </Tab>
-  
-  <Tab title="Datastores">
-    - Qdrant memory/IO, vector count, index build time
-    - MongoDB ops/latency, Redis connections, S3 errors
-  </Tab>
-</Tabs>
+| Endpoint | Insight |
+|----------|---------|
+| `/v1/analytics/retrievers/{id}/performance` | Query volume, latency percentiles |
+| `/v1/analytics/retrievers/{id}/stages` | Stage-level timing and candidate counts |
+| `/v1/analytics/retrievers/{id}/signals` | Cache hits, rerank scores, filter reductions |
+| `/v1/analytics/retrievers/{id}/cache-performance` | Hit/miss rates and latency delta |
+| `/v1/analytics/retrievers/{id}/slow-queries` | Top slow queries with execution context |
+| `/v1/analytics/usage/summary` | Credit and resource usage (billing support) |
 
-## Tasks visibility
+Use these APIs to populate dashboards or feed alerting systems.
 
-- Use [Tasks](/processing/tasks) to monitor batch and long‑running jobs
-- List active tasks and drill into details; alert on FAILED/CANCELED
+## Logging & Tracing
 
-## Dashboards & alerts
+- **API layer** – structured JSON logs include request IDs, namespace, HTTP status, error codes, and downstream latency.
+- **Celery workers** – log task execution, retries, and webhook dispatch results.
+- **Ray workers** – include extractor metrics, batch IDs, and queue stats; aggregate logs centrally for long-term retention.
+- **Correlation** – propagate `x-request-id` from API to Engine jobs via `additional_data.request_id` to stitch traces together.
 
-<Steps>
-  <Step title="Dashboards">
-    Build API, Engine, and datastore dashboards with your metrics backend
-  </Step>
-  <Step title="SLOs">
-    Define target latency and error budgets; alert on burn rate
-  </Step>
-  <Step title="Runbooks">
-    Document incident steps for extractor failures, clustering stalls, and Qdrant errors
-  </Step>
-</Steps>
+## Metrics to Track
 
-## References
+| Component | Key Metrics |
+|-----------|-------------|
+| API | Request rate, p95 latency, error rate, rate-limit hits |
+| Celery | Queue depth, task execution time, retry count |
+| Ray | Worker utilization (CPU/GPU), job duration, Serve requests in flight |
+| MongoDB | Operation latency, primary health, replication lag |
+| Qdrant | Memory usage, search latency, vector count per namespace |
+| Redis | Connection count, command latency, cache hit ratio |
 
-- Health: [/api-reference/health/healthcheck](/api-reference/health/healthcheck)
-- Tasks: [/processing/tasks](/processing/tasks)
-- Clusters: [/enrichment/clusters](/enrichment/clusters)
-- Taxonomies: [/enrichment/taxonomies](/enrichment/taxonomies)
+Integrate with Prometheus, Datadog, or your preferred metrics stack via existing exporters or custom scrapers.
+
+## Alerting Playbook
+
+1. **Latency spike** → check retriever analytics, stage statistics, and Ray Serve load.
+2. **Task backlog** → inspect Celery queue length, Redis health, and Ray worker availability.
+3. **Failed enrichment** → query `/v1/tasks/list` for `FAILED`, inspect `error_message`, review webhook events.
+4. **Storage saturation** → monitor Qdrant RAM usage and MongoDB disk consumption; scale storage or shard by namespace.
+5. **Cache regression** → view cache hit-rate endpoint; adjust TTLs or stage cache configuration.
+
+## Dashboards to Build
+
+- **API dashboard** – health endpoint status, request latency, error breakdown, rate-limit counters.
+- **Engine dashboard** – Ray worker utilization, job runtime percentiles, extractor throughput, Serve queue depth.
+- **Retrieval performance** – retriever analytics charts (latency, cache hits, slow queries).
+- **Storage dashboard** – MongoDB/Redis/Qdrant metrics for capacity planning.
+- **Task tracker** – open tasks by status, median processing times, failure rates.
+
+## Incident Response Tips
+
+- Keep runbooks for common failures (e.g., extractor timeouts, Qdrant restarts).
+- Use webhook history to confirm whether ingestion completed or stalled.
+- Capture Ray job IDs from task metadata to replay logs quickly.
+- Snapshot retriever and collection configurations when debugging to ensure you’re reproducing the same pipeline.
+
+With health checks, task metadata, analytics APIs, and Ray observability, you can confidently operate Mixpeek in production and catch issues before users notice.

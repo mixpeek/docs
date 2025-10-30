@@ -1,225 +1,206 @@
 ---
 title: "Retrievers"
-description: "Configure and execute staged retrieval pipelines over your collections"
+description: "Compose stage-based search pipelines over your collections"
 ---
 
-<Note>
-  Retrievers are schema‑validated, multi‑stage search pipelines. They combine vector search, metadata filters, grouping, sorting, and optional post‑processing to return ranked results from one or more collections.
-</Note>
+Retrievers combine feature-aware search stages, structured filters, enrichment joins, and optional LLM post-processing into a single executable pipeline. Each retriever has an input schema, a list of target collections, and a deterministic set of stages executed in order.
 
-## Overview
+## Anatomy of a Retriever
 
-<CardGroup cols={2}>
-  <Card title="Pipelines" icon="layer-group">
-    Compose ordered stages (KNN, hybrid, filters, reranking, generation)
-  </Card>
-  
-  <Card title="Schema" icon="brackets-curly">
-    Define an input schema for query‑time <code>inputs</code>
-  </Card>
-  
-  <Card title="Collections" icon="database">
-    Target one or more collections for search
-  </Card>
-  
-  <Card title="Execution" icon="play">
-    Single <code>execute</code> endpoint with filters, sorts, grouping, selection, pagination
-  </Card>
-</CardGroup>
-
-## Capabilities
-
-<CardGroup cols={3}>
-  <Card title="Vector & Hybrid" icon="magnifying-glass">
-    KNN over specific indexes; hybrid fusion across multiple vectors
-  </Card>
-  
-  <Card title="Filters & Logic" icon="filter">
-    AND/OR/NOT with typed operators and case sensitivity controls
-  </Card>
-  
-  <Card title="Sorting & Paging" icon="sort">
-    Sort by score or fields; stable <code>limit</code>/<code>offset</code>
-  </Card>
-</CardGroup>
-
-<CardGroup cols={3}>
-  <Card title="Grouping & Selection" icon="object-group">
-    Group by a field; return only requested fields via <code>select</code>
-  </Card>
-  
-  <Card title="Presigned URLs" icon="link">
-    Optional asset URLs with <code>return_urls=true</code>
-  </Card>
-  
-  <Card title="Introspection" icon="list">
-    List stages and describe features to understand searchable fields
-  </Card>
-</CardGroup>
-
-## Create a retriever
-
-- **API**: Create Retriever
-- **Method**: POST
-- **Path**: `/v1/retrievers`
-- **Reference**: [API Reference](/api-reference/retrievers/create-retriever)
-
-```bash
-curl -X POST https://api.mixpeek.com/v1/retrievers \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "X-Namespace: ns_123" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "retriever_name": "products_semantic_v1",
-    "description": "Semantic search over product catalog",
-    "collection_ids": ["col_products_v1"],
-    "input_schema": {"properties": {"query_text": {"type": "text"}}},
-    "stages": [
-      {"stage_name": "knn_search", "version": "1.0.0", "parameters": {"k": 50, "vector_field": "features.text_embedding"}}
-    ]
-  }'
-```
-
-## Execute a retriever
-
-- **API**: Execute Retriever
-- **Method**: POST
-- **Path**: `/v1/retrievers/{retriever_identifier}/execute`
-- **Reference**: [API Reference](/api-reference/retrievers/execute-retriever)
-
-```bash
-curl -X POST https://api.mixpeek.com/v1/retrievers/RET_ID/execute \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "X-Namespace: ns_123" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "inputs": {"query_text": "red running shoes"},
-    "filters": {"AND": [{"field": "metadata.category", "operator": "eq", "value": "footwear"}]},
-    "sorts": [{"field": "score", "direction": "desc"}],
-    "group_by": {"field": "metadata.brand", "max_features": 3},
-    "select": ["document_id", "metadata.brand", "title"],
-    "limit": 10,
-    "offset": 0,
-    "return_urls": true
-  }'
-```
-
-## How it works
-
-<Frame>
-  ```mermaid
-  graph TD
-    Q[Query Inputs] --> R[Retriever]
-    R --> S1[Stage 1]
-    S1 --> S2[Stage 2]
-    S2 --> S3[Stage 3]
-    S3 --> OUT[Results]
-  ```
-</Frame>
-
-<Steps>
-  <Step title="Inputs">
-    Validated against the retriever <code>input_schema</code>
-  </Step>
-  <Step title="Stage execution">
-    Each stage refines candidates; hybrid and filters can combine modalities and metadata
-  </Step>
-  <Step title="Response shaping">
-    Apply optional grouping, sorting, pagination, and <code>select</code>
-  </Step>
-</Steps>
-
-<Tip>
-  Enable <code>return_urls=true</code> to include presigned URLs for assets in results.
-</Tip>
-
-## Inputs and filters
-
-<Tabs>
-  <Tab title="Filters payload">
-    ```json
-    {
-      "AND": [
-        {"field": "metadata.category", "operator": "eq", "value": "footwear"},
-        {"OR": [
-          {"field": "price", "operator": "lte", "value": 100},
-          {"field": "on_sale", "operator": "eq", "value": true}
-        ]}
-      ],
-      "case_sensitive": false
+```json
+{
+  "retriever_name": "product_search_v2",
+  "description": "Semantic + hybrid search with reranking",
+  "collection_ids": ["col_products"],
+  "input_schema": {
+    "properties": {
+      "query_text": { "type": "text", "required": true },
+      "max_price": { "type": "number" }
     }
-    ```
-  </Tab>
-  
-  <Tab title="Available operators">
-    <AccordionGroup>
-      <Accordion title="Equality and ranges" icon="sliders">
-        <code>eq</code>, <code>ne</code>, <code>gt</code>, <code>gte</code>, <code>lt</code>, <code>lte</code>
-      </Accordion>
-      <Accordion title="Sets" icon="list-check">
-        <code>in</code>, <code>nin</code>
-      </Accordion>
-      <Accordion title="Text" icon="font">
-        <code>contains</code>, <code>starts_with</code>, <code>ends_with</code>, <code>regex</code>, <code>text</code>
-      </Accordion>
-      <Accordion title="Presence" icon="eye">
-        <code>exists</code>, <code>is_null</code>
-      </Accordion>
-      <Accordion title="Logical composition" icon="diagram-project">
-        Top‑level: <code>AND</code>, <code>OR</code>, <code>NOT</code>; toggle case rules with <code>case_sensitive</code>
-      </Accordion>
-    </AccordionGroup>
-  </Tab>
-</Tabs>
+  },
+  "stages": [
+    {
+      "stage_name": "hybrid_search",
+      "version": "v1",
+      "parameters": {
+        "dense_feature_address": "mixpeek://text_extractor@v1/text_embedding",
+        "sparse_feature_address": "mixpeek://splade_extractor@v1/splade_vector",
+        "input_mapping": { "text": "query_text" },
+        "limit": 200,
+        "dense_weight": 0.7,
+        "sparse_weight": 0.3,
+        "sort_by": [{ "field": "score", "direction": "desc" }]
+      }
+    },
+    {
+      "stage_name": "filter",
+      "version": "v1",
+      "parameters": {
+        "strategy": "structured",
+        "structured_filter": {
+          "AND": [
+            { "field": "metadata.in_stock", "operator": "eq", "value": true },
+            { "field": "metadata.price", "operator": "lte", "value": "{{INPUT.max_price}}" }
+          ]
+        }
+      }
+    },
+    {
+      "stage_name": "rerank",
+      "version": "v1",
+      "parameters": {
+        "strategy": "cross_encoder",
+        "model": "bge-reranker-v2-m3",
+        "top_k": 50
+      }
+    }
+  ],
+  "cache_config": {
+    "enabled": true,
+    "ttl_seconds": 300,
+    "cache_stage_names": ["hybrid_search"]
+  }
+}
+```
 
-## Manage retrievers
+## Stage Catalog
 
-<CardGroup cols={2}>
-  <Card title="Get Retriever" icon="magnifying-glass" href="/api-reference/retrievers/get-retriever" />
-  <Card title="Delete Retriever" icon="trash" href="/api-reference/retrievers/delete-retriever" />
-  <Card title="List Retrievers" icon="list" href="/api-reference/retrievers/list-retrievers" />
-  <Card title="Debug Inference" icon="bug" href="/api-reference/retrievers/debug-inference" />
-  <Card title="List Stages" icon="bars" href="/api-reference/retriever-stages/list-available-retriever-stages" />
-</CardGroup>
+Mixpeek exposes retriever stages through `GET /v1/retrievers/stages`. Each stage definition includes its `stage_id`, category, icon, and JSON Schema for parameters. The current registry includes:
 
-## Best practices
+### Search
 
-<Steps>
-  <Step title="Start simple">
-    Begin with a single KNN stage; add hybrid, filters, and reranking as needed
-  </Step>
-  <Step title="Pre‑filter early">
-    Narrow candidates with metadata filters before expensive vector ops
-  </Step>
-  <Step title="Select fields">
-    Use <code>select</code> to minimize payload size and latency
-  </Step>
-  <Step title="Group wisely">
-    Keep per‑group caps small to avoid skew
-  </Step>
-  <Step title="Version retrievers">
-    Create new retrievers for breaking changes to inputs or stages
-  </Step>
-</Steps>
+- `hybrid_search` – Dense + lexical retrieval with reciprocal-rank fusion, weighted-score fusion, score thresholds, and per-stage caching.
 
-## See also
+### Reduce
 
-<CardGroup cols={2}>
-  <Card title="Filters" icon="filter" href="/retrieval/filters">
-    Operators and logical composition for queries
-  </Card>
-  
-  <Card title="Interactions" icon="comments" href="/retrieval/interactions">
-    Sessions, feedback, and iterative search flows
-  </Card>
-</CardGroup>
+- `attribute_filter` – Structured filtering with simple or boolean expressions, projections, and batch sizing.
+- `llm_filter` – LLM-powered classification that keeps or discards documents based on prompt criteria.
 
-<CardGroup cols={2}>
-  <Card title="Feature Extractors" icon="wand-magic-sparkles" href="/processing/feature-extractors">
-    Configure features available to search
-  </Card>
-  
-  <Card title="Collections" icon="database" href="/ingestion/collections">
-    Target collections and describe searchable features
-  </Card>
-</CardGroup> 
+### Rank
+
+- `sort_attribute` – Sort in-flight results by any payload field, with case-insensitive options and null handling.
+- `sort_relevance` – Sort by `score` or another numeric field, with fallbacks for missing scores.
+
+### Enrich
+
+- `document_enrichment` – Join documents with another collection (direct field match) and merge selected fields.
+- `taxonomy_enrichment` – Attach taxonomy assignments via feature URIs and copy enrichment fields.
+- `llm_enrichment` – Generate new fields with an LLM, respecting per-document conditions, batching, and schemas.
+
+Call `GET /v1/retrievers/stages` to inspect the parameter schema for each stage before configuring it in a retriever.
+
+## Execution Lifecycle
+
+1. **Validate Inputs** – Mixpeek enforces the retriever’s `input_schema`.
+2. **Walk Stages** – Each stage receives the current working set, runs, and outputs a new set.
+3. **Apply Pagination** – `limit`, `offset`, `cursor`, or `keyset` pagination is handled after the final stage.
+4. **Return Telemetry** – Responses include `stage_statistics`, `budget`, and optional presigned URLs.
+
+Response headers include:
+
+- `ETag` – cache validator; pair with `If-None-Match` for 304 responses.
+- `Cache-Control` – TTL derived from `cache_config`.
+- `X-Cache` – `HIT` or `MISS` for query-level caching.
+
+## Filters & Templates
+
+- Structured filters support comparison operators (`eq`, `gt`, `lte`, `in`, etc.) and logical composition (`AND`, `OR`, `NOT`).
+- Template variables let you reference namespaces:
+  - `{{INPUT.query_text}}`
+  - `{{DOC.metadata.category}}`
+  - `{{STAGE.hybrid_search.top_score}}`
+  - `{{CONTEXT.budget_remaining}}`
+
+## Retrievers & Caching
+
+- **Query cache** – caches entire responses keyed by inputs, filters, pagination, and collection index signatures.
+- **Stage cache** – reuse outputs of expensive stages by listing them under `cache_stage_names`.
+- **Inference cache** – Engine deduplicates identical model calls.
+
+Use `GET /v1/analytics/retrievers/{id}/cache-performance` to monitor hit rates and latency improvements.
+
+## Pagination Options
+
+| Method | Use Case |
+|--------|----------|
+| `offset` | Simple pagination, supports `limit` + `offset` |
+| `cursor` | Stable iteration over large result sets |
+| `scroll` | Deep pagination for analytics workloads |
+| `keyset` | High-performance paginated browsing (requires sort key) |
+
+Specify the method in `pagination.method` when executing a retriever.
+
+## Execute a Retriever
+
+```bash
+curl -sS -X POST "$MP_API_URL/v1/retrievers/<retriever_id>/execute" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "inputs": {
+      "query_text": "wireless earbuds",
+      "max_price": 150
+    },
+    "filters": {
+      "field": "metadata.category",
+      "operator": "eq",
+      "value": "audio"
+    },
+    "limit": 10,
+    "return_urls": true,
+    "return_vectors": false,
+    "session_id": "sess_123"
+  }'
+```
+
+Response snippet:
+
+```json
+{
+  "execution_id": "exec_b8f31e0c",
+  "documents": [...],
+  "stage_statistics": {
+    "hybrid_search": { "duration_ms": 180, "cache_hit": true },
+    "filter": { "duration_ms": 8 },
+    "rerank": { "duration_ms": 120 }
+  },
+  "budget": {
+    "credits_used": 12.4,
+    "credits_limit": 100,
+    "time_elapsed_ms": 310
+  }
+}
+```
+
+## Maintenance & Versioning
+
+- Use `PATCH /v1/retrievers/{id}` to rename retrievers or adjust cache settings (stages and schema are immutable; create a new retriever for breaking changes).
+- List retrievers with filters, search, and sort: `POST /v1/retrievers/list`.
+- Retrieve execution history: `GET /v1/retrievers/{id}/executions`.
+- Diagnose pipelines without executing: `POST /v1/retrievers/{id}/explain`.
+
+## Interaction Feedback
+
+Capture user feedback with `/v1/retrievers/interactions` to power downstream analytics, learning-to-rank, or personalized retrieval:
+
+```json
+{
+  "feature_id": "doc_abc123",
+  "interaction_type": ["click", "long_view"],
+  "position": 2,
+  "metadata": { "duration_ms": 12000 },
+  "user_id": "user_456",
+  "session_id": "sess_xyz789"
+}
+```
+
+## Best Practices
+
+1. **Start narrow** – run a single search stage before adding rerankers or joins.
+2. **Push filters early** – stage-level filters shrink the candidate set before expensive operations.
+3. **Use JOIN strategies wisely** – `direct` for key-based joins, `retriever` for similarity joins; set `join_strategy` to control merge behavior.
+4. **Enable caching** – stage caching plus query caching dramatically reduces latency for repeat queries.
+5. **Monitor analytics** – use retriever analytics endpoints to optimize parameters, detect slow stages, and understand cache ROI.
+
+Retrievers turn Mixpeek’s primitives—features, taxonomies, clusters, and models—into end-user search experiences. Configure once, execute anywhere, and evolve the pipeline with confidence.

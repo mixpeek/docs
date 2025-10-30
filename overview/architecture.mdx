@@ -1,83 +1,118 @@
 ---
-title: 'Architecture'
-description: 'Understanding Mixpeek core architecture and data flow'
+title: "Architecture"
+description: "How Mixpeek is wired end-to-end"
 ---
 
-## Overview
+The Mixpeek platform is intentionally split across an API layer, an Engine layer, and a shared storage layer. This separation keeps ingestion, enrichment, and retrieval isolated while still sharing a common data model.
 
-Mixpeek is a multimodal platform built for secure ingestion, distributed feature extraction, and low‑latency retrieval across text, image, audio, and video. The system separates control‑plane APIs from the execution Engine, enabling horizontal scale, strong tenancy, and consistent performance at load.
+## System Overview
 
+```
+Clients → FastAPI (HTTP) → Celery Tasks → Shared Storage → Ray Jobs → Qdrant/S3 → Webhooks → Clients
+```
 
-<img src="https://d8ts56gtwtyh1.cloudfront.net/docs/diagrams/architecture.png" alt="Mixpeek Architecture Diagram" />
+- **API Layer (FastAPI + Celery)** handles HTTP requests, validation, authorization, transactional metadata updates, task creation, and webhook dispatch.
+- **Engine Layer (Ray)** performs distributed feature extraction, inference, taxonomy materialization, clustering, and long-running compute.
+- **Shared Storage** (MongoDB, Qdrant, Redis, S3) acts as the contract between layers. No direct imports cross the API ↔ Engine boundary.
 
+## Service Architecture
 
-## Core Components
+```
+┌───────────────┐       ┌───────────────┐        ┌────────────────┐
+│ FastAPI       │───┬──▶│ Celery Worker │──┬────▶│ Redis (Tasks)  │
+│ (REST + auth) │   │   └───────────────┘  │     └────────────────┘
+└──────┬────────┘   │                     │
+       │            │                     │               ┌──────────────┐
+       │   ┌────────▼───────┐             │──────────────▶│ Ray Head     │
+       └──▶│ MongoDB        │◀────────────┘               │  + Pollers   │
+           │ (metadata)     │                             └────┬─────────┘
+           └─────┬──────────┘                                  │
+                 │                     ┌───────────────────────▼────────────┐
+                 │                     │ Ray Workers (CPU / GPU, Serve)     │
+                 │                     └──────┬───────────────┬─────────────┘
+        ┌────────▼────────┐   ┌──────────────▼──────┐   ┌─────▼─────────────┐
+        │ Qdrant           │   │ S3 (objects/artifacts)│ │ External Webhooks │
+        └──────────────────┘   └──────────────────────┘ └───────────────────┘
+```
 
-- **API (FastAPI)**
-  - Auth via API keys; tenancy resolved per request using `Authorization` and `X-Namespace` headers
-  - Centralized errors with a consistent JSON envelope and documented status codes
-  - Rate limiting and safety policies enforced per organization and API name
-  - Asynchronous tasks (e.g., bucket deletes) scheduled via Celery
+- Ray pollers read `batches` and `clustering_jobs` from MongoDB, submit jobs, and update status.
+- Ray Serve hosts embedding, reranking, audio, and video models.
+- Celery Beat scans MongoDB for webhook events and dispatches handlers.
 
-- **Engine (FastAPI + Ray)**
-  - Distributed execution for feature extraction, taxonomy enrichment, and clustering
-  - Parallel processing across extractors; resilient fan‑out/fan‑in with backpressure
-  - Ensures Qdrant collections exist and writes vectors and payloads in a single‑write pattern
+## Layer Separation
 
-- **Data stores**
-  - **Qdrant**: Primary store for documents, payloads, and feature vectors (per‑namespace collections)
-  - **MongoDB**: Metadata/configuration for collections, retrievers, and taxonomies
-  - **Redis**: Caching, counters, rate limiting, and lightweight task metadata
-  - **S3‑compatible storage**: Source object blobs, batch manifests, and optional presigned URL generation
+> **Golden Rule:** API and Engine code never import each other. Shared models sit in a neutral library that both layers consume.
 
-## Tenancy and Security
+- API defines Pydantic schemas, orchestrates workflows, and updates MongoDB + Redis.
+- Engine consumes manifests, runs ML workloads, and writes vectors/documents to Qdrant.
+- A common library provides enums, models, constants, and utilities that both layers consume.
 
-- **Organizations and Namespaces**: Every request is scoped to an organization and, for most routes, a namespace. Namespaces map 1:1 to Qdrant collections.
-- **Headers**: `Authorization: Bearer <API_KEY>` and `X-Namespace: <id-or-name>` are required for namespace‑scoped routes.
-- **Payload scoping**: All Qdrant documents include `internal_id` for strict tenant filtering.
-- **Rate limiting**: Redis‑backed limits per organization and API operation.
+## Data Flow
 
-## Ingestion and Processing
+### Ingestion (Object → Document)
 
-- **Uploads**
-  - Register objects via the Buckets/Object API; optionally batch register many at once
-  - Store raw assets in S3 (or any S3‑compatible storage)
+1. Client uploads objects (`/v1/buckets/{bucket}/objects`) — metadata lands in MongoDB, blobs in S3.
+2. Client submits batch (`/v1/buckets/{bucket}/batches/{batch}/submit`) — API flattens manifests into per-extractor artifacts in S3 and creates tasks.
+3. Ray poller picks up the batch, runs feature extractors tier-by-tier, writes documents to Qdrant, and emits webhook events.
+4. Celery Beat processes webhook events: updates collection schemas, invalidates caches, notifies external systems.
 
-- **Batch extraction (Engine)**
-  - Engine reads batch manifests and collection configs
-  - Runs feature extractors in parallel using Ray
-  - Writes vectors and payloads to Qdrant with tenant metadata
-  - Optionally materializes taxonomy enrichments post‑extraction
+### Retrieval (Query → Results)
 
-- **Feature store**
-  - Multiple vector indexes per collection (e.g., text, image) with payload indexes for filtering
+1. Client executes retriever (`/v1/retrievers/{id}/execute`) with structured inputs and optional filters.
+2. FastAPI loads the retriever definition, validates inputs, and walks the stage pipeline.
+3. Stages call Ray Serve (for inference), Qdrant (for search), MongoDB (for joins), and Redis (for cache signatures).
+4. Response returns results, stage metrics, cache hints (`ETag`), and budget usage.
 
-## Retrieval
+## Storage Strategy
 
-- **Retrievers** define inputs, stages, and target collections
-- **SearchFlow** executes KNN, hybrid (RRF), and grouped searches over Qdrant
-- Pre/post‑filters, sorting, pagination, and optional S3 URL presigning are supported
-- Normalized results prefer Qdrant point id as `document_id`
+| Store | Purpose | Access Pattern |
+|-------|---------|----------------|
+| **MongoDB** | Metadata, configs, tasks, webhook events | CRUD + aggregation |
+| **Qdrant** | Namespace-scoped vector stores + payloads | ANN search + payload filters |
+| **Redis** | Task queue (Celery) + cache namespaces | Get/Set + TTL-managed cache |
+| **S3** | Raw blobs, manifests, per-extractor artifacts | Large object IO |
 
-## Error Handling and Health
+- MongoDB indexes include `(internal_id, namespace_id)` to enforce isolation.
+- Qdrant names collections `ns_<namespace_id>` and stores collection/document identifiers in payload indexes.
+- Redis namespaces keys per feature (`collections`, `retrievers`, etc.) with index signatures baked into cache keys.
 
-- Consistent error envelope with explicit status codes across all routes
-- Health fan‑out checks Redis, MongoDB, Qdrant, Celery, and Engine endpoints
+## Ray Cluster
 
-## Operations
+- **Head node** hosts the Ray dashboard, job submission API, and pollers.
+- **CPU worker pool** handles text extraction, manifest parsing, Qdrant writes.
+- **GPU worker pool** runs embeddings, rerankers, video processing, and Ray Serve replicas.
+- Autoscaling targets: CPU utilization ~70%, GPU utilization ~80%, with configurable min/max replica counts.
+- Custom Ray resources (`{"batch": 1}`, `{"serve": 1}`) isolate heavy batch jobs from inference traffic.
 
-- **Asynchronous tasks**: Celery for API‑side async operations and housekeeping
-- **Configuration**: All services configure via environment variables (e.g., QDRANT_URL, MONGO_URI)
-- **Observability**: Structured logs and clear error surfaces; rate limiting in non‑local environments
+## Communication Patterns
 
-## Extensibility
+1. **Task Queue (API → Engine)**  
+   MongoDB stores batch descriptors; pollers submit Ray jobs and track state.
 
-- **Self‑host or managed**: Deploy core services in your cloud or use managed offerings
-- **Custom feature extractors**: Plug in your own extractors and indexes
-- **API‑first**: Everything is accessible via documented APIs
+2. **Webhook Events (Engine → API)**  
+   Engine writes webhook events to MongoDB. Celery Beat dispatches cache invalidation, schema updates, and external notifications.
 
-This architecture ensures predictable performance, strong isolation, and scale as your content grows.
+3. **Real-time Inference (API → Engine)**  
+   API calls Ray Serve HTTP endpoints for embeddings, reranking, generation, and audio transcription.
 
-<Card title="Questions About Our Architecture?" icon="message-question" href="https://mixpeek.com/contact">
-Our engineering team is ready to help you understand how Mixpeek can fit into your specific use case. 
-</Card> 
+## Scaling & Deployment
+
+- **API**: scale FastAPI replicas horizontally via Kubernetes HPA; Celery workers scale with queue depth.
+- **Engine**: autoscale Ray worker pools (CPU/GPU). Ray Serve replicates per-model deployments with independent scaling policies.
+- **Storage**: MongoDB uses replica sets or sharding, Qdrant supports distributed clusters, Redis can run in cluster mode, S3 scales automatically.
+- **Deployments**: local development relies on Docker Compose + `./start.sh`; production runs on Kubernetes (or Anyscale for Ray) with dedicated node groups for API, CPU workers, and GPU workers.
+
+## Key Design Decisions
+
+- **Strict layer boundaries** keep API deployments lightweight and Engine deployments GPU-optimized.
+- **MongoDB + Qdrant** pairing combines flexible metadata with high-performance vector search.
+- **Webhook-based events** replace direct imports between Engine and API, yielding durable, observable communication.
+- **Prefork Celery workers** support task termination, concurrency, and graceful shutdowns—critical for webhook dispatch and maintenance jobs.
+- **Index signatures** prevent stale caches without manual invalidation.
+
+## Further Reading
+
+- [Processing → Feature Extractors](/processing/feature-extractors) for extractor catalogs and configuration patterns
+- [Retrieval → Retrievers](/retrieval/retrievers) for stage pipelines, caching, and execution telemetry
+- [Operations → Deployment](/operations/deployment) for local and production deployment topologies
+- [Operations → Observability](/operations/observability) for metrics, logging, and tracing integrations

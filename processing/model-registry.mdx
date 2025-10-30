@@ -1,0 +1,111 @@
+---
+title: "Model Registry"
+description: "Select, version, and optimize inference models"
+---
+
+Mixpeek ships with a curated model registry operated on Ray Serve. Rather than fine-tuning models inside the platform, you configure which model to use per extractor or retriever stage, monitor performance, and roll out upgrades safely. This page explains how to select models, manage versions, and optimize latency and cost.
+
+## Model Categories
+
+| Category | Examples | Served From | Primary Use |
+|----------|----------|-------------|-------------|
+| Embeddings | `multilingual-e5-large-instruct`, `gte-modernbert-base`, OpenAI `text-embedding-3-*`, `clip_vit_l_14` | Ray Serve (GPU) or external API | Semantic search, multimodal similarity |
+| Sparse | `splade_v1` | Ray Serve (CPU) | Hybrid and lexical search |
+| Multi-Vector | `colbertv2` | Ray Serve (GPU) | Late interaction retrieval |
+| Rerankers | `bge-reranker-v2-m3`, `cross-encoder` | Ray Serve (GPU/CPU) | Reordering search results |
+| Generation | `gpt-4`, `gpt-4-turbo`, `claude-3-opus`, `gemini-pro` | External APIs | Summaries, transformations |
+| Audio | `whisper_large_v3_turbo`, `pyannote-segmentation` | Ray Serve (GPU) | Transcription, diarization |
+
+Call `/v1/feature-extractors` and `/v1/retrievers/stages` to discover supported models and parameters programmatically.
+
+## Choosing a Model
+
+### Feature Extractors
+
+```json
+{
+  "feature_extractor": {
+    "feature_extractor_name": "text_extractor",
+    "version": "v1",
+    "parameters": {
+      "model": "multilingual-e5-large-instruct",
+      "normalize": true
+    }
+  }
+}
+```
+
+- `parameters.model` selects the embedding model.
+- Collections compute an `output_schema` reflecting the chosen model’s vector dimensions.
+- Vector field names include the extractor version (e.g., `text_extractor_v1_embedding`).
+
+### Retriever Stages
+
+```json
+{
+  "stage_name": "rerank",
+  "version": "v1",
+  "parameters": {
+    "strategy": "cross_encoder",
+    "model": "bge-reranker-v2-m3",
+    "top_k": 20
+  }
+}
+```
+
+- Most stages expose a `model` parameter or use the feature URI to infer the model.
+- Stage-level caching (`cache_stage_names`) combined with inference caching shortens repeated requests.
+
+## Versioning Strategy
+
+Models are versioned independently of extractors:
+
+```
+multilingual_e5_large_instruct_v1
+multilingual_e5_large_instruct_v2
+multilingual_e5_large_instruct_v3
+```
+
+Recommended rollout:
+
+1. Deploy new model version alongside the old one.
+2. Update a staging collection or retriever to reference the new model.
+3. Use Analytics (`/v1/analytics/retrievers/...`) to compare latency and relevance.
+4. Shift traffic gradually (e.g., update a percentage of retrievers).
+5. Deprecate the previous version once validated.
+
+Because feature URIs include extractor version, upgrading an extractor typically requires reprocessing documents or creating a new collection.
+
+## Performance & Scaling
+
+- Ray Serve deployments define autoscaling policies (`min_replicas`, `max_replicas`, target concurrency).
+- GPU workers host embedding and reranking models; CPU workers can serve lighter workloads.
+- Inference caching hashes `(model_name, inputs, parameters)` to skip repeated calls.
+- Stage telemetry (`stage_statistics`) exposes per-stage latency, cache hits, and token usage.
+
+## Cost Controls
+
+- Use sparse or hybrid strategies when domain-specific vocabulary matters—dense-only pipelines can miss rare terms.
+- Cache responses for high-volume retrievers to minimize repeated inference.
+- For LLM-based stages, set budget limits via retriever `budget_limits` to cap token spend and execution time.
+- Monitor cache hit rates with `GET /v1/analytics/retrievers/{id}/cache-performance`.
+
+## When You Need Fine-Tuning
+
+Mixpeek does not yet offer in-platform fine-tuning. If you need domain-specific embeddings or rerankers:
+
+1. Train or fine-tune externally (e.g., Hugging Face, OpenAI, Vertex AI).
+2. Deploy the model to Ray Serve using a custom provider or call the external API directly from stages.
+3. Register the new model name/version in your extractor or retriever configuration.
+
+Contact support for professional services if you require managed fine-tuning or custom deployments.
+
+## Checklist Before Switching Models
+
+1. **Update lower environments** (dev/staging) first; ensure collections reprocess with the new model.
+2. **Validate vector dimensions** match expectations—retrievers must reference the correct feature URI.
+3. **Monitor latency and cache metrics** after rollout.
+4. **Communicate index signature changes** to teams relying on cached responses.
+5. **Plan reindex time** for large collections if the model upgrade changes vector dimensionality.
+
+Mixpeek’s model registry lets you evolve retrieval quality continuously without pausing ingestion or rewriting pipelines. Pick the right model for the job, monitor real-time telemetry, and roll out upgrades confidently.

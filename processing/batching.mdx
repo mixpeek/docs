@@ -1,120 +1,103 @@
 ---
 title: "Batching"
-description: "Group objects and submit asynchronous processing jobs"
+description: "Group objects and hand them off to the Engine"
 ---
 
-<Note>
-  Batches group previously registered object IDs and submit them for asynchronous processing. Use batching for larger or scheduled ingestions. Batches operate on object IDs; they do not upload files.
-</Note>
+Batches let you process many objects in one asynchronous job. They store the list of object IDs, generate extractor manifests, and provide a task handle so you can monitor progress.
 
-## Overview
+<Steps>
+  <Step title="Create batch">
+    Supply object IDs (or create an empty batch and add objects later).
+  </Step>
+  <Step title="Submit batch">
+    API flattens manifests into per-extractor Parquet artifacts and writes them to S3.
+  </Step>
+  <Step title="Engine processes">
+    Ray pollers pick up the batch, execute extractors tier-by-tier, and write documents to Qdrant.
+  </Step>
+  <Step title="Webhook & cache updates">
+    Engine emits webhook events, Celery Beat invalidates caches, and collection schemas update.
+  </Step>
+</Steps>
 
-- **Purpose**: Organize many objects into a single processing job.
-- **Scope**: Batches are created per bucket.
-- **Flow**: Create batch → add objects → submit for processing → monitor tasks.
-
-## When to use batching
-
-- **Large backfills**: Process thousands or millions of objects in controlled chunks
-- **Scheduled ingestion**: Nightly/weekly jobs without manual triggers
-- **Load smoothing**: Avoid spikes from many single-object submissions
-- **Consistent snapshot**: Group a known set of objects for reproducible results
-
-## Typical flow
-
-1) Create a batch with object IDs (or create empty and add later)
-2) Add objects to the batch (optional step if not provided at creation)
-3) Submit the batch for processing
-4) Track progress via Tasks
-
-## Create a batch
-
-- **API**: Create Batch
-- **Method**: POST
-- **Path**: `/v1/buckets/{bucket_identifier}/batches`
-- **Reference**: [API Reference](/api-reference/bucket-batches/create-batch)
+## Create a Batch
 
 ```bash
-curl -X POST https://api.mixpeek.com/v1/buckets/bkt_123/batches \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "X-Namespace: ns_123" \
+curl -sS -X POST "$MP_API_URL/v1/buckets/<bucket_id>/batches" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
   -H "Content-Type: application/json" \
   -d '{
-    "object_ids": ["obj_abc","obj_def"]
+    "batch_name": "products-2025-10-28",
+    "object_ids": ["obj_abc", "obj_def"]
   }'
 ```
 
-## Add objects to a batch
-
-- **API**: Add Objects to Batch
-- **Method**: POST
-- **Path**: `/v1/buckets/{bucket_identifier}/batches/{batch_id}/objects`
-- **Reference**: [API Reference](/api-reference/bucket-batches/add-objects-to-batch)
+Add more objects later:
 
 ```bash
-curl -X POST https://api.mixpeek.com/v1/buckets/bkt_123/batches/batch_456/objects \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "X-Namespace: ns_123" \
+curl -sS -X POST "$MP_API_URL/v1/buckets/<bucket_id>/batches/<batch_id>/objects" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
   -H "Content-Type: application/json" \
-  -d '{
-    "object_ids": ["obj_xyz"]
-  }'
+  -d '{ "object_ids": ["obj_xyz"] }'
 ```
 
-## Submit batch for processing
-
-- **API**: Submit Batch for Processing
-- **Method**: POST
-- **Path**: `/v1/buckets/{bucket_identifier}/batches/{batch_id}/submit`
-- **Reference**: [API Reference](/api-reference/bucket-batches/submit-batch-for-processing)
+## Submit for Processing
 
 ```bash
-curl -X POST https://api.mixpeek.com/v1/buckets/bkt_123/batches/batch_456/submit \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "X-Namespace: ns_123"
+curl -sS -X POST "$MP_API_URL/v1/buckets/<bucket_id>/batches/<batch_id>/submit" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
+  -H "Content-Type: application/json" \
+  -d '{ "include_processing_history": true }'
 ```
 
-## What happens after submit
+- `include_processing_history=true` records each enrichment operation in `internal_metadata.processing_history`.
+- Response contains a `task_id`; poll `/v1/tasks/{task_id}` or the batch resource directly.
 
-- Engine runs the configured feature extractors for downstream collections
-- Documents are written into target collections with lineage and features
-- Track status via [Tasks](/api-reference/tasks/get-task-information)
+## Lifecycle & Status
 
-## Example scenario
+| Status | Meaning |
+|--------|---------|
+| `DRAFT` | Created but not submitted |
+| `QUEUED` | Submitted; waiting for poller pickup |
+| `PROCESSING` | Ray job running feature extractors |
+| `COMPLETED` | All extractors finished successfully |
+| `FAILED` | Extractors or Ray job failed (see `error_message`) |
 
-You import 50k new product assets each week. Create a batch with the new object IDs on Friday, submit it, and monitor the task. By Monday, enriched documents and vectors are available in your `products_v1` collection for retrieval.
+Status updates synchronize to both the batch resource and the associated task.
 
-## Monitor and manage
+## Under the Hood
 
-- **Track jobs**: [Tasks](/api-reference/tasks/get-task-information)
-- **List batches**: [List Batches](/api-reference/bucket-batches/list-batches)
-- **Delete batch**: [Delete Batch](/api-reference/bucket-batches/delete-batch)
+1. API writes manifest metadata to MongoDB and extractor row artifacts to S3.
+2. Ray poller queries MongoDB every 5 seconds for `PENDING` batches.
+3. Poller submits a Ray job with manifest details.
+4. Worker downloads artifacts, runs extractors in dependency tiers, and writes documents to Qdrant/MongoDB.
+5. QdrantBatchProcessor emits webhook events and updates collection index signatures.
 
-## Behavior & validation
+## Monitoring
 
-- **Bucket-scoped**: A batch belongs to a bucket; objects must come from that bucket.
-- **Status lifecycle**: Batches are created as draft, populated with objects, then submitted for processing.
-- **Requirements**: Submit only after adding at least one object.
-- **Idempotency**: Adding the same object twice is ignored.
+- `GET /v1/buckets/<bucket_id>/batches/<batch_id>` – check batch status and manifest metadata.
+- `GET /v1/tasks/<task_id>` – track task-level progress (Redis TTL ≈ 24h).
+- Webhook events (`collection.documents.written`) notify you when documents land.
+- Analytics (coming soon) provide throughput metrics for Extractor + Engine performance.
 
-## See also
+## Scaling Tips
 
-<CardGroup cols={2}>
-  <Card title="Uploads" icon="arrow-up-from-bracket" href="/ingestion/uploads">
-    Register objects (single or batch) before batching
-  </Card>
-  
-  <Card title="Objects & Blobs" icon="box" href="/ingestion/objects">
-    Object and blob request shapes
-  </Card>
-</CardGroup>
+- **Chunk large imports** into batches of 1k–10k objects to keep pollers responsive.
+- **Parallelize submissions**—pollers handle multiple batches concurrently.
+- **Use namespaces** to isolate environments; pollers are namespace-aware.
+- **Retry safely**—batch submission and task polling are idempotent.
+- **Pipeline scheduling**—combine Celery Beat or your orchestrator to submit batches on cron.
 
-<CardGroup cols={2}>
-  <Card title="Collections" icon="database" href="/ingestion/collections">
-    Configure extractors; where processing writes documents
-  </Card>
-  
-  <Card title="Tasks" icon="list-check" href="/processing/tasks">
-    Track processing status and outcomes
-  </Card>
-</CardGroup>
+## Related APIs
+
+- [Create Batch](/api-reference/bucket-batches/create-batch)
+- [Add Objects to Batch](/api-reference/bucket-batches/add-objects-to-batch)
+- [Submit Batch](/api-reference/bucket-batches/submit-batch-for-processing)
+- [List Batches](/api-reference/bucket-batches/list-batches)
+- [Delete Batch](/api-reference/bucket-batches/delete-batch)
+- [Tasks](/processing/tasks) for status and error handling
+
+Batching keeps ingestion resilient and scalable—separate raw uploads from heavy compute, then let the Engine take over on its own schedule.

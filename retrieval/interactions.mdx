@@ -1,229 +1,103 @@
 ---
 title: "Interactions"
-description: "Track and leverage user interactions to improve search relevance"
+description: "Capture user feedback to improve retrieval"
 ---
 
-<Note>
-  Interaction tracking allows you to record how users engage with search results, enabling personalized ranking, relevance improvement, and usage analytics.
-</Note>
+Interactions record how users engage with retriever results. Store clicks, long views, purchases, skips, and other signals to power learning-to-rank, collaborative filtering, or analytics.
 
-## Overview
+## Interaction Model
 
-In Mixpeek, interactions represent how users engage with search results. By tracking these interactions, you can gather valuable data to improve search relevance, personalize results, and gain insights into user behavior and content performance.
+```json
+{
+  "interaction_id": "int_abc123",
+  "feature_id": "doc_xyz789",
+  "interaction_type": ["click", "long_view"],
+  "position": 2,
+  "metadata": {
+    "duration_ms": 12000,
+    "device": "mobile"
+  },
+  "user_id": "user_456",
+  "session_id": "sess_xyz789",
+  "created_at": "2025-10-28T10:15:23Z"
+}
+```
 
-<CardGroup cols={2}>
-  <Card title="User Engagement Data" icon="hand-pointer">
-    Record how users interact with search results, including clicks, views, and conversions
-  </Card>
-  
-  <Card title="Relevance Signals" icon="chart-line">
-    Use interaction data as signals to improve search relevance and personalization
-  </Card>
-</CardGroup>
+- `feature_id` should match a `document_id` returned by a retriever execution.
+- `interaction_type` accepts multiple labels per event (e.g., `["click", "long_view"]`).
+- `position` is the 0-based position in the result set.
+- `metadata` stores arbitrary context.
 
-## Types of Interactions
-
-Mixpeek supports several types of user interactions that you can track:
-
-<AccordionGroup>
-  <Accordion title="Click Interactions" icon="hand-pointer">
-    Track when users click on or select search results.
-    
-    **Use cases:**
-    - Determine which results users find most relevant
-    - Calculate click-through rates (CTR)
-    - Build personalized result rankings
-  </Accordion>
-
-  <Accordion title="View Interactions" icon="eye">
-    Track when users view or engage with content after clicking.
-    
-    **Use cases:**
-    - Measure content engagement depth
-    - Identify abandoned content
-    - Evaluate post-click relevance
-  </Accordion>
-
-  <Accordion title="Conversion Interactions" icon="cart-shopping">
-    Track when users take valuable actions like purchases, signups, or downloads.
-    
-    **Use cases:**
-    - Understand which content drives business outcomes
-    - Optimize for conversion-driving content
-    - Calculate conversion rates by result position
-  </Accordion>
-
-  <Accordion title="Custom Interactions" icon="sliders">
-    Define and track interactions specific to your application.
-    
-    **Use cases:**
-    - Track domain-specific engagement metrics
-    - Collect specialized feedback signals
-    - Measure application-specific user behaviors
-  </Accordion>
-</AccordionGroup>
-
-## Recording Interactions
-
-There is no dedicated public Interactions API in the OpenAPI spec. Track interactions in your application (e.g., analytics or your backend), then use those signals with supported endpoints like Retriever Execute.
-
-### Apply interaction signals at query time
-
-Use exclusion or boosting via filters/sorts when calling Execute Retriever:
+## Capture an Interaction
 
 ```bash
-curl -X POST https://api.mixpeek.com/v1/retrievers/RET_ID/execute \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "X-Namespace: ns_abc123" \
+curl -sS -X POST "$MP_API_URL/v1/retrievers/interactions" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
   -H "Content-Type: application/json" \
   -d '{
-    "inputs": {"query_text": "wireless headphones"},
-    "filters": {
-      "AND": [
-        {"field": "document_id", "operator": "nin", "value": ["doc_already_clicked_1", "doc_already_clicked_2"]}
-      ]
+    "feature_id": "doc_xyz789",
+    "interaction_type": ["click"],
+    "position": 3,
+    "metadata": {
+      "duration_ms": 4500,
+      "query": "wireless earbuds"
     },
-    "limit": 20
+    "user_id": "user_123",
+    "session_id": "sess_456"
   }'
 ```
 
-### Recommended fields to log in your app
+## Supported Interaction Types
 
-<Tabs>
-  <Tab title="Core">
-    | Field | Type | Description |
-    |-------|------|-------------|
-    | `type` | string | Interaction type such as click, view, conversion |
-    | `document_id` | string | Document the user interacted with |
-    | `user_id` | string | The end-user identifier (pseudonymous recommended) |
-  </Tab>
-  
-  <Tab title="Context">
-    | Field | Type | Description |
-    |-------|------|-------------|
-    | `session_id` | string | Session identifier |
-    | `position` | integer | Result position (1-based) |
-    | `metadata` | object | App-specific context (query text, device, page) |
-  </Tab>
-</Tabs>
+| Type | Signal | Description |
+|------|--------|-------------|
+| `click` | Positive (moderate) | User clicked the result |
+| `view` | Neutral | Result was viewed |
+| `long_view` | Positive (engagement) | User spent significant time on the result |
+| `positive_feedback` | Positive | Thumbs up / helpful vote |
+| `negative_feedback` | Negative | Thumbs down / not helpful |
+| `add_to_cart`, `purchase`, `wishlist` | Positive | Conversion-focused events |
+| `skip`, `return_to_results` | Negative | User ignored or bounced |
+| `query_refinement`, `zero_results` | Query signal | User refined query or saw no results |
 
+You can also define custom interaction types. Keep naming consistent to unlock downstream analytics.
 
-## Using Interactions in Search
-
-Interactions can be used to personalize and improve search results:
-
-Use interaction history to pre-filter or post-process results on the client or your server. When using the API directly, prefer supported features like filters and sorts.
-
-### User-based filtering example
+## Query Interactions
 
 ```bash
-curl -X POST https://api.mixpeek.com/v1/retrievers/RET_ID/execute \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "X-Namespace: ns_abc123" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "inputs": {"query_text": "running shoes"},
-    "filters": {
-      "AND": [
-        {"field": "document_id", "operator": "nin", "value": ["doc_clicked_1", "doc_clicked_2"]}
-      ]
-    },
-    "limit": 20
-  }'
+curl -sS -X GET "$MP_API_URL/v1/retrievers/interactions?feature_id=doc_xyz789&limit=20" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE"
 ```
 
-## Tracking Interactions Client-Side
+Use filters to slice by `interaction_type`, `user_id`, or `session_id`. For bulk exports, paginate using `page` and `page_size`.
 
-For web applications, capture interactions in your app and send them to your backend or analytics system. Use those signals to inform subsequent Mixpeek queries.
+## Delete an Interaction
 
-```javascript
-// Add click event listeners to search results
-document.querySelectorAll('.search-result').forEach((element, index) => {
-  element.addEventListener('click', async () => {
-    const documentId = element.getAttribute('data-document-id');
-    const payload = {
-      type: 'click',
-      document_id: documentId,
-      position: index + 1,
-      user_id: getCurrentUserId(),
-      session_id: getSessionId(),
-      metadata: {
-        query: getCurrentQueryText(),
-        device: getDeviceType(),
-        page: 'search_results'
-      }
-    };
-
-    // Send to your backend or analytics
-    await fetch('/api/track-interaction', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-  });
-});
+```bash
+curl -sS -X DELETE "$MP_API_URL/v1/retrievers/interactions/<interaction_id>" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE"
 ```
 
-## Analytics and Reporting
+Supports GDPR-style removal or deduplication workflows.
 
-Use your existing analytics stack (e.g., Segment, Snowflake, BigQuery, ClickHouse) to store and analyze interaction events. Mixpeek does not expose analytics endpoints in the OpenAPI spec.
+## Integrating with Retrievers
+
+Use interactions to:
+
+- **Exclude consumed results**: pass a filter referencing previous `feature_id`s.
+- **Boost popular content**: feed click/conversion signals into reranking or score fusion stages.
+- **Personalize**: build user preference vectors externally and inject them via retriever inputs or joins.
+- **Measure quality**: correlate `interaction_type` frequency with retriever executions using execution IDs.
 
 ## Best Practices
 
-<Steps>
-  <Step title="Track Consistently">
-    Implement interaction tracking consistently across your application to collect comprehensive data.
-  </Step>
-  <Step title="Include Context">
-    Capture relevant contextual information in the metadata field to make interactions more valuable for analysis.
-  </Step>
-  <Step title="Balance Privacy">
-    Respect user privacy by anonymizing user identifiers where appropriate and complying with relevant regulations.
-  </Step>
-  <Step title="Optimize Volume">
-    For high-traffic applications, consider batching interaction records or sampling to manage data volume.
-  </Step>
-</Steps>
+1. **Capture context** – record `query_text`, device, or surface in the `metadata` field.
+2. **Store position** – position data is critical for correcting rank bias in learning-to-rank.
+3. **Batch or stream** – interactions can be sent synchronously or aggregated and submitted in batches.
+4. **Respect privacy** – hash or tokenize `user_id` if you need anonymization; honour deletion requests via the DELETE endpoint.
+5. **Analyze regularly** – pipe interactions into your analytics warehouse to spot relevance regressions or new personalization opportunities.
 
-<Warning>
-  Interaction data can grow rapidly in high-traffic applications. Consider implementing data retention policies and monitoring storage usage.
-</Warning>
-
-## Implementation Strategies
-
-<CardGroup cols={2}>
-  <Card title="Basic Implementation" icon="baby">
-    - Track clicks on search results
-    - Use document position data
-    - Include user and session IDs
-    - Store basic query information
-  </Card>
-  
-  <Card title="Intermediate Implementation" icon="person-walking">
-    - Track clicks, views, and conversions
-    - Measure view duration and engagement depth
-    - Include device and page context
-    - Implement client-side tracking with JS SDK
-  </Card>
-
-  <Card title="Advanced Implementation" icon="person-running">
-    - Track custom interaction types
-    - Implement personalized ranking based on history
-    - Use interaction data for A/B testing
-    - Analyze interaction patterns for recommendations
-  </Card>
-  
-  <Card title="Enterprise Implementation" icon="building">
-    - Integrate with data warehouses
-    - Implement comprehensive reporting
-    - Use interaction data for model training
-    - Create personalized content recommendations
-  </Card>
-</CardGroup>
-
-## API Reference
-
-Relevant endpoints and guides:
-
-- [Execute Retriever](/api-reference/retrievers/execute-retriever)
-- [Filters](/retrieval/filters)
+The Interactions API gives you a canonical stream of user feedback—perfect for closing the loop between retrieval quality and real-world behavior.

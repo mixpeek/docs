@@ -1,126 +1,93 @@
 ---
-title: "Deep Research"
-description: "Multi‑step explorations that synthesize results into structured outputs"
+title: "Deep Research Patterns"
+description: "Compose multi-stage retrievers for investigations, literature reviews, and analysis"
 ---
 
-<Note>
-  Research chains multiple retrieval steps to explore a topic, organize findings, and synthesize a cohesive report. It builds on retrievers, pipelines, and interactions rather than a single API call.
-</Note>
+Deep research workflows orchestrate multiple retriever executions, enrichment passes, and synthesis steps to answer complex questions. Mixpeek’s stage catalog—search, filter, enrich, transform, compose—gives you the primitives to build these flows without bespoke infrastructure.
 
-## Overview
+## Building Blocks
 
-<CardGroup cols={2}>
-  <Card title="Multi‑step Search" icon="magnifying-glass-chart">
-    Break complex questions into sequential, targeted retrieval steps
-  </Card>
-  
-  <Card title="Structured Synthesis" icon="file-lines">
-    Organize findings into sections and produce a coherent narrative
-  </Card>
-  
-  <Card title="Source‑grounded" icon="quote-left">
-    Maintain citations and lineage back to original documents
-  </Card>
-  
-  <Card title="Configurable Flow" icon="diagram-project">
-    Compose with retrievers, pipelines, and enrichment stages
-  </Card>
-</CardGroup>
+| Stage Type | Examples | Use in Research |
+|------------|----------|-----------------|
+| Search | `semantic_search`, `hybrid_search`, `late_interaction_search`, `web_search` | Gather candidate documents across modalities and the open web |
+| Filter | `filter` (structured/text/LLM/custom) | Narrow to relevant time ranges, entities, or sentiment |
+| Enrich | `join` (direct/retriever), `taxonomy` | Attach structured context, e.g., taxonomy tags or related entities |
+| Transform | `llm_generation` | Summarize, extract key facts, or generate structured notes |
+| Compose | `retriever`, `external_api_call` | Chain sub-retrievers or call external services (e.g., fact-check APIs) |
 
-## How it works
+## Common Patterns
 
-<Frame>
-  ```mermaid
-  graph TD
-    Q[Primary Question] --> T[Topic Breakdown]
-    T --> S[Sequential Searches]
-    S --> O[Organize Findings]
-    O --> R[Report Assembly]
-  ```
-</Frame>
+### Literature Review
 
-<Steps>
-  <Step title="Decompose">
-    Split the question into sub‑topics and define per‑topic retrieval intents
-  </Step>
-  <Step title="Retrieve">
-    Execute retrievers per sub‑topic; apply filters, grouping, and selection
-  </Step>
-  <Step title="Enrich">
-    Optionally apply taxonomies or clustering to label and group
-  </Step>
-  <Step title="Synthesize">
-    Assemble a structured report with sections and citations
-  </Step>
-</Steps>
+1. **Seed search** using `hybrid_search` to retrieve recent papers.
+2. **Structured filter** by publication date and venue.
+3. **Taxonomy join** to classify by research area.
+4. **LLM generation** stage to summarize findings with citations.
+5. Store summaries alongside `feature_id` references for auditability.
 
-## Example patterns
+### Competitive Intelligence
 
-<Tabs>
-  <Tab title="Literature Review">
-    - Query recent papers, group by venue or year
-    - Extract abstracts, key findings, and limitations
-    - Summarize trends with citations back to source docs
-  </Tab>
-  
-  <Tab title="Competitive Analysis">
-    - Retrieve product specs, pricing, and announcements across sources
-    - Group by competitor and category; highlight deltas
-    - Produce an executive summary with referenced evidence
-  </Tab>
-  
-  <Tab title="Incident Investigation">
-    - Pull logs, tickets, runbooks, and chat transcripts
-    - Timeline events and root‑cause factors
-    - Generate an RCA draft linking to underlying artifacts
-  </Tab>
-</Tabs>
+1. Use `web_search` + `web_lookup` stages to pull public announcements.
+2. Join with internal product docs via `join@v1` (retriever strategy) to compare specs.
+3. Apply a custom filter to spotlight price or feature gaps.
+4. Generate a briefing memo with the `llm_generation` stage.
 
-## Building blocks
+### Incident Investigation
 
-<CardGroup cols={2}>
-  <Card title="Retrievers" icon="magnifying-glass" href="/retrieval/retrievers">
-    Stage KNN, hybrid, filters, grouping, and selection
-  </Card>
-  
-  <Card title="Pipelines & Workflows" icon="diagram-project" href="/processing/pipelines">
-    Chain collections and stages to orchestrate multi‑step flows
-  </Card>
-  
-  <Card title="Interactions" icon="comments" href="/retrieval/interactions">
-    Capture feedback signals to inform reranking across steps
-  </Card>
-  
-  <Card title="Tasks" icon="list-check" href="/processing/tasks">
-    Track long‑running enrichment or synthesis jobs
-  </Card>
-</CardGroup>
+1. Collect relevant runbooks/logs via `semantic_search` over internal collections.
+2. Use `filter` stages to isolate the incident window.
+3. Enrich with taxonomy-based tags (`taxonomy@v1`) for impacted systems.
+4. Summarize timeline and root cause via `llm_generation`, keeping citations.
 
-## Tips
+## Orchestrating Multi-Retriever Flows
 
-<Steps>
-  <Step title="Define scope">
-    Set clear sub‑topics and stop criteria to bound exploration
-  </Step>
-  <Step title="Curate signals">
-    Prefer high‑precision filters and groupings for each step
-  </Step>
-  <Step title="Cite sources">
-    Preserve document ids and metadata to ground conclusions
-  </Step>
-  <Step title="Iterate">
-    Refine prompts, filters, and stage parameters based on gaps
-  </Step>
-</Steps>
+Leverage the `retriever@v1` compose stage to call sub-retrievers based on previous stage output:
 
-## See also
+```json
+{
+  "stage_name": "retriever",
+  "version": "v1",
+  "parameters": {
+    "retriever_id": "ret_internal_logs",
+    "input_mappings": {
+      "query_text": "{{inputs.primary_question}}",
+      "time_range": "{{STAGE.filter.time_range}}"
+    },
+    "merge_strategy": "append"
+  }
+}
+```
 
-<CardGroup cols={2}>
-  <Card title="Filters" icon="filter" href="/retrieval/filters">
-    Compose logical operators and operators for targeted steps
-  </Card>
-  
-  <Card title="Collections" icon="database" href="/ingestion/collections">
-    Understand feature addresses and searchable fields
-  </Card>
-</CardGroup>
+This pattern lets you create macro retrievers that orchestrate domain-specific sub-searches, enabling modular reuse.
+
+## Capturing Feedback
+
+- Record user signals with the [Interactions API](/retrieval/interactions) (`click`, `long_view`, `positive_feedback`, etc.).
+- Feed interactions back into rerankers or filter stages (“hide documents seen in this session”).
+- Combine interactions with `analytics` endpoints to optimize parameter choices (e.g., increase `hybrid_search.limit` if users often tap beyond top 10).
+
+## Operational Tips
+
+1. **Persist execution IDs** – each `execute` response includes `execution_id`; link it to your research session for audit trails.
+2. **Monitor stage telemetry** – `stage_statistics` identifies bottlenecks (e.g., LLM stages dominating latency).
+3. **Budget controls** – set `budget_limits` on retrievers to cap time or credit consumption for exploratory workflows.
+4. **Cache intermediate results** – use `cache_stage_names` for expensive discovery steps, especially when analysts reiterate queries.
+5. **Leverage tasks** – schedule enrichment batches (clusters, taxonomies) ahead of time so research pipelines stay low-latency.
+
+## Suggested Architecture
+
+```
+Orchestration App
+ ├─ Calls macro retriever (with compose stages)
+ ├─ Logs execution IDs + user prompts
+ ├─ Stores generated summaries & citations
+ └─ Sends interactions back to Mixpeek
+```
+
+Behind the scenes, Mixpeek handles stage execution, caching, and lineage tracking. You focus on stitching together the right stages and presenting the synthesized output.
+
+## Next Steps
+
+- Review [Retrievers](/retrieval/retrievers) for stage configuration details.
+- Learn how [Filters](/retrieval/filters) and [Taxonomies](/enrichment/taxonomies) contribute structure to exploratory pipelines.
+- Use [Operations → Observability](/operations/observability) to monitor research workloads in production.

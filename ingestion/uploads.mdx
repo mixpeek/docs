@@ -1,111 +1,104 @@
 ---
-title: "Uploads"
-description: "Register objects and blobs for processing"
+title: "Uploads & Ingestion Patterns"
+description: "Strategies for registering objects at scale"
 ---
 
-<Note>
-  Uploads in Mixpeek mean registering objects that reference one or more blobs (files or JSON). Creating an object does not trigger processing; it simply records the object so downstream collections can process it later.
-</Note>
+Uploads in Mixpeek consist of creating objects inside schema-backed buckets and, optionally, bundling them into batches for processing. Whether you are uploading one file from a client or importing millions of records from a data lake, the workflow follows the same pattern: register → batch → submit → monitor.
 
-## Overview
-
-- **What you create**: An object inside a bucket, composed of one or more blobs.
-- **Where files live**: Provide blob data as a URL or inline JSON, matching your bucket schema.
-- **Processing**: Object creation does not start processing; use batches or collection pipelines to process.
-
-## Create a single object
-
-- API: Create Object
-- Method: POST
-- Path: `/v1/buckets/{bucket_identifier}/objects`
-- Reference: [API Reference](/api-reference/bucket-objects/create-object)
+## Single Object Upload
 
 ```bash
-curl -X POST https://api.mixpeek.com/v1/buckets/bkt_123/objects \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "X-Namespace: ns_123" \
+curl -sS -X POST "$MP_API_URL/v1/buckets/<bucket_id>/objects" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
   -H "Content-Type: application/json" \
   -d '{
-    "key_prefix": "/products/red-sneaker",
-    "metadata": {"category": "shoes", "year": 2024},
+    "key_prefix": "/catalog/2025-10/",
+    "metadata": { "category": "headphones" },
     "skip_duplicates": true,
     "blobs": [
       {
-        "property": "image_main",
-        "type": "image",
-        "data": "https://example.com/images/red-sneaker-front.jpg",
-        "metadata": {"mimetype": "image/jpeg"}
+        "property": "product_text",
+        "type": "text",
+        "data": "Lightweight wireless headphones with adaptive ANC."
       },
       {
-        "property": "specs",
-        "type": "json",
-        "data": {"title": "Red Sneaker", "sizes": [7,8,9,10]}
+        "property": "hero_image",
+        "type": "image",
+        "data": "https://cdn.example.com/headphones.jpg"
       }
     ]
   }'
 ```
 
-## Create multiple objects (batch)
+- `skip_duplicates` compares blob hashes to avoid storing identical uploads.
+- `key_prefix` provides logical grouping for later queries.
+- Object creation is idempotent—safe to retry failed requests.
 
-- API: Create Objects in Batch
-- Method: POST
-- Path: `/v1/buckets/{bucket_identifier}/objects/batch`
-- Reference: [API Reference](/api-reference/bucket-objects/create-objects-in-batch)
+## Batch Upload
+
+Bulk ingestion is faster when you create objects in batch and submit a single processing job.
 
 ```bash
-curl -X POST https://api.mixpeek.com/v1/buckets/bkt_123/objects/batch \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "X-Namespace: ns_123" \
+curl -sS -X POST "$MP_API_URL/v1/buckets/<bucket_id>/objects/batch" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
   -H "Content-Type: application/json" \
   -d '{
     "objects": [
       {
-        "key_prefix": "/products/red-sneaker",
-        "metadata": {"category": "shoes"},
+        "key_prefix": "/catalog/headphones",
+        "metadata": { "category": "audio" },
         "blobs": [
-          {"property": "image_main", "type": "image", "data": "https://example.com/images/red-front.jpg"}
+          { "property": "product_text", "type": "text", "data": "Wireless over-ear headphones..." }
         ]
       },
       {
-        "key_prefix": "/products/blue-sneaker",
-        "metadata": {"category": "shoes"},
+        "key_prefix": "/catalog/speakers",
+        "metadata": { "category": "audio" },
         "blobs": [
-          {"property": "image_main", "type": "image", "data": "https://example.com/images/blue-front.jpg"}
+          { "property": "product_text", "type": "text", "data": "Compact smart speaker..." }
         ]
       }
     ]
   }'
 ```
 
-## Batching primer
+Then create and submit a batch:
 
-Use batches to organize object processing into an asynchronous job. See the full guide at [Batching](/processing/batching).
+```bash
+curl -sS -X POST "$MP_API_URL/v1/buckets/<bucket_id>/batches" \
+  ...
 
+curl -sS -X POST "$MP_API_URL/v1/buckets/<bucket_id>/batches/<batch_id>/submit" \
+  ...
+```
+
+The submit response includes a `task_id`; poll `/v1/tasks/{task_id}` or watch the batch resource directly.
+
+## Upload Sources
+
+| Source | Strategy |
+|--------|----------|
+| Browser / client app | Upload to your storage, then register object URLs with Mixpeek |
+| Data lake (S3/GCS) | Point blobs to existing URIs and set `skip_duplicates=true` |
+| Streaming ingestion | Combine incremental object creation with periodic batch submissions |
+| Large archives | Pre-process externally, split into multiple objects, and enqueue batches | 
+
+## Tips for High-Volume Imports
+
+- **Use multiple smaller batches** (1k–10k objects) to keep pollers responsive.
+- **Parallelize object registration**—the API layer scales horizontally.
+- **Monitor tasks** with the Tasks API or webhooks to coordinate downstream systems.
+- **Leverage retries**; object creation and batch submission are safe to repeat on failure.
+- **Tag metadata** that will help with retrieval filters or taxonomy enrichment later.
+
+## Related APIs
+
+- [Create Object](/api-reference/bucket-objects/create-object)
+- [Create Objects in Batch](/api-reference/bucket-objects/create-objects-in-batch)
 - [Create Batch](/api-reference/bucket-batches/create-batch)
-- [Add Objects to Batch](/api-reference/bucket-batches/add-objects-to-batch)
-- [Submit Batch for Processing](/api-reference/bucket-batches/submit-batch-for-processing)
+- [Submit Batch](/api-reference/bucket-batches/submit-batch-for-processing)
+- [List Objects](/api-reference/bucket-objects/list-objects)
 
-## Tips
-
-- **Match your schema**: Blob `property` and `type` must match your bucket schema.
-- **Use prefixes**: `key_prefix` helps organize downstream documents.
-- **Metadata propagates**: Object `metadata` is attached to downstream documents.
-- **Deduplication**: Set `skip_duplicates` to avoid re-registering identical blobs.
-
-## See also
-
-<CardGroup cols={2}>
-  <Card title="Buckets" icon="bucket" href="/ingestion/buckets">
-    Design schemas and organize objects
-  </Card>
-  
-  <Card title="Collections" icon="database" href="/ingestion/collections">
-    Configure feature extractors and outputs
-  </Card>
-</CardGroup>
-
-<CardGroup cols={1}>
-  <Card title="Batching" icon="layer-group" href="/processing/batching">
-    Submit grouped objects for asynchronous processing
-  </Card>
-</CardGroup>
+Uploads are just the start—once registered, objects can feed multiple collection pipelines, ensuring you only upload once regardless of how many features or retrievers you build later.

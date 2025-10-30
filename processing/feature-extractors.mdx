@@ -1,84 +1,99 @@
 ---
 title: "Feature Extractors"
-description: "Configurable pipelines that produce features inside documents"
+description: "Distributed pipelines that turn raw objects into reusable features"
 ---
 
-<Note>
-  Feature extractors transform raw content from buckets or collections into features stored inside documents. Availability varies by account; see the public catalog and contact support to enable additional extractors as needed.
-</Note>
+Feature extractors are Ray-powered workflows that read objects, run ML models, and write features into collection documents. Each extractor exposes a stable feature URI so retrievers, taxonomies, and clusters can reference the outputs with confidence.
 
-## Overview
+## Catalog Highlights
 
-- **What they do**: Run models to generate vectors and structured fields inside documents.
-- **Where they run**: As part of ingestion pipelines for a target collection.
-- **Outputs**: Vectors (dense, sparse, multi) and payload fields, with index definitions applied by the collection.
+| Extractor | Output | Key Models | Typical Latency | Use Cases |
+|-----------|--------|------------|-----------------|-----------|
+| `text_extractor@v1` | Dense text embedding (1024–1536 dims) + language, token counts | `intfloat/multilingual-e5-large-instruct`, `gte-modernbert-base`, OpenAI `text-embedding-3-*` | 10–50 ms/doc (GPU) | Semantic search, Q&A, classification |
+| `video_extractor@v1` | Scene metadata, frame embeddings, OCR text | CLIP, Pyannote, FFmpeg | 2–10 s/video | Video search, moderation, scene detection |
+| `splade_extractor@v1` | Sparse lexical vector (indices + values) | `naver/splade-v1` | 5–20 ms/doc | Hybrid search, rare term recall |
+| `colbert_extractor@v1` | Multi-vector token embeddings (per token 128 dims) | `colbert_ir/colbertv2` | 20–80 ms/doc | Late interaction search, passage QA |
+| `whisper_large_v3` | Transcription + timestamps | `openai/whisper-large-v3-turbo` | 500–2000 ms/min audio | Speech search, diarization |
 
-## Discover extractors
+Contact support to enable additional extractors or custom models.
 
-- Browse catalog: [mixpeek.com/extractors](https://mixpeek.com/extractors)
-- Availability: Some extractors may require enablement. Contact support: [mixpeek.com/contact](https://mixpeek.com/contact)
-- API:
-  - [List Feature Extractors](/api-reference/feature-extractors/list-feature-extractors)
-  - [Get Feature Extractor by Name](/api-reference/feature-extractors/get-feature-extractor-by-name)
+## Where Extractors Run
 
-## Configure in a collection
+- Mixpeek submits Ray jobs tier-by-tier using manifests stored in S3.
+- Workers download per-extractor Parquet artifacts, execute model inference (GPU if available), and write results to Qdrant and MongoDB.
+- Engine pollers respect dependency tiers so downstream collections only run when upstream data is ready.
 
-Attach extractors when creating a collection. Each entry declares the extractor name and version (plus optional parameters and mappings).
+## Configuring Extractors
+
+Extractors are attached to a collection via the singular `feature_extractor` field:
 
 ```json
 {
-  "collection_name": "products_v1",
-  "source": {"type": "BUCKET", "bucket_id": "bkt_123"},
-  "feature_extractors": [
-    {
-      "feature_extractor_name": "gte_modernbert_base",
-      "version": "1.0.0",
-      "parameters": {},
-      "input_mappings": {"text": "payload.title"}
+  "feature_extractor": {
+    "feature_extractor_name": "text_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "text": "product_text"
+    },
+    "field_passthrough": [
+      { "source_path": "metadata.category" },
+      { "source_path": "metadata.brand" }
+    ],
+    "parameters": {
+      "model": "multilingual-e5-large-instruct",
+      "normalize": true
     }
-  ]
+  }
 }
 ```
 
-- Extractor outputs determine feature field names and vector index requirements for the collection.
-- Use Describe Collection Features to see resolved addresses and metadata.
+- **Input mappings** use JSONPath-like paths (`metadata.category`, `$.payload.description`) to map object fields to extractor inputs.
+- **Field passthrough** copies original object fields into the resulting documents.
+- **Parameters** set model-specific options (e.g., alternative embedding models, chunk strategies).
 
-## Behavior & availability
+The collection immediately calculates an `output_schema` that merges passthrough fields and extractor outputs, so you can validate downstream systems before processing begins.
 
-- **Account‑dependent**: Certain extractors are not enabled by default; request access if needed.
-- **Versioned**: Changing model versions typically requires reprocessing to keep features consistent.
-- **Indexes**: Required vector/payload indexes are applied by the engine based on extractor outputs.
+## Feature URIs
 
-## Used by
+Every extractor output publishes a URI (`mixpeek://{name}@{version}/{output}`), for example:
 
-- **Collections**: Store the produced features in documents ([Collections](/ingestion/collections)).
-- **Retrievers**: Search across vectors and payloads ([Retrievers](/retrieval/retrievers)).
-- **Taxonomies**: Join and enrich using feature fields ([Taxonomies](/enrichment/taxonomies)).
-- **Clusters**: Build similarity groups over feature vectors ([Clusters](/enrichment/clusters)).
+- `mixpeek://text_extractor@v1/text_embedding`
+- `mixpeek://video_extractor@v1/scene_embedding`
+- `mixpeek://splade_extractor@v1/splade_vector`
 
-## Manage and inspect
+Use these URIs when configuring retrievers, taxonomies, clustering jobs, and analytics. They guarantee query-time compatibility with ingestion.
 
-- [Describe Collection Features](/api-reference/collections/describe-collection-features) to see addresses and indexes.
-- [List Feature Extractors](/api-reference/feature-extractors/list-feature-extractors) to view available extractors.
+## Pipeline Flow
 
-## See also
+1. API flattens manifest → extractor row artifacts (Parquet) and stores them in S3.
+2. Ray poller discovers a pending batch and submits a job.
+3. Worker loads dataset, runs the extractor flow, and emits features + passthrough fields.
+4. QdrantBatchProcessor writes vectors/payloads to Qdrant, emits webhook events, and updates index signatures.
 
-<CardGroup cols={2}>
-  <Card title="Collections" icon="database" href="/ingestion/collections">
-    Attach extractors and define outputs
-  </Card>
-  
-  <Card title="Features" icon="tags" href="/ingestion/features">
-    How features are stored inside documents
-  </Card>
-</CardGroup>
+Each document records lineage metadata:
 
-<CardGroup cols={2}>
-  <Card title="Retrievers" icon="magnifying-glass" href="/retrieval/retrievers">
-    Search vectors and payloads from collections
-  </Card>
-  
-  <Card title="Extractor Catalog" icon="list" href="https://mixpeek.com/extractors">
-    Explore available extractors and request enablement
-  </Card>
-</CardGroup> 
+```json
+{
+  "root_object_id": "obj_123",
+  "source_collection_id": "col_source",
+  "processing_tier": 2,
+  "feature_address": "mixpeek://text_extractor@v1/text_embedding"
+}
+```
+
+## Performance & Scaling
+
+- GPU workers deliver 5–10× faster throughput for embeddings, reranking, and video processing.
+- Ray Data handles batching, shuffling, and parallelization automatically.
+- Autoscaling policies maintain target utilization (`0.7` CPU, `0.8` GPU by default).
+- Inference cache short-circuits repeated model calls when inputs match exactly.
+
+## Operational Tips
+
+1. **Pin versions** – upgrade by creating a new collection or reprocessing existing documents.
+2. **Batch uploads** – keep batches to manageable sizes (1k–10k objects) to maximize parallelism.
+3. **Monitor analytics** – `/v1/analytics/extractors/performance` exposes throughput and error metrics (stub available now; enable analytics to populate).
+4. **Use passthrough fields** – propagate metadata you’ll need for retrieval filters or taxonomies.
+5. **Inspect features** – `GET /v1/collections/{id}/features` lists the feature URIs, dimensions, and descriptions produced for that collection.
+
+Feature extractors are the heart of Mixpeek’s Engine. Configure them once, reuse the outputs everywhere, and rely on Ray + Qdrant to keep performance predictable at scale.

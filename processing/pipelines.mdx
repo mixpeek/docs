@@ -1,105 +1,89 @@
 ---
-title: "Pipelines & Workflows"
-description: "Chain collections to build multi-stage processing workflows"
+title: "Processing Pipelines"
+description: "Chain collections into tiered extraction workflows"
 ---
 
-<Note>
-  Pipelines let you chain multiple collections so the output documents of one stage become the input to the next. This enables modular, versioned, and reusable processing for complex multimodal workflows.
-</Note>
+Processing pipelines are simply collections referencing other collections. By setting `source.type` to `"collection"`, you create a tiered DAG that Mixpeek processes in dependency order.
 
-## Overview
+## Tiered DAG Execution
 
-- **What**: Multi-stage processing where a collection can use another collection as its source
-- **How**: Set collection `source.type` to `COLLECTION` and reference the upstream `collection_id`
-- **Why**: Compose extraction, transformation, enrichment, and indexing in clear stages
+1. API builds a dependency graph when you submit a batch.
+2. Ray poller processes Tier 0 collections (bucket sources) in parallel.
+3. Once Tier 0 completes, Tier 1 collections (collection sources) execute.
+4. The cycle continues until the deepest tier finishes.
 
-## How chaining works
+Example:
 
-Each collection declares a source and its own feature extractors. By pointing one collection at another, you build a directed graph of stages.
+```
+Tier 0:  videos_raw           (bucket source)
+Tier 1:  video_frames         (collection source → videos_raw)
+Tier 2:  frame_faces          (collection source → video_frames)
+Tier 3:  face_embeddings      (collection source → frame_faces)
+```
+
+Documents at every tier retain `root_object_id`, `source_collection_id`, `source_document_id`, and `lineage_path`, enabling complete traceability back to the original object.
+
+## Configuration Pattern
 
 ```json
 {
-  "collection_name": "products_raw_v1",
-  "source": {"type": "BUCKET", "bucket_id": "bkt_123"},
-  "feature_extractors": [
-    {"feature_extractor_name": "pdf_parser", "version": "1.0.0"},
-    {"feature_extractor_name": "image_embedder", "version": "1.0.0"}
-  ]
+  "collection_name": "video_frames",
+  "source": { "type": "bucket", "bucket_id": "bkt_videos" },
+  "feature_extractor": {
+    "feature_extractor_name": "video_extractor",
+    "version": "v1",
+    "parameters": { "scene_detection": true }
+  }
 }
 ```
 
 ```json
 {
-  "collection_name": "products_enriched_v1",
-  "source": {"type": "COLLECTION", "collection_id": "col_products_raw_v1"},
-  "feature_extractors": [
-    {"feature_extractor_name": "text_embedder", "version": "1.0.0"}
-  ]
+  "collection_name": "frame_faces",
+  "source": { "type": "collection", "collection_id": "col_video_frames" },
+  "feature_extractor": {
+    "feature_extractor_name": "face_detector",
+    "version": "v2",
+    "input_mappings": { "image": "frame_image" }
+  }
 }
 ```
 
-<Frame>
-  ```mermaid
-  graph TD
-    B[Bucket] --> C1[Collection products_raw_v1]
-    C1 --> C2[Collection products_enriched_v1]
-    C2 --> R[Retrievers]
-  ```
-</Frame>
+## Manifest Flattening
 
-- Upstream collection writes documents with initial features
-- Downstream collection reads those documents as its input and adds more features
+When you submit a batch Mixpeek:
 
-## Examples
+1. Flattens objects into per-extractor row artifacts (Parquet).
+2. Stores artifacts in S3 (`manifest_key`, `extractor_row_artifacts`).
+3. Passes artifact references to Ray jobs for each collection tier.
+4. Ensures each extractor processes the correct subset of inputs.
 
-- **Video pipeline**: `video_scenes` (BUCKET → scene splitting) → `scene_analytics` (COLLECTION → face object detection) → `scene_enriched` (COLLECTION → taxonomy enrichment)
-- **Document pipeline**: `docs_raw` (BUCKET → OCR and PDF parse) → `docs_nlp` (COLLECTION → embeddings and entities) → `docs_topics` (COLLECTION → topic tagging)
-- **Image pipeline**: `images_raw` (BUCKET → EXIF and thumbnail) → `images_semantic` (COLLECTION → CLIP embeddings) → `images_moderation` (COLLECTION → safety labels)
+This design allows thousands of objects and multiple collections to be processed efficiently without duplicating raw blobs.
 
-## What this unlocks
+## Enrichment Within Pipelines
 
-- **Modularity**: Swap or upgrade a stage without rebuilding the entire flow
-- **Versioning**: Keep `*_v1`, `*_v2` collections side by side for safe rollouts
-- **Reuse**: Share upstream collections across multiple downstream use cases
-- **Parallelism**: Run different enrichments in parallel from the same source
-- **Observability**: Stage-by-stage lineage and targeted reprocessing
+- Add taxonomy applications to collections to materialize enrichment immediately after extractor runs.
+- Trigger clustering jobs on collection outputs to assign cluster metadata.
+- Downstream collections can reference enriched fields from upstream tiers (e.g., taxonomy tags).
 
-## Describe and verify
+## Observability
 
-- Introspect feature addresses for each stage: [Describe Collection Features](/api-reference/collections/describe-collection-features)
-- List and inspect collections: [List Collections](/api-reference/collections/list-collections), [Get Collection](/api-reference/collections/get-collection)
+- `GET /v1/collections/{id}` shows `document_count`, `taxonomy_count`, and `retriever_count`.
+- Ray poller logs and task metadata (`/v1/tasks/{task_id}`) capture job IDs and timing.
+- Use `/v1/objects/{object_id}/decomposition-tree` to inspect the entire pipeline lineage for a single object.
 
-## API references
+## Upgrade & Versioning Strategy
 
-- Create: [Create Collection](/api-reference/collections/create-collection)
-- Update: [Update Collection](/api-reference/collections/update-collection)
-- Delete: [Delete Collection](/api-reference/collections/delete-collection)
+- Clone a collection with a new name/version (e.g., `video_frames_v2`) when changing extractors or parameters.
+- Update downstream collections to point at the new version.
+- Run batches through both versions for A/B testing before deprecating the old one.
 
-## Best practices
+## Best Practices
 
-- **Explicit naming**: Use clear stage/version suffixes (e.g., `products_raw_v1`)
-- **Stable schemas**: Keep downstream contracts stable; add new outputs with new versions
-- **Small stages**: Prefer focused extractors per collection for easier upgrades
-- **Task monitoring**: Track processing with [Tasks](/processing/tasks)
+1. Keep each collection focused on a single concern (frame extraction, face detection, embeddings).
+2. Use metadata passthrough to share relevant fields between tiers.
+3. Submit batches that contain all objects needed for a multi-tier run to avoid partial states.
+4. Monitor webhook events to trigger downstream automation once documents land.
+5. Use retriever JOIN stages to traverse tiers during query time if you prefer on-demand joins over materialization.
 
-## See also
-
-<CardGroup cols={2}>
-  <Card title="Collections" icon="database" href="/ingestion/collections">
-    Define sources and attach feature extractors
-  </Card>
-  
-  <Card title="Feature Extractors" icon="wand-magic-sparkles" href="/processing/feature-extractors">
-    Configure model-based outputs per stage
-  </Card>
-</CardGroup>
-
-<CardGroup cols={2}>
-  <Card title="Tasks" icon="list-check" href="/processing/tasks">
-    Monitor multi-stage processing jobs
-  </Card>
-  
-  <Card title="Retrievers" icon="magnifying-glass" href="/retrieval/retrievers">
-    Search across one or more target collections
-  </Card>
-</CardGroup>
+Pipelines give you the freedom to build complex multimodal workflows while keeping each stage modular, observable, and upgradeable.

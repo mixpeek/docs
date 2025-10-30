@@ -1,165 +1,128 @@
 ---
-title: "Errors"
-description: "Understand Mixpeek error responses and how to resolve common issues"
+title: "Error Guide"
+description: "Diagnose and resolve common Mixpeek errors"
 ---
 
-<Note>
-  Mixpeek returns a consistent JSON error envelope for API errors and structured codes for WebSocket failures. This guide shows common error types, how to diagnose them, and recommended fixes.
-</Note>
-
-## Canonical error envelope
+Every API error returns the same JSON envelope:
 
 ```json
 {
   "success": false,
   "status": 404,
   "error": {
-    "message": "Resource not found",
     "type": "NotFoundError",
-    "details": {
-      "resource": "collection",
-      "id": "col_missing"
-    }
+    "message": "Resource not found",
+    "details": { "resource": "collection", "id": "col_missing" }
   }
 }
 ```
 
-- `success`: always false on errors
-- `status`: HTTP status code
-- `error.type`: stable, machine‑readable error class
-- `error.details`: optional context for debugging
+- `status` is the HTTP status code.
+- `type` is a stable error class you can branch on.
+- `details` contains structured context (optional).
 
-## Common API errors
+## Frequent Errors & Fixes
 
-<CardGroup cols={2}>
-  <Card title="400 BadRequestError" icon="triangle-exclamation">
-    Malformed input, unsupported parameters, invalid state transitions
-  </Card>
-  
-  <Card title="422 ValidationError" icon="circle-exclamation">
-    Pydantic validation failed; check field names and types
-  </Card>
-  
-  <Card title="404 NotFoundError" icon="magnifying-glass">
-    Resource or route not found (IDs, names, or paths)
-  </Card>
-  
-  <Card title="409 AlreadyExistsError" icon="clone">
-    Unique constraint conflict (e.g., duplicate names per namespace)
-  </Card>
-  
-  <Card title="429 TooManyRequestsError" icon="gauge">
-    Rate limit exceeded; back off and retry later
-  </Card>
-  
-  <Card title="403 UnauthorizedError" icon="lock">
-    Missing/invalid permissions, tier/credit checks, or auth failures
-  </Card>
-  
-  <Card title="500 InternalServerError" icon="circle-xmark">
-    Unexpected server error; retry, then contact support if persistent
-  </Card>
-  
-  <Card title="503 InferenceServiceUnavailableError" icon="cloud-slash">
-    Inference backend unavailable; retry with backoff or failover
-  </Card>
-</CardGroup>
+| HTTP | Error Type | Typical Cause | Resolution |
+|------|------------|---------------|------------|
+| 400 | `BadRequestError` | Invalid query parameters, unsupported combinations | Compare request with OpenAPI schema; remove unknown keys |
+| 401 | `UnauthorizedError` | Missing/invalid API key | Provide `Authorization: Bearer <api_key>` |
+| 403 | `ForbiddenError` / `NotEnabledError` | Feature disabled or wrong permission tier | Check account plan or API key scopes |
+| 404 | `NotFoundError` | Resource ID/name incorrect, wrong namespace | Verify IDs and `X-Namespace`; list resources to confirm |
+| 409 | `AlreadyExistsError` | Duplicate name within namespace | Choose unique names or delete existing resource |
+| 422 | `ValidationError` | Body schema mismatch | Inspect `validation_errors` in `details`; fix types/paths |
+| 429 | `TooManyRequestsError` | Rate limit exceeded | Throttle requests, introduce exponential backoff |
+| 500 | `InternalServerError` | Unexpected server error | Retry with jitter; capture `request_id` for support |
+| 503 | `InferenceServiceUnavailableError` | Ray Serve deployment unavailable | Retry; check Ray dashboard for replica health |
 
-## Domain‑specific errors
+## Domain-Specific Errors
 
-- ProcessingError · FeatureExtractionError · SchemaValidationError
-- StorageError · S3StorageError
-- QdrantError · MongoDBError
-- NotEnabledError · NotImplementedError · UnavailableError
-- RaySubmissionError · TimeoutError (408)
+- `ProcessingError`, `FeatureExtractionError` – Engine failed during extraction; inspect task logs (`/v1/tasks/{id}`) and Ray job output.
+- `StorageError`, `MongoDBError`, `QdrantError` – Underlying datastore unavailable or returned failure; verify connection strings and service health.
+- `TimeoutError`, `RaySubmissionError` – Engine job submission failed or timed out; check Ray head logs and job queue depth.
 
-These include a descriptive `message` and may include `details` to pinpoint the failing phase (extraction, storage, database, engine dispatch).
+## Debugging Checklist
 
-## WebSocket errors
+1. **Headers** – Confirm both `Authorization` and `X-Namespace` are present where required.
+2. **Schema** – Validate request against `/api-reference/...` examples; pay attention to recent breaking changes (e.g., `feature_extractor` singular).
+3. **Resource existence** – Use list endpoints to confirm IDs. Names are namespace-scoped; duplicates across namespaces are allowed.
+4. **Task status** – For async operations (batches, clustering, taxonomy), poll `/v1/tasks/{task_id}` or the resource until `COMPLETED`.
+5. **Health** – Call `/v1/health` if you suspect dependency failures.
+6. **Logs** – Check API logs (request ID) and Ray job logs (`additional_data.job_id` in task response) for stack traces.
+7. **Webhooks** – If downstream systems disagree, inspect webhook events (`collection.documents.written`), which persist until delivered.
 
-```json
-{ "code": 4001, "type": "WebSocketAuthenticationError", "message": "WebSocket authentication failed" }
-{ "code": 4004, "type": "WebSocketTaskNotFoundError", "message": "Task not found" }
-{ "code": 4000, "type": "WebSocketInternalError", "message": "Internal WebSocket server error" }
-```
+## Error Examples
 
-- 4001: Authentication failure
-- 4004: Referenced task not found/expired
-- 4000: Generic internal WebSocket error
+### Validation Error (422)
 
-## Quick diagnosis
-
-<Steps>
-  <Step title="Check headers">
-    Ensure <code>Authorization</code> and <code>X-Namespace</code> are set where required
-  </Step>
-  <Step title="Validate inputs">
-    Compare body against API reference schemas; fix types/paths
-  </Step>
-  <Step title="Confirm resource IDs">
-    Verify namespace, collection/retriever/taxonomy IDs or names
-  </Step>
-  <Step title="Review limits">
-    For 429, see rate limits and backoff strategies
-  </Step>
-  <Step title="Inspect logs">
-    Correlate request IDs across API/Engine; check recent exceptions
-  </Step>
-</Steps>
-
-## Examples
-
-### Validation error (422)
 ```json
 {
   "success": false,
   "status": 422,
   "error": {
-    "message": "Validation error",
     "type": "ValidationError",
+    "message": "Validation error",
     "details": {
       "validation_errors": [
-        { "type": "string_type", "location": ["body","collection_name"], "message": "Input should be a valid string" }
+        { "type": "string_type", "location": ["body", "collection_name"], "message": "Input should be a valid string" }
       ]
     }
   }
 }
 ```
 
-### Rate limit exceeded (429)
+### Rate Limit (429)
+
 ```json
 {
   "success": false,
   "status": 429,
-  "error": { "message": "Rate limit exceeded", "type": "TooManyRequestsError", "details": {"api_name": "search"} }
+  "error": {
+    "type": "TooManyRequestsError",
+    "message": "Rate limit exceeded",
+    "details": { "api_name": "retrievers.execute" }
+  }
 }
 ```
 
-### Not found (404)
+### Engine Failure
+
 ```json
 {
   "success": false,
-  "status": 404,
-  "error": { "message": "Resource not found", "type": "NotFoundError" }
+  "status": 500,
+  "error": {
+    "type": "ProcessingError",
+    "message": "Extractor text_extractor failed",
+    "details": {
+      "batch_id": "bat_abc123",
+      "extractor": "text_extractor@v1",
+      "job_id": "ray_job_456"
+    }
+  }
 }
 ```
 
-## Resolution tips
+Use `job_id` to fetch Ray logs: `ray job logs ray_job_456`.
 
-- 400/422: Recheck body shape and field paths; align with OpenAPI
-- 403: Confirm API key permissions and account tier/credits
-- 404: Verify identifiers and namespace context; ensure resources exist
-- 408/429: Exponential backoff and retries; reduce request rate/size
-- 5xx: Retry with jitter; if persistent, capture request ID and contact support
+## Retry Guidance
 
-## See also
+- **Idempotent GET/POST**: safe to retry with exponential backoff (jitter).
+- **Batch submissions**: multiple submissions of the same batch are ignored (`skip_duplicates`).
+- **Mutations (create/update)**: ensure client retries include the same idempotency keys or check resource existence before resubmitting.
 
-<CardGroup cols={2}>
-  <Card title="Troubleshooting: Limits" icon="gauge" href="/troubleshoot/limits">
-    Understand rate limits and quotas by tier
-  </Card>
-  
-  <Card title="Health API" icon="heart-pulse" href="/api-reference/health/healthcheck">
-    Check service readiness and dependency status
-  </Card>
-</CardGroup>
+## When to Contact Support
+
+- Persistent 5xx errors with identical inputs.
+- Inference disruptions across models (Ray Serve unreachable).
+- Data consistency issues between MongoDB and Qdrant.
+- Feature flags or endpoints missing from your plan (`NotEnabledError`).
+
+Provide the `request_id` (from response headers), `namespace_id`, and relevant resource IDs to accelerate investigation.
+
+## Related Resources
+
+- [Limits & Quotas](/troubleshoot/limits)
+- [Health Check](/api-reference/health/healthcheck)
+- [Tasks](/processing/tasks)
+- [Observability](/operations/observability)

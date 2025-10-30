@@ -1,121 +1,116 @@
 ---
-title: "Concepts"
-description: "Key concepts for using a Multimodal Data Warehouse"
+title: "Core Concepts"
+description: "Understand the building blocks that power Mixpeek"
 ---
 
-<Note>
-  Understanding these concepts will help you utilize the Mixpeek Multimodal Warehouse offerings.
-</Note>
+Mixpeek exposes a small set of typed resources that work together to ingest, process, enrich, and retrieve multimodal data. This page introduces the key abstractions and the rules that keep them isolated, observable, and composable.
 
-Mixpeek organizes data in a structured hierarchy designed for flexibility and performance of multimodal content processing and retrieval.
+## Entities & Relationships
 
+| Layer | Entity | What it Represents | Related APIs |
+|-------|--------|--------------------|--------------|
+| Isolation | **Organization / API Key** | Authentication boundary (`Authorization: Bearer …`) | [Authentications](/api-reference/authentications) |
+| Isolation | **Namespace** | Tenant or environment boundary (`X-Namespace`) | [Namespaces](/ingestion/namespaces) |
+| Storage | **Bucket** | Schema-validated container for objects | [Buckets](/ingestion/buckets) |
+| Storage | **Object** | Logical record referencing blobs (files/JSON) | [Objects](/ingestion/objects) |
+| Processing | **Batch** | Submission that feeds objects into extractors | [Batches](/processing/batching) |
+| Processing | **Collection** | Document store + feature extraction recipe | [Collections](/ingestion/collections) |
+| Processing | **Feature Extractor** | Reusable pipeline component that emits features | [Feature Extractors](/processing/feature-extractors) |
+| Retrieval | **Retriever** | Stage-based search pipeline | [Retrievers](/retrieval/retrievers) |
+| Enrichment | **Taxonomy** | Retrieval-backed enrichment recipe (flat or hierarchical) | [Taxonomies](/enrichment/taxonomies) |
+| Enrichment | **Cluster** | Vector-based grouping and enrichment artifacts | [Clusters](/enrichment/clusters) |
+| Operations | **Task** | Status wrapper for asynchronous jobs | [Tasks](/processing/tasks) |
+| Operations | **Webhook** | Event notification subscription | [Webhooks](/operations/webhooks) |
 
-| Mixpeek Term | Description | Data Warehouse Analogy |
-|--------------|-------------|-----------------------------------|
-| [Namespace](/ingestion/namespaces) | Query boundaries that isolate environments | Database/Schema |
-| [Bucket](/ingestion/buckets) | Storage containers for raw objects and files | Raw Data Lake/Storage Layer |
-| [Object](/ingestion/objects) | Collections of related input files | Raw Data Files/Source Documents |
-| [Blob](/ingestion/objects) | Individual raw files within Objects | Binary Data/Single File |
-| [Collection](/ingestion/collections) | Groups of processed documents with consistent schema | Table |
-| [Document](/ingestion/collections) | Structured outputs from feature extractors | Row |
-| [Feature Extractor](/processing/feature-extractors) | Specialized components that process inputs to extract specific features | ETL Process/Transformation |
-| [Feature](/ingestion/features) | Extracted data elements stored in feature stores | Column/Field |
-| [Feature Store](/ingestion/features) | Specialized storage for extracted features optimized for efficient retrieval | Indexed Columns/Materialized Views |
-| [Retriever](/retrieval/retrievers) | Query engines that search feature stores to find relevant documents | SQL Query Engine |
-| [Retriever Stage](/retrieval/retrievers) | Components of search pipelines that perform specific operations in the retrieval process | Query Execution Plan Step |
-| [Taxonomy](/enrichment/taxonomies) | Multimodal equivalent of SQL JOIN operations | JOIN Operation |
-| [Clustering](/enrichment/clusters) | Multimodal equivalent of SQL GROUP BY operations | GROUP BY Operation |
-| [Research](/retrieval/research) | Multi-step process that explores topics through iterative searches, generates structured reports with sections, and combines retrieved information into cohesive content | Business Intelligence Report |
+## Dual-ID Multi-Tenancy
 
+Mixpeek separates authentication from authorization by using two IDs per organization:
 
+- **`organization_id`** – Short, user-facing identifier returned in API responses
+- **`internal_id`** – 24-character key used inside services, task payloads, and database documents
 
-## Component Relationships
+Namespaces are the primary isolation boundary. Every API request must include `X-Namespace` unless your organization has a single shared namespace. Enforced rules:
 
-The different components in Mixpeek relate to each other in specific ways:
+- All MongoDB collections index on `namespace_id`
+- Each namespace maps to a dedicated Qdrant collection (`ns_<namespace_id>`)
+- Redis keys and Ray jobs include namespace prefixes
+- Cross-namespace queries are not permitted by design
 
-<Frame>
-  ```mermaid
-  graph TD
-    NS[Namespaces] --> BK[Buckets]
-    BK --> OBJ[Objects]
-    OBJ --> BAT[Batches]
-    BAT --> FX[Feature Extractors]
-    FX --> DOC[Documents]
-    DOC --> COL[Collections]
-    FX --> FS[Feature Stores]
-    TAX[Taxonomies] --> DOC
-    CLU[Clusters] --> DOC
-    RET[Retrievers] --> FS
-    RET --> DOC
+## Object → Document Lineage
 
-    style NS fill:#FC5185,stroke:#333
-    style FX fill:#FC5185,stroke:#333
-    style DOC fill:#FC5185,stroke:#333
-  ```
-</Frame>
-
-### Understanding the Relationships
-
-- Buckets contain Objects; Objects are grouped into Batches for processing.
-- Submitting a Batch runs Feature Extractors to produce Documents and Feature Stores.
-- Documents (features + metadata) live in Collections.
-- Taxonomies enrich Documents; Clusters group Documents.
-- Retrievers query Feature Stores and return ranked Documents.
-
-## Processing Components
-
-<CardGroup cols={2}>
-  <Card title="Feature Extractors" icon="microchip">
-    Specialized components that process inputs to extract features (embeddings, faces, scenes, objects, transcripts). They populate feature stores and produce documents in collections.
-  </Card>
-
-  <Card title="Retrievers" icon="magnifying-glass">
-    Configurable pipelines that combine KNN over feature stores, metadata filters, grouping, and reranking to return relevant documents.
-  </Card>
-</CardGroup>
-
-## SQL Analogs
-
-- JOIN → Taxonomies: similarity joins that enrich documents (flat or hierarchical).
-- GROUP BY → Clustering: groups similar documents; can output centroids/artifacts.
-
-## Metadata and Document Properties
-
-All documents in Mixpeek collections include standard metadata properties:
+Ingestion separates raw objects from processed documents so you can run multiple extraction tiers without duplicating data. Every document tracks:
 
 ```json
 {
-  "document_id": "doc_123",           // Unique document identifier
-  "collection_id": "col_456def",      // Collection this document belongs to
-  "source_details": [                   // Lineage and processing info for this doc
-    {
-      "type": "bucket",               // Immediate origin type (bucket/collection/taxonomy/cluster)
-      "source_id": "bkt_789",         // Immediate source identifier (e.g., bucket_id)
-      "object_id": "obj_123abc",      // Originating object id
-      "feature_extractor_task_id": "ray_task_fx_1", // Ray task that ran the extractor
-      "object_task_id": "ray_task_obj_1",           // Ray task that orchestrated the object
-      "feature_extractor_id": "clip_vit_l_14@1.0.0" // Extractor instance that produced features
-    }
-  ],
-  "metadata": {},                       // User-provided metadata
-  "internal_metadata": {},              // System-generated metadata
-  "vector": null,                       // Optional vector embedding in this response
-  "presigned_url": null,                // Optional signed URL for the primary asset
-  "enrichments": null,                  // Optional taxonomy/cluster enrichments
-  "source_blobs": []                    // Optional list of source blob descriptors
+  "root_object_id": "obj_video_123",
+  "root_bucket_id": "bkt_marketing",
+  "source_type": "collection",
+  "source_collection_id": "col_frames",
+  "source_document_id": "doc_frame_050",
+  "lineage_path": "bkt_marketing/col_frames/col_scenes/col_highlights",
+  "processing_tier": 3
 }
 ```
 
-## Next Steps
+- **Tier 0** – Raw object in the bucket  
+- **Tier N** – Document produced by another collection (`source_type = "collection"`)
+- The `lineage_path` is a denormalized materialized path for fast queries
+- Collections respect dependency tiers during extraction so downstream collections only execute when inputs are ready
 
-Now that you understand the core concepts of Mixpeek, you're ready to start building with the platform:
+Use the [Object Decomposition Tree](/api-reference/documents/object-decomposition-tree) endpoint to inspect the entire lineage for a given object.
 
-<CardGroup cols={2}>
-  <Card title="Quickstart Guide" icon="rocket" href="/overview/quickstart">
-    Get started with your first Mixpeek project
-  </Card>
-  
-  <Card title="Data Management" icon="database" href="/ingestion/namespaces">
-    Learn how to organize and manage your data
-  </Card>
-</CardGroup>
+## Feature URIs
+
+Every feature emitted by an extractor is addressed with a URI:
+
+```
+mixpeek://{extractor_name}@{version}/{output_name}
+```
+
+Examples:
+
+- `mixpeek://text_extractor@v1/text_embedding`
+- `mixpeek://clip_vit_l_14@v1/image_embedding`
+- `mixpeek://video_extractor@v1/scene_embeddings`
+
+Feature URIs are referenced by collections (output schemas), retriever stages (`feature_address`), taxonomies, clustering jobs, and analytics. They guarantee query-time model compatibility with the ingestion pipeline.
+
+## TaskStatusEnum Standard
+
+All asynchronous operations—batches, clustering jobs, taxonomy materialization, namespace migrations—report status using the shared `TaskStatusEnum`:
+
+```
+PENDING → PROCESSING → COMPLETED
+            ↘
+            FAILED
+```
+
+Additional lifecycle values include `IN_PROGRESS`, `CANCELED`, `SKIPPED`, `UNKNOWN`, `DRAFT`, `ACTIVE`, `ARCHIVED`, and `SUSPENDED`. Use the [Tasks API](/processing/tasks) for short-term polling and fall back to the resource (e.g., batch or cluster) for long-running workflows.
+
+## Caching Signatures
+
+Mixpeek uses deterministic signatures to avoid stale results:
+
+- Collection index signatures hash document count, vector dimensions, and schema state
+- Retriever caches incorporate the collection signature to invalidate automatically
+- Stage-level caches speed up pipelines that reuse expensive stages (KNN → rerank)
+- Inference cache shortcuts repeated embedding requests for identical inputs
+
+Learn more in [Caching](/overview/caching).
+
+## Putting It Together
+
+```
+Namespace
+ └── Bucket
+      ├── Object (Tier 0)
+      └── Batch → Collection (Tier 1)
+               └── Collection (Tier 2)
+                    └── ...
+```
+
+- Documents retain lineage to the original object (`root_object_id`)
+- Enrichment layers (taxonomies, clustering) augment documents in place
+- Retrievers run on namespace-scoped data, returning results with presigned URLs, metrics, and cache hints
+
+With these concepts in mind you can navigate deeper sections of the docs—whether you’re planning ingestion schemas, designing retriever pipelines, or wiring observability for production deployments.
