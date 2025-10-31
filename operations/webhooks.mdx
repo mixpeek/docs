@@ -84,7 +84,7 @@ Use `event_id` for deduplication and store payloads for auditing.
 
 - Require HTTPS endpoints; reject plaintext URLs.
 - Include a shared secret header (`X-Mixpeek-Secret`) and verify before processing.
-- Respond quickly (<10s). Offload heavy work to background jobs and return `200`.
+- Respond quickly (&lt;10s). Offload heavy work to background jobs and return `200`.
 - Use idempotent handlers; Mixpeek may retry on failure or timeout.
 - Monitor webhook delivery with your logging pipeline; correlate by `event_id`.
 

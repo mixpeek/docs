@@ -440,7 +440,7 @@ POST /v1/organizations/webhooks
 
 ### Scenario 1: High-Volume Product Search
 
-**Goal:** 1M searches/month, <500ms p95 latency, $1000 budget
+**Goal:** 1M searches/month, &lt;500ms p95 latency, $1000 budget
 
 **Strategy:**
 - Use `multilingual-e5-base` embeddings (1 credit vs 5)
@@ -500,7 +500,7 @@ if cost_per_conversion > target_cpa:
   </Step>
 
   <Step title="Switch to base models for non-critical workloads">
-    Use `multilingual-e5-base` instead of `large` where accuracy delta is <5%
+    Use `multilingual-e5-base` instead of `large` where accuracy delta is &lt;5%
   </Step>
 
   <Step title="Set budget limits on exploratory retrievers">

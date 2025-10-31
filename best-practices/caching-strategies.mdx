@@ -264,8 +264,8 @@ GET /v1/analytics/retrievers/{retriever_id}/performance
 
 | Metric | Observation | Action |
 |--------|-------------|--------|
-| **Hit rate <50%** | Queries too diverse | Increase TTL, add query canonicalization |
-| **Hit rate >90%** | Over-caching | Reduce TTL to save memory |
+| **Hit rate &lt;50%** | Queries too diverse | Increase TTL, add query canonicalization |
+| **Hit rate &gt;90%** | Over-caching | Reduce TTL to save memory |
 | **High miss latency** | Expensive execution | Enable stage-level caching |
 | **Large cache size** | Memory pressure | Reduce TTL or limit cached stages |
 
@@ -458,7 +458,7 @@ mixpeek.retrievers.invalidate_cache(retriever_id, allow_stale=True)
 
 ### Low Hit Rate
 
-**Symptoms:** <50% hit rate despite repetitive queries
+**Symptoms:** &lt;50% hit rate despite repetitive queries
 
 **Diagnosis:**
 ```bash

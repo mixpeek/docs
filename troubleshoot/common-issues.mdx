@@ -296,8 +296,8 @@ GET /v1/analytics/retrievers/{retriever_id}/stages
 
 | Stage | Typical Latency | If Slow, Check |
 |-------|----------------|----------------|
-| `knn_search` | <50ms | Qdrant health, index size, `limit` value |
-| `filter` | <10ms | Filter complexity, indexed fields |
+| `knn_search` | &lt;50ms | Qdrant health, index size, `limit` value |
+| `filter` | &lt;10ms | Filter complexity, indexed fields |
 | `rerank` | 50-200ms | Reranking model, `top_k` value |
 | `llm_generation` | 500-2000ms | Model size, `max_tokens`, prompt length |
 | `web_search` | 200-500ms | External API latency, cache hit rate |
