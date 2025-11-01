@@ -20,9 +20,17 @@ graph TD
 ```
 </Frame>
 
-- **API Layer (FastAPI + Celery)** handles HTTP requests, validation, authorization, transactional metadata updates, task creation, and webhook dispatch.
-- **Engine Layer (Ray)** performs distributed feature extraction, inference, taxonomy materialization, clustering, and long-running compute.
-- **Shared Storage** (MongoDB, Qdrant, Redis, S3) acts as the contract between layers. No direct imports cross the API ↔ Engine boundary.
+<CardGroup cols={3}>
+  <Card title="API Layer" icon="server">
+    FastAPI and Celery handle HTTP requests, validation, authorization, metadata updates, task creation, and webhook dispatch.
+  </Card>
+  <Card title="Engine Layer" icon="microchip">
+    Ray orchestrates distributed feature extraction, inference, taxonomy materialization, clustering, and other long-running compute.
+  </Card>
+  <Card title="Shared Storage" icon="database">
+    MongoDB, Qdrant, Redis, and S3 provide the contract between layers—no direct imports cross the API ↔ Engine boundary.
+  </Card>
+</CardGroup>
 
 ## Service Architecture
 
@@ -58,7 +66,9 @@ graph TB
 
 ## Layer Separation
 
-> **Golden Rule:** API and Engine code never import each other. Shared models sit in a neutral library that both layers consume.
+<Callout type="warning">
+  **Golden Rule:** API and Engine code never import each other. Shared models sit in a neutral library that both layers consume.
+</Callout>
 
 - API defines Pydantic schemas, orchestrates workflows, and updates MongoDB + Redis.
 - Engine consumes manifests, runs ML workloads, and writes vectors/documents to Qdrant.
@@ -68,17 +78,37 @@ graph TB
 
 ### Ingestion (Object → Document)
 
-1. Client uploads objects (`/v1/buckets/{bucket}/objects`) — metadata lands in MongoDB, blobs in S3.
-2. Client submits batch (`/v1/buckets/{bucket}/batches/{batch}/submit`) — API flattens manifests into per-extractor artifacts in S3 and creates tasks.
-3. Ray poller picks up the batch, runs feature extractors tier-by-tier, writes documents to Qdrant, and emits webhook events.
-4. Celery Beat processes webhook events: updates collection schemas, invalidates caches, notifies external systems.
+<Steps>
+  <Step title="Upload objects">
+    Client uploads objects (`/v1/buckets/{bucket}/objects`)—metadata lands in MongoDB, blobs in S3.
+  </Step>
+  <Step title="Submit batch">
+    Client submits a batch (`/v1/buckets/{bucket}/batches/{batch}/submit`); the API flattens manifests into per-extractor artifacts in S3 and creates tasks.
+  </Step>
+  <Step title="Process in Ray">
+    Ray pollers pick up the batch, execute feature extractors tier-by-tier, write documents to Qdrant, and emit webhook events.
+  </Step>
+  <Step title="Dispatch events">
+    Celery Beat processes webhook events, updates collection schemas, invalidates caches, and notifies external systems.
+  </Step>
+</Steps>
 
 ### Retrieval (Query → Results)
 
-1. Client executes retriever (`/v1/retrievers/{id}/execute`) with structured inputs and optional filters.
-2. FastAPI loads the retriever definition, validates inputs, and walks the stage pipeline.
-3. Stages call Ray Serve (for inference), Qdrant (for search), MongoDB (for joins), and Redis (for cache signatures).
-4. Response returns results, stage metrics, cache hints (`ETag`), and budget usage.
+<Steps>
+  <Step title="Execute retriever">
+    Client calls `/v1/retrievers/{id}/execute` with structured inputs and optional filters.
+  </Step>
+  <Step title="Validate & plan">
+    FastAPI loads the retriever definition, validates inputs, and walks the configured stage pipeline.
+  </Step>
+  <Step title="Invoke services">
+    Stages call Ray Serve for inference, Qdrant for search, MongoDB for joins, and Redis for cache signatures.
+  </Step>
+  <Step title="Return results">
+    Response includes results, stage metrics, cache hints (`ETag`), and budget usage.
+  </Step>
+</Steps>
 
 ## Storage Strategy
 
@@ -103,14 +133,17 @@ graph TB
 
 ## Communication Patterns
 
-1. **Task Queue (API → Engine)**  
-   MongoDB stores batch descriptors; pollers submit Ray jobs and track state.
-
-2. **Webhook Events (Engine → API)**  
-   Engine writes webhook events to MongoDB. Celery Beat dispatches cache invalidation, schema updates, and external notifications.
-
-3. **Real-time Inference (API → Engine)**  
-   API calls Ray Serve HTTP endpoints for embeddings, reranking, generation, and audio transcription.
+<Tabs>
+  <Tab title="Task Queue (API → Engine)">
+    MongoDB stores batch descriptors; Ray pollers submit jobs and track state on behalf of the Engine.
+  </Tab>
+  <Tab title="Webhook Events (Engine → API)">
+    Engine writes webhook events to MongoDB. Celery Beat dispatches cache invalidation, schema updates, and external notifications.
+  </Tab>
+  <Tab title="Real-time Inference (API → Engine)">
+    API calls Ray Serve HTTP endpoints for embeddings, reranking, generation, and audio transcription workloads.
+  </Tab>
+</Tabs>
 
 ## Scaling & Deployment
 
@@ -121,11 +154,23 @@ graph TB
 
 ## Key Design Decisions
 
-- **Strict layer boundaries** keep API deployments lightweight and Engine deployments GPU-optimized.
-- **MongoDB + Qdrant** pairing combines flexible metadata with high-performance vector search.
-- **Webhook-based events** replace direct imports between Engine and API, yielding durable, observable communication.
-- **Prefork Celery workers** support task termination, concurrency, and graceful shutdowns—critical for webhook dispatch and maintenance jobs.
-- **Index signatures** prevent stale caches without manual invalidation.
+<AccordionGroup>
+  <Accordion title="Strict layer boundaries">
+    Keep API deployments lightweight and Engine deployments GPU-optimized by isolating codebases and deployment concerns.
+  </Accordion>
+  <Accordion title="MongoDB + Qdrant pairing">
+    Combine flexible metadata storage with high-performance vector search to serve semantic retrieval and filtering.
+  </Accordion>
+  <Accordion title="Webhook-based events">
+    Replace direct imports between Engine and API with durable, observable communication channels that can be retried.
+  </Accordion>
+  <Accordion title="Prefork Celery workers">
+    Prefork workers support task termination, concurrency, and graceful shutdowns—critical for webhook dispatch and maintenance jobs.
+  </Accordion>
+  <Accordion title="Index signatures">
+    Index signatures prevent stale caches and keep retrievers consistent without manual invalidation.
+  </Accordion>
+</AccordionGroup>
 
 ## Further Reading
 
