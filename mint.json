@@ -144,7 +144,6 @@
     {
       "group": "Operate in Production",
       "pages": [
-        "operations/deployment",
         "operations/security",
         "operations/observability",
         "operations/webhooks",
