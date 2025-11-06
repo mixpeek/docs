@@ -12,16 +12,31 @@ Processing pipelines are simply collections referencing other collections. By se
 3. Once Tier 0 completes, Tier 1 collections (collection sources) execute.
 4. The cycle continues until the deepest tier finishes.
 
-Example:
-
+```mermaid
+graph TD
+    Obj[Object: Marketing Video<br/>bucket_id: bkt_marketing<br/>video_url: s3://videos/ad.mp4<br/>duration: 120s]
+    
+    Obj --> T1_1[Tier 1: Video Scenes<br/>video_extractor@v1<br/>scene_detection<br/>Documents: 8 scenes]
+    Obj --> T1_2[Tier 1: Audio Transcript<br/>audio_extractor@v1<br/>whisper-large-v3<br/>Documents: 1 transcript]
+    
+    T1_1 --> T2_1[Tier 2: Scene Faces<br/>face_detector@v2<br/>face_detection<br/>Documents: 12 faces]
+    T1_1 --> T2_2[Tier 2: Scene Objects<br/>object_detector@v1<br/>yolo_detection<br/>Documents: 45 objects]
+    T1_1 --> T2_3[Tier 2: Scene Text<br/>text_extractor@v1<br/>ocr_extraction<br/>Documents: 8 text blocks]
+    
+    T1_2 --> T2_4[Tier 2: Speaker Segments<br/>audio_extractor@v1<br/>diarization<br/>Documents: 3 speakers]
+    T1_2 --> T2_5[Tier 2: Transcript Chunks<br/>text_extractor@v1<br/>chunking<br/>Documents: 15 chunks]
+    
+    T2_1 --> T3_1[Tier 3: Face Embeddings<br/>face_encoder@v1<br/>arcface<br/>Documents: 12 embeddings]
+    T2_1 --> T3_2[Tier 3: Face Expressions<br/>expression_classifier@v1<br/>emotion_detection<br/>Documents: 12 expressions]
+    
+    T2_4 --> T3_3[Tier 3: Speaker ID<br/>speaker_encoder@v1<br/>voice_embedding<br/>Documents: 3 speaker profiles]
+    
+    T3_1 --> T4_1[Tier 4: Employee Match<br/>Taxonomy: employee_faces<br/>enrichment<br/>Documents: 5 matched]
+    
+    T3_3 --> T4_2[Tier 4: Executive Match<br/>Taxonomy: executive_voices<br/>enrichment<br/>Documents: 1 matched]
 ```
-Tier 0:  videos_raw           (bucket source)
-Tier 1:  video_frames         (collection source → videos_raw)
-Tier 2:  frame_faces          (collection source → video_frames)
-Tier 3:  face_embeddings      (collection source → frame_faces)
-```
 
-Documents at every tier retain `root_object_id`, `source_collection_id`, `source_document_id`, and `lineage_path`, enabling complete traceability back to the original object.
+Documents at every tier retain `root_object_id`, `source_collection_id`, `source_document_id`, and `lineage_path`, enabling complete traceability back to the original object. The DAG executes in parallel where possible—Tier 1 collections process simultaneously, then all Tier 2 collections execute once their parents complete.
 
 ## Configuration Pattern
 
