@@ -240,6 +240,7 @@
             "api-reference/organization-connections/update-storage-connection",
             "api-reference/organization-connections/test-storage-connection",
             "api-reference/organization-connections/list-google-drive-folders",
+            "api-reference/organization-connections/list-google-drive-files",
             "api-reference/organization-connections/delete-storage-connection"
           ]
         },
@@ -261,7 +262,16 @@
         "api-reference/namespaces/update-namespace",
         "api-reference/namespaces/partially-update-namespace",
         "api-reference/namespaces/list-namespaces",
-        "api-reference/namespaces/delete-namespace"
+        "api-reference/namespaces/delete-namespace",
+        {
+          "group": "Templates",
+          "pages": [
+            "api-reference/namespace-templates/list-templates",
+            "api-reference/namespace-templates/create-template",
+            "api-reference/namespace-templates/get-template",
+            "api-reference/namespace-templates/instantiate-template"
+          ]
+        }
       ]
     },
     {
@@ -319,7 +329,10 @@
             "api-reference/bucket-batches/partially-update-batch",
             "api-reference/bucket-batches/submit-batch-for-processing",
             "api-reference/bucket-batches/list-batches",
+            "api-reference/bucket-batches/get-batch-health",
             "api-reference/bucket-batches/cancel-batch",
+            "api-reference/bucket-batches/get-failed-documents-for-batch",
+            "api-reference/bucket-batches/retry-failed-documents",
             "api-reference/bucket-batches/delete-batch"
           ]
         }
@@ -374,6 +387,7 @@
         "api-reference/retrievers/get-retriever",
         "api-reference/retrievers/delete-retriever",
         "api-reference/retrievers/patch-retriever",
+        "api-reference/retrievers/execute-anonymous-retriever",
         "api-reference/retrievers/execute-retriever",
         "api-reference/retrievers/list-executions",
         "api-reference/retrievers/get-execution",
@@ -461,8 +475,11 @@
         "api-reference/analytics/get-cache-performance",
         "api-reference/analytics/analyze-for-tuning",
         "api-reference/analytics/get-slowest-queries",
-        "api-reference/analytics/get-api-performance",
         "api-reference/analytics/get-engine-performance",
+        "api-reference/analytics/get-engine-stage-breakdown",
+        "api-reference/analytics/get-extractor-breakdown",
+        "api-reference/analytics/analyze-bottlenecks",
+        "api-reference/analytics/get-slowest-operations",
         "api-reference/analytics/get-usage-summary",
         "api-reference/analytics/get-extractor-performance",
         "api-reference/analytics/get-inference-performance"
@@ -472,7 +489,7 @@
       "group": "Tasks",
       "pages": [
         "api-reference/tasks/get-task-information",
-        "api-reference/tasks/list-active-tasks",
+        "api-reference/tasks/list-tasks",
         "api-reference/tasks/kill-task"
       ]
     },
