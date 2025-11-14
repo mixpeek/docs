@@ -4,28 +4,7 @@ description: "Extract insights from video content with scene detection, transcri
 icon: 'video'
 ---
 
-<Note>
-  **Business Impact:** Transform hours of video into searchable moments. Find "scenes where someone mentions pricing" across 10,000 videos in milliseconds. Enable visual search, auto-moderation, highlight reels, and compliance monitoring without watching a single frame.
-</Note>
-
-Video understanding combines multiple feature extractors to transform raw video files into searchable, analyzable documents. This pattern enables applications like content moderation, highlight generation, video search engines, and automated metadata tagging.
-
-## vs Building It Yourself
-
-| Task | Without Mixpeek | With Mixpeek |
-|------|-----------------|--------------|
-| Video processing pipeline (FFmpeg, codecs) | 6-8 weeks | Instant |
-| GPU cluster for CLIP embeddings | 4-6 weeks | Instant |
-| Whisper transcription deployment | 3-4 weeks | Instant |
-| Scene detection & keyframe extraction | 4-5 weeks | Config change |
-| Multi-modal search (visual + audio) | 6-8 weeks | 1 hour |
-| Distributed processing at scale | 8-12 weeks | Built-in |
-
-**Engineering time saved: 6-9 months** • **GPU infrastructure: Zero**
-
-<Tip>
-  **Key Differentiator:** Process scenes, audio, faces, and on-screen text in parallel with one API call. Ray handles distribution, GPU scheduling, and retries—you just configure extractors and query results.
-</Tip>
+Video understanding combines multiple feature extractors to transform raw video files into searchable, analyzable documents. This tutorial shows you how to build applications like content moderation, highlight generation, video search engines, and automated metadata tagging.
 
 ## Object Decomposition
 
@@ -168,7 +147,7 @@ POST /v1/buckets/{bucket_id}/batches
 POST /v1/buckets/{bucket_id}/batches/{batch_id}/submit
 ```
 
-The Engine will:
+Processing steps:
 1. Download the video from S3
 2. Run scene detection and extract keyframes
 3. Generate CLIP embeddings for each scene
@@ -332,8 +311,6 @@ PATCH /v1/retrievers/{retriever_id}
   "collection_ids": ["col_video_scenes_v2", "col_video_transcripts_v2"]
 }
 ```
-
-**No reprocessing of old videos. New uploads use v2. Gradual rollover.**
 
 ## Advanced Patterns
 

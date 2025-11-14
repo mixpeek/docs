@@ -4,11 +4,7 @@ description: "Find visually similar content using images or videos as your searc
 icon: 'image'
 ---
 
-<Note>
-  **Business Impact:** Enable "search by example" for visual content. Detect duplicate uploads, find similar products, monitor brand usage, and discover related creative concepts—all without text descriptions.
-</Note>
-
-Reverse search (also called "search by example" or "similarity search") allows you to find similar content by providing an example image, video, or their embeddings as the search query, rather than using text descriptions. This pattern is essential for brand monitoring, visual product discovery, content deduplication, and creative intelligence.
+Reverse search (also called "search by example" or "similarity search") allows you to find similar content by providing an example image, video, or their embeddings as the search query, rather than using text descriptions. This tutorial shows you how to build applications for brand monitoring, visual product discovery, content deduplication, and creative intelligence.
 
 ## Why Reverse Search?
 
@@ -19,23 +15,6 @@ Traditional text search requires describing visual content in words, which often
 - You need pixel-level similarity (copyright detection, brand monitoring)
 
 Reverse search solves these by comparing visual embeddings directly, finding conceptually similar content regardless of text descriptions.
-
-## vs Building It Yourself
-
-| Task | Without Mixpeek | With Mixpeek |
-|------|-----------------|--------------|
-| Deploy CLIP/vision models (GPU) | 4-6 weeks | Instant |
-| Build vector similarity search | 3-4 weeks | 30 minutes |
-| Handle multiple input formats (URL/base64) | 2-3 weeks | Built-in |
-| Image-to-video cross-modal search | 4-6 weeks | Config change |
-| Deduplication at scale | 3-4 weeks | 1 hour |
-| Embedding extraction & caching | 2-3 weeks | Automatic |
-
-**Engineering time saved: 4-6 months** • **GPU infrastructure: Zero**
-
-<Tip>
-  **Key Differentiator:** Provide pre-computed embeddings to bypass inference entirely. Extract an embedding once, store it, and reuse it for millions of queries—perfect for high-volume similarity checks at scale.
-</Tip>
 
 ## Search Flow Diagram
 
@@ -415,7 +394,7 @@ GET /v1/analytics/retrievers/compare?baseline=ret_v1&candidate=ret_v2
 - Precision@10: v1 (0.78) vs v2 (0.86) → +10% accuracy
 - Scene count: v1 (15/video) vs v2 (42/video) → better granularity
 - Processing time: v1 (45s) vs v2 (68s) → 50% slower
-- User engagement: v1 (38% CTR) vs v2 (44% CTR) → worth it
+- User engagement: v1 (38% CTR) vs v2 (44% CTR) → improved results
 
 ## Advanced Patterns
 
@@ -624,91 +603,35 @@ video_rankings.sort(key=lambda x: x["best_score"], reverse=True)
 - Product discovery: 0.70+ (balanced)
 - Creative inspiration: 0.60+ (high recall)
 
-## Real-World Use Cases
+## Use Case Examples
 
 <AccordionGroup>
   <Accordion title="Brand Safety & Copyright Detection">
-    **Scenario**: Detect unauthorized use of your brand's visual assets across platforms.
-    
-    **Implementation**:
-    - Extract embeddings from all brand assets
-    - Monitor incoming content (UGC, competitor ads) with reverse search
-    - Flag matches above 0.90 similarity for legal review
-    - Track brand usage patterns across channels
-    
-    **Result**: Identify copyright violations within hours instead of weeks.
+    Detect unauthorized use of brand visual assets by extracting embeddings from all brand assets, monitoring incoming content with reverse search, and flagging matches above 0.90 similarity for review.
   </Accordion>
 
   <Accordion title="Visual Product Discovery">
-    **Scenario**: "Find products that look like this" for e-commerce.
-    
-    **Implementation**:
-    - User uploads photo of desired product
-    - Search product catalog with reverse image search
-    - Filter by price range, availability, brand
-    - Return visually similar alternatives
-    
-    **Result**: 40% increase in conversion from visual search vs text search.
+    Enable "find products that look like this" by allowing users to upload photos, searching the product catalog with reverse image search, and filtering by price range, availability, and brand.
   </Accordion>
 
   <Accordion title="Content Deduplication">
-    **Scenario**: Clean up large media libraries with duplicate detection.
-    
-    **Implementation**:
-    - Process entire catalog to extract embeddings
-    - For each asset, search for similar content
-    - Group near-duplicates (0.95+ similarity)
-    - Keep highest quality version, archive duplicates
-    
-    **Result**: Reduce storage costs by 30-50%, improve asset management.
+    Clean up media libraries by processing the catalog to extract embeddings, searching for similar content, grouping near-duplicates (0.95+ similarity), and keeping the highest quality version.
   </Accordion>
 
   <Accordion title="Video Ad Performance Analysis">
-    **Scenario**: Find which creative concepts perform well and discover similar patterns.
-    
-    **Implementation**:
-    - Identify top-performing ads by KPI (CTR, conversion)
-    - Extract visual embeddings from winning creatives
-    - Search ad library for similar concepts
-    - Analyze performance patterns across similar visuals
-    
-    **Result**: Data-driven creative strategy, reduce production waste.
+    Analyze creative patterns by identifying top-performing ads, extracting visual embeddings from winning creatives, searching the ad library for similar concepts, and analyzing performance patterns.
   </Accordion>
 
   <Accordion title="Scene-Level Video Search">
-    **Scenario**: Find specific moments within thousands of hours of video.
-    
-    **Implementation**:
-    - Segment videos into scenes with `video_extractor`
-    - User provides screenshot or keyframe
-    - Search segmented collection with reverse search
-    - Return matching segments with timestamps
-    
-    **Result**: Find needle-in-haystack moments in seconds, enable video forensics.
+    Find specific moments in video archives by segmenting videos into scenes with `video_extractor`, accepting screenshot queries, and returning matching segments with timestamps.
   </Accordion>
 
   <Accordion title="UGC Campaign Matching">
-    **Scenario**: Link user-generated content to brand campaigns automatically.
-    
-    **Implementation**:
-    - Extract embeddings from official campaign assets
-    - Process incoming UGC submissions
-    - Match UGC to campaigns via visual similarity
-    - Auto-tag and curate highest-quality matches
-    
-    **Result**: Scale UGC curation 10x, build community galleries automatically.
+    Link user-generated content to campaigns by extracting embeddings from official campaign assets, processing incoming submissions, and matching via visual similarity.
   </Accordion>
 
   <Accordion title="Competitive Intelligence">
-    **Scenario**: Track competitor creative strategies through visual analysis.
-    
-    **Implementation**:
-    - Monitor competitor ad libraries
-    - Search your creative archive for similar concepts
-    - Identify overlap and gaps in visual strategies
-    - Benchmark performance of similar creatives
-    
-    **Result**: Data-driven competitive positioning, identify market opportunities.
+    Track competitor creative strategies by monitoring competitor ad libraries, searching your creative archive for similar concepts, and identifying overlap and gaps in visual strategies.
   </Accordion>
 </AccordionGroup>
 
