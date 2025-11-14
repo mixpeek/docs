@@ -73,8 +73,8 @@
       "url": "api-reference"
     },
     {
-      "name": "Use Cases",
-      "url": "patterns"
+      "name": "Tutorials",
+      "url": "tutorials"
     },
     {
       "name": "Integrations",
@@ -98,11 +98,12 @@
       ]
     },
     {
-      "group": "Use Cases & Patterns",
+      "group": "Tutorials",
       "pages": [
-        "patterns/video-understanding",
-        "patterns/semantic-search",
-        "patterns/document-intelligence"
+        "tutorials/reverse-search",
+        "tutorials/video-understanding",
+        "tutorials/semantic-search",
+        "tutorials/document-intelligence"
       ]
     },
     {
