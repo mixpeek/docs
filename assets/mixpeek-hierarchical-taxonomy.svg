@@ -1,0 +1,273 @@
+<svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="rootGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4f46e5;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="level1Grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="level2Grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ec4899;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#db2777;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="docGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ea580c;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="enrichGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowGray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
+    </marker>
+    <marker id="arrowTeal" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#14b8a6"/>
+    </marker>
+    <marker id="arrowOrange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="800" fill="#f8fafc"/>
+  
+  <!-- Title -->
+  <text x="600" y="40" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="600" fill="#0f172a" text-anchor="middle">Hierarchical Taxonomy: Organization Structure</text>
+  <text x="600" y="65" font-family="system-ui, sans-serif" font-size="13" fill="#64748b" text-anchor="middle">Parent/child nodes with property inheritance • Multi-level classification</text>
+
+  <!-- Left Side: Taxonomy Tree Structure -->
+  <text x="220" y="100" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#475569" text-anchor="middle">Taxonomy Tree</text>
+
+  <!-- Root Node: Company -->
+  <g filter="url(#shadow)">
+    <rect x="120" y="120" width="200" height="70" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="120" y="120" width="200" height="28" rx="10" fill="url(#rootGrad)"/>
+    <rect x="120" y="138" width="200" height="10" fill="url(#rootGrad)"/>
+    <text x="220" y="140" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">🏢 Company</text>
+  </g>
+  <text x="220" y="165" font-family="system-ui, sans-serif" font-size="9" fill="#475569" text-anchor="middle">Root Node</text>
+  <text x="220" y="178" font-family="monospace" font-size="8" fill="#6366f1" text-anchor="middle">collection: companies</text>
+
+  <!-- Level 1 Connectors -->
+  <path d="M 220 190 L 220 210 L 120 210 L 120 230" stroke="#94a3b8" stroke-width="2" fill="none"/>
+  <path d="M 220 190 L 220 210 L 320 210 L 320 230" stroke="#94a3b8" stroke-width="2" fill="none"/>
+
+  <!-- Level 1: Departments -->
+  <g filter="url(#shadow)">
+    <rect x="20" y="230" width="200" height="85" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="20" y="230" width="200" height="28" rx="10" fill="url(#level1Grad)"/>
+    <rect x="20" y="248" width="200" height="10" fill="url(#level1Grad)"/>
+    <text x="120" y="250" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">📁 Engineering</text>
+  </g>
+  <text x="120" y="275" font-family="system-ui, sans-serif" font-size="9" fill="#475569" text-anchor="middle">Inherits: company_id, region</text>
+  <text x="120" y="288" font-family="monospace" font-size="8" fill="#8b5cf6" text-anchor="middle">collection: departments</text>
+  <text x="120" y="301" font-family="monospace" font-size="8" fill="#94a3b8" text-anchor="middle">+ department_id, budget</text>
+
+  <g filter="url(#shadow)">
+    <rect x="220" y="230" width="200" height="85" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="220" y="230" width="200" height="28" rx="10" fill="url(#level1Grad)"/>
+    <rect x="220" y="248" width="200" height="10" fill="url(#level1Grad)"/>
+    <text x="320" y="250" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">📁 Marketing</text>
+  </g>
+  <text x="320" y="275" font-family="system-ui, sans-serif" font-size="9" fill="#475569" text-anchor="middle">Inherits: company_id, region</text>
+  <text x="320" y="288" font-family="monospace" font-size="8" fill="#8b5cf6" text-anchor="middle">collection: departments</text>
+  <text x="320" y="301" font-family="monospace" font-size="8" fill="#94a3b8" text-anchor="middle">+ department_id, budget</text>
+
+  <!-- Level 2 Connectors -->
+  <path d="M 120 315 L 120 335 L 65 335 L 65 355" stroke="#94a3b8" stroke-width="2" fill="none"/>
+  <path d="M 120 315 L 120 335 L 175 335 L 175 355" stroke="#94a3b8" stroke-width="2" fill="none"/>
+  <path d="M 320 315 L 320 335 L 265 335 L 265 355" stroke="#94a3b8" stroke-width="2" fill="none"/>
+  <path d="M 320 315 L 320 335 L 375 335 L 375 355" stroke="#94a3b8" stroke-width="2" fill="none"/>
+
+  <!-- Level 2: Teams under Engineering -->
+  <g filter="url(#shadow)">
+    <rect x="10" y="355" width="110" height="75" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="10" y="355" width="110" height="24" rx="8" fill="url(#level2Grad)"/>
+    <rect x="10" y="371" width="110" height="8" fill="url(#level2Grad)"/>
+    <text x="65" y="372" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">👥 Backend</text>
+  </g>
+  <text x="65" y="395" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Inherits all parent fields</text>
+  <text x="65" y="408" font-family="monospace" font-size="7" fill="#ec4899" text-anchor="middle">collection: teams</text>
+  <text x="65" y="420" font-family="monospace" font-size="7" fill="#94a3b8" text-anchor="middle">+ team_id, lead</text>
+
+  <g filter="url(#shadow)">
+    <rect x="125" y="355" width="110" height="75" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="125" y="355" width="110" height="24" rx="8" fill="url(#level2Grad)"/>
+    <rect x="125" y="371" width="110" height="8" fill="url(#level2Grad)"/>
+    <text x="180" y="372" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">👥 Frontend</text>
+  </g>
+  <text x="180" y="395" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Inherits all parent fields</text>
+  <text x="180" y="408" font-family="monospace" font-size="7" fill="#ec4899" text-anchor="middle">collection: teams</text>
+  <text x="180" y="420" font-family="monospace" font-size="7" fill="#94a3b8" text-anchor="middle">+ team_id, lead</text>
+
+  <!-- Level 2: Teams under Marketing -->
+  <g filter="url(#shadow)">
+    <rect x="240" y="355" width="110" height="75" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="240" y="355" width="110" height="24" rx="8" fill="url(#level2Grad)"/>
+    <rect x="240" y="371" width="110" height="8" fill="url(#level2Grad)"/>
+    <text x="295" y="372" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">👥 Brand</text>
+  </g>
+  <text x="295" y="395" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Inherits all parent fields</text>
+  <text x="295" y="408" font-family="monospace" font-size="7" fill="#ec4899" text-anchor="middle">collection: teams</text>
+  <text x="295" y="420" font-family="monospace" font-size="7" fill="#94a3b8" text-anchor="middle">+ team_id, lead</text>
+
+  <g filter="url(#shadow)">
+    <rect x="355" y="355" width="110" height="75" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="355" y="355" width="110" height="24" rx="8" fill="url(#level2Grad)"/>
+    <rect x="355" y="371" width="110" height="8" fill="url(#level2Grad)"/>
+    <text x="410" y="372" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">👥 Growth</text>
+  </g>
+  <text x="410" y="395" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Inherits all parent fields</text>
+  <text x="410" y="408" font-family="monospace" font-size="7" fill="#ec4899" text-anchor="middle">collection: teams</text>
+  <text x="410" y="420" font-family="monospace" font-size="7" fill="#94a3b8" text-anchor="middle">+ team_id, lead</text>
+
+  <!-- Inheritance Legend -->
+  <g transform="translate(50, 460)">
+    <rect width="380" height="90" rx="8" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="190" y="20" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#475569" text-anchor="middle">Property Inheritance Chain</text>
+    
+    <rect x="15" y="35" width="100" height="20" rx="4" fill="#eef2ff"/>
+    <text x="65" y="49" font-family="monospace" font-size="8" fill="#4f46e5" text-anchor="middle">company_id</text>
+    
+    <text x="125" y="49" font-family="system-ui, sans-serif" font-size="10" fill="#94a3b8">→</text>
+    
+    <rect x="140" y="35" width="100" height="20" rx="4" fill="#f3e8ff"/>
+    <text x="190" y="49" font-family="monospace" font-size="8" fill="#7c3aed" text-anchor="middle">+ department_id</text>
+    
+    <text x="250" y="49" font-family="system-ui, sans-serif" font-size="10" fill="#94a3b8">→</text>
+    
+    <rect x="265" y="35" width="100" height="20" rx="4" fill="#fce7f3"/>
+    <text x="315" y="49" font-family="monospace" font-size="8" fill="#db2777" text-anchor="middle">+ team_id</text>
+    
+    <text x="190" y="75" font-family="system-ui, sans-serif" font-size="9" fill="#64748b" text-anchor="middle">Child nodes automatically inherit all parent enrichment fields</text>
+  </g>
+
+  <!-- Right Side: Document Classification Flow -->
+  <text x="820" y="100" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#475569" text-anchor="middle">Document Classification</text>
+
+  <!-- Input Document -->
+  <g filter="url(#shadow)">
+    <rect x="680" y="120" width="280" height="100" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="680" y="120" width="280" height="28" rx="10" fill="url(#docGrad)"/>
+    <rect x="680" y="138" width="280" height="10" fill="url(#docGrad)"/>
+    <text x="820" y="140" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">📄 Project Proposal Document</text>
+  </g>
+  <g transform="translate(695, 160)">
+    <text x="0" y="12" font-family="system-ui, sans-serif" font-size="9" fill="#475569">Content: "Q4 frontend redesign proposal..."</text>
+    <text x="0" y="26" font-family="system-ui, sans-serif" font-size="9" fill="#475569">Embedding: CLIP + Text</text>
+    <rect x="0" y="32" width="250" height="18" rx="4" fill="#fff7ed"/>
+    <text x="125" y="45" font-family="monospace" font-size="8" fill="#c2410c" text-anchor="middle">[0.34, -0.21, 0.78, 0.45, ...]</text>
+  </g>
+
+  <!-- Classification Arrow -->
+  <path d="M 820 220 L 820 260" stroke="#f97316" stroke-width="2" fill="none" marker-end="url(#arrowOrange)"/>
+  <text x="860" y="245" font-family="system-ui, sans-serif" font-size="9" fill="#f97316">Classify</text>
+
+  <!-- Multi-level Match Results -->
+  <g filter="url(#shadow)">
+    <rect x="680" y="270" width="280" height="200" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="680" y="270" width="280" height="28" rx="10" fill="url(#rootGrad)"/>
+    <rect x="680" y="288" width="280" height="10" fill="url(#rootGrad)"/>
+    <text x="820" y="290" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Hierarchical Match Results</text>
+  </g>
+
+  <!-- Level 0 Match -->
+  <g transform="translate(695, 310)">
+    <rect width="250" height="45" rx="6" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+    <text x="10" y="16" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#4338ca">Level 0: Company</text>
+    <text x="10" y="30" font-family="system-ui, sans-serif" font-size="8" fill="#475569">Match: Acme Corp (0.95)</text>
+    <text x="10" y="40" font-family="monospace" font-size="7" fill="#6366f1">→ company_id: "acme_001"</text>
+  </g>
+
+  <!-- Level 1 Match -->
+  <g transform="translate(695, 360)">
+    <rect width="250" height="45" rx="6" fill="#f3e8ff" stroke="#d8b4fe" stroke-width="1"/>
+    <text x="10" y="16" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#7c3aed">Level 1: Department</text>
+    <text x="10" y="30" font-family="system-ui, sans-serif" font-size="8" fill="#475569">Match: Engineering (0.91)</text>
+    <text x="10" y="40" font-family="monospace" font-size="7" fill="#8b5cf6">→ department_id: "eng_042"</text>
+  </g>
+
+  <!-- Level 2 Match -->
+  <g transform="translate(695, 410)">
+    <rect width="250" height="45" rx="6" fill="#fce7f3" stroke="#f9a8d4" stroke-width="1"/>
+    <text x="10" y="16" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#db2777">Level 2: Team</text>
+    <text x="10" y="30" font-family="system-ui, sans-serif" font-size="8" fill="#475569">Match: Frontend (0.89)</text>
+    <text x="10" y="40" font-family="monospace" font-size="7" fill="#ec4899">→ team_id: "fe_007", lead: "Sarah Chen"</text>
+  </g>
+
+  <!-- Enrichment Arrow -->
+  <path d="M 820 470 L 820 510" stroke="#14b8a6" stroke-width="2" fill="none" marker-end="url(#arrowTeal)"/>
+  <text x="860" y="495" font-family="system-ui, sans-serif" font-size="9" fill="#14b8a6">Enrich</text>
+
+  <!-- Enriched Document -->
+  <g filter="url(#shadow)">
+    <rect x="680" y="520" width="280" height="170" rx="10" fill="white" stroke="#14b8a6" stroke-width="2"/>
+    <rect x="680" y="520" width="280" height="28" rx="10" fill="url(#enrichGrad)"/>
+    <rect x="680" y="538" width="280" height="10" fill="url(#enrichGrad)"/>
+    <text x="820" y="540" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">📄 Enriched Document</text>
+  </g>
+
+  <g transform="translate(695, 560)">
+    <text x="0" y="12" font-family="system-ui, sans-serif" font-size="9" fill="#475569">Original content preserved</text>
+    
+    <rect x="0" y="22" width="250" height="100" rx="6" fill="#f0fdfa"/>
+    <text x="10" y="38" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#0d9488">+ Inherited Enrichment Fields</text>
+    
+    <text x="10" y="55" font-family="monospace" font-size="8" fill="#115e59">company_id: "acme_001"</text>
+    <text x="10" y="68" font-family="monospace" font-size="8" fill="#115e59">company_name: "Acme Corp"</text>
+    <text x="10" y="81" font-family="monospace" font-size="8" fill="#115e59">department_id: "eng_042"</text>
+    <text x="10" y="94" font-family="monospace" font-size="8" fill="#115e59">department: "Engineering"</text>
+    <text x="10" y="107" font-family="monospace" font-size="8" fill="#115e59">team_id: "fe_007"</text>
+    <text x="10" y="120" font-family="monospace" font-size="8" fill="#115e59">team_lead: "Sarah Chen"</text>
+  </g>
+
+  <!-- Connection from tree to classification -->
+  <path d="M 460 250 Q 550 250 550 180 Q 550 150 680 155" stroke="#94a3b8" stroke-width="2" fill="none" stroke-dasharray="6,3" marker-end="url(#arrowGray)"/>
+  <text x="550" y="130" font-family="system-ui, sans-serif" font-size="9" fill="#94a3b8" text-anchor="middle">Reference</text>
+  <text x="550" y="142" font-family="system-ui, sans-serif" font-size="9" fill="#94a3b8" text-anchor="middle">Collections</text>
+
+  <!-- Bottom: Config Example -->
+  <g filter="url(#shadow)">
+    <rect x="50" y="580" width="420" height="160" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+    <text x="70" y="608" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#94a3b8">Taxonomy Configuration</text>
+    <line x1="50" y1="620" x2="470" y2="620" stroke="#334155" stroke-width="1"/>
+  </g>
+  
+  <g transform="translate(70, 640)">
+    <text x="0" y="0" font-family="ui-monospace, monospace" font-size="10" fill="#e2e8f0">{</text>
+    <text x="12" y="16" font-family="ui-monospace, monospace" font-size="10"><tspan fill="#7dd3fc">"type"</tspan><tspan fill="#e2e8f0">: </tspan><tspan fill="#fcd34d">"hierarchical"</tspan><tspan fill="#e2e8f0">,</tspan></text>
+    <text x="12" y="32" font-family="ui-monospace, monospace" font-size="10"><tspan fill="#7dd3fc">"root"</tspan><tspan fill="#e2e8f0">: {</tspan></text>
+    <text x="24" y="48" font-family="ui-monospace, monospace" font-size="10"><tspan fill="#7dd3fc">"collection"</tspan><tspan fill="#e2e8f0">: </tspan><tspan fill="#fcd34d">"companies"</tspan><tspan fill="#e2e8f0">,</tspan></text>
+    <text x="24" y="64" font-family="ui-monospace, monospace" font-size="10"><tspan fill="#7dd3fc">"enrichment_fields"</tspan><tspan fill="#e2e8f0">: [</tspan><tspan fill="#fcd34d">"company_id"</tspan><tspan fill="#e2e8f0">, </tspan><tspan fill="#fcd34d">"name"</tspan><tspan fill="#e2e8f0">]</tspan></text>
+    <text x="12" y="80" font-family="ui-monospace, monospace" font-size="10" fill="#e2e8f0">},</text>
+    <text x="12" y="96" font-family="ui-monospace, monospace" font-size="10"><tspan fill="#7dd3fc">"children"</tspan><tspan fill="#e2e8f0">: [{ ... }]</tspan></text>
+    <text x="0" y="112" font-family="ui-monospace, monospace" font-size="10" fill="#e2e8f0">}</text>
+  </g>
+
+  <!-- Legend -->
+  <g transform="translate(680, 720)">
+    <rect x="0" y="0" width="12" height="12" rx="2" fill="url(#rootGrad)"/>
+    <text x="18" y="11" font-family="system-ui, sans-serif" font-size="10" fill="#475569">Root (Level 0)</text>
+    
+    <rect x="100" y="0" width="12" height="12" rx="2" fill="url(#level1Grad)"/>
+    <text x="118" y="11" font-family="system-ui, sans-serif" font-size="10" fill="#475569">Level 1</text>
+    
+    <rect x="180" y="0" width="12" height="12" rx="2" fill="url(#level2Grad)"/>
+    <text x="198" y="11" font-family="system-ui, sans-serif" font-size="10" fill="#475569">Level 2</text>
+    
+    <rect x="260" y="0" width="12" height="12" rx="2" fill="url(#enrichGrad)"/>
+    <text x="278" y="11" font-family="system-ui, sans-serif" font-size="10" fill="#475569">Enriched Output</text>
+  </g>
+
+  <!-- Use Case Note -->
+  <g transform="translate(50, 762)">
+    <text x="0" y="0" font-family="system-ui, sans-serif" font-size="10" fill="#64748b">Use cases: Org charts, product categories, content taxonomies, multi-level classification with automatic field inheritance</text>
+  </g>
+
+</svg>

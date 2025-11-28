@@ -77,12 +77,12 @@
       "url": "tutorials"
     },
     {
-      "name": "Integrations",
-      "url": "integrations"
-    },
-    {
       "name": "Studio",
       "url": "studio"
+    },
+    {
+      "name": "Integrations",
+      "url": "integrations"
     }
   ],
   "navigation": [
@@ -122,7 +122,6 @@
       "pages": [
         "processing/feature-extractors",
         "processing/batching",
-        "processing/model-registry",
         "processing/tasks",
         "processing/pipelines"
       ]
@@ -150,15 +149,6 @@
         "operations/webhooks",
         "operations/analytics-overview",
         "operations/rate-limits-quotas"
-      ]
-    },
-    {
-      "group": "Best Practices",
-      "pages": [
-        "best-practices/schema-design",
-        "best-practices/feature-selection",
-        "best-practices/caching-strategies",
-        "best-practices/cost-optimization"
       ]
     },
     {
@@ -207,72 +197,13 @@
       ]
     },
     {
-      "group": "Organizations",
-      "pages": [
-        "api-reference/organizations/get-organization",
-        "api-reference/organizations/update-organization",
-        "api-reference/organizations/add-credits",
-        {
-          "group": "Users",
-          "pages": [
-            "api-reference/organization-users/list-users",
-            "api-reference/organization-users/create-user",
-            "api-reference/organization-users/get-user",
-            "api-reference/organization-users/update-user",
-            "api-reference/organization-users/delete-user"
-          ]
-        },
-        {
-          "group": "API Keys",
-          "pages": [
-            "api-reference/organization-api-keys/list-api-keys",
-            "api-reference/organization-api-keys/create-api-key",
-            "api-reference/organization-api-keys/update-api-key",
-            "api-reference/organization-api-keys/rotate-api-key",
-            "api-reference/organization-api-keys/delete-api-key"
-          ]
-        },
-        {
-          "group": "Connections",
-          "pages": [
-            "api-reference/organization-connections/list-storage-connections",
-            "api-reference/organization-connections/create-storage-connection",
-            "api-reference/organization-connections/get-storage-connection",
-            "api-reference/organization-connections/update-storage-connection",
-            "api-reference/organization-connections/test-storage-connection",
-            "api-reference/organization-connections/list-google-drive-folders",
-            "api-reference/organization-connections/list-google-drive-files",
-            "api-reference/organization-connections/delete-storage-connection"
-          ]
-        },
-        {
-          "group": "Usage",
-          "pages": [
-            "api-reference/organization-usage/get-org-usage",
-            "api-reference/organization-usage/get-api-key-usage",
-            "api-reference/organization-usage/get-api-key-endpoint-breakdown"
-          ]
-        }
-      ]
-    },
-    {
       "group": "Namespaces",
       "pages": [
         "api-reference/namespaces/create-namespace",
         "api-reference/namespaces/get-namespace",
         "api-reference/namespaces/update-namespace",
-        "api-reference/namespaces/partially-update-namespace",
         "api-reference/namespaces/list-namespaces",
-        "api-reference/namespaces/delete-namespace",
-        {
-          "group": "Templates",
-          "pages": [
-            "api-reference/namespace-templates/list-templates",
-            "api-reference/namespace-templates/create-template",
-            "api-reference/namespace-templates/get-template",
-            "api-reference/namespace-templates/instantiate-template"
-          ]
-        }
+        "api-reference/namespaces/delete-namespace"
       ]
     },
     {
@@ -281,21 +212,8 @@
         "api-reference/buckets/create-bucket",
         "api-reference/buckets/get-bucket",
         "api-reference/buckets/update-bucket",
-        "api-reference/buckets/partially-update-bucket",
         "api-reference/buckets/list-buckets",
         "api-reference/buckets/delete-bucket",
-        {
-          "group": "Syncs",
-          "pages": [
-            "api-reference/bucket-syncs/list-sync-configurations",
-            "api-reference/bucket-syncs/create-sync-configuration",
-            "api-reference/bucket-syncs/get-sync-configuration",
-            "api-reference/bucket-syncs/update-sync-configuration",
-            "api-reference/bucket-syncs/pause-sync-configuration",
-            "api-reference/bucket-syncs/resume-sync-configuration",
-            "api-reference/bucket-syncs/delete-sync-configuration"
-          ]
-        },
         {
           "group": "Objects",
           "pages": [

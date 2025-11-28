@@ -24,42 +24,9 @@ In a flat taxonomy, documents from any modality (video, image, audio, text) are 
 
 ### Hierarchical Taxonomy: Media Content Classification
 
-```mermaid
-graph TD
-    Root[Level 1: Brand<br/>Nike<br/>CLIP Logo Detection]
-    
-    Root --> L2_1[Level 2: Category<br/>Athletic Performance<br/>Scene Classification]
-    Root --> L2_2[Level 2: Category<br/>Lifestyle Fashion<br/>Scene Classification]
-    
-    L2_1 --> L3_1[Level 3: Sport Type<br/>Running<br/>Activity Detection]
-    L2_1 --> L3_2[Level 3: Sport Type<br/>Training<br/>Activity Detection]
-    
-    L2_2 --> L3_3[Level 3: Style<br/>Streetwear<br/>Context Analysis]
-    L2_2 --> L3_4[Level 3: Style<br/>Sneaker Culture<br/>Context Analysis]
-    
-    L3_1 --> L4_1[Level 4: Audience<br/>Recreational Runners<br/>Demographic Model]
-    L3_1 --> L4_2[Level 4: Audience<br/>Competitive Athletes<br/>Demographic Model]
-    
-    L3_2 --> L4_3[Level 4: Audience<br/>Gym Members<br/>Demographic Model]
-    
-    L3_3 --> L4_4[Level 4: Audience<br/>Gen Z Fashion<br/>Demographic Model]
-    
-    L3_4 --> L4_5[Level 4: Audience<br/>Sneaker Collectors<br/>Demographic Model]
-    
-    L4_1 --> L5_1[Level 5: Campaign<br/>Run Club 2024<br/>NK-RC-2024<br/>30s Video]
-    L4_1 --> L5_2[Level 5: Campaign<br/>5K Challenge<br/>NK-5K-2024<br/>15s Video]
-    
-    L4_2 --> L5_3[Level 5: Campaign<br/>Marathon Pro<br/>NK-MP-2024<br/>60s Video]
-    
-    L4_3 --> L5_4[Level 5: Campaign<br/>Training Club<br/>NK-TC-2024<br/>45s Video]
-    
-    L4_4 --> L5_5[Level 5: Campaign<br/>Urban Style<br/>NK-US-2024<br/>Image Set]
-    
-    L4_5 --> L5_6[Level 5: Campaign<br/>Air Max Day<br/>NK-AM-2024<br/>90s Video]
-    
-    D1[Video: Marathon Race] -.->|Matched| L5_3
-    D2[Social: Street Photo] -.->|Matched| L5_5
-```
+<Frame>
+  <img src="/assets/mixpeek-hierarchical-taxonomy.svg" alt="Hierarchical taxonomy showing media content classification with multiple levels from brand to campaign" />
+</Frame>
 
 In a hierarchical taxonomy, documents traverse multiple levels of progressive refinement. Starting from a broad brand classification (1 node), through content category (2 nodes), sport/style type (4 nodes), audience segmentation (5 nodes), to specific campaigns (6 nodes). Each level narrows the classification using different multimodal features—CLIP for brand detection, scene classification for categories, activity detection for sport types, demographic models for audiences, and campaign-specific patterns at the final level. Documents inherit all properties from parent nodes as they traverse down the tree.
 
