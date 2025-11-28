@@ -6,52 +6,18 @@ description: "Distributed pipelines that turn raw objects into reusable features
 Feature extractors are Ray-powered workflows that read objects, run ML models, and write features into collection documents. Each extractor exposes a stable feature URI so retrievers, taxonomies, and clusters can reference the outputs with confidence.
 
 <Note>
-  Fetch the authoritative list of extractors at runtime with `GET /v1/collections/features/extractors`. The API returns extractor ids, versions, supported input types, schemas, and default parameters.
+  View the live list of extractors at [api.mixpeek.com/v1/collections/features/extractors](https://api.mixpeek.com/v1/collections/features/extractors) or fetch programmatically with `GET /v1/collections/features/extractors`.
 </Note>
 
-<CodeGroup>
-```bash
-curl -s --request GET \
-  --url "$MP_API_URL/v1/collections/features/extractors" \
-  --header "Authorization: Bearer $MP_API_KEY" \
-  --header "X-Namespace: $MP_NAMESPACE"
-```
+## Available Extractors
 
-```json
-[
-  {
-    "feature_extractor_id": "text_extractor@v1",
-    "feature_extractor_name": "text_extractor",
-    "version": "v1",
-    "description": "Generate dense text embeddings and metadata",
-    "supported_input_types": ["text"],
-    "document_output_type": "documents",
-    "icon": "file-text"
-  },
-  {
-    "feature_extractor_id": "video_extractor@v1",
-    "feature_extractor_name": "video_extractor",
-    "version": "v1",
-    "description": "Segment videos into scenes and frame embeddings",
-    "supported_input_types": ["video"],
-    "document_output_type": "documents",
-    "icon": "video"
-  }
-]
-```
-</CodeGroup>
+| Extractor | Description | Input Types | Dimensions | Latency | Cost |
+|-----------|-------------|-------------|------------|---------|------|
+| `passthrough_extractor_v1` | Copies source fields without processing. Use for passing metadata or vectors between collections. | Any | N/A | &lt;1ms | Free |
+| `text_extractor_v1` | Dense embeddings via E5-Large multilingual. Supports chunking (characters, words, sentences, paragraphs, pages) and LLM extraction via `response_shape`. | `text`, `string` | 1024 | ~5ms/doc | Free |
+| `multimodal_extractor_v1` | Unified embeddings for video, image, text, and GIF via Google Vertex AI. Videos decomposed by time, scene, or silence with transcription, OCR, and thumbnails. | `video`, `image`, `text`, `string` | 1408 | 0.5-2x realtime | $0.01-0.15/min |
 
-## Catalog Highlights
-
-| Extractor | Output | Key Models | Typical Latency | Use Cases |
-|-----------|--------|------------|-----------------|-----------|
-| `text_extractor@v1` | Dense text embeddings plus language metadata | `multilingual-e5-large-instruct`, `gte-modernbert-base`, OpenAI `text-embedding-3-*` | 10–50 ms/doc (GPU) | Semantic search, Q&A, classification |
-| `video_extractor@v1` | Scene slices, thumbnails, frame embeddings | CLIP, Pyannote, FFmpeg | 2–10 s/video | Video retrieval, moderation, scene detection |
-| `splade_extractor@v1` | Sparse lexical vectors (indices + weights) | `naver/splade-v1` | 5–20 ms/doc | Hybrid search, rare term recall |
-| `colbert_extractor@v1` | Multi-vector token embeddings | `colbert_ir/colbertv2` | 20–80 ms/doc | Late interaction search, passage QA |
-| `whisper_large_v3_turbo` | Transcripts with timestamps | OpenAI Whisper | 500–2000 ms/min audio | Speech search, diarization |
-
-Need something custom or gated? Contact support to enable additional extractors or deploy bespoke models.
+Need something custom? Contact support to enable additional extractors or deploy bespoke models.
 
 ## Where Extractors Run
 

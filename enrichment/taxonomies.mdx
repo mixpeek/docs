@@ -16,26 +16,9 @@ Each node references a collection, retriever, and list of enrichment fields. Chi
 
 ### Flat Taxonomy: Product Catalog Recognition
 
-```mermaid
-graph LR
-    subgraph "Multimodal Documents"
-        D1[Video Frame<br/>CLIP Embedding<br/>Timestamp: 00:15]
-        D2[Product Image<br/>CLIP Embedding<br/>Source: Instagram]
-        D3[Audio Transcript<br/>Text Embedding<br/>'red running shoes']
-        D4[User Upload<br/>CLIP Embedding<br/>Query photo]
-    end
-    
-    subgraph "Product Catalog Reference"
-        P1[Nike Air Zoom<br/>SKU: NK-2024-RED<br/>Category: Athletic<br/>Price: $129.99]
-        P2[Adidas Ultraboost<br/>SKU: AD-2024-BLK<br/>Category: Running<br/>Price: $180.00]
-        P3[New Balance 990<br/>SKU: NB-2024-GRY<br/>Category: Lifestyle<br/>Price: $199.99]
-    end
-    
-    D1 -->|Visual Match<br/>Score: 0.92| P1
-    D2 -->|Visual Match<br/>Score: 0.89| P2
-    D3 -->|Semantic Match<br/>Score: 0.87| P1
-    D4 -->|Visual Match<br/>Score: 0.91| P3
-```
+<Frame>
+  <img src="/assets/mixpeek-flat-taxonomy.svg" alt="Flat taxonomy showing multimodal documents matched against a product catalog reference collection" />
+</Frame>
 
 In a flat taxonomy, documents from any modality (video, image, audio, text) are matched against a single reference collection. Each document uses its appropriate feature embedding (CLIP for visual, text embeddings for audio transcripts) to find the best match. Enrichment fields (SKU, category, price) are attached when similarity exceeds the threshold.
 
@@ -84,10 +67,93 @@ In a hierarchical taxonomy, documents traverse multiple levels of progressive re
 
 | Mode | Description | Use Case |
 |------|-------------|----------|
-| `on_demand` | Enrich documents at query time inside a retriever (`taxonomy@v1` stage) | Exploratory workflows, testing, dynamic reference data |
+| `on_demand` | Enrich documents at query time inside a retriever (`taxonomy_enrich` stage) | Exploratory workflows, testing, dynamic reference data |
 | `materialize` | Batch enrichment after extraction; results persisted in the collection | Production search, low-latency retrieval, analytics |
+| `retroactive` | Apply taxonomy to existing documents in a collection | Backfilling, taxonomy updates, schema migrations |
 
-Configure execution mode via a collection’s `taxonomy_applications` array or by adding a taxonomy stage to a retriever.
+Configure execution mode via a collection's `taxonomy_applications` array or by adding a taxonomy stage to a [retriever](/retrieval/retrievers).
+
+### How Hierarchical Taxonomies Execute
+
+Hierarchical taxonomies are executed like **Common Table Expressions (CTEs)** in SQL—each level builds on the results of the previous level, creating a recursive evaluation chain from root to leaf nodes.
+
+```
+Level 1 (Root)     →  Match against brand collection
+    ↓ passes matched docs
+Level 2            →  Match against category collection (filtered by L1 result)
+    ↓ passes matched docs
+Level 3            →  Match against subcategory collection (filtered by L2 result)
+    ↓ passes matched docs
+Level N (Leaf)     →  Final enrichment fields attached
+```
+
+At each level:
+1. Documents that matched the parent node are passed down
+2. The child node's retriever executes against its reference collection
+3. Enrichment fields from matching nodes are accumulated
+4. Only documents exceeding the similarity threshold continue to child nodes
+
+This CTE-style execution ensures that a document classified as "Nike → Athletic → Running" inherits enrichment fields from all three levels, not just the leaf node.
+
+### Application Methods
+
+Hierarchical taxonomies can be applied through three methods:
+
+| Method | When It Runs | Use Case |
+|--------|--------------|----------|
+| **On-demand** | Query time, as a [retriever stage](/retrieval/retrievers#apply-stages) | Dynamic classification, A/B testing taxonomy versions, low-volume queries |
+| **Materialized** | During collection processing (post-extraction) | Production search requiring low latency, analytics dashboards |
+| **Retroactive** | Manually triggered via API | Backfilling existing documents, applying updated taxonomy versions |
+
+**On-demand** enrichment adds a `taxonomy_enrich` stage to your retriever pipeline:
+
+```json
+{
+  "stage_type": "apply",
+  "stage_id": "taxonomy_enrich",
+  "parameters": {
+    "taxonomy_id": "tax_org_roles",
+    "input_mappings": {
+      "query_embedding": "{{DOC.mixpeek://face_detector@v2/face_embedding}}"
+    }
+  }
+}
+```
+
+**Materialized** enrichment runs automatically after document extraction completes. Configure it in the collection's `taxonomy_applications`:
+
+```json
+{
+  "taxonomy_applications": [
+    {
+      "taxonomy_id": "tax_product_hierarchy",
+      "execution_mode": "materialize"
+    }
+  ]
+}
+```
+
+**Retroactive** enrichment applies a taxonomy to documents already in the collection:
+
+```bash
+curl -sS -X POST "$MP_API_URL/v1/collections/<collection_id>/apply-taxonomy" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "taxonomy_id": "tax_product_hierarchy",
+    "filter": {
+      "field": "metadata.needs_reclassification",
+      "operator": "eq",
+      "value": true
+    }
+  }'
+```
+
+Use retroactive application when:
+- You've updated a taxonomy and need to reclassify existing documents
+- You're migrating from a flat taxonomy to a hierarchical one
+- You've added new reference data to taxonomy collections
 
 ## Internals: JOIN Stage
 

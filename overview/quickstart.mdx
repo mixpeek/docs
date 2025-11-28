@@ -7,7 +7,7 @@ description: "Ingest data, extract features, and run your first retriever"
   This guide spins up the end-to-end Mixpeek workflow: create an isolated namespace, register raw objects, materialize features through the Engine, and query results with a stage-based retriever. Every request matches the current OpenAPI specification.
 </Note>
 
-[Prefer video? Watch the walkthrough →](/studio/quickstart)
+<iframe width="560" height="315" src="https://www.youtube.com/embed/vQbPF1yU0m0?si=uEdWll7xd92WHseJ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 ## Prerequisites
 
@@ -104,7 +104,7 @@ curl -sS -X POST "$MP_API_URL/v1/collections" \
   }'
 ```
 
-Collections immediately expose their deterministic `output_schema`, so you can build integrations before any documents are processed.
+Collections immediately expose their deterministic `output_schema`, so you can build integrations before any documents are processed. For all available feature extractors, see [Feature Extractors](/processing/feature-extractors).
 
 ## 4. Register an Object
 
@@ -186,7 +186,11 @@ Every document includes lineage back to the root object (`root_object_id`) and f
 
 ## 8. Create a Retriever
 
-Retrievers combine stage-based pipelines and cache-aware execution. The example below performs semantic search with stage-level sorting.
+Retrievers combine stage-based pipelines with cache-aware execution. Stages fall into categories like `filter`, `sort`, and `apply` (for enrichment and transformation).
+
+### Basic Retriever
+
+A simple semantic search retriever:
 
 ```bash
 curl -sS -X POST "$MP_API_URL/v1/retrievers" \
@@ -204,15 +208,12 @@ curl -sS -X POST "$MP_API_URL/v1/retrievers" \
     "collection_ids": ["<collection_id>"],
     "stages": [
       {
-        "stage_name": "knn_search",
-        "version": "v1",
+        "stage_type": "filter",
+        "stage_id": "feature_search",
         "parameters": {
-          "feature_address": "mixpeek://text_extractor@v1/text_embedding",
-          "input_mapping": { "text": "query_text" },
-          "limit": 20,
-          "sort_by": [
-            { "field": "score", "direction": "desc" }
-          ]
+          "feature_uri": "urn:embedding:text:multilingual_e5_large:1",
+          "input": { "text": "{{INPUT.query_text}}" },
+          "limit": 20
         }
       }
     ],
@@ -223,6 +224,75 @@ curl -sS -X POST "$MP_API_URL/v1/retrievers" \
   }'
 ```
 
+### Advanced Retriever with Apply Stages
+
+Retrievers support powerful `apply` stages for enrichment and transformation:
+
+```bash
+curl -sS -X POST "$MP_API_URL/v1/retrievers" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "retriever_name": "enriched-product-search",
+    "description": "Search with external enrichment and transformation",
+    "input_schema": {
+      "properties": {
+        "query_text": { "type": "text", "required": true },
+        "customer_id": { "type": "string", "required": false }
+      }
+    },
+    "collection_ids": ["<collection_id>"],
+    "stages": [
+      {
+        "stage_type": "filter",
+        "stage_id": "feature_search",
+        "parameters": {
+          "feature_uri": "urn:embedding:text:multilingual_e5_large:1",
+          "input": { "text": "{{INPUT.query_text}}" },
+          "limit": 20
+        }
+      },
+      {
+        "stage_type": "apply",
+        "stage_id": "document_enrich",
+        "parameters": {
+          "target_collection_id": "<catalog_collection_id>",
+          "source_field": "metadata.product_id",
+          "target_field": "product_id",
+          "fields_to_merge": ["price", "inventory_count", "description"],
+          "output_field": "catalog_data"
+        }
+      },
+      {
+        "stage_type": "apply",
+        "stage_id": "api_call",
+        "parameters": {
+          "url": "https://api.stripe.com/v1/customers/{{INPUT.customer_id}}",
+          "method": "GET",
+          "allowed_domains": ["api.stripe.com"],
+          "auth": {
+            "type": "bearer",
+            "secret_ref": "stripe_api_key"
+          },
+          "output_field": "metadata.customer_data",
+          "on_error": "skip"
+        }
+      },
+      {
+        "stage_type": "apply",
+        "stage_id": "json_transform",
+        "parameters": {
+          "template": "{\"id\": \"{{DOC.document_id}}\", \"title\": \"{{DOC.metadata.title}}\", \"price\": {{DOC.catalog_data.price}}, \"score\": {{DOC.score}}}",
+          "fail_on_error": false
+        }
+      }
+    ]
+  }'
+```
+
+For all available retriever stages, see [Retriever Pipelines](/retrieval/retrievers).
+
 Execute the retriever:
 
 ```bash
@@ -231,7 +301,10 @@ curl -sS -X POST "$MP_API_URL/v1/retrievers/<retriever_id>/execute" \
   -H "X-Namespace: $MP_NAMESPACE" \
   -H "Content-Type: application/json" \
   -d '{
-    "inputs": { "query_text": "wireless headphones with noise cancelling" },
+    "inputs": {
+      "query_text": "wireless headphones with noise cancelling",
+      "customer_id": "cus_abc123"
+    },
     "limit": 5,
     "return_urls": false
   }'

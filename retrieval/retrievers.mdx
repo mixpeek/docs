@@ -65,8 +65,19 @@ Retrievers combine feature-aware search stages, structured filters, enrichment j
 
 ## Stage Catalog
 
+Stages are the building blocks of retriever pipelines. Each stage belongs to a **category** that defines its behavior:
+
+| Category | Behavior | Example Use Cases |
+|----------|----------|-------------------|
+| **filter** | Reduce the number of documents while preserving schema | Attribute filters, semantic search, hybrid search |
+| **sort** | Reorder documents without changing the set | Attribute sort, score-based ordering, reranking |
+| **reduce** | Aggregate to a smaller set of documents | Top-k selection, clustering reducers, deduplication |
+| **apply** | Enrich or transform documents without dropping them | Taxonomy joins, API enrichment, LLM enrichers, JSON transforms |
+
 <Note>
   Retrieve the live registry with `GET /v1/retrievers/stages`. Each entry includes `stage_id`, category, icon, and parameter schema so you can dynamically build configuration UIs or validations.
+
+  **Live stages:** [https://api.mixpeek.com/v1/retrievers/stages](https://api.mixpeek.com/v1/retrievers/stages)
 </Note>
 
 <CodeGroup>
@@ -80,31 +91,117 @@ curl -s --request GET \
 ```json
 [
   {
-    "stage_id": "hybrid_search",
-    "description": "Hybrid lexical + vector retrieval with score fusion",
-    "category": "search",
+    "stage_id": "feature_search",
+    "description": "Vector similarity search using feature embeddings",
+    "category": "filter",
     "icon": "search"
   },
   {
-    "stage_id": "attribute_filter",
-    "description": "Filter documents by attribute values",
-    "category": "reduce",
-    "icon": "list-filter"
+    "stage_id": "document_enrich",
+    "description": "Join and enrich documents with data from another collection",
+    "category": "apply",
+    "icon": "link"
   }
 ]
 ```
 </CodeGroup>
 
-| Category | Stage ID | Description |
-|----------|----------|-------------|
-| search | `hybrid_search` | Dense + lexical retrieval with reciprocal-rank and weighted-score fusion, plus score thresholds. |
-| reduce | `attribute_filter` | Structured filtering with boolean logic, projections, and template-aware batch sizing. |
-| reduce | `llm_filter` | LLM-powered screening that keeps or discards documents based on prompt-defined criteria. |
-| rank | `sort_attribute` | Sort in-flight results by any payload field with case-insensitive and null handling options. |
-| rank | `sort_relevance` | Sort by relevance score (or custom numeric field) with graceful fallbacks for missing scores. |
-| enrich | `document_enrichment` | Join documents with another collection and merge selected fields. |
-| enrich | `taxonomy_enrichment` | Attach taxonomy assignments via feature URIs and copy enrichment fields. |
-| enrich | `llm_enrichment` | Generate new fields with an LLM, respecting per-document conditions, batching, and schemas. |
+### Filter Stages
+
+Filter stages reduce the document set while preserving the document schema. Use these at the start of your pipeline to narrow down candidates.
+
+| Stage ID | Description |
+|----------|-------------|
+| `feature_search` | Vector similarity search using feature embeddings (dense retrieval) |
+| `hybrid_search` | Combined dense + sparse retrieval with reciprocal-rank or weighted-score fusion |
+| `attribute_filter` | Structured filtering with boolean logic (`AND`, `OR`, `NOT`) and comparison operators |
+| `llm_filter` | LLM-powered screening that keeps or discards documents based on prompt-defined criteria |
+
+### Sort Stages
+
+Sort stages reorder documents without changing the result set. Place these after filters to control ranking.
+
+| Stage ID | Description |
+|----------|-------------|
+| `sort_attribute` | Sort by any payload field with case-insensitive and null handling options |
+| `sort_relevance` | Sort by relevance score or custom numeric field with fallbacks for missing scores |
+| `rerank` | Cross-encoder reranking using models like `bge-reranker-v2-m3` for improved relevance |
+
+### Reduce Stages
+
+Reduce stages aggregate documents to a smaller set. Use these for deduplication or clustering.
+
+| Stage ID | Description |
+|----------|-------------|
+| `top_k` | Select top K documents by score or attribute |
+| `deduplicate` | Remove duplicate documents based on field values or similarity threshold |
+
+### Apply Stages
+
+Apply stages enrich or transform documents without dropping them (1-1 transformation). Use these to add context, join data, or reshape output.
+
+| Stage ID | Description |
+|----------|-------------|
+| `document_enrich` | Join documents with data from another collection (SQL-like JOIN) |
+| `taxonomy_enrich` | Attach taxonomy assignments via feature URIs and copy enrichment fields |
+| `api_call` | Enrich documents with external API calls (supports auth, rate limiting, SSRF protection) |
+| `json_transform` | Transform document structure using Jinja2 templates to reshape output schema |
+| `external_web_search` | Search the web using Exa AI-native search to create new documents |
+| `llm_enrich` | Generate new fields with an LLM, respecting per-document conditions and output schemas |
+
+### Stage Configuration Example
+
+Each stage requires a `stage_type`, `stage_id`, and `parameters`:
+
+```json
+{
+  "stages": [
+    {
+      "stage_type": "filter",
+      "stage_id": "feature_search",
+      "parameters": {
+        "feature_uri": "urn:embedding:text:multilingual_e5_large:1",
+        "input": { "text": "{{INPUT.query_text}}" },
+        "limit": 100
+      }
+    },
+    {
+      "stage_type": "apply",
+      "stage_id": "document_enrich",
+      "parameters": {
+        "target_collection_id": "col_catalog",
+        "source_field": "metadata.product_id",
+        "target_field": "product_id",
+        "fields_to_merge": ["price", "inventory"],
+        "output_field": "catalog_data"
+      }
+    },
+    {
+      "stage_type": "apply",
+      "stage_id": "api_call",
+      "parameters": {
+        "url": "https://api.stripe.com/v1/customers/{{DOC.metadata.customer_id}}",
+        "method": "GET",
+        "allowed_domains": ["api.stripe.com"],
+        "auth": {
+          "type": "bearer",
+          "secret_ref": "stripe_api_key"
+        },
+        "output_field": "metadata.billing",
+        "on_error": "skip"
+      }
+    },
+    {
+      "stage_type": "apply",
+      "stage_id": "json_transform",
+      "parameters": {
+        "template": "{\"id\": \"{{DOC.document_id}}\", \"title\": \"{{DOC.metadata.title}}\", \"price\": {{DOC.catalog_data.price}}}",
+        "fail_on_error": false
+      }
+    }
+  ]
+}
+```
 
 Call `GET /v1/retrievers/stages` whenever you need the latest metadata or parameter schemas.
 
@@ -123,12 +220,39 @@ Response headers include:
 
 ## Filters & Templates
 
-- Structured filters support comparison operators (`eq`, `gt`, `lte`, `in`, etc.) and logical composition (`AND`, `OR`, `NOT`).
-- Template variables let you reference namespaces:
-  - `{{INPUT.query_text}}`
-  - `{{DOC.metadata.category}}`
-  - `{{STAGE.hybrid_search.top_score}}`
-  - `{{CONTEXT.budget_remaining}}`
+Structured filters support comparison operators (`eq`, `gt`, `lte`, `in`, etc.) and logical composition (`AND`, `OR`, `NOT`).
+
+### Template Namespaces
+
+Stages support dynamic configuration through template expressions using Jinja2 syntax. Both uppercase and lowercase namespace formats are supported and work identically:
+
+| Namespace | Description | Examples |
+|-----------|-------------|----------|
+| `INPUT` / `inputs` | User-provided query parameters and inputs | `{{INPUT.query_text}}`, `{{inputs.max_price}}` |
+| `DOC` / `doc` | Current document fields (for per-document logic) | `{{DOC.metadata.category}}`, `{{doc.content_type}}` |
+| `CONTEXT` / `context` | Execution state (budget, timing, retriever metadata) | `{{CONTEXT.budget_remaining}}`, `{{context.time_elapsed_ms}}` |
+| `STAGE` / `stage` | Previous stage outputs (for cascading logic) | `{{STAGE.hybrid_search.top_score}}`, `{{stage.filter.count}}` |
+
+<Note>
+  Mixed usage within the same stage is supported. For example, you can use `{{INPUT.query}}` alongside `{{context.budget_remaining}}` in the same configuration.
+</Note>
+
+**Conditional expressions:**
+
+```json
+{
+  "batch_size": "{{CONTEXT.budget_remaining > 50 ? 200 : 50}}",
+  "field": "{{DOC.media_type == 'image' ? 'image_url' : 'video_url'}}"
+}
+```
+
+**Templated batch size:**
+
+```json
+{
+  "batch_size": "{{20 * inputs.page_size}}"
+}
+```
 
 ## Retrievers & Caching
 

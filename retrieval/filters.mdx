@@ -1,20 +1,121 @@
 ---
 title: "Filters"
-description: "Reduce candidate sets with structured, text, or LLM filtering"
+description: "Compose filter conditions with logical operators"
 ---
 
-Filters let you narrow results returned by earlier retriever stages. They operate on document payloads (metadata, enrichments, passthrough fields) and can be applied either directly in the retriever execution payload or as dedicated `filter@v1` stages.
+Filters narrow results using logical operators to combine conditions. They operate on document payloads (metadata, enrichments, passthrough fields) and can be applied in retriever execution or as dedicated `filter@v1` stages.
 
-## Filter Strategies
+## Logical Operators
 
-| Strategy | When to Use | Parameters |
-|----------|-------------|------------|
-| `structured` | Fast field-based filtering using comparison operators | `structured_filter` (supports `AND`, `OR`, `NOT`, `eq`, `lt`, `gte`, `in`, etc.) |
-| `text` | Convert natural language descriptions into structured predicates | `text_filter`, optional `target_fields` |
-| `llm` | Ask an LLM to judge whether documents match free-form criteria | `llm_filter` (prompt, model, threshold, batch size) |
-| `custom` | Execute a bespoke Python expression (careful with performance) | `function_code` (stringified lambda) |
+Mixpeek filters support three logical operators for composing conditions:
 
-Example stage:
+| Operator | Description | Usage |
+|----------|-------------|-------|
+| `AND` | All conditions must be true | Combine multiple required constraints |
+| `OR` | At least one condition must be true | Match any of several alternatives |
+| `NOT` | Inverts the condition | Exclude matching documents |
+
+### AND Operator
+
+Requires all nested conditions to match:
+
+```json
+{
+  "AND": [
+    { "field": "metadata.status", "operator": "eq", "value": "published" },
+    { "field": "metadata.price", "operator": "lte", "value": 100 }
+  ]
+}
+```
+
+### OR Operator
+
+Matches if any nested condition is true:
+
+```json
+{
+  "OR": [
+    { "field": "metadata.category", "operator": "eq", "value": "video" },
+    { "field": "metadata.category", "operator": "eq", "value": "audio" }
+  ]
+}
+```
+
+### NOT Operator
+
+Excludes documents matching the condition:
+
+```json
+{
+  "NOT": {
+    "field": "metadata.status", "operator": "eq", "value": "draft"
+  }
+}
+```
+
+## Nesting Operators
+
+Logical operators can be nested to create complex filter logic:
+
+```json
+{
+  "AND": [
+    { "field": "metadata.status", "operator": "eq", "value": "published" },
+    {
+      "OR": [
+        { "field": "metadata.category", "operator": "eq", "value": "video" },
+        { "field": "metadata.category", "operator": "eq", "value": "audio" }
+      ]
+    },
+    {
+      "NOT": {
+        "field": "metadata.restricted", "operator": "eq", "value": true
+      }
+    }
+  ]
+}
+```
+
+This filter matches documents that are:
+- Published **AND**
+- Either video or audio **AND**
+- Not restricted
+
+## Comparison Operators
+
+Use these operators within conditions:
+
+| Operator | Description |
+|----------|-------------|
+| `eq` | Equals |
+| `ne` | Not equals |
+| `gt` | Greater than |
+| `gte` | Greater than or equal |
+| `lt` | Less than |
+| `lte` | Less than or equal |
+| `in` | Value in list |
+| `nin` | Value not in list |
+| `exists` | Field exists |
+| `is_null` | Field is null |
+| `contains` | String contains substring |
+| `starts_with` | String starts with prefix |
+| `ends_with` | String ends with suffix |
+| `regex` | Matches regular expression |
+
+## Using Templates
+
+Reference request inputs or stage outputs in filter values:
+
+```json
+{
+  "AND": [
+    { "field": "metadata.category", "operator": "eq", "value": "{{INPUT.category}}" },
+    { "field": "metadata.price", "operator": "lte", "value": "{{INPUT.max_price}}" }
+  ]
+}
+```
+
+## Filter Stage Example
 
 ```json
 {
@@ -32,62 +133,17 @@ Example stage:
 }
 ```
 
-## Filter Operators
+## Options
 
-| Operator | Description |
-|----------|-------------|
-| `eq`, `ne`, `gt`, `gte`, `lt`, `lte` | Comparison |
-| `in`, `nin` | Membership |
-| `exists`, `is_null` | Presence checks |
-| `contains`, `starts_with`, `ends_with`, `regex` | Text predicates |
-| `AND`, `OR`, `NOT` | Logical composition (nestable) |
-
-Case sensitivity defaults to `false`; set `"case_sensitive": true` on the filter payload when needed.
-
-## Where Filters Live
-
-1. **Retriever Execution Payload**  
-   Add a `filters` object directly in the execute call. The filter runs before the stage pipeline, reducing the initial candidate set.
-2. **Filter Stage**  
-   Insert `filter@v1` between other stages to operate on intermediate results (after KNN, before rerank, etc.).
-
-Use input templates to reference request inputs or prior stage outputs:
+| Option | Default | Description |
+|--------|---------|-------------|
+| `case_sensitive` | `false` | Enable case-sensitive string comparisons |
 
 ```json
 {
-  "field": "metadata.category",
-  "operator": "eq",
-  "value": "{{INPUT.category}}"
+  "field": "metadata.title",
+  "operator": "contains",
+  "value": "AI",
+  "case_sensitive": true
 }
 ```
-
-## LLM Filter Example
-
-```json
-{
-  "stage_name": "filter",
-  "version": "v1",
-  "parameters": {
-    "strategy": "llm",
-    "llm_filter": {
-      "instruction": "Return true only if the review mentions battery life issues.",
-      "model": "gpt-4o-mini",
-      "batch_size": "{{5 * INPUT.page_size}}",
-      "threshold": 0.7
-    }
-  }
-}
-```
-
-- Documents are grouped into batches and evaluated asynchronously.
-- Stage statistics expose token usage and latency so you can monitor cost.
-
-## Best Practices
-
-1. **Filter early** to shrink the candidate set before expensive stages (rerank, joins, LLM transforms).
-2. **Index frequently filtered fields** using collection payload indexes to speed up structured filters.
-3. **Mix strategies**—use structured filters for hard constraints and LLM filters for fuzzy criteria.
-4. **Avoid over-filtering** by leaving room for semantic recall; reranking can handle final ordering.
-5. **Use templates** to drive filter values from query inputs, stage outputs, or runtime context.
-
-Filters are a powerful complement to vector search. Combine them with Mixpeek’s caching and telemetry to keep retrieval precise without sacrificing performance.

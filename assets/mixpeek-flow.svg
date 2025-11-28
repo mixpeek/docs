@@ -1,0 +1,165 @@
+<svg viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="ingestGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4f46e5;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="processGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ea580c;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="enrichGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="retrieveGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1000" height="500" fill="#f8fafc"/>
+  
+  <!-- Title -->
+  <text x="500" y="40" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="600" fill="#0f172a" text-anchor="middle">Data Transformation Flow</text>
+
+  <!-- Stage 1: Ingest -->
+  <rect x="30" y="80" width="210" height="320" rx="12" fill="white" stroke="#e2e8f0" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="30" y="80" width="210" height="40" rx="12" fill="url(#ingestGrad)"/>
+  <rect x="30" y="108" width="210" height="12" fill="url(#ingestGrad)"/>
+  <text x="135" y="107" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="white" text-anchor="middle">Ingest</text>
+  
+  <g transform="translate(50, 140)">
+    <rect width="170" height="40" rx="6" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1.5"/>
+    <text x="85" y="25" font-family="system-ui, sans-serif" font-size="12" font-weight="500" fill="#4338ca" text-anchor="middle">Buckets</text>
+  </g>
+  <g transform="translate(50, 190)">
+    <rect width="170" height="40" rx="6" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1.5"/>
+    <text x="85" y="25" font-family="system-ui, sans-serif" font-size="12" font-weight="500" fill="#4338ca" text-anchor="middle">Objects</text>
+  </g>
+  <g transform="translate(50, 240)">
+    <rect width="170" height="40" rx="6" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1.5"/>
+    <text x="85" y="25" font-family="system-ui, sans-serif" font-size="12" font-weight="500" fill="#4338ca" text-anchor="middle">Uploads</text>
+  </g>
+  <g transform="translate(50, 290)">
+    <rect width="170" height="40" rx="6" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1.5"/>
+    <text x="85" y="25" font-family="system-ui, sans-serif" font-size="12" font-weight="500" fill="#4338ca" text-anchor="middle">Batches</text>
+  </g>
+  <g transform="translate(50, 340)">
+    <rect width="170" height="40" rx="6" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1.5"/>
+    <text x="85" y="25" font-family="system-ui, sans-serif" font-size="12" font-weight="500" fill="#4338ca" text-anchor="middle">Syncs</text>
+  </g>
+
+  <!-- Arrow 1 -->
+  <path d="M 240 240 L 270 240" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- Stage 2: Process -->
+  <rect x="280" y="80" width="210" height="320" rx="12" fill="white" stroke="#e2e8f0" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="280" y="80" width="210" height="40" rx="12" fill="url(#processGrad)"/>
+  <rect x="280" y="108" width="210" height="12" fill="url(#processGrad)"/>
+  <text x="385" y="107" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="white" text-anchor="middle">Process</text>
+  
+  <g transform="translate(300, 140)">
+    <rect width="170" height="40" rx="6" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.5"/>
+    <text x="85" y="25" font-family="system-ui, sans-serif" font-size="12" font-weight="500" fill="#c2410c" text-anchor="middle">Feature Extractors</text>
+  </g>
+  <g transform="translate(300, 190)">
+    <rect width="170" height="40" rx="6" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.5"/>
+    <text x="85" y="25" font-family="system-ui, sans-serif" font-size="12" font-weight="500" fill="#c2410c" text-anchor="middle">Inference</text>
+  </g>
+  <g transform="translate(300, 240)">
+    <rect width="170" height="40" rx="6" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.5"/>
+    <text x="85" y="25" font-family="system-ui, sans-serif" font-size="12" font-weight="500" fill="#c2410c" text-anchor="middle">Collections</text>
+  </g>
+  <g transform="translate(300, 290)">
+    <rect width="170" height="40" rx="6" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.5"/>
+    <text x="85" y="25" font-family="system-ui, sans-serif" font-size="12" font-weight="500" fill="#c2410c" text-anchor="middle">Documents</text>
+  </g>
+  <g transform="translate(300, 340)">
+    <rect width="170" height="40" rx="6" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.5"/>
+    <text x="85" y="25" font-family="system-ui, sans-serif" font-size="12" font-weight="500" fill="#c2410c" text-anchor="middle">Features</text>
+  </g>
+
+  <!-- Arrow 2 -->
+  <path d="M 490 240 L 520 240" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- Stage 3: Enrich -->
+  <rect x="530" y="80" width="210" height="320" rx="12" fill="white" stroke="#e2e8f0" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="530" y="80" width="210" height="40" rx="12" fill="url(#enrichGrad)"/>
+  <rect x="530" y="108" width="210" height="12" fill="url(#enrichGrad)"/>
+  <text x="635" y="107" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="white" text-anchor="middle">Enrich</text>
+  
+  <g transform="translate(550, 140)">
+    <rect width="170" height="40" rx="6" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1.5"/>
+    <text x="85" y="25" font-family="system-ui, sans-serif" font-size="12" font-weight="500" fill="#047857" text-anchor="middle">Taxonomies</text>
+  </g>
+  <g transform="translate(550, 190)">
+    <rect width="170" height="40" rx="6" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1.5"/>
+    <text x="85" y="25" font-family="system-ui, sans-serif" font-size="12" font-weight="500" fill="#047857" text-anchor="middle">Clusters</text>
+  </g>
+  <g transform="translate(550, 240)">
+    <rect width="170" height="40" rx="6" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1.5"/>
+    <text x="85" y="25" font-family="system-ui, sans-serif" font-size="12" font-weight="500" fill="#047857" text-anchor="middle">Metadata</text>
+  </g>
+  <g transform="translate(550, 290)">
+    <rect width="170" height="40" rx="6" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1.5"/>
+    <text x="85" y="25" font-family="system-ui, sans-serif" font-size="12" font-weight="500" fill="#047857" text-anchor="middle">Labels</text>
+  </g>
+  <g transform="translate(550, 340)">
+    <rect width="170" height="40" rx="6" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1.5"/>
+    <text x="85" y="25" font-family="system-ui, sans-serif" font-size="12" font-weight="500" fill="#047857" text-anchor="middle">Lineage</text>
+  </g>
+
+  <!-- Arrow 3 -->
+  <path d="M 740 240 L 770 240" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- Stage 4: Retrieve -->
+  <rect x="780" y="80" width="190" height="320" rx="12" fill="white" stroke="#e2e8f0" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="780" y="80" width="190" height="40" rx="12" fill="url(#retrieveGrad)"/>
+  <rect x="780" y="108" width="190" height="12" fill="url(#retrieveGrad)"/>
+  <text x="875" y="107" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="white" text-anchor="middle">Retrieve</text>
+  
+  <g transform="translate(795, 140)">
+    <rect width="160" height="40" rx="6" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="1.5"/>
+    <text x="80" y="25" font-family="system-ui, sans-serif" font-size="12" font-weight="500" fill="#6d28d9" text-anchor="middle">Retrievers</text>
+  </g>
+  <g transform="translate(795, 190)">
+    <rect width="160" height="40" rx="6" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="1.5"/>
+    <text x="80" y="25" font-family="system-ui, sans-serif" font-size="12" font-weight="500" fill="#6d28d9" text-anchor="middle">Stages</text>
+  </g>
+  <g transform="translate(795, 240)">
+    <rect width="160" height="40" rx="6" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="1.5"/>
+    <text x="80" y="25" font-family="system-ui, sans-serif" font-size="12" font-weight="500" fill="#6d28d9" text-anchor="middle">Filters</text>
+  </g>
+  <g transform="translate(795, 290)">
+    <rect width="160" height="40" rx="6" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="1.5"/>
+    <text x="80" y="25" font-family="system-ui, sans-serif" font-size="12" font-weight="500" fill="#6d28d9" text-anchor="middle">Interactions</text>
+  </g>
+  <g transform="translate(795, 340)">
+    <rect width="160" height="40" rx="6" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="1.5"/>
+    <text x="80" y="25" font-family="system-ui, sans-serif" font-size="12" font-weight="500" fill="#6d28d9" text-anchor="middle">Results</text>
+  </g>
+
+  <!-- Legend -->
+  <g transform="translate(30, 465)">
+    <rect width="12" height="12" rx="2" fill="url(#ingestGrad)"/>
+    <text x="20" y="11" font-family="system-ui, sans-serif" font-size="11" fill="#475569">Raw Assets</text>
+    
+    <rect x="120" width="12" height="12" rx="2" fill="url(#processGrad)"/>
+    <text x="140" y="11" font-family="system-ui, sans-serif" font-size="11" fill="#475569">Feature Extraction</text>
+    
+    <rect x="280" width="12" height="12" rx="2" fill="url(#enrichGrad)"/>
+    <text x="300" y="11" font-family="system-ui, sans-serif" font-size="11" fill="#475569">Semantic Structure</text>
+    
+    <rect x="450" width="12" height="12" rx="2" fill="url(#retrieveGrad)"/>
+    <text x="470" y="11" font-family="system-ui, sans-serif" font-size="11" fill="#475569">Query &amp; Search</text>
+  </g>
+
+</svg>

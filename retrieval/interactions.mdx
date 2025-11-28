@@ -5,6 +5,10 @@ description: "Turn user behavior into better retrieval through automated feedbac
 
 Interactions capture how users engage with search results—clicks, purchases, skips, dwell time. This feedback automatically improves your retrievers through fine-tuning, personalization, and analytics.
 
+<Frame>
+  <img src="/assets/mixpeek-interactions.svg" alt="Mixpeek Interactions Flow" />
+</Frame>
+
 ## Why Track Interactions
 
 **Automatic Quality Improvement**: User behavior becomes training data for fine-tuning embedding models and ranking algorithms—no manual labeling required.
@@ -97,7 +101,7 @@ fine_tuned_model = training.fine_tune(
 signals = analytics.get_retriever_signals(retriever_id="ret_123")
 # Returns:
 # - Documents ranked high but skipped (ranking issues)
-# - Queries with <5% CTR (need tuning)
+# - Queries with &lt;5% CTR (need tuning)
 # - Average position of first click (relevance proxy)
 ```
 
