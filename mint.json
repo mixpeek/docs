@@ -100,9 +100,7 @@
     {
       "group": "Tutorials",
       "pages": [
-        "tutorials/reverse-search",
         "tutorials/video-understanding",
-        "tutorials/semantic-search",
         "tutorials/document-intelligence"
       ]
     },

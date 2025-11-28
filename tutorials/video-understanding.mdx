@@ -1,79 +1,60 @@
 ---
 title: "Video Understanding"
-description: "Extract insights from video content with scene detection, transcription, and semantic search"
+description: "Extract insights from video with scene detection, transcription, and search"
 icon: 'video'
 ---
 
-Video understanding combines multiple feature extractors to transform raw video files into searchable, analyzable documents. This tutorial shows you how to build applications like content moderation, highlight generation, video search engines, and automated metadata tagging.
+<Frame>
+  <img src="/assets/mixpeek-video-understanding.svg" alt="Video Understanding Pipeline" />
+</Frame>
 
-## Object Decomposition
+## How It Works
 
-```mermaid
-graph TD
-  V[Video] --> S[Split by Scene]
-  
-  S --> S1[Scene 1]
-  S --> S2[Scene 2]
-  S --> S3[Scene 3]
-  
-  S1 --> F1[Face Detected]
-  S2 --> F2[Face Detected]
-  S3 --> F3[Face Detected]
-  
-  F1 --> E1[Expression: Happy]
-  F2 --> E2[Expression: Speaking]
-  F3 --> E3[Expression: Focused]
-  
-  S1 --> A1[Audio: Transcript]
-  S2 --> A2[Audio: Transcript]
-  S3 --> A3[Audio: Transcript]
-  
-  E1 --> R[Retriever Joins at Query Time]
-  E2 --> R
-  E3 --> R
-  A1 --> R
-  A2 --> R
-  A3 --> R
-```
+When you ingest a video, Mixpeek runs a multi-stage pipeline:
+
+1. **Chunking** — Videos split into segments using scene detection, silence detection, or fixed intervals
+2. **Parallel Extraction** — Multiple extractors run concurrently:
+   - **Transcription**: Whisper extracts speech-to-text with timestamps
+   - **Visual Embeddings**: Multimodal model generates embeddings from keyframes
+   - **Thumbnails**: Representative frames extracted for each segment
+3. **Description & OCR** — Gemini generates segment descriptions and extracts on-screen text
+4. **Multi-Vector Indexing** — Separate embeddings for transcription and visual content enable hybrid search
+
+At query time, the retriever searches across both visual and transcript embeddings, fusing results to find moments by what's shown *or* what's said.
 
 ## Feature Extractors
 
-| Extractor | Outputs | Use Cases |
-|-----------|---------|-----------|
-| **video_extractor@v1** | Scene embeddings (CLIP), keyframes, timestamps | Visual search, scene similarity, highlight detection |
-| **audio_extractor@v1** | Transcription (Whisper), audio embeddings, speaker diarization | Dialogue search, podcast indexing, accessibility |
-| **text_extractor@v1** | Text embeddings (E5), OCR text from frames | On-screen text search, subtitle generation |
-| **face_extractor@v1** | Face embeddings (ArcFace), bounding boxes | Character tracking, person search |
+| Extractor | Outputs |
+|-----------|---------|
+| `video_extractor@v1` | Scene embeddings, keyframes, timestamps |
+| `audio_extractor@v1` | Transcription, speaker diarization |
+| `text_extractor@v1` | Text embeddings, OCR from frames |
+| `face_extractor@v1` | Face embeddings, bounding boxes |
 
-## Implementation Steps
-
-### 1. Create a Bucket for Videos
+## 1. Create a Bucket
 
 ```bash
 POST /v1/buckets
 {
   "bucket_name": "video-catalog",
-  "description": "Video content repository",
   "schema": {
     "properties": {
       "video_url": { "type": "url", "required": true },
       "title": { "type": "text" },
-      "category": { "type": "text" },
-      "duration_seconds": { "type": "number" }
+      "category": { "type": "text" }
     }
   }
 }
 ```
 
-### 2. Define Collections for Different Modalities
+## 2. Create Collections
 
-**Scene-Level Collection:**
+**For scenes:**
 
 ```bash
 POST /v1/collections
 {
   "collection_name": "video-scenes",
-  "description": "Visual scene embeddings",
   "source": { "type": "bucket", "bucket_id": "bkt_videos" },
   "feature_extractor": {
     "feature_extractor_name": "video_extractor",
@@ -92,13 +73,12 @@ POST /v1/collections
 }
 ```
 
-**Transcript Collection:**
+**For transcripts:**
 
 ```bash
 POST /v1/collections
 {
   "collection_name": "video-transcripts",
-  "description": "Audio transcription embeddings",
   "source": { "type": "bucket", "bucket_id": "bkt_videos" },
   "feature_extractor": {
     "feature_extractor_name": "audio_extractor",
@@ -117,16 +97,15 @@ POST /v1/collections
 }
 ```
 
-### 3. Register Video Objects
+## 3. Ingest Videos
 
 ```bash
 POST /v1/buckets/{bucket_id}/objects
 {
-  "key_prefix": "/marketing/product-demos",
+  "key_prefix": "/marketing/demos",
   "metadata": {
     "title": "Product Launch Q4 2025",
-    "category": "marketing",
-    "duration_seconds": 180
+    "category": "marketing"
   },
   "blobs": [
     {
@@ -138,7 +117,7 @@ POST /v1/buckets/{bucket_id}/objects
 }
 ```
 
-### 4. Process with Batch
+## 4. Process
 
 ```bash
 POST /v1/buckets/{bucket_id}/batches
@@ -147,27 +126,20 @@ POST /v1/buckets/{bucket_id}/batches
 POST /v1/buckets/{bucket_id}/batches/{batch_id}/submit
 ```
 
-Processing steps:
-1. Download the video from S3
-2. Run scene detection and extract keyframes
-3. Generate CLIP embeddings for each scene
-4. Transcribe audio with Whisper
-5. Create documents in both collections with lineage references
+## 5. Create a Hybrid Retriever
 
-### 5. Build a Hybrid Retriever
-
-Combine visual and textual search for comprehensive video queries:
+Combine visual and transcript search:
 
 ```bash
 POST /v1/retrievers
 {
-  "retriever_name": "video-hybrid-search",
+  "retriever_name": "video-search",
   "collection_ids": ["col_video_scenes", "col_video_transcripts"],
   "input_schema": {
     "properties": {
       "query_text": { "type": "text", "required": true },
-      "query_image": { "type": "url", "required": false },
-      "category": { "type": "text", "required": false }
+      "query_image": { "type": "url" },
+      "category": { "type": "text" }
     }
   },
   "stages": [
@@ -201,21 +173,15 @@ POST /v1/retrievers
           "value": "{{inputs.category}}"
         }
       }
-    },
-    {
-      "stage_name": "sort",
-      "version": "v1",
-      "parameters": {
-        "sort_by": [{ "field": "score", "direction": "desc" }]
-      }
     }
   ]
 }
 ```
 
-### 6. Execute Searches
+## 6. Search
 
-**Text Query:**
+**Text query:**
+
 ```bash
 POST /v1/retrievers/{retriever_id}/execute
 {
@@ -223,12 +189,12 @@ POST /v1/retrievers/{retriever_id}/execute
     "query_text": "someone explaining product features",
     "category": "marketing"
   },
-  "limit": 10,
-  "return_urls": true
+  "limit": 10
 }
 ```
 
-**Image Query (find similar scenes):**
+**Image query (find similar scenes):**
+
 ```bash
 POST /v1/retrievers/{retriever_id}/execute
 {
@@ -240,107 +206,14 @@ POST /v1/retrievers/{retriever_id}/execute
 }
 ```
 
-## Model Evolution & A/B Testing
+## Moment-Level Search
 
-Test different scene detection thresholds, transcription models, and embedding versions without rebuilding your entire video catalog.
-
-### Test Scene Detection Parameters
-
-```bash
-# Production: Conservative scene detection
-POST /v1/collections
-{
-  "collection_name": "video-scenes-v1",
-  "feature_extractor": {
-    "feature_extractor_name": "video_extractor",
-    "parameters": { "scene_detection_threshold": 0.4 }
-  }
-}
-
-# Staging: More granular scenes
-POST /v1/collections
-{
-  "collection_name": "video-scenes-v2",
-  "feature_extractor": {
-    "parameters": { "scene_detection_threshold": 0.2 }
-  }
-}
-```
-
-### Compare Transcription Models
-
-```bash
-# Baseline: Fast transcription
-POST /v1/collections
-{
-  "collection_name": "video-transcripts-v1",
-  "feature_extractor": {
-    "feature_extractor_name": "audio_extractor",
-    "parameters": { "transcription_model": "whisper-base" }
-  }
-}
-
-# Candidate: Higher accuracy
-POST /v1/collections
-{
-  "collection_name": "video-transcripts-v2",
-  "feature_extractor": {
-    "parameters": { "transcription_model": "whisper-large-v3" }
-  }
-}
-```
-
-### Measure Impact
-
-```bash
-GET /v1/analytics/retrievers/compare?baseline=ret_v1&candidate=ret_v2
-```
-
-**Results:**
-- Scenes per video: v1 (12) vs v2 (28) → better granularity
-- Transcription accuracy: v1 (92%) vs v2 (97%) → fewer search misses
-- Processing cost: v1 (0.05 credits) vs v2 (0.12 credits) → 2.4x cost
-- User satisfaction: v1 (3.2/5) vs v2 (4.1/5) → worth the upgrade
-
-### Seamless Migration
-
-```bash
-# Point retriever to new collections
-PATCH /v1/retrievers/{retriever_id}
-{
-  "collection_ids": ["col_video_scenes_v2", "col_video_transcripts_v2"]
-}
-```
-
-## Advanced Patterns
-
-### Highlight Generation
-
-Use clustering to identify key moments:
-
-```bash
-POST /v1/clusters
-{
-  "cluster_name": "video-highlights",
-  "collection_id": "col_video_scenes",
-  "algorithm": "kmeans",
-  "parameters": {
-    "n_clusters": 5,
-    "feature_address": "mixpeek://video_extractor@v1/scene_embedding"
-  }
-}
-```
-
-Execute clustering to group similar scenes, then select representative keyframes from each cluster.
-
-### Moment-Level Search
-
-Filter by timestamp to find specific segments:
+Filter by timestamp:
 
 ```bash
 POST /v1/retrievers/{retriever_id}/execute
 {
-  "inputs": { "query_text": "product pricing discussion" },
+  "inputs": { "query_text": "pricing discussion" },
   "filters": {
     "field": "segment_metadata.start_time",
     "operator": "gte",
@@ -349,9 +222,9 @@ POST /v1/retrievers/{retriever_id}/execute
 }
 ```
 
-### Speaker-Specific Search
+## Speaker-Specific Search
 
-If audio extractor enables diarization:
+With diarization enabled:
 
 ```bash
 {
@@ -363,85 +236,29 @@ If audio extractor enables diarization:
 }
 ```
 
-### Cross-Video Analysis
+## Output Example
 
-Search across multiple videos by omitting object-level filters:
-
-```bash
-POST /v1/collections/{collection_id}/documents/list
-{
-  "filters": {
-    "field": "metadata.category",
-    "operator": "eq",
-    "value": "product-demos"
-  },
-  "limit": 100
-}
-```
-
-## Output Schema Example
-
-Scene documents produced by `video_extractor@v1`:
+Scene document from `video_extractor@v1`:
 
 ```json
 {
   "document_id": "doc_scene_123",
   "source_object_id": "obj_video_001",
-  "collection_id": "col_video_scenes",
   "metadata": {
     "title": "Product Launch Q4 2025",
-    "category": "marketing",
     "scene_index": 3,
     "start_time": 45.2,
     "end_time": 58.7,
-    "duration": 13.5,
     "keyframe_url": "s3://my-bucket/keyframes/scene_003.jpg"
-  },
-  "feature_refs": [
-    "mixpeek://video_extractor@v1/scene_embedding"
-  ],
-  "__fully_enriched": true
+  }
 }
 ```
 
-## Performance Considerations
+## Parameters
 
-| Optimization | Impact |
-|--------------|--------|
-| **Scene detection threshold** | Lower = more scenes but slower processing. Tune between 0.2-0.5 |
-| **Keyframe interval** | Extract fewer frames (every 60s vs 30s) for faster processing |
-| **Max scenes limit** | Cap scenes per video to control document count and cost |
-| **Transcription model** | Use `whisper-base` for speed, `whisper-large-v3` for accuracy |
-| **Batch size** | Process 10-50 videos per batch for optimal throughput |
-
-## Use Case Examples
-
-<AccordionGroup>
-  <Accordion title="Video Search Engine">
-    Enable users to search video libraries by text ("find scenes with dogs") or image ("find similar product shots"). Combine `video_extractor` scenes with `audio_extractor` transcripts for comprehensive coverage.
-  </Accordion>
-
-  <Accordion title="Content Moderation">
-    Use `image_extractor` on keyframes to detect inappropriate content. Filter documents with taxonomy tags like "violence" or "adult_content" and flag for review.
-  </Accordion>
-
-  <Accordion title="Automated Captioning">
-    Use `audio_extractor` transcripts to generate SRT/VTT caption files. Enrich with `text_extractor` OCR to capture on-screen text not spoken aloud.
-  </Accordion>
-
-  <Accordion title="Video Summarization">
-    Cluster scenes with `kmeans`, select one keyframe per cluster, and use `llm_generation` stage to create a textual summary based on transcript segments.
-  </Accordion>
-
-  <Accordion title="Character Tracking">
-    Use `face_extractor` to identify characters across scenes. Group by `face_embedding` to track appearances and generate character timelines.
-  </Accordion>
-</AccordionGroup>
-
-## Next Steps
-
-- Explore [Feature Extractors](/processing/feature-extractors) for full parameter documentation
-- Learn [Hybrid Search](/retrieval/retrievers#hybrid-search) fusion strategies
-- Review [Clusters](/enrichment/clusters) for highlight generation workflows
-- Check [Batching Best Practices](/processing/batching) for efficient video ingestion
-
+| Parameter | Effect |
+|-----------|--------|
+| `scene_detection_threshold` | Lower = more scenes (0.2-0.5) |
+| `keyframe_interval` | Seconds between keyframes |
+| `max_scenes` | Cap scenes per video |
+| `transcription_model` | `whisper-base` (fast) or `whisper-large-v3` (accurate) |
