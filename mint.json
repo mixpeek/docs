@@ -145,15 +145,13 @@
         "operations/security",
         "operations/observability",
         "operations/webhooks",
-        "operations/analytics-overview",
-        "operations/rate-limits-quotas"
+        "operations/analytics-overview"
       ]
     },
     {
       "group": "Troubleshoot",
       "pages": [
         "troubleshoot/errors",
-        "troubleshoot/limits",
         "troubleshoot/common-issues",
         "troubleshoot/faq"
       ]
