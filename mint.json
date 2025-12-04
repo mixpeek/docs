@@ -397,7 +397,15 @@
         "api-reference/analytics/get-slowest-operations",
         "api-reference/analytics/get-usage-summary",
         "api-reference/analytics/get-extractor-performance",
-        "api-reference/analytics/get-inference-performance"
+        "api-reference/analytics/get-inference-performance",
+        "analytics/get-most-queried-fields",
+        "analytics/get-slow-queries",
+        "analytics/get-field-performance",
+        "analytics/get-compound-index-patterns",
+        "analytics/get-index-recommendations",
+        "analytics/get-namespace-summary",
+        "analytics/get-index-suggestions",
+        "analytics/get-field-usage"
       ]
     },
     {

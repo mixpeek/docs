@@ -602,6 +602,52 @@ Response snippet:
 }
 ```
 
+## Anonymous Retrievers
+
+Anonymous retrievers let you execute a retriever pipeline in a single API call without persisting it. This is ideal for:
+
+- **Prototyping and experimentation** – Test stage configurations quickly without cluttering your retriever list
+- **Dynamic pipelines** – Build pipelines on-the-fly based on user context or application logic
+- **One-off queries** – Run complex searches that don't need to be reused
+- **CI/CD testing** – Validate retriever configurations in automated tests without creating permanent resources
+
+<Tip>
+  Use anonymous retrievers during development to iterate quickly, then promote working configurations to named retrievers for production use.
+</Tip>
+
+```bash
+curl -sS -X POST "$MP_API_URL/v1/retrievers/execute" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "collection_ids": ["col_products"],
+    "stages": [
+      {
+        "stage_type": "filter",
+        "stage_id": "hybrid_search",
+        "parameters": {
+          "query": "{{INPUT.query_text}}",
+          "top_k": 50
+        }
+      },
+      {
+        "stage_type": "sort",
+        "stage_id": "rerank",
+        "parameters": {
+          "model": "bge-reranker-v2-m3"
+        }
+      }
+    ],
+    "inputs": {
+      "query_text": "noise cancelling headphones"
+    },
+    "limit": 10
+  }'
+```
+
+The response format is identical to named retriever execution. The key difference: no `retriever_id` is created or stored.
+
 ## Maintenance & Versioning
 
 - Use `PATCH /v1/retrievers/{id}` to rename retrievers or adjust cache settings (stages and schema are immutable; create a new retriever for breaking changes).
