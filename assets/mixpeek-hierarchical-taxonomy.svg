@@ -1,0 +1,329 @@
+<svg viewBox="0 0 1200 920" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="rootGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4f46e5;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="level1Grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="level2Grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ec4899;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#db2777;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="docGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ea580c;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="enrichGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="retrieverGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#d97706;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowGray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
+    </marker>
+    <marker id="arrowTeal" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#14b8a6"/>
+    </marker>
+    <marker id="arrowAmber" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f59e0b"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#10b981"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="920" fill="#f8fafc"/>
+  
+  <!-- Title -->
+  <text x="600" y="40" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="600" fill="#0f172a" text-anchor="middle">Hierarchical Taxonomy: CTE-Style Execution</text>
+  <text x="600" y="65" font-family="system-ui, sans-serif" font-size="13" fill="#64748b" text-anchor="middle">Each level has its own retriever • Results filter scope for child retrievers • Enrichment fields accumulate</text>
+
+  <!-- Input Document (Top Left) -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="100" width="180" height="80" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="40" y="100" width="180" height="28" rx="10" fill="url(#docGrad)"/>
+    <rect x="40" y="118" width="180" height="10" fill="url(#docGrad)"/>
+    <text x="130" y="120" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">📄 Input Document</text>
+  </g>
+  <text x="130" y="150" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">"Q4 frontend redesign..."</text>
+  <text x="130" y="165" font-family="monospace" font-size="7" fill="#c2410c" text-anchor="middle">[0.34, -0.21, 0.78, ...] embedding</text>
+
+  <!-- Arrow to Level 1 -->
+  <path d="M 220 140 L 270 140" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- ==================== LEVEL 1 ==================== -->
+  <g filter="url(#shadow)">
+    <rect x="280" y="95" width="880" height="150" rx="12" fill="white" stroke="#6366f1" stroke-width="2"/>
+    <rect x="280" y="95" width="880" height="30" rx="12" fill="url(#rootGrad)"/>
+    <rect x="280" y="117" width="880" height="8" fill="url(#rootGrad)"/>
+    <text x="720" y="116" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Level 1 (Root): Companies</text>
+  </g>
+
+  <!-- Level 1 Reference Collection -->
+  <g transform="translate(300, 135)">
+    <rect x="0" y="0" width="200" height="90" rx="8" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+    <text x="100" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#4338ca" text-anchor="middle">📦 companies collection</text>
+    <rect x="10" y="26" width="180" height="55" rx="4" fill="white"/>
+    <text x="100" y="42" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Acme Corp, Beta Inc, Gamma LLC...</text>
+    <text x="100" y="56" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">enrichment_fields:</text>
+    <text x="100" y="70" font-family="monospace" font-size="7" fill="#6366f1" text-anchor="middle">["company_id", "company_name"]</text>
+  </g>
+
+  <!-- Level 1 Retriever -->
+  <g transform="translate(520, 135)">
+    <rect x="0" y="0" width="180" height="90" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+    <text x="90" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#92400e" text-anchor="middle">⚙️ ret_company_match</text>
+    <rect x="10" y="26" width="160" height="55" rx="4" fill="white"/>
+    <text x="90" y="42" font-family="monospace" font-size="7" fill="#78350f" text-anchor="middle">feature_search</text>
+    <text x="90" y="56" font-family="monospace" font-size="7" fill="#78350f" text-anchor="middle">→ filter (score ≥ 0.85)</text>
+    <text x="90" y="70" font-family="monospace" font-size="7" fill="#78350f" text-anchor="middle">→ top_k (k=1)</text>
+  </g>
+
+  <!-- Arrow from collection to retriever -->
+  <path d="M 500 180 L 520 180" stroke="#f59e0b" stroke-width="1.5" fill="none" marker-end="url(#arrowAmber)"/>
+
+  <!-- Level 1 Result -->
+  <g transform="translate(720, 135)">
+    <rect x="0" y="0" width="200" height="90" rx="8" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+    <text x="100" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#047857" text-anchor="middle">✓ Match Result</text>
+    <rect x="10" y="26" width="180" height="55" rx="4" fill="white"/>
+    <text x="100" y="42" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#065f46" text-anchor="middle">Acme Corp (score: 0.95)</text>
+    <text x="100" y="58" font-family="monospace" font-size="7" fill="#047857" text-anchor="middle">+ company_id: "acme_001"</text>
+    <text x="100" y="72" font-family="monospace" font-size="7" fill="#047857" text-anchor="middle">+ company_name: "Acme Corp"</text>
+  </g>
+
+  <!-- Arrow from retriever to result -->
+  <path d="M 700 180 L 720 180" stroke="#10b981" stroke-width="1.5" fill="none" marker-end="url(#arrowGreen)"/>
+
+  <!-- Accumulated fields L1 -->
+  <g transform="translate(940, 135)">
+    <rect x="0" y="0" width="200" height="90" rx="8" fill="#f0fdfa" stroke="#14b8a6" stroke-width="1"/>
+    <text x="100" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#0d9488" text-anchor="middle">📦 Accumulated Fields</text>
+    <rect x="10" y="26" width="180" height="55" rx="4" fill="white"/>
+    <text x="100" y="46" font-family="monospace" font-size="8" fill="#115e59" text-anchor="middle">company_id: "acme_001"</text>
+    <text x="100" y="62" font-family="monospace" font-size="8" fill="#115e59" text-anchor="middle">company_name: "Acme Corp"</text>
+  </g>
+
+  <!-- Arrow from result to accumulated -->
+  <path d="M 920 180 L 940 180" stroke="#14b8a6" stroke-width="1.5" fill="none" marker-end="url(#arrowTeal)"/>
+
+  <!-- Arrow down to Level 2 -->
+  <path d="M 820 245 L 820 265" stroke="#10b981" stroke-width="2" fill="none" marker-end="url(#arrowGreen)"/>
+  <text x="900" y="258" font-family="system-ui, sans-serif" font-size="8" fill="#10b981">passes doc + fields, filters scope ↓</text>
+
+  <!-- ==================== LEVEL 2 ==================== -->
+  <g filter="url(#shadow)">
+    <rect x="280" y="275" width="880" height="150" rx="12" fill="white" stroke="#8b5cf6" stroke-width="2"/>
+    <rect x="280" y="275" width="880" height="30" rx="12" fill="url(#level1Grad)"/>
+    <rect x="280" y="297" width="880" height="8" fill="url(#level1Grad)"/>
+    <text x="720" y="296" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Level 2: Departments (filtered to Acme only)</text>
+  </g>
+
+  <!-- Level 2 Reference Collection -->
+  <g transform="translate(300, 315)">
+    <rect x="0" y="0" width="200" height="90" rx="8" fill="#f3e8ff" stroke="#d8b4fe" stroke-width="1"/>
+    <text x="100" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#7c3aed" text-anchor="middle">📦 departments collection</text>
+    <rect x="10" y="26" width="180" height="55" rx="4" fill="white"/>
+    <text x="100" y="42" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Acme: Eng, Mkt, Sales...</text>
+    <text x="100" y="56" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">enrichment_fields:</text>
+    <text x="100" y="70" font-family="monospace" font-size="7" fill="#8b5cf6" text-anchor="middle">["dept_id", "department"]</text>
+  </g>
+
+  <!-- Level 2 Retriever -->
+  <g transform="translate(520, 315)">
+    <rect x="0" y="0" width="180" height="90" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+    <text x="90" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#92400e" text-anchor="middle">⚙️ ret_dept_match</text>
+    <rect x="10" y="26" width="160" height="55" rx="4" fill="white"/>
+    <text x="90" y="42" font-family="monospace" font-size="7" fill="#78350f" text-anchor="middle">filter (parent: acme_001)</text>
+    <text x="90" y="56" font-family="monospace" font-size="7" fill="#78350f" text-anchor="middle">→ feature_search</text>
+    <text x="90" y="70" font-family="monospace" font-size="7" fill="#78350f" text-anchor="middle">→ top_k (k=1)</text>
+  </g>
+
+  <!-- Arrow from collection to retriever -->
+  <path d="M 500 360 L 520 360" stroke="#f59e0b" stroke-width="1.5" fill="none" marker-end="url(#arrowAmber)"/>
+
+  <!-- Level 2 Result -->
+  <g transform="translate(720, 315)">
+    <rect x="0" y="0" width="200" height="90" rx="8" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+    <text x="100" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#047857" text-anchor="middle">✓ Match Result</text>
+    <rect x="10" y="26" width="180" height="55" rx="4" fill="white"/>
+    <text x="100" y="42" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#065f46" text-anchor="middle">Engineering (score: 0.91)</text>
+    <text x="100" y="58" font-family="monospace" font-size="7" fill="#047857" text-anchor="middle">+ dept_id: "eng_042"</text>
+    <text x="100" y="72" font-family="monospace" font-size="7" fill="#047857" text-anchor="middle">+ department: "Engineering"</text>
+  </g>
+
+  <!-- Arrow from retriever to result -->
+  <path d="M 700 360 L 720 360" stroke="#10b981" stroke-width="1.5" fill="none" marker-end="url(#arrowGreen)"/>
+
+  <!-- Accumulated fields L2 -->
+  <g transform="translate(940, 315)">
+    <rect x="0" y="0" width="200" height="90" rx="8" fill="#f0fdfa" stroke="#14b8a6" stroke-width="1"/>
+    <text x="100" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#0d9488" text-anchor="middle">📦 Accumulated Fields</text>
+    <rect x="10" y="26" width="180" height="55" rx="4" fill="white"/>
+    <text x="100" y="42" font-family="monospace" font-size="7" fill="#94a3b8" text-anchor="middle">company_id, company_name</text>
+    <text x="100" y="56" font-family="monospace" font-size="8" fill="#8b5cf6" text-anchor="middle">+ dept_id: "eng_042"</text>
+    <text x="100" y="70" font-family="monospace" font-size="8" fill="#8b5cf6" text-anchor="middle">+ department: "Engineering"</text>
+  </g>
+
+  <!-- Arrow from result to accumulated -->
+  <path d="M 920 360 L 940 360" stroke="#14b8a6" stroke-width="1.5" fill="none" marker-end="url(#arrowTeal)"/>
+
+  <!-- Arrow down to Level 3 -->
+  <path d="M 820 425 L 820 445" stroke="#10b981" stroke-width="2" fill="none" marker-end="url(#arrowGreen)"/>
+  <text x="900" y="438" font-family="system-ui, sans-serif" font-size="8" fill="#10b981">passes doc + fields, filters scope ↓</text>
+
+  <!-- ==================== LEVEL 3 ==================== -->
+  <g filter="url(#shadow)">
+    <rect x="280" y="455" width="880" height="150" rx="12" fill="white" stroke="#ec4899" stroke-width="2"/>
+    <rect x="280" y="455" width="880" height="30" rx="12" fill="url(#level2Grad)"/>
+    <rect x="280" y="477" width="880" height="8" fill="url(#level2Grad)"/>
+    <text x="720" y="476" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Level 3 (Leaf): Teams (filtered to Engineering only)</text>
+  </g>
+
+  <!-- Level 3 Reference Collection -->
+  <g transform="translate(300, 495)">
+    <rect x="0" y="0" width="200" height="90" rx="8" fill="#fce7f3" stroke="#f9a8d4" stroke-width="1"/>
+    <text x="100" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#db2777" text-anchor="middle">📦 teams collection</text>
+    <rect x="10" y="26" width="180" height="55" rx="4" fill="white"/>
+    <text x="100" y="42" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Eng: Backend, Frontend, Infra...</text>
+    <text x="100" y="56" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">enrichment_fields:</text>
+    <text x="100" y="70" font-family="monospace" font-size="7" fill="#ec4899" text-anchor="middle">["team_id", "team_lead"]</text>
+  </g>
+
+  <!-- Level 3 Retriever -->
+  <g transform="translate(520, 495)">
+    <rect x="0" y="0" width="180" height="90" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+    <text x="90" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#92400e" text-anchor="middle">⚙️ ret_team_match</text>
+    <rect x="10" y="26" width="160" height="55" rx="4" fill="white"/>
+    <text x="90" y="42" font-family="monospace" font-size="7" fill="#78350f" text-anchor="middle">filter (parent: eng_042)</text>
+    <text x="90" y="56" font-family="monospace" font-size="7" fill="#78350f" text-anchor="middle">→ feature_search</text>
+    <text x="90" y="70" font-family="monospace" font-size="7" fill="#78350f" text-anchor="middle">→ top_k (k=1)</text>
+  </g>
+
+  <!-- Arrow from collection to retriever -->
+  <path d="M 500 540 L 520 540" stroke="#f59e0b" stroke-width="1.5" fill="none" marker-end="url(#arrowAmber)"/>
+
+  <!-- Level 3 Result -->
+  <g transform="translate(720, 495)">
+    <rect x="0" y="0" width="200" height="90" rx="8" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+    <text x="100" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#047857" text-anchor="middle">✓ Match Result</text>
+    <rect x="10" y="26" width="180" height="55" rx="4" fill="white"/>
+    <text x="100" y="42" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#065f46" text-anchor="middle">Frontend (score: 0.89)</text>
+    <text x="100" y="58" font-family="monospace" font-size="7" fill="#047857" text-anchor="middle">+ team_id: "fe_007"</text>
+    <text x="100" y="72" font-family="monospace" font-size="7" fill="#047857" text-anchor="middle">+ team_lead: "Sarah Chen"</text>
+  </g>
+
+  <!-- Arrow from retriever to result -->
+  <path d="M 700 540 L 720 540" stroke="#10b981" stroke-width="1.5" fill="none" marker-end="url(#arrowGreen)"/>
+
+  <!-- Final Accumulated fields -->
+  <g transform="translate(940, 495)">
+    <rect x="0" y="0" width="200" height="90" rx="8" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+    <text x="100" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#047857" text-anchor="middle">✅ Final Enrichment</text>
+    <rect x="10" y="26" width="180" height="55" rx="4" fill="white"/>
+    <text x="100" y="40" font-family="monospace" font-size="7" fill="#94a3b8" text-anchor="middle">company_id, company_name</text>
+    <text x="100" y="52" font-family="monospace" font-size="7" fill="#94a3b8" text-anchor="middle">dept_id, department</text>
+    <text x="100" y="66" font-family="monospace" font-size="8" fill="#ec4899" text-anchor="middle">+ team_id: "fe_007"</text>
+    <text x="100" y="78" font-family="monospace" font-size="8" fill="#ec4899" text-anchor="middle">+ team_lead: "Sarah Chen"</text>
+  </g>
+
+  <!-- Arrow from result to final -->
+  <path d="M 920 540 L 940 540" stroke="#14b8a6" stroke-width="1.5" fill="none" marker-end="url(#arrowTeal)"/>
+
+  <!-- Arrow to Output -->
+  <path d="M 1040 585 L 1040 630" stroke="#14b8a6" stroke-width="2" fill="none" marker-end="url(#arrowTeal)"/>
+
+  <!-- Output Document -->
+  <g filter="url(#shadow)">
+    <rect x="940" y="640" width="200" height="120" rx="10" fill="white" stroke="#14b8a6" stroke-width="2"/>
+    <rect x="940" y="640" width="200" height="28" rx="10" fill="url(#docGrad)"/>
+    <rect x="940" y="658" width="200" height="10" fill="url(#docGrad)"/>
+    <text x="1040" y="660" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">📄 Enriched Document</text>
+  </g>
+  <g transform="translate(950, 680)">
+    <text x="90" y="12" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Original + Full Ancestry:</text>
+    <text x="90" y="28" font-family="monospace" font-size="7" fill="#6366f1" text-anchor="middle">Acme Corp → Engineering → Frontend</text>
+    <rect x="10" y="35" width="160" height="35" rx="4" fill="#f0fdfa"/>
+    <text x="90" y="50" font-family="monospace" font-size="7" fill="#115e59" text-anchor="middle">All 6 enrichment fields</text>
+    <text x="90" y="64" font-family="monospace" font-size="7" fill="#115e59" text-anchor="middle">from complete path</text>
+  </g>
+
+  <!-- CTE Insight Box -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="640" width="400" height="120" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+    <text x="240" y="665" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#92400e" text-anchor="middle">💡 CTE-Style Execution</text>
+    <line x1="40" y1="675" x2="440" y2="675" stroke="#fcd34d" stroke-width="1"/>
+  </g>
+  <g transform="translate(55, 690)">
+    <text x="0" y="12" font-family="system-ui, sans-serif" font-size="9" fill="#78350f">• Each level has its own retriever (ret_company, ret_dept, ret_team)</text>
+    <text x="0" y="28" font-family="system-ui, sans-serif" font-size="9" fill="#78350f">• Parent match filters which children to search</text>
+    <text x="0" y="44" font-family="system-ui, sans-serif" font-size="9" fill="#78350f">• Only docs exceeding threshold (0.85) continue down</text>
+    <text x="0" y="60" font-family="system-ui, sans-serif" font-size="9" fill="#78350f">• Enrichment fields accumulate at each level</text>
+  </g>
+
+  <!-- Hierarchy Config -->
+  <g filter="url(#shadow)">
+    <rect x="460" y="640" width="460" height="120" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+    <text x="480" y="665" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#94a3b8">Taxonomy Config (each node has its own retriever)</text>
+    <line x1="460" y1="675" x2="920" y2="675" stroke="#334155" stroke-width="1"/>
+  </g>
+  <g transform="translate(475, 688)">
+    <text x="0" y="0" font-family="monospace" font-size="8"><tspan fill="#7dd3fc">"hierarchy"</tspan><tspan fill="#e2e8f0">: [</tspan></text>
+    <text x="10" y="14" font-family="monospace" font-size="8"><tspan fill="#e2e8f0">{ </tspan><tspan fill="#7dd3fc">"node_id"</tspan><tspan fill="#e2e8f0">: </tspan><tspan fill="#fcd34d">"companies"</tspan><tspan fill="#e2e8f0">, </tspan><tspan fill="#7dd3fc">"retriever_id"</tspan><tspan fill="#e2e8f0">: </tspan><tspan fill="#fcd34d">"ret_company_match"</tspan><tspan fill="#e2e8f0"> },</tspan></text>
+    <text x="10" y="28" font-family="monospace" font-size="8"><tspan fill="#e2e8f0">{ </tspan><tspan fill="#7dd3fc">"node_id"</tspan><tspan fill="#e2e8f0">: </tspan><tspan fill="#fcd34d">"departments"</tspan><tspan fill="#e2e8f0">, </tspan><tspan fill="#7dd3fc">"retriever_id"</tspan><tspan fill="#e2e8f0">: </tspan><tspan fill="#fcd34d">"ret_dept_match"</tspan><tspan fill="#e2e8f0">, </tspan><tspan fill="#7dd3fc">"parent"</tspan><tspan fill="#e2e8f0">: </tspan><tspan fill="#fcd34d">"companies"</tspan><tspan fill="#e2e8f0"> },</tspan></text>
+    <text x="10" y="42" font-family="monospace" font-size="8"><tspan fill="#e2e8f0">{ </tspan><tspan fill="#7dd3fc">"node_id"</tspan><tspan fill="#e2e8f0">: </tspan><tspan fill="#fcd34d">"teams"</tspan><tspan fill="#e2e8f0">, </tspan><tspan fill="#7dd3fc">"retriever_id"</tspan><tspan fill="#e2e8f0">: </tspan><tspan fill="#fcd34d">"ret_team_match"</tspan><tspan fill="#e2e8f0">, </tspan><tspan fill="#7dd3fc">"parent"</tspan><tspan fill="#e2e8f0">: </tspan><tspan fill="#fcd34d">"departments"</tspan><tspan fill="#e2e8f0"> }</tspan></text>
+    <text x="0" y="56" font-family="monospace" font-size="8" fill="#e2e8f0">]</text>
+  </g>
+
+  <!-- Legend -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="780" width="1120" height="70" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <text x="600" y="805" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#475569" text-anchor="middle">Legend</text>
+    <line x1="40" y1="815" x2="1160" y2="815" stroke="#e2e8f0" stroke-width="1"/>
+  </g>
+  
+  <g transform="translate(60, 830)">
+    <rect x="0" y="0" width="12" height="12" rx="2" fill="url(#rootGrad)"/>
+    <text x="18" y="10" font-family="system-ui, sans-serif" font-size="8" fill="#475569">Level 1</text>
+    
+    <rect x="70" y="0" width="12" height="12" rx="2" fill="url(#level1Grad)"/>
+    <text x="88" y="10" font-family="system-ui, sans-serif" font-size="8" fill="#475569">Level 2</text>
+    
+    <rect x="140" y="0" width="12" height="12" rx="2" fill="url(#level2Grad)"/>
+    <text x="158" y="10" font-family="system-ui, sans-serif" font-size="8" fill="#475569">Level 3</text>
+    
+    <rect x="210" y="0" width="12" height="12" rx="2" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+    <text x="228" y="10" font-family="system-ui, sans-serif" font-size="8" fill="#475569">Retriever (per level)</text>
+    
+    <rect x="340" y="0" width="12" height="12" rx="2" fill="#d1fae5" stroke="#10b981" stroke-width="1"/>
+    <text x="358" y="10" font-family="system-ui, sans-serif" font-size="8" fill="#475569">Match Result</text>
+    
+    <rect x="450" y="0" width="12" height="12" rx="2" fill="#f0fdfa" stroke="#14b8a6" stroke-width="1"/>
+    <text x="468" y="10" font-family="system-ui, sans-serif" font-size="8" fill="#475569">Accumulated Fields</text>
+    
+    <line x1="590" y1="6" x2="620" y2="6" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrowAmber)"/>
+    <text x="628" y="10" font-family="system-ui, sans-serif" font-size="8" fill="#475569">Query collection</text>
+    
+    <line x1="730" y1="6" x2="760" y2="6" stroke="#10b981" stroke-width="2" marker-end="url(#arrowGreen)"/>
+    <text x="768" y="10" font-family="system-ui, sans-serif" font-size="8" fill="#475569">Match + pass down</text>
+    
+    <line x1="880" y1="6" x2="910" y2="6" stroke="#14b8a6" stroke-width="2" marker-end="url(#arrowTeal)"/>
+    <text x="918" y="10" font-family="system-ui, sans-serif" font-size="8" fill="#475569">Accumulate fields</text>
+  </g>
+
+  <!-- Use cases -->
+  <g transform="translate(40, 870)">
+    <text x="0" y="0" font-family="system-ui, sans-serif" font-size="10" fill="#64748b">Use cases: Org charts • Product categories • Media content classification • Multi-level labeling with automatic field inheritance</text>
+  </g>
+
+</svg>

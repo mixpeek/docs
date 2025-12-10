@@ -8,16 +8,7 @@ The Mixpeek platform is intentionally split across an API layer, an Engine layer
 ## System Overview
 
 <Frame>
-```mermaid
-graph TD
-  C[Clients] --> API[FastAPI HTTP]
-  API --> CT[Celery Tasks]
-  CT --> SS[Shared Storage]
-  SS --> RJ[Ray Jobs]
-  RJ --> QS[Qdrant & S3]
-  QS --> WH[Webhooks]
-  WH --> C
-```
+  <img src="/assets/mixpeek-architecture.svg" alt="Mixpeek Architecture" />
 </Frame>
 
 <CardGroup cols={3}>
@@ -31,48 +22,6 @@ graph TD
     MongoDB, Qdrant, Redis, and S3 provide the contract between layers—no direct imports cross the API ↔ Engine boundary.
   </Card>
 </CardGroup>
-
-## Service Architecture
-
-<Frame>
-```mermaid
-graph TB
-  FastAPI[FastAPI<br/>REST + auth]
-  Celery[Celery Worker]
-  Redis[(Redis<br/>Tasks)]
-  Mongo[(MongoDB<br/>metadata)]
-  RayHead[Ray Head<br/>+ Pollers]
-  RayWorkers[Ray Workers<br/>CPU/GPU/Serve]
-  Qdrant[(Qdrant)]
-  S3[(S3<br/>objects/artifacts)]
-  Webhooks[External Webhooks]
-  
-  FastAPI --> Celery
-  FastAPI --> Mongo
-  Celery --> Redis
-  Celery --> RayHead
-  Mongo --> RayHead
-  Mongo --> Qdrant
-  RayHead --> RayWorkers
-  RayWorkers --> Qdrant
-  RayWorkers --> S3
-  RayWorkers --> Webhooks
-```
-</Frame>
-
-- Ray pollers read `batches` and `clustering_jobs` from MongoDB, submit jobs, and update status.
-- Ray Serve hosts embedding, reranking, audio, and video models.
-- Celery Beat scans MongoDB for webhook events and dispatches handlers.
-
-## Layer Separation
-
-<Callout type="warning">
-  **Golden Rule:** API and Engine code never import each other. Shared models sit in a neutral library that both layers consume.
-</Callout>
-
-- API defines Pydantic schemas, orchestrates workflows, and updates MongoDB + Redis.
-- Engine consumes manifests, runs ML workloads, and writes vectors/documents to Qdrant.
-- A common library provides enums, models, constants, and utilities that both layers consume.
 
 ## Data Flow
 
@@ -110,27 +59,6 @@ graph TB
   </Step>
 </Steps>
 
-## Storage Strategy
-
-| Store | Purpose | Access Pattern |
-|-------|---------|----------------|
-| **MongoDB** | Metadata, configs, tasks, webhook events | CRUD + aggregation |
-| **Qdrant** | Namespace-scoped vector stores + payloads | ANN search + payload filters |
-| **Redis** | Task queue (Celery) + cache namespaces | Get/Set + TTL-managed cache |
-| **S3** | Raw blobs, manifests, per-extractor artifacts | Large object IO |
-
-- MongoDB indexes include `(internal_id, namespace_id)` to enforce isolation.
-- Qdrant names collections `ns_<namespace_id>` and stores collection/document identifiers in payload indexes.
-- Redis namespaces keys per feature (`collections`, `retrievers`, etc.) with index signatures baked into cache keys.
-
-## Ray Cluster
-
-- **Head node** hosts the Ray dashboard, job submission API, and pollers.
-- **CPU worker pool** handles text extraction, manifest parsing, Qdrant writes.
-- **GPU worker pool** runs embeddings, rerankers, video processing, and Ray Serve replicas.
-- Autoscaling targets: CPU utilization ~70%, GPU utilization ~80%, with configurable min/max replica counts.
-- Custom Ray resources (`{"batch": 1}`, `{"serve": 1}`) isolate heavy batch jobs from inference traffic.
-
 ## Communication Patterns
 
 <Tabs>
@@ -144,33 +72,6 @@ graph TB
     API calls Ray Serve HTTP endpoints for embeddings, reranking, generation, and audio transcription workloads.
   </Tab>
 </Tabs>
-
-## Scaling & Deployment
-
-- **API**: scale FastAPI replicas horizontally via Kubernetes HPA; Celery workers scale with queue depth.
-- **Engine**: autoscale Ray worker pools (CPU/GPU). Ray Serve replicates per-model deployments with independent scaling policies.
-- **Storage**: MongoDB uses replica sets or sharding, Qdrant supports distributed clusters, Redis can run in cluster mode, S3 scales automatically.
-- **Deployments**: local development relies on Docker Compose + `./start.sh`; production runs on Kubernetes (or Anyscale for Ray) with dedicated node groups for API, CPU workers, and GPU workers.
-
-## Key Design Decisions
-
-<AccordionGroup>
-  <Accordion title="Strict layer boundaries">
-    Keep API deployments lightweight and Engine deployments GPU-optimized by isolating codebases and deployment concerns.
-  </Accordion>
-  <Accordion title="MongoDB + Qdrant pairing">
-    Combine flexible metadata storage with high-performance vector search to serve semantic retrieval and filtering.
-  </Accordion>
-  <Accordion title="Webhook-based events">
-    Replace direct imports between Engine and API with durable, observable communication channels that can be retried.
-  </Accordion>
-  <Accordion title="Prefork Celery workers">
-    Prefork workers support task termination, concurrency, and graceful shutdowns—critical for webhook dispatch and maintenance jobs.
-  </Accordion>
-  <Accordion title="Index signatures">
-    Index signatures prevent stale caches and keep retrievers consistent without manual invalidation.
-  </Accordion>
-</AccordionGroup>
 
 ## Further Reading
 

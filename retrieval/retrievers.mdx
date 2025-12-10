@@ -3,6 +3,10 @@ title: "Retrievers"
 description: "Compose stage-based search pipelines over your collections"
 ---
 
+<Frame>
+  <img src="/assets/mixpeek-retrievers.svg" alt="Mixpeek Retrievers" />
+</Frame>
+
 Retrievers combine feature-aware search stages, structured filters, enrichment joins, and optional LLM post-processing into a single executable pipeline. Each retriever has an input schema, a list of target collections, and a deterministic set of stages executed in order.
 
 ## Anatomy of a Retriever
@@ -10,7 +14,7 @@ Retrievers combine feature-aware search stages, structured filters, enrichment j
 ```json
 {
   "retriever_name": "product_search_v2",
-  "description": "Semantic + hybrid search with reranking",
+  "description": "Product search with enrichment and transformation",
   "collection_ids": ["col_products"],
   "input_schema": {
     "properties": {
@@ -20,53 +24,62 @@ Retrievers combine feature-aware search stages, structured filters, enrichment j
   },
   "stages": [
     {
-      "stage_name": "hybrid_search",
-      "version": "v1",
+      "stage_type": "apply",
+      "stage_id": "document_enrich",
       "parameters": {
-        "dense_feature_address": "mixpeek://text_extractor@v1/text_embedding",
-        "sparse_feature_address": "mixpeek://splade_extractor@v1/splade_vector",
-        "input_mapping": { "text": "query_text" },
-        "limit": 200,
-        "dense_weight": 0.7,
-        "sparse_weight": 0.3,
-        "sort_by": [{ "field": "score", "direction": "desc" }]
+        "target_collection_id": "col_catalog",
+        "source_field": "metadata.product_id",
+        "target_field": "product_id",
+        "fields_to_merge": ["name", "price", "category"],
+        "output_field": "catalog_data"
       }
     },
     {
-      "stage_name": "filter",
-      "version": "v1",
+      "stage_type": "apply",
+      "stage_id": "api_call",
       "parameters": {
-        "strategy": "structured",
-        "structured_filter": {
-          "AND": [
-            { "field": "metadata.in_stock", "operator": "eq", "value": true },
-            { "field": "metadata.price", "operator": "lte", "value": "{{INPUT.max_price}}" }
-          ]
-        }
+        "url": "https://api.stripe.com/v1/customers/{{DOC.metadata.customer_id}}",
+        "method": "GET",
+        "allowed_domains": ["api.stripe.com"],
+        "auth": {
+          "type": "bearer",
+          "secret_ref": "stripe_api_key"
+        },
+        "output_field": "metadata.billing",
+        "on_error": "skip"
       }
     },
     {
-      "stage_name": "rerank",
-      "version": "v1",
+      "stage_type": "apply",
+      "stage_id": "json_transform",
       "parameters": {
-        "strategy": "cross_encoder",
-        "model": "bge-reranker-v2-m3",
-        "top_k": 50
+        "template": "{\"id\": \"{{DOC.document_id}}\", \"title\": \"{{DOC.metadata.title}}\", \"price\": {{DOC.catalog_data.price}}}",
+        "fail_on_error": false
       }
     }
   ],
   "cache_config": {
     "enabled": true,
-    "ttl_seconds": 300,
-    "cache_stage_names": ["hybrid_search"]
+    "ttl_seconds": 300
   }
 }
 ```
 
 ## Stage Catalog
 
+Stages are the building blocks of retriever pipelines. Each stage belongs to a **category** that defines its behavior:
+
+| Category | Behavior | Example Use Cases |
+|----------|----------|-------------------|
+| **filter** | Reduce the number of documents while preserving schema | Attribute filters, semantic search, hybrid search |
+| **sort** | Reorder documents without changing the set | Attribute sort, score-based ordering, reranking |
+| **reduce** | Aggregate to a smaller set of documents | Top-k selection, clustering reducers, deduplication |
+| **apply** | Enrich or transform documents without dropping them | Taxonomy joins, API enrichment, LLM enrichers, JSON transforms |
+
 <Note>
   Retrieve the live registry with `GET /v1/retrievers/stages`. Each entry includes `stage_id`, category, icon, and parameter schema so you can dynamically build configuration UIs or validations.
+
+  **Live stages:** [https://api.mixpeek.com/v1/retrievers/stages](https://api.mixpeek.com/v1/retrievers/stages)
 </Note>
 
 <CodeGroup>
@@ -80,33 +93,403 @@ curl -s --request GET \
 ```json
 [
   {
-    "stage_id": "hybrid_search",
-    "description": "Hybrid lexical + vector retrieval with score fusion",
-    "category": "search",
-    "icon": "search"
+    "stage_id": "api_call",
+    "description": "Enrich documents with external API calls",
+    "category": "apply",
+    "icon": "external-link"
   },
   {
-    "stage_id": "attribute_filter",
-    "description": "Filter documents by attribute values",
-    "category": "reduce",
-    "icon": "list-filter"
+    "stage_id": "json_transform",
+    "description": "Transform document structure using Jinja2 templates",
+    "category": "apply",
+    "icon": "code"
+  },
+  {
+    "stage_id": "external_web_search",
+    "description": "Search the web using Exa AI-native search",
+    "category": "apply",
+    "icon": "globe"
+  },
+  {
+    "stage_id": "document_enrich",
+    "description": "Join and enrich documents with data from another collection",
+    "category": "apply",
+    "icon": "link"
   }
 ]
 ```
 </CodeGroup>
 
-| Category | Stage ID | Description |
-|----------|----------|-------------|
-| search | `hybrid_search` | Dense + lexical retrieval with reciprocal-rank and weighted-score fusion, plus score thresholds. |
-| reduce | `attribute_filter` | Structured filtering with boolean logic, projections, and template-aware batch sizing. |
-| reduce | `llm_filter` | LLM-powered screening that keeps or discards documents based on prompt-defined criteria. |
-| rank | `sort_attribute` | Sort in-flight results by any payload field with case-insensitive and null handling options. |
-| rank | `sort_relevance` | Sort by relevance score (or custom numeric field) with graceful fallbacks for missing scores. |
-| enrich | `document_enrichment` | Join documents with another collection and merge selected fields. |
-| enrich | `taxonomy_enrichment` | Attach taxonomy assignments via feature URIs and copy enrichment fields. |
-| enrich | `llm_enrichment` | Generate new fields with an LLM, respecting per-document conditions, batching, and schemas. |
+### Filter Stages
 
-Call `GET /v1/retrievers/stages` whenever you need the latest metadata or parameter schemas.
+Filter stages reduce the document set while preserving the document schema. Use these at the start of your pipeline to narrow down candidates.
+
+<Note>
+  Use `GET /v1/retrievers/stages?category=filter` to retrieve the current list of filter stages and their parameter schemas.
+</Note>
+
+### Sort Stages
+
+Sort stages reorder documents without changing the result set. Place these after filters to control ranking.
+
+<Note>
+  Use `GET /v1/retrievers/stages?category=sort` to retrieve the current list of sort stages and their parameter schemas.
+</Note>
+
+### Reduce Stages
+
+Reduce stages aggregate documents to a smaller set. Use these for deduplication or clustering.
+
+<Note>
+  Use `GET /v1/retrievers/stages?category=reduce` to retrieve the current list of reduce stages and their parameter schemas.
+</Note>
+
+### Apply Stages
+
+Apply stages enrich or transform documents. Use these to add context, join data, or reshape output.
+
+| Stage ID | Description | Transformation |
+|----------|-------------|----------------|
+| `document_enrich` | Join documents with data from another collection | N → N (LEFT JOIN) |
+| `api_call` | Enrich documents with external API calls | N → N |
+| `json_transform` | Transform document structure using Jinja2 templates | N → N |
+| `external_web_search` | Search the web using Exa AI-native search | 0 → M (creates documents) |
+
+---
+
+## Apply Stage Details
+
+### document_enrich
+
+Joins documents with data from another collection, similar to a SQL LEFT JOIN. Each input document produces exactly one output document with added fields from the target collection.
+
+**When to use:**
+- Combine data from multiple collections (e.g., products + catalog info)
+- Attach user profiles, metadata, or related entities
+- Denormalize data at query time
+
+**Parameters:**
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `target_collection_id` | Yes | Collection to join with |
+| `source_field` | Yes* | Field in current documents to match |
+| `target_field` | Yes* | Field in target collection to match against |
+| `fields_to_merge` | No | Specific fields to merge (or entire document if omitted) |
+| `output_field` | No | Where to place enrichment (root or nested path) |
+| `retriever_id` | No | Use an existing retriever for lookup instead of direct field matching |
+| `retriever_config` | No | Anonymous retriever definition for complex lookups |
+| `retriever_inputs` | No | Template inputs when using retriever-based enrichment |
+| `strategy` | No | `enrich` (merge fields) or `append` (add as nested object) |
+| `allow_missing` | No | Keep documents without matches (default: true) |
+| `when` | No | Conditional filter for selective enrichment |
+| `cache_behavior` | No | `auto`, `disabled`, or `aggressive` |
+| `cache_ttl_seconds` | No | Cache TTL in seconds |
+
+*Required for direct joins; not needed when using `retriever_id` or `retriever_config`.
+
+**Examples:**
+
+<CodeGroup>
+```json Direct Field Join
+{
+  "stage_type": "apply",
+  "stage_id": "document_enrich",
+  "parameters": {
+    "target_collection_id": "col_products",
+    "source_field": "metadata.product_id",
+    "target_field": "product_id",
+    "fields_to_merge": ["name", "price", "category"],
+    "output_field": "product_data"
+  }
+}
+```
+
+```json Retriever-Based Enrichment
+{
+  "stage_type": "apply",
+  "stage_id": "document_enrich",
+  "parameters": {
+    "target_collection_id": "col_similar_items",
+    "retriever_id": "ret_find_similar_products",
+    "retriever_inputs": {
+      "query": "{{DOC.description}}",
+      "category": "{{DOC.metadata.category}}"
+    },
+    "fields_to_merge": ["name", "price", "image_url"],
+    "output_field": "similar_products",
+    "strategy": "append"
+  }
+}
+```
+
+```json Conditional Enrichment
+{
+  "stage_type": "apply",
+  "stage_id": "document_enrich",
+  "parameters": {
+    "target_collection_id": "col_specs",
+    "source_field": "metadata.sku",
+    "target_field": "sku",
+    "fields_to_merge": ["specifications", "warranty"],
+    "output_field": "metadata.technical_details",
+    "when": {
+      "field": "metadata.category",
+      "operator": "eq",
+      "value": "electronics"
+    }
+  }
+}
+```
+</CodeGroup>
+
+---
+
+### api_call
+
+Enriches documents by calling external HTTP APIs. Enables integration with third-party services (Stripe, GitHub, weather APIs, etc.) to augment documents with real-time data.
+
+<Warning>
+  **Security**: This stage makes external HTTP requests. Always use `allowed_domains` to prevent SSRF attacks. Never store credentials directly—use `auth.secret_ref` to reference vault-stored secrets.
+</Warning>
+
+**Parameters:**
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `url` | Yes | API endpoint URL (supports `{DOC.field}` and `{INPUT.field}` templates) |
+| `allowed_domains` | Yes | Domain allowlist for SSRF protection (never use `*`) |
+| `output_field` | Yes | Dot-path where API response should be stored |
+| `method` | No | HTTP method: GET, POST, PUT, PATCH, DELETE (default: GET) |
+| `auth` | No | Authentication configuration (see below) |
+| `headers` | No | Additional HTTP headers |
+| `body` | No | Request body for POST/PUT/PATCH (JSON, supports templates) |
+| `timeout` | No | Request timeout in seconds (1-60, default: 10) |
+| `max_response_size` | No | Maximum response size in bytes (default: 10MB) |
+| `response_path` | No | JSONPath to extract specific field from response |
+| `rate_limit` | No | Rate limiting config (`requests_per_minute`, `requests_per_hour`) |
+| `when` | No | Conditional filter for selective enrichment |
+| `on_error` | No | Error handling: `skip`, `remove`, or `raise` (default: skip) |
+
+**Authentication Types:**
+
+| Type | Description | Required Fields |
+|------|-------------|-----------------|
+| `none` | No authentication (public APIs) | — |
+| `bearer` | Bearer token (OAuth 2.0, JWT) | `secret_ref` |
+| `api_key` | API key in header or query param | `secret_ref`, `key`, `location` (header/query) |
+| `basic` | HTTP Basic Auth (username:password in secret) | `secret_ref` |
+| `custom_header` | Custom header with arbitrary name | `secret_ref`, `key` |
+
+**Examples:**
+
+<CodeGroup>
+```json Stripe Customer Lookup
+{
+  "stage_type": "apply",
+  "stage_id": "api_call",
+  "parameters": {
+    "url": "https://api.stripe.com/v1/customers/{DOC.metadata.stripe_id}",
+    "method": "GET",
+    "allowed_domains": ["api.stripe.com"],
+    "auth": {
+      "type": "bearer",
+      "secret_ref": "stripe_api_key"
+    },
+    "output_field": "metadata.stripe_data",
+    "timeout": 10,
+    "on_error": "skip"
+  }
+}
+```
+
+```json GitHub API (Public)
+{
+  "stage_type": "apply",
+  "stage_id": "api_call",
+  "parameters": {
+    "url": "https://api.github.com/repos/{INPUT.owner}/{INPUT.repo}",
+    "method": "GET",
+    "allowed_domains": ["api.github.com"],
+    "output_field": "metadata.github_info",
+    "response_path": "$.stargazers_count"
+  }
+}
+```
+
+```json POST with API Key
+{
+  "stage_type": "apply",
+  "stage_id": "api_call",
+  "parameters": {
+    "url": "https://api.example.com/v1/analyze",
+    "method": "POST",
+    "allowed_domains": ["api.example.com"],
+    "auth": {
+      "type": "api_key",
+      "key": "X-API-Key",
+      "location": "header",
+      "secret_ref": "example_api_key"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "text": "{DOC.text}",
+      "language": "en"
+    },
+    "output_field": "metadata.analysis"
+  }
+}
+```
+</CodeGroup>
+
+---
+
+### json_transform
+
+Applies a Jinja2 template to each document, rendering the template with full document context and replacing the document with the parsed JSON output. Use this to reformat documents for external APIs or reshape data for downstream consumers.
+
+**Parameters:**
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `template` | Yes | Jinja2 template string that must render to valid JSON |
+| `fail_on_error` | No | Fail entire pipeline on transformation error (default: false) |
+
+**Template Context:**
+
+| Namespace | Description |
+|-----------|-------------|
+| `DOC` / `doc` | Current document fields and metadata |
+| `INPUT` / `inputs` | Original query inputs from the search request |
+| `CONTEXT` / `context` | Execution context (namespace_id, internal_id, etc.) |
+| `STAGE` / `stage` | Current stage execution data |
+
+**Examples:**
+
+<CodeGroup>
+```json Field Selection
+{
+  "stage_type": "apply",
+  "stage_id": "json_transform",
+  "parameters": {
+    "template": "{\"id\": \"{{ DOC.document_id }}\", \"content\": \"{{ DOC.text }}\", \"score\": {{ DOC.score }}}"
+  }
+}
+```
+
+```json Conditional Fields
+{
+  "stage_type": "apply",
+  "stage_id": "json_transform",
+  "parameters": {
+    "template": "{\"workflow_name\": \"process-asset\", \"inputs\": [{\"name\": \"id\", \"value\": \"{{ DOC.id }}\"}{% if DOC.asset_type == \"VIDEO\" %}, {\"name\": \"video\", \"value\": {\"src\": \"{{ DOC.url }}\"}}{% endif %}]}"
+  }
+}
+```
+
+```json Array Iteration
+{
+  "stage_type": "apply",
+  "stage_id": "json_transform",
+  "parameters": {
+    "template": "{\"title\": \"{{ DOC.title }}\", \"tags\": [{% for tag in DOC.tags %}\"{{ tag }}\"{% if not loop.last %}, {% endif %}{% endfor %}]}"
+  }
+}
+```
+
+```json JSON Escaping
+{
+  "stage_type": "apply",
+  "stage_id": "json_transform",
+  "parameters": {
+    "template": "{\"user_id\": \"{{ DOC.metadata.user_id }}\", \"raw_data\": {{ DOC.metadata.raw | tojson }}}"
+  }
+}
+```
+</CodeGroup>
+
+---
+
+### external_web_search
+
+Performs AI-native web search using Exa's neural ranking system. Creates new documents from web search results, enabling retriever pipelines to incorporate real-time internet content.
+
+<Note>
+  This stage **creates** new documents (0 → M transformation) rather than enriching existing ones. Use it at the start of a pipeline or to augment internal results with external web sources.
+</Note>
+
+**Parameters:**
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `query` | Yes | Search query (supports `{INPUT.field}` and `{DOC.field}` templates) |
+| `num_results` | No | Number of results (1-100, default: 10) |
+| `use_autoprompt` | No | Enable Exa's query enhancement (default: true) |
+| `start_published_date` | No | Filter by publication date (YYYY-MM-DD format) |
+| `category` | No | Content category: `research paper`, `news`, `github`, `tweet`, `blog`, `company`, `pdf` |
+| `include_text` | No | Include text snippets in results (default: true) |
+
+**Output Schema:**
+
+Each result becomes a document with:
+- `metadata.url` – Web page URL
+- `metadata.title` – Page title
+- `metadata.text` – Text snippet (if `include_text=true`)
+- `metadata.published_date` – Publication date (if available)
+- `metadata.author` – Author name (if available)
+- `metadata.search_query` – Original query used
+- `metadata.search_position` – 0-indexed position in results
+- `score` – Exa relevance score
+
+**Examples:**
+
+<CodeGroup>
+```json Basic Web Search
+{
+  "stage_type": "apply",
+  "stage_id": "external_web_search",
+  "parameters": {
+    "query": "{INPUT.query}",
+    "num_results": 10,
+    "include_text": true,
+    "use_autoprompt": true
+  }
+}
+```
+
+```json Research Papers
+{
+  "stage_type": "apply",
+  "stage_id": "external_web_search",
+  "parameters": {
+    "query": "neural network architectures",
+    "num_results": 20,
+    "category": "research paper",
+    "include_text": true
+  }
+}
+```
+
+```json Recent News
+{
+  "stage_type": "apply",
+  "stage_id": "external_web_search",
+  "parameters": {
+    "query": "{INPUT.company_name} latest product launches",
+    "num_results": 5,
+    "category": "news",
+    "start_published_date": "2024-10-01",
+    "include_text": true
+  }
+}
+```
+</CodeGroup>
+
+---
+
+Call `GET /v1/retrievers/stages` to retrieve the latest stage metadata and parameter schemas.
 
 ## Execution Lifecycle
 
@@ -123,12 +506,39 @@ Response headers include:
 
 ## Filters & Templates
 
-- Structured filters support comparison operators (`eq`, `gt`, `lte`, `in`, etc.) and logical composition (`AND`, `OR`, `NOT`).
-- Template variables let you reference namespaces:
-  - `{{INPUT.query_text}}`
-  - `{{DOC.metadata.category}}`
-  - `{{STAGE.hybrid_search.top_score}}`
-  - `{{CONTEXT.budget_remaining}}`
+Structured filters support comparison operators (`eq`, `gt`, `lte`, `in`, etc.) and logical composition (`AND`, `OR`, `NOT`).
+
+### Template Namespaces
+
+Stages support dynamic configuration through template expressions using Jinja2 syntax. Both uppercase and lowercase namespace formats are supported and work identically:
+
+| Namespace | Description | Examples |
+|-----------|-------------|----------|
+| `INPUT` / `inputs` | User-provided query parameters and inputs | `{{INPUT.query_text}}`, `{{inputs.max_price}}` |
+| `DOC` / `doc` | Current document fields (for per-document logic) | `{{DOC.metadata.category}}`, `{{doc.content_type}}` |
+| `CONTEXT` / `context` | Execution state (budget, timing, retriever metadata) | `{{CONTEXT.budget_remaining}}`, `{{context.time_elapsed_ms}}` |
+| `STAGE` / `stage` | Previous stage outputs (for cascading logic) | `{{STAGE.hybrid_search.top_score}}`, `{{stage.filter.count}}` |
+
+<Note>
+  Mixed usage within the same stage is supported. For example, you can use `{{INPUT.query}}` alongside `{{context.budget_remaining}}` in the same configuration.
+</Note>
+
+**Conditional expressions:**
+
+```json
+{
+  "batch_size": "{{CONTEXT.budget_remaining > 50 ? 200 : 50}}",
+  "field": "{{DOC.media_type == 'image' ? 'image_url' : 'video_url'}}"
+}
+```
+
+**Templated batch size:**
+
+```json
+{
+  "batch_size": "{{20 * inputs.page_size}}"
+}
+```
 
 ## Retrievers & Caching
 
@@ -191,6 +601,52 @@ Response snippet:
   }
 }
 ```
+
+## Anonymous Retrievers
+
+Anonymous retrievers let you execute a retriever pipeline in a single API call without persisting it. This is ideal for:
+
+- **Prototyping and experimentation** – Test stage configurations quickly without cluttering your retriever list
+- **Dynamic pipelines** – Build pipelines on-the-fly based on user context or application logic
+- **One-off queries** – Run complex searches that don't need to be reused
+- **CI/CD testing** – Validate retriever configurations in automated tests without creating permanent resources
+
+<Tip>
+  Use anonymous retrievers during development to iterate quickly, then promote working configurations to named retrievers for production use.
+</Tip>
+
+```bash
+curl -sS -X POST "$MP_API_URL/v1/retrievers/execute" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "collection_ids": ["col_products"],
+    "stages": [
+      {
+        "stage_type": "filter",
+        "stage_id": "hybrid_search",
+        "parameters": {
+          "query": "{{INPUT.query_text}}",
+          "top_k": 50
+        }
+      },
+      {
+        "stage_type": "sort",
+        "stage_id": "rerank",
+        "parameters": {
+          "model": "bge-reranker-v2-m3"
+        }
+      }
+    ],
+    "inputs": {
+      "query_text": "noise cancelling headphones"
+    },
+    "limit": 10
+  }'
+```
+
+The response format is identical to named retriever execution. The key difference: no `retriever_id` is created or stored.
 
 ## Maintenance & Versioning
 

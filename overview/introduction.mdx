@@ -3,115 +3,120 @@ title: "Introduction"
 description: "Meet the Mixpeek multimodal data processing and retrieval platform"
 ---
 
-<Note>
-  Mixpeek turns raw multimodal inputs—text, images, video, audio, PDFs—into structured documents, reusable features, and query-ready indexes. **Skip 6-12 months of infrastructure work**: Mixpeek replaces 15+ tools (vector DBs, ML orchestration, feature stores, search infrastructure) with a single API. No ops, no ML deployment, no pipeline code—just configuration.
-</Note>
+<Info>
+**Quick Links**
+- [API Reference](/api-reference/health/health-check) — Explore the API endpoints in these docs
+- [Full API Docs](https://api.mixpeek.com/docs) — Complete OpenAPI documentation
+- [Studio](https://mixpeek.com/start) — Access all resources via the UI
+</Info>
 
-## What Mixpeek Replaces
+Mixpeek is a platform for processing and searching multimodal content—text, images, video, audio, and documents. Think of it as a unified API that handles everything from extracting features with ML models to searching across them with semantic queries.
 
-<CardGroup cols={3}>
-  <Card title="ML Orchestration" icon="diagram-project">
-    Airflow, Prefect, Temporal, Kubeflow
-  </Card>
-  <Card title="Vector & Search" icon="magnifying-glass">
-    Qdrant, Pinecone, Weaviate, Elasticsearch
-  </Card>
-  <Card title="Feature Infrastructure" icon="database">
-    Feast, Tecton, custom feature stores
-  </Card>
-</CardGroup>
+## Decompose with Extractors
 
-## Zero Infrastructure, Maximum Power
+Break complex objects into semantic layers. A single video becomes searchable transcripts, visual embeddings, scene descriptions, and detected entities—each layer independently queryable.
 
-<CardGroup cols={2}>
-  <Card title="No ML Ops Required" icon="robot">
-    Deploy CLIP, Whisper, LayoutLM, or custom models **without infrastructure**. Mix extractors across collections. [Model Registry](/processing/model-registry) handles versions, GPU allocation, and autoscaling. You write JSON configs, not Kubernetes manifests.
-  </Card>
-  <Card title="Retrievers = Semantic JOINs" icon="link">
-    Search is a **JOIN operation** using vector similarity instead of foreign keys. Chain stages (search → filter → rank → enrich → transform) into [multi-hop graphs](/retrieval/retrievers). Connect documents across collections—no ETL code required.
-  </Card>
-  <Card title="Versioned & Immutable" icon="code-branch">
-    Taxonomies, extractors, and pipelines are versioned snapshots. A/B test retrieval strategies, roll back configs, and track complete lineage from result → document → object → source file.
-  </Card>
-  <Card title="Production-Grade Observability" icon="chart-line">
-    **ClickHouse analytics**, multi-channel notifications (email, Slack, SMS, webhooks), audit logs, and real-time task monitoring. Built-in caching delivers sub-100ms retrieval latency.
-  </Card>
-  <Card title="Multi-Database Orchestration" icon="database">
-    One API, five databases underneath: MongoDB (metadata), Qdrant (vectors), ClickHouse (analytics), Redis (cache), S3 (files). Cross-database queries, transactions, and routing handled automatically.
-  </Card>
-  <Card title="Parallel Enrichment at Scale" icon="gauge-high">
-    [Taxonomy enrichment](/enrichment/taxonomies) runs as parallel joins across Qdrant collections. Process thousands of documents concurrently. Hierarchical taxonomies and flat tags use the same JOIN stage—just configuration.
-  </Card>
-</CardGroup>
+<Frame caption="Breaking down a video into semantic layers">
+  <img src="/assets/mixpeek-decomposition.svg" alt="Decompose with Extractors" />
+</Frame>
 
-## Time Saved
+**Example**: Upload a meeting recording → Whisper extracts the transcript, CLIP generates visual embeddings per frame, and entity detection identifies speakers and topics.
 
-| Task | Without Mixpeek | With Mixpeek |
-|------|----------------|--------------|
-| Setup vector search | 2-4 weeks | 5 minutes |
-| Build feature extraction pipeline | 4-8 weeks | 1 hour |
-| Implement multi-modal search | 6-12 weeks | 30 minutes |
-| Add new ML model | 2-4 weeks | Config change |
-| Multi-tenant architecture | 4-8 weeks | Built-in |
-| Taxonomies & semantic joins | 4-8 weeks | 1 hour |
-| **Total engineering effort** | **6-12 months** | **Days** |
+**Unlocks**:
+- Search within any modality (find spoken words, visual moments, or document sections)
+- Extract structured data from unstructured content
+- Build multiple indexes from a single source file
 
-## Core Workflows
+[Learn about Feature Extractors →](/processing/feature-extractors)
+
+---
+
+## Recompose with Retrievers
+
+Reassemble layers based on semantic relevance. Chain search stages, apply filters across modalities, and enrich results—turning decomposed content back into meaningful answers.
+
+<Frame caption="Chaining search stages to recompose results">
+  <img src="/assets/mixpeek-retrieval.svg" alt="Recompose with Retrievers" />
+</Frame>
+
+**Example**: Query "product demo with Sarah" → vector search finds relevant transcript segments, face detection filters for Sarah, visual similarity ranks by product imagery, and enrichment adds full context.
+
+**Unlocks**:
+- Multi-stage retrieval pipelines (search → filter → rank → enrich)
+- Cross-modal queries (text query finds video moments)
+- Dynamic result enrichment without re-indexing
+
+[Learn about Retrievers →](/retrieval/retrievers)
+
+## How It Works
+
+The platform has three main pieces that work together:
 
 <Steps>
-  <Step title="Isolate tenants with namespaces">
-    Provision namespaces (or use the default) to keep tenants and environments separate. Pass `X-Namespace` on every authenticated request.
+  <Step title="Ingestion">
+    Store your raw files and data as [Objects](/ingestion/objects) in [Buckets](/ingestion/buckets). Objects can be videos, PDFs, images, audio files, or JSON—whatever you're working with.
   </Step>
-  <Step title="Register raw objects">
-    Store files or JSON payloads as [Objects](/ingestion/objects) inside schema-backed [Buckets](/ingestion/buckets). Mixpeek tracks blobs, metadata, and lineage without processing yet.
+  <Step title="Processing">
+    Create [Collections](/ingestion/collections) that run ML models (CLIP, Whisper, LayoutLM, etc.) on your objects. Models extract embeddings and structured data, then store everything as searchable documents.
   </Step>
-  <Step title="Define collections and extract features">
-    Create [Collections](/ingestion/collections) to map object fields into feature extractor inputs. The Engine downloads per-extractor artifacts, runs Ray tasks, and writes documents plus vectors to Qdrant.
-  </Step>
-  <Step title="Enrich with taxonomies and clustering">
-    Apply [Taxonomies](/enrichment/taxonomies) (flat or hierarchical) or [Clusters](/enrichment/clusters) to attach structured metadata. Both reuse the JOIN stage for fast, parallel enrichment.
-  </Step>
-  <Step title="Retrieve with multi-stage pipelines">
-    Compose [Retrievers](/retrieval/retrievers) from search, filter, rank, enrich, transform, and compose stages. Fetch presigned URLs, execution metrics, and cache-aware responses in a single API call.
+  <Step title="Retrieval">
+    Build [Retrievers](/retrieval/retrievers) to search across your documents. Chain multiple search stages together, apply filters, and enrich results—all through configuration, no code.
   </Step>
 </Steps>
 
-## Architecture Snapshot
-
-<Frame>
-```mermaid
-graph TD
-  subgraph API Layer
-    FastAPI[FastAPI] --> Celery(Celery Workers)
-    CeleryBeat(Celery Beat Scheduler)
-  end
-  subgraph Engine Layer
-    RayHead[Ray Head Node] --> RayWorkers[Ray Workers CPU/GPU]
-    RayHead --> RayServe[Ray Serve Models]
-  end
-  FastAPI -->|Tasks| Redis[(Redis)]
-  FastAPI -->|Metadata| Mongo[(MongoDB)]
-  RayHead -->|Job submit| Mongo
-  RayWorkers -->|Vectors| Qdrant[(Qdrant)]
-  RayWorkers -->|Artifacts| S3[(S3)]
-  RayServe --> FastAPI
-  Mongo --> CeleryBeat
-  CeleryBeat -->|Webhooks| External[External Systems]
-```
-</Frame>
-
-## Request Headers
+### Example Flow
 
 ```bash
-Authorization: Bearer sk_live_xxx
-X-Namespace: ns_production  # required when multi-tenancy is enabled
+# 1. Create a bucket and register an object
+POST /v1/buckets/{bucket_id}/objects
+{ "key_prefix": "/meetings", "blobs": [{ "property": "video", "url": "s3://..." }] }
+
+# 2. Create a collection with feature extractors
+POST /v1/collections
+{ "collection_name": "meetings", "feature_extractor": { "feature_extractor_name": "video-descriptor", "version": "v1" } }
+
+# 3. Execute a retriever
+POST /v1/retrievers/{retriever_id}/execute
+{ "inputs": { "query_text": "Q4 roadmap discussion" }, "limit": 10 }
 ```
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Multi-Tenant by Default" icon="building">
+    Every request includes a namespace header. Keep customers, environments, and projects completely isolated.
+  </Card>
+  <Card title="Configuration Over Code" icon="sliders">
+    Define pipelines, extractors, and retrievers with JSON configs. No infrastructure to manage, no model deployments to worry about.
+  </Card>
+  <Card title="Enrichment & Discovery" icon="sparkles">
+    Add [taxonomies](/enrichment/taxonomies) for classification or [clusters](/enrichment/clusters) for content discovery—both use the same semantic JOIN primitives.
+  </Card>
+  <Card title="Built for Production" icon="gauge-high">
+    Analytics, caching, webhooks, and monitoring built in. Track every request, A/B test retrieval strategies, and roll back configs when needed.
+  </Card>
+</CardGroup>
+
+## What You Get
+
+- **No infrastructure work**: No Ray clusters to manage, no model serving to configure, no vector DB ops
+- **Mix any models**: CLIP for images, Whisper for audio, LayoutLM for documents—use them together in the same collection
+- **Semantic JOINs**: Connect documents across collections using vector similarity instead of foreign keys
+- **Complete lineage**: Trace any result back through document → object → source file
 
 ## Next Steps
 
-- Follow the [Quickstart](/overview/quickstart) to stand up Mixpeek locally or in the cloud
-- Review [Core Concepts](/overview/concepts) for namespaces, objects, documents, and lineage patterns
-- Study the complete [Architecture](/overview/architecture) and [Caching](/overview/caching) strategies
-- Explore ready-made [Recipes](https://mixpeek.com/recipes) or jump straight into the [API Reference](/api-reference/introduction)
-
-Looking for real-world help? Use the “Talk to Engineers” CTA in the top bar and we’ll walk you through deployment or integration planning.
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/overview/quickstart">
+    Get Mixpeek running in 10 minutes
+  </Card>
+  <Card title="Core Concepts" icon="book" href="/overview/concepts">
+    Learn about objects, collections, and retrievers
+  </Card>
+  <Card title="Architecture" icon="sitemap" href="/overview/architecture">
+    Understand how the pieces fit together
+  </Card>
+  <Card title="Tutorials" icon="graduation-cap" href="/tutorials">
+    Step-by-step implementation guides
+  </Card>
+</CardGroup>

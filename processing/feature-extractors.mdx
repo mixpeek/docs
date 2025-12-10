@@ -3,55 +3,47 @@ title: "Feature Extractors"
 description: "Distributed pipelines that turn raw objects into reusable features"
 ---
 
+<Frame>
+  <img src="/assets/mixpeek-feature-extractors.svg" alt="Feature extractor pipeline showing objects being processed through ML models to produce reusable features" />
+</Frame>
+
 Feature extractors are Ray-powered workflows that read objects, run ML models, and write features into collection documents. Each extractor exposes a stable feature URI so retrievers, taxonomies, and clusters can reference the outputs with confidence.
 
 <Note>
-  Fetch the authoritative list of extractors at runtime with `GET /v1/collections/features/extractors`. The API returns extractor ids, versions, supported input types, schemas, and default parameters.
+  View the live list of extractors at [api.mixpeek.com/v1/collections/features/extractors](https://api.mixpeek.com/v1/collections/features/extractors) or fetch programmatically with `GET /v1/collections/features/extractors`.
 </Note>
 
-<CodeGroup>
-```bash
-curl -s --request GET \
-  --url "$MP_API_URL/v1/collections/features/extractors" \
-  --header "Authorization: Bearer $MP_API_KEY" \
-  --header "X-Namespace: $MP_NAMESPACE"
-```
+## Fully Managed & Versioned
 
-```json
-[
-  {
-    "feature_extractor_id": "text_extractor@v1",
-    "feature_extractor_name": "text_extractor",
-    "version": "v1",
-    "description": "Generate dense text embeddings and metadata",
-    "supported_input_types": ["text"],
-    "document_output_type": "documents",
-    "icon": "file-text"
-  },
-  {
-    "feature_extractor_id": "video_extractor@v1",
-    "feature_extractor_name": "video_extractor",
-    "version": "v1",
-    "description": "Segment videos into scenes and frame embeddings",
-    "supported_input_types": ["video"],
-    "document_output_type": "documents",
-    "icon": "video"
-  }
-]
-```
-</CodeGroup>
+All feature extractors are built, maintained, and hosted by Mixpeek. Every extractor is **versioned** (`text_extractor_v1`, `multimodal_extractor_v2`, etc.), giving you:
 
-## Catalog Highlights
+- **Version pinning** – Lock to a specific version for reproducible results across environments
+- **Safe migrations** – Swap extractor versions via [namespace migrations](/namespaces/migrations) without disrupting production
+- **A/B testing** – Run multiple versions in parallel namespaces to compare quality and performance
+- **Zero maintenance** – We handle model updates, infrastructure scaling, and GPU provisioning
 
-| Extractor | Output | Key Models | Typical Latency | Use Cases |
-|-----------|--------|------------|-----------------|-----------|
-| `text_extractor@v1` | Dense text embeddings plus language metadata | `multilingual-e5-large-instruct`, `gte-modernbert-base`, OpenAI `text-embedding-3-*` | 10–50 ms/doc (GPU) | Semantic search, Q&A, classification |
-| `video_extractor@v1` | Scene slices, thumbnails, frame embeddings | CLIP, Pyannote, FFmpeg | 2–10 s/video | Video retrieval, moderation, scene detection |
-| `splade_extractor@v1` | Sparse lexical vectors (indices + weights) | `naver/splade-v1` | 5–20 ms/doc | Hybrid search, rare term recall |
-| `colbert_extractor@v1` | Multi-vector token embeddings | `colbert_ir/colbertv2` | 20–80 ms/doc | Late interaction search, passage QA |
-| `whisper_large_v3_turbo` | Transcripts with timestamps | OpenAI Whisper | 500–2000 ms/min audio | Speech search, diarization |
+When a new version ships, your existing collections continue using the pinned version until you explicitly migrate.
 
-Need something custom or gated? Contact support to enable additional extractors or deploy bespoke models.
+<Accordion title="Enterprise: Bring Your Own Models">
+  Enterprise customers can extend the extractor library with custom models for specialized use cases:
+
+  - **ONNX** – Deploy optimized models exported from any framework
+  - **TensorFlow** – Run SavedModel or Keras models directly
+  - **PyTorch** – Load TorchScript or eager-mode models
+  - **Custom code** – Write Python extractors with arbitrary preprocessing, postprocessing, or multi-model pipelines
+
+  Custom extractors run on the same Ray infrastructure with full GPU support, versioning, and observability. Contact your account team to enable BYO model deployment.
+</Accordion>
+
+## Available Extractors
+
+| Extractor | Description | Input Types | Dimensions | Latency | Cost |
+|-----------|-------------|-------------|------------|---------|------|
+| `passthrough_extractor_v1` | Copies source fields without processing. Use for passing metadata or vectors between collections. | Any | N/A | &lt;1ms | Free |
+| `text_extractor_v1` | Dense embeddings via E5-Large multilingual. Supports chunking (characters, words, sentences, paragraphs, pages) and LLM extraction via `response_shape`. | `text`, `string` | 1024 | ~5ms/doc | Free |
+| `multimodal_extractor_v1` | Unified embeddings for video, image, text, and GIF via Google Vertex AI. Videos decomposed by time, scene, or silence with transcription, OCR, and thumbnails. | `video`, `image`, `text`, `string` | 1408 | 0.5-2x realtime | $0.01-0.15/min |
+
+Need something custom? Enterprise customers can [bring their own models](#fully-managed--versioned) or contact support to enable additional extractors.
 
 ## Where Extractors Run
 

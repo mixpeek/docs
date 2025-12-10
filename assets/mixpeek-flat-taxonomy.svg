@@ -1,0 +1,320 @@
+<svg viewBox="0 0 1200 750" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="refGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4f46e5;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="videoGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ea580c;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="imageGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="audioGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="uploadGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ec4899;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#db2777;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="enrichGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="retrieverGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#d97706;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowGray" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
+    </marker>
+    <marker id="arrowTeal" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#14b8a6"/>
+    </marker>
+    <marker id="arrowAmber" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f59e0b"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="750" fill="#f8fafc"/>
+  
+  <!-- Title -->
+  <text x="600" y="40" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="600" fill="#0f172a" text-anchor="middle">Flat Taxonomy: Product Catalog Recognition</text>
+  <text x="600" y="65" font-family="system-ui, sans-serif" font-size="13" fill="#64748b" text-anchor="middle">Retrievers match documents against a reference collection and copy enrichment fields</text>
+
+  <!-- Left Side: Multimodal Documents -->
+  <text x="120" y="100" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#475569" text-anchor="middle">Source Documents</text>
+  
+  <!-- Video Frame -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="120" width="160" height="75" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="40" y="120" width="160" height="24" rx="8" fill="url(#videoGrad)"/>
+    <rect x="40" y="136" width="160" height="8" fill="url(#videoGrad)"/>
+    <text x="120" y="138" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">🎬 Video Frame</text>
+  </g>
+  <text x="120" y="165" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">[0.23, -0.41, 0.87, ...]</text>
+  <text x="120" y="180" font-family="system-ui, sans-serif" font-size="8" fill="#94a3b8" text-anchor="middle">multimodal_embedding</text>
+
+  <!-- Image Post -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="210" width="160" height="75" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="40" y="210" width="160" height="24" rx="8" fill="url(#imageGrad)"/>
+    <rect x="40" y="226" width="160" height="8" fill="url(#imageGrad)"/>
+    <text x="120" y="228" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">📷 Social Image</text>
+  </g>
+  <text x="120" y="255" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">[0.19, -0.38, 0.91, ...]</text>
+  <text x="120" y="270" font-family="system-ui, sans-serif" font-size="8" fill="#94a3b8" text-anchor="middle">multimodal_embedding</text>
+
+  <!-- Audio Transcript -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="300" width="160" height="75" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="40" y="300" width="160" height="24" rx="8" fill="url(#audioGrad)"/>
+    <rect x="40" y="316" width="160" height="8" fill="url(#audioGrad)"/>
+    <text x="120" y="318" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">🎙 Audio Transcript</text>
+  </g>
+  <text x="120" y="345" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">[-0.12, 0.55, 0.34, ...]</text>
+  <text x="120" y="360" font-family="system-ui, sans-serif" font-size="8" fill="#94a3b8" text-anchor="middle">text_embedding</text>
+
+  <!-- User Upload -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="390" width="160" height="75" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="40" y="390" width="160" height="24" rx="8" fill="url(#uploadGrad)"/>
+    <rect x="40" y="406" width="160" height="8" fill="url(#uploadGrad)"/>
+    <text x="120" y="408" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">📤 User Upload</text>
+  </g>
+  <text x="120" y="435" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">[0.45, -0.22, 0.78, ...]</text>
+  <text x="120" y="450" font-family="system-ui, sans-serif" font-size="8" fill="#94a3b8" text-anchor="middle">multimodal_embedding</text>
+
+  <!-- Arrows to Retriever -->
+  <path d="M 200 157 L 250 240" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+  <path d="M 200 247 L 250 260" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+  <path d="M 200 337 L 250 290" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+  <path d="M 200 427 L 250 320" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- CENTER: Retriever -->
+  <g filter="url(#shadow)">
+    <rect x="260" y="180" width="200" height="200" rx="12" fill="white" stroke="#f59e0b" stroke-width="3"/>
+    <rect x="260" y="180" width="200" height="32" rx="12" fill="url(#retrieverGrad)"/>
+    <rect x="260" y="200" width="200" height="12" fill="url(#retrieverGrad)"/>
+    <text x="360" y="202" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">⚙️ Taxonomy Retriever</text>
+  </g>
+  
+  <!-- Retriever stages -->
+  <g transform="translate(275, 225)">
+    <rect x="0" y="0" width="170" height="35" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+    <text x="85" y="15" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#92400e" text-anchor="middle">Stage 1: feature_search</text>
+    <text x="85" y="28" font-family="monospace" font-size="7" fill="#78350f" text-anchor="middle">KNN against reference collection</text>
+    
+    <rect x="0" y="42" width="170" height="35" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+    <text x="85" y="57" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#92400e" text-anchor="middle">Stage 2: filter</text>
+    <text x="85" y="70" font-family="monospace" font-size="7" fill="#78350f" text-anchor="middle">score ≥ 0.85 threshold</text>
+    
+    <rect x="0" y="84" width="170" height="35" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+    <text x="85" y="99" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#92400e" text-anchor="middle">Stage 3: top_k</text>
+    <text x="85" y="112" font-family="monospace" font-size="7" fill="#78350f" text-anchor="middle">Select best match (k=1)</text>
+    
+    <text x="85" y="140" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Returns matched product + score</text>
+  </g>
+
+  <!-- Arrow from Retriever to Reference -->
+  <path d="M 460 280 L 500 280" stroke="#f59e0b" stroke-width="2" fill="none" marker-end="url(#arrowAmber)"/>
+  <text x="480" y="270" font-family="system-ui, sans-serif" font-size="8" fill="#92400e" text-anchor="middle">query</text>
+
+  <!-- Reference Collection -->
+  <g filter="url(#shadow)">
+    <rect x="510" y="120" width="220" height="360" rx="12" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="510" y="120" width="220" height="32" rx="12" fill="url(#refGrad)"/>
+    <rect x="510" y="140" width="220" height="12" fill="url(#refGrad)"/>
+    <text x="620" y="142" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">📦 Reference Collection</text>
+    <text x="620" y="170" font-family="system-ui, sans-serif" font-size="9" fill="#64748b" text-anchor="middle">Product Catalog</text>
+  </g>
+
+  <!-- Product 1: Nike -->
+  <g transform="translate(525, 185)">
+    <rect width="190" height="70" rx="6" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+    <text x="95" y="16" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#4338ca" text-anchor="middle">Nike Air Zoom</text>
+    <text x="95" y="32" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">SKU: NK-2024-RED</text>
+    <text x="95" y="46" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Category: Athletic • $129.99</text>
+    <rect x="10" y="52" width="170" height="12" rx="2" fill="#e0e7ff"/>
+    <text x="95" y="62" font-family="monospace" font-size="6" fill="#6366f1" text-anchor="middle">[0.21, -0.39, 0.85, ...] embedding</text>
+  </g>
+
+  <!-- Product 2: Adidas -->
+  <g transform="translate(525, 265)">
+    <rect width="190" height="70" rx="6" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+    <text x="95" y="16" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#4338ca" text-anchor="middle">Adidas Ultraboost</text>
+    <text x="95" y="32" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">SKU: AD-2024-BLK</text>
+    <text x="95" y="46" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Category: Running • $180.00</text>
+    <rect x="10" y="52" width="170" height="12" rx="2" fill="#e0e7ff"/>
+    <text x="95" y="62" font-family="monospace" font-size="6" fill="#6366f1" text-anchor="middle">[0.18, -0.36, 0.92, ...] embedding</text>
+  </g>
+
+  <!-- Product 3: New Balance -->
+  <g transform="translate(525, 345)">
+    <rect width="190" height="70" rx="6" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+    <text x="95" y="16" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#4338ca" text-anchor="middle">New Balance 990</text>
+    <text x="95" y="32" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">SKU: NB-2024-GRY</text>
+    <text x="95" y="46" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Category: Lifestyle • $199.99</text>
+    <rect x="10" y="52" width="170" height="12" rx="2" fill="#e0e7ff"/>
+    <text x="95" y="62" font-family="monospace" font-size="6" fill="#6366f1" text-anchor="middle">[0.44, -0.21, 0.79, ...] embedding</text>
+  </g>
+
+  <!-- Enrichment fields callout -->
+  <g transform="translate(525, 425)">
+    <rect width="190" height="40" rx="6" fill="#d1fae5" stroke="#10b981" stroke-width="1"/>
+    <text x="95" y="16" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#047857" text-anchor="middle">enrichment_fields:</text>
+    <text x="95" y="32" font-family="monospace" font-size="7" fill="#065f46" text-anchor="middle">["product_sku", "category", "price"]</text>
+  </g>
+
+  <!-- Arrow from Reference back to Apply stage -->
+  <path d="M 730 300 L 770 300" stroke="#14b8a6" stroke-width="2" fill="none" marker-end="url(#arrowTeal)"/>
+  <text x="750" y="290" font-family="system-ui, sans-serif" font-size="8" fill="#0d9488" text-anchor="middle">match</text>
+
+  <!-- Apply Stage (Enrichment) -->
+  <g filter="url(#shadow)">
+    <rect x="780" y="200" width="160" height="160" rx="12" fill="white" stroke="#14b8a6" stroke-width="3"/>
+    <rect x="780" y="200" width="160" height="32" rx="12" fill="url(#enrichGrad)"/>
+    <rect x="780" y="220" width="160" height="12" fill="url(#enrichGrad)"/>
+    <text x="860" y="222" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">✨ Apply Stage</text>
+  </g>
+  
+  <g transform="translate(795, 245)">
+    <rect x="0" y="0" width="130" height="50" rx="6" fill="#f0fdfa" stroke="#5eead4" stroke-width="1"/>
+    <text x="65" y="16" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#0f766e" text-anchor="middle">taxonomy_enrich</text>
+    <text x="65" y="32" font-family="system-ui, sans-serif" font-size="7" fill="#475569" text-anchor="middle">Copy fields from</text>
+    <text x="65" y="44" font-family="system-ui, sans-serif" font-size="7" fill="#475569" text-anchor="middle">matched reference</text>
+    
+    <text x="65" y="70" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Adds to each doc:</text>
+    <text x="65" y="85" font-family="monospace" font-size="7" fill="#0d9488" text-anchor="middle">+ product_sku</text>
+    <text x="65" y="97" font-family="monospace" font-size="7" fill="#0d9488" text-anchor="middle">+ category</text>
+    <text x="65" y="109" font-family="monospace" font-size="7" fill="#0d9488" text-anchor="middle">+ price</text>
+  </g>
+
+  <!-- Arrow to Output -->
+  <path d="M 940 280 L 980 280" stroke="#14b8a6" stroke-width="2" fill="none" marker-end="url(#arrowTeal)"/>
+
+  <!-- Right Side: Enriched Documents -->
+  <text x="1080" y="100" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#475569" text-anchor="middle">Enriched Documents</text>
+
+  <!-- Enriched Video -->
+  <g filter="url(#shadow)">
+    <rect x="990" y="120" width="170" height="85" rx="8" fill="white" stroke="#14b8a6" stroke-width="2"/>
+    <rect x="990" y="120" width="170" height="24" rx="8" fill="url(#videoGrad)"/>
+    <rect x="990" y="136" width="170" height="8" fill="url(#videoGrad)"/>
+    <text x="1075" y="138" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="white" text-anchor="middle">🎬 Video + Nike</text>
+  </g>
+  <g transform="translate(1000, 155)">
+    <text x="75" y="12" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Original fields preserved</text>
+    <rect x="5" y="18" width="140" height="30" rx="3" fill="#f0fdfa"/>
+    <text x="75" y="32" font-family="monospace" font-size="7" fill="#0d9488" text-anchor="middle">+ sku: NK-2024-RED</text>
+    <text x="75" y="44" font-family="monospace" font-size="7" fill="#0d9488" text-anchor="middle">+ category: Athletic</text>
+  </g>
+
+  <!-- Enriched Image -->
+  <g filter="url(#shadow)">
+    <rect x="990" y="220" width="170" height="85" rx="8" fill="white" stroke="#14b8a6" stroke-width="2"/>
+    <rect x="990" y="220" width="170" height="24" rx="8" fill="url(#imageGrad)"/>
+    <rect x="990" y="236" width="170" height="8" fill="url(#imageGrad)"/>
+    <text x="1075" y="238" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="white" text-anchor="middle">📷 Image + Adidas</text>
+  </g>
+  <g transform="translate(1000, 255)">
+    <text x="75" y="12" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Original fields preserved</text>
+    <rect x="5" y="18" width="140" height="30" rx="3" fill="#f0fdfa"/>
+    <text x="75" y="32" font-family="monospace" font-size="7" fill="#0d9488" text-anchor="middle">+ sku: AD-2024-BLK</text>
+    <text x="75" y="44" font-family="monospace" font-size="7" fill="#0d9488" text-anchor="middle">+ category: Running</text>
+  </g>
+
+  <!-- Enriched Audio -->
+  <g filter="url(#shadow)">
+    <rect x="990" y="320" width="170" height="85" rx="8" fill="white" stroke="#14b8a6" stroke-width="2"/>
+    <rect x="990" y="320" width="170" height="24" rx="8" fill="url(#audioGrad)"/>
+    <rect x="990" y="336" width="170" height="8" fill="url(#audioGrad)"/>
+    <text x="1075" y="338" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="white" text-anchor="middle">🎙 Audio + Nike</text>
+  </g>
+  <g transform="translate(1000, 355)">
+    <text x="75" y="12" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Original fields preserved</text>
+    <rect x="5" y="18" width="140" height="30" rx="3" fill="#f0fdfa"/>
+    <text x="75" y="32" font-family="monospace" font-size="7" fill="#0d9488" text-anchor="middle">+ sku: NK-2024-RED</text>
+    <text x="75" y="44" font-family="monospace" font-size="7" fill="#0d9488" text-anchor="middle">+ category: Athletic</text>
+  </g>
+
+  <!-- Enriched Upload -->
+  <g filter="url(#shadow)">
+    <rect x="990" y="420" width="170" height="85" rx="8" fill="white" stroke="#14b8a6" stroke-width="2"/>
+    <rect x="990" y="420" width="170" height="24" rx="8" fill="url(#uploadGrad)"/>
+    <rect x="990" y="436" width="170" height="8" fill="url(#uploadGrad)"/>
+    <text x="1075" y="438" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="white" text-anchor="middle">📤 Upload + New Balance</text>
+  </g>
+  <g transform="translate(1000, 455)">
+    <text x="75" y="12" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Original fields preserved</text>
+    <rect x="5" y="18" width="140" height="30" rx="3" fill="#f0fdfa"/>
+    <text x="75" y="32" font-family="monospace" font-size="7" fill="#0d9488" text-anchor="middle">+ sku: NB-2024-GRY</text>
+    <text x="75" y="44" font-family="monospace" font-size="7" fill="#0d9488" text-anchor="middle">+ category: Lifestyle</text>
+  </g>
+
+  <!-- Bottom: How it works -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="530" width="1120" height="100" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  </g>
+  <text x="600" y="560" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#475569" text-anchor="middle">How Taxonomy Matching Works</text>
+  
+  <g transform="translate(60, 580)">
+    <!-- Step 1 -->
+    <rect x="0" y="0" width="250" height="35" rx="6" fill="#fff7ed" stroke="#fed7aa" stroke-width="1"/>
+    <text x="125" y="14" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#c2410c" text-anchor="middle">1. Document enters pipeline</text>
+    <text x="125" y="28" font-family="system-ui, sans-serif" font-size="8" fill="#78350f" text-anchor="middle">With extracted feature embeddings</text>
+    
+    <text x="265" y="18" font-family="system-ui, sans-serif" font-size="14" fill="#94a3b8">→</text>
+    
+    <!-- Step 2 -->
+    <rect x="280" y="0" width="250" height="35" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+    <text x="405" y="14" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#92400e" text-anchor="middle">2. Retriever searches reference</text>
+    <text x="405" y="28" font-family="system-ui, sans-serif" font-size="8" fill="#78350f" text-anchor="middle">KNN + threshold filter + top_k</text>
+    
+    <text x="545" y="18" font-family="system-ui, sans-serif" font-size="14" fill="#94a3b8">→</text>
+    
+    <!-- Step 3 -->
+    <rect x="560" y="0" width="250" height="35" rx="6" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+    <text x="685" y="14" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#047857" text-anchor="middle">3. taxonomy_enrich applies fields</text>
+    <text x="685" y="28" font-family="system-ui, sans-serif" font-size="8" fill="#065f46" text-anchor="middle">Copies enrichment_fields from match</text>
+    
+    <text x="825" y="18" font-family="system-ui, sans-serif" font-size="14" fill="#94a3b8">→</text>
+    
+    <!-- Step 4 -->
+    <rect x="840" y="0" width="220" height="35" rx="6" fill="#f0fdfa" stroke="#14b8a6" stroke-width="1"/>
+    <text x="950" y="14" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#0d9488" text-anchor="middle">4. Enriched document output</text>
+    <text x="950" y="28" font-family="system-ui, sans-serif" font-size="8" fill="#115e59" text-anchor="middle">Original + taxonomy fields</text>
+  </g>
+
+  <!-- Legend -->
+  <g transform="translate(60, 660)">
+    <rect x="0" width="12" height="12" rx="2" fill="url(#retrieverGrad)"/>
+    <text x="18" y="11" font-family="system-ui, sans-serif" font-size="9" fill="#475569">Taxonomy Retriever</text>
+    
+    <rect x="140" width="12" height="12" rx="2" fill="url(#refGrad)"/>
+    <text x="158" y="11" font-family="system-ui, sans-serif" font-size="9" fill="#475569">Reference Collection</text>
+    
+    <rect x="290" width="12" height="12" rx="2" fill="url(#enrichGrad)"/>
+    <text x="308" y="11" font-family="system-ui, sans-serif" font-size="9" fill="#475569">Apply Stage (taxonomy_enrich)</text>
+    
+    <line x1="470" y1="6" x2="510" y2="6" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrowAmber)"/>
+    <text x="520" y="11" font-family="system-ui, sans-serif" font-size="9" fill="#475569">Retriever query</text>
+    
+    <line x1="620" y1="6" x2="660" y2="6" stroke="#14b8a6" stroke-width="2" marker-end="url(#arrowTeal)"/>
+    <text x="670" y="11" font-family="system-ui, sans-serif" font-size="9" fill="#475569">Enrichment flow</text>
+  </g>
+
+  <!-- Key insight callout -->
+  <g transform="translate(780, 660)">
+    <rect x="0" y="-8" width="370" height="30" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+    <text x="185" y="11" font-family="system-ui, sans-serif" font-size="9" fill="#92400e" text-anchor="middle">💡 Taxonomies are powered by retrievers — same stage-based pipeline</text>
+  </g>
+
+</svg>

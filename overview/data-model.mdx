@@ -21,15 +21,9 @@ Mixpeek's data model is built around a clear transformation pipeline: **Objects 
 
 ## Transformation Flow
 
-```mermaid
-graph LR
-  O[Object in Bucket] -->|Added to Batch| B[Batch]
-  B -->|Submit for Processing| E[Engine Extraction]
-  E -->|Feature Extractor| D[Document in Collection]
-  D -->|Vectors| Q[Qdrant Feature Store]
-  D -->|Metadata| M[MongoDB Payload]
-  D -->|Lineage| L[Object Reference]
-```
+<Frame>
+  <img src="/assets/mixpeek-flow.svg" alt="Mixpeek Transformation Flow" />
+</Frame>
 
 ### 1. Object Registration
 

@@ -1,0 +1,394 @@
+<svg viewBox="0 0 1200 900" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="docGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ea580c;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="extractGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4f46e5;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="chunkGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="embedGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="indexGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ec4899;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#db2777;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="queryGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
+    </marker>
+    <marker id="arrowTeal" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#14b8a6"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="900" fill="#f8fafc"/>
+  
+  <!-- Title -->
+  <text x="600" y="40" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="600" fill="#0f172a" text-anchor="middle">Document Intelligence Pipeline</text>
+  <text x="600" y="65" font-family="system-ui, sans-serif" font-size="13" fill="#64748b" text-anchor="middle">Extract, chunk, embed, and query PDFs, images, and scanned documents</text>
+
+  <!-- Stage Labels -->
+  <text x="100" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#94a3b8">1. INGEST</text>
+  <text x="280" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#94a3b8">2. EXTRACT</text>
+  <text x="500" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#94a3b8">3. CHUNK</text>
+  <text x="720" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#94a3b8">4. EMBED</text>
+  <text x="940" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#94a3b8">5. INDEX</text>
+
+  <!-- Stage 1: Source Document -->
+  <g filter="url(#shadow)">
+    <rect x="50" y="115" width="160" height="180" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="50" y="115" width="160" height="28" rx="10" fill="url(#docGrad)"/>
+    <rect x="50" y="133" width="160" height="10" fill="url(#docGrad)"/>
+    <text x="130" y="135" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">📄 Source Document</text>
+  </g>
+  
+  <!-- Document visual -->
+  <g transform="translate(70, 155)">
+    <rect x="0" y="0" width="120" height="130" rx="4" fill="#fff7ed" stroke="#fed7aa" stroke-width="1"/>
+    <rect x="10" y="10" width="100" height="8" rx="2" fill="#fdba74"/>
+    <rect x="10" y="24" width="80" height="4" rx="1" fill="#d6d3d1"/>
+    <rect x="10" y="32" width="90" height="4" rx="1" fill="#d6d3d1"/>
+    <rect x="10" y="40" width="70" height="4" rx="1" fill="#d6d3d1"/>
+    <!-- Table representation -->
+    <rect x="10" y="52" width="100" height="35" rx="2" fill="white" stroke="#e7e5e4" stroke-width="1"/>
+    <line x1="10" y1="62" x2="110" y2="62" stroke="#e7e5e4" stroke-width="1"/>
+    <line x1="10" y1="72" x2="110" y2="72" stroke="#e7e5e4" stroke-width="1"/>
+    <line x1="45" y1="52" x2="45" y2="87" stroke="#e7e5e4" stroke-width="1"/>
+    <line x1="80" y1="52" x2="80" y2="87" stroke="#e7e5e4" stroke-width="1"/>
+    <!-- More text -->
+    <rect x="10" y="95" width="85" height="4" rx="1" fill="#d6d3d1"/>
+    <rect x="10" y="103" width="95" height="4" rx="1" fill="#d6d3d1"/>
+    <rect x="10" y="111" width="60" height="4" rx="1" fill="#d6d3d1"/>
+    <text x="60" y="125" font-family="monospace" font-size="7" fill="#78716c" text-anchor="middle">vendor-001.pdf</text>
+  </g>
+
+  <!-- Arrow 1→2 -->
+  <path d="M 210 205 L 245 205" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Stage 2: Content Extraction -->
+  <g filter="url(#shadow)">
+    <rect x="255" y="115" width="180" height="180" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="255" y="115" width="180" height="28" rx="10" fill="url(#extractGrad)"/>
+    <rect x="255" y="133" width="180" height="10" fill="url(#extractGrad)"/>
+    <text x="345" y="135" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">🔍 Content Extraction</text>
+  </g>
+  
+  <g transform="translate(270, 155)">
+    <!-- Native PDF -->
+    <rect x="0" y="0" width="150" height="38" rx="6" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+    <text x="75" y="16" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#4338ca" text-anchor="middle">Native PDF</text>
+    <text x="75" y="30" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">Direct text extraction</text>
+    
+    <!-- OCR Fallback -->
+    <rect x="0" y="44" width="150" height="38" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+    <text x="75" y="60" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#92400e" text-anchor="middle">OCR Fallback</text>
+    <text x="75" y="74" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">Scanned pages detected</text>
+    
+    <!-- Layout Detection -->
+    <rect x="0" y="88" width="150" height="38" rx="6" fill="#f3e8ff" stroke="#d8b4fe" stroke-width="1"/>
+    <text x="75" y="104" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#7c3aed" text-anchor="middle">Layout Detection</text>
+    <text x="75" y="118" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">Headers, tables, figures</text>
+  </g>
+
+  <!-- Arrow 2→3 -->
+  <path d="M 435 205 L 470 205" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Stage 3: Hierarchical Chunking -->
+  <g filter="url(#shadow)">
+    <rect x="480" y="115" width="180" height="180" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="480" y="115" width="180" height="28" rx="10" fill="url(#chunkGrad)"/>
+    <rect x="480" y="133" width="180" height="10" fill="url(#chunkGrad)"/>
+    <text x="570" y="135" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">📑 Hierarchical Chunking</text>
+  </g>
+  
+  <!-- Chunk hierarchy visual -->
+  <g transform="translate(495, 155)">
+    <!-- Document level -->
+    <rect x="45" y="0" width="60" height="22" rx="4" fill="#ede9fe" stroke="#c4b5fd" stroke-width="1"/>
+    <text x="75" y="15" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#6d28d9" text-anchor="middle">Document</text>
+    
+    <!-- Lines down -->
+    <line x1="75" y1="22" x2="75" y2="30" stroke="#c4b5fd" stroke-width="1"/>
+    <line x1="30" y1="30" x2="120" y2="30" stroke="#c4b5fd" stroke-width="1"/>
+    <line x1="30" y1="30" x2="30" y2="38" stroke="#c4b5fd" stroke-width="1"/>
+    <line x1="75" y1="30" x2="75" y2="38" stroke="#c4b5fd" stroke-width="1"/>
+    <line x1="120" y1="30" x2="120" y2="38" stroke="#c4b5fd" stroke-width="1"/>
+    
+    <!-- Pages -->
+    <rect x="5" y="38" width="50" height="20" rx="3" fill="#f3e8ff" stroke="#d8b4fe" stroke-width="1"/>
+    <text x="30" y="52" font-family="system-ui, sans-serif" font-size="7" fill="#7c3aed" text-anchor="middle">Page 1</text>
+    
+    <rect x="50" y="38" width="50" height="20" rx="3" fill="#f3e8ff" stroke="#d8b4fe" stroke-width="1"/>
+    <text x="75" y="52" font-family="system-ui, sans-serif" font-size="7" fill="#7c3aed" text-anchor="middle">Page 2</text>
+    
+    <rect x="95" y="38" width="50" height="20" rx="3" fill="#f3e8ff" stroke="#d8b4fe" stroke-width="1"/>
+    <text x="120" y="52" font-family="system-ui, sans-serif" font-size="7" fill="#7c3aed" text-anchor="middle">Page 3</text>
+    
+    <!-- Sections under Page 1 -->
+    <line x1="30" y1="58" x2="30" y2="66" stroke="#d8b4fe" stroke-width="1"/>
+    <line x1="15" y1="66" x2="45" y2="66" stroke="#d8b4fe" stroke-width="1"/>
+    <line x1="15" y1="66" x2="15" y2="72" stroke="#d8b4fe" stroke-width="1"/>
+    <line x1="45" y1="66" x2="45" y2="72" stroke="#d8b4fe" stroke-width="1"/>
+    
+    <rect x="0" y="72" width="30" height="18" rx="2" fill="#fce7f3" stroke="#f9a8d4" stroke-width="1"/>
+    <text x="15" y="84" font-family="system-ui, sans-serif" font-size="6" fill="#db2777" text-anchor="middle">§ 1.1</text>
+    
+    <rect x="32" y="72" width="30" height="18" rx="2" fill="#fce7f3" stroke="#f9a8d4" stroke-width="1"/>
+    <text x="47" y="84" font-family="system-ui, sans-serif" font-size="6" fill="#db2777" text-anchor="middle">§ 1.2</text>
+    
+    <!-- Paragraphs under section -->
+    <line x1="15" y1="90" x2="15" y2="96" stroke="#f9a8d4" stroke-width="1"/>
+    <rect x="0" y="96" width="30" height="14" rx="2" fill="#fdf2f8" stroke="#fbcfe8" stroke-width="1"/>
+    <text x="15" y="106" font-family="system-ui, sans-serif" font-size="5" fill="#be185d" text-anchor="middle">¶ chunk</text>
+    
+    <!-- Strategy label -->
+    <rect x="70" y="95" width="80" height="30" rx="4" fill="#f1f5f9"/>
+    <text x="110" y="108" font-family="system-ui, sans-serif" font-size="7" font-weight="600" fill="#475569" text-anchor="middle">Strategies:</text>
+    <text x="110" y="120" font-family="monospace" font-size="6" fill="#64748b" text-anchor="middle">page | section | para</text>
+  </g>
+
+  <!-- Arrow 3→4 -->
+  <path d="M 660 205 L 695 205" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Stage 4: Multi-Vector Embeddings -->
+  <g filter="url(#shadow)">
+    <rect x="705" y="115" width="180" height="180" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="705" y="115" width="180" height="28" rx="10" fill="url(#embedGrad)"/>
+    <rect x="705" y="133" width="180" height="10" fill="url(#embedGrad)"/>
+    <text x="795" y="135" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">🧠 Multi-Vector Embeddings</text>
+  </g>
+  
+  <g transform="translate(720, 155)">
+    <!-- Title embedding -->
+    <rect x="0" y="0" width="150" height="36" rx="6" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+    <text x="12" y="14" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#047857">📌 Title Embedding</text>
+    <text x="75" y="28" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">[0.23, -0.41, 0.87, ...] 1024d</text>
+    
+    <!-- Summary embedding -->
+    <rect x="0" y="42" width="150" height="36" rx="6" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+    <text x="12" y="56" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#047857">📝 Summary Embedding</text>
+    <text x="75" y="70" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">[0.19, -0.38, 0.91, ...] 1024d</text>
+    
+    <!-- Full text embedding -->
+    <rect x="0" y="84" width="150" height="36" rx="6" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+    <text x="12" y="98" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#047857">📄 Full Text Embedding</text>
+    <text x="75" y="112" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">[0.45, -0.22, 0.78, ...] 1024d</text>
+  </g>
+
+  <!-- Arrow 4→5 -->
+  <path d="M 885 205 L 920 205" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Stage 5: Multi-Collection Index -->
+  <g filter="url(#shadow)">
+    <rect x="930" y="115" width="220" height="180" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="930" y="115" width="220" height="28" rx="10" fill="url(#indexGrad)"/>
+    <rect x="930" y="133" width="220" height="10" fill="url(#indexGrad)"/>
+    <text x="1040" y="135" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">🗂 Multi-Collection Index</text>
+  </g>
+  
+  <g transform="translate(945, 155)">
+    <!-- Text collection -->
+    <rect x="0" y="0" width="90" height="55" rx="5" fill="#fce7f3" stroke="#f9a8d4" stroke-width="1"/>
+    <text x="45" y="14" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#db2777" text-anchor="middle">📝 Text</text>
+    <text x="45" y="28" font-family="monospace" font-size="6" fill="#475569" text-anchor="middle">contracts-text</text>
+    <text x="45" y="42" font-family="system-ui, sans-serif" font-size="6" fill="#64748b" text-anchor="middle">chunks + embeddings</text>
+    
+    <!-- Tables collection -->
+    <rect x="100" y="0" width="90" height="55" rx="5" fill="#fce7f3" stroke="#f9a8d4" stroke-width="1"/>
+    <text x="145" y="14" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#db2777" text-anchor="middle">📊 Tables</text>
+    <text x="145" y="28" font-family="monospace" font-size="6" fill="#475569" text-anchor="middle">contracts-tables</text>
+    <text x="145" y="42" font-family="system-ui, sans-serif" font-size="6" fill="#64748b" text-anchor="middle">cells + structure</text>
+    
+    <!-- Entities collection -->
+    <rect x="0" y="62" width="90" height="55" rx="5" fill="#fce7f3" stroke="#f9a8d4" stroke-width="1"/>
+    <text x="45" y="76" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#db2777" text-anchor="middle">🏷 Entities</text>
+    <text x="45" y="90" font-family="monospace" font-size="6" fill="#475569" text-anchor="middle">NER results</text>
+    <text x="45" y="104" font-family="system-ui, sans-serif" font-size="6" fill="#64748b" text-anchor="middle">PERSON, ORG, DATE</text>
+    
+    <!-- Metadata -->
+    <rect x="100" y="62" width="90" height="55" rx="5" fill="#fce7f3" stroke="#f9a8d4" stroke-width="1"/>
+    <text x="145" y="76" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#db2777" text-anchor="middle">📋 Metadata</text>
+    <text x="145" y="90" font-family="monospace" font-size="6" fill="#475569" text-anchor="middle">passthrough</text>
+    <text x="145" y="104" font-family="system-ui, sans-serif" font-size="6" fill="#64748b" text-anchor="middle">doc_type, date</text>
+  </g>
+
+  <!-- Query Time Section -->
+  <text x="600" y="340" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#475569" text-anchor="middle">Query-Time: Cross-Collection Search &amp; Reassembly</text>
+  
+  <g filter="url(#shadow)">
+    <rect x="100" y="360" width="1000" height="230" rx="12" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  </g>
+
+  <!-- Query Input -->
+  <g transform="translate(120, 380)">
+    <rect x="0" y="0" width="180" height="90" rx="8" fill="url(#queryGrad)"/>
+    <text x="90" y="20" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">🔍 Query</text>
+    <rect x="10" y="30" width="160" height="50" rx="4" fill="white" fill-opacity="0.9"/>
+    <text x="90" y="48" font-family="system-ui, sans-serif" font-size="8" fill="#0f172a" text-anchor="middle">"termination clauses</text>
+    <text x="90" y="60" font-family="system-ui, sans-serif" font-size="8" fill="#0f172a" text-anchor="middle">with 30-day notice"</text>
+    <text x="90" y="74" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">doc_type: vendor_agreement</text>
+  </g>
+
+  <!-- Arrow to retriever -->
+  <path d="M 300 425 L 340 425" stroke="#14b8a6" stroke-width="2" fill="none" marker-end="url(#arrowTeal)"/>
+
+  <!-- Retriever Stages -->
+  <g transform="translate(350, 380)">
+    <rect x="0" y="0" width="280" height="130" rx="8" fill="#f0fdfa" stroke="#14b8a6" stroke-width="2"/>
+    <text x="140" y="20" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#0d9488" text-anchor="middle">⚙️ Retriever: contract-search</text>
+    
+    <!-- Stage 1: Filter -->
+    <rect x="15" y="35" width="120" height="40" rx="5" fill="#ccfbf1" stroke="#5eead4" stroke-width="1"/>
+    <text x="75" y="52" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#0f766e" text-anchor="middle">Stage 1: Filter</text>
+    <text x="75" y="66" font-family="monospace" font-size="6" fill="#475569" text-anchor="middle">doc_type = "vendor..."</text>
+    
+    <!-- Stage 2: KNN -->
+    <rect x="145" y="35" width="120" height="40" rx="5" fill="#ccfbf1" stroke="#5eead4" stroke-width="1"/>
+    <text x="205" y="52" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#0f766e" text-anchor="middle">Stage 2: KNN</text>
+    <text x="205" y="66" font-family="monospace" font-size="6" fill="#475569" text-anchor="middle">text_embedding k=50</text>
+    
+    <!-- Collections searched -->
+    <text x="140" y="95" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Searches across:</text>
+    <rect x="30" y="102" width="90" height="18" rx="3" fill="#fce7f3"/>
+    <text x="75" y="114" font-family="monospace" font-size="7" fill="#db2777" text-anchor="middle">contracts-text</text>
+    <rect x="130" y="102" width="90" height="18" rx="3" fill="#fce7f3"/>
+    <text x="175" y="114" font-family="monospace" font-size="7" fill="#db2777" text-anchor="middle">contracts-tables</text>
+  </g>
+
+  <!-- Arrow to results -->
+  <path d="M 630 445 L 670 445" stroke="#14b8a6" stroke-width="2" fill="none" marker-end="url(#arrowTeal)"/>
+
+  <!-- Matched Chunks -->
+  <g transform="translate(680, 380)">
+    <rect x="0" y="0" width="180" height="130" rx="8" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+    <text x="90" y="20" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#475569" text-anchor="middle">📄 Matched Chunks</text>
+    
+    <!-- Chunk 1 -->
+    <rect x="10" y="32" width="160" height="28" rx="4" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="20" y="44" font-family="system-ui, sans-serif" font-size="7" fill="#0f172a">§ 4.2 Termination</text>
+    <text x="20" y="54" font-family="monospace" font-size="6" fill="#64748b">score: 0.94 • page 3</text>
+    
+    <!-- Chunk 2 -->
+    <rect x="10" y="64" width="160" height="28" rx="4" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="20" y="76" font-family="system-ui, sans-serif" font-size="7" fill="#0f172a">§ 4.3 Notice Period</text>
+    <text x="20" y="86" font-family="monospace" font-size="6" fill="#64748b">score: 0.91 • page 3</text>
+    
+    <!-- Chunk 3 -->
+    <rect x="10" y="96" width="160" height="28" rx="4" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="20" y="108" font-family="system-ui, sans-serif" font-size="7" fill="#0f172a">Table: Payment Terms</text>
+    <text x="20" y="118" font-family="monospace" font-size="6" fill="#64748b">score: 0.87 • page 5</text>
+  </g>
+
+  <!-- Arrow to reassembly -->
+  <path d="M 860 445 L 900 445" stroke="#14b8a6" stroke-width="2" fill="none" marker-end="url(#arrowTeal)"/>
+
+  <!-- Reassembly with Lineage -->
+  <g transform="translate(910, 380)">
+    <rect x="0" y="0" width="170" height="130" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+    <text x="85" y="20" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#059669" text-anchor="middle">🔗 Lineage Join</text>
+    
+    <rect x="10" y="32" width="150" height="88" rx="4" fill="white"/>
+    <text x="85" y="48" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#0f172a" text-anchor="middle">vendor-001.pdf</text>
+    <line x1="20" y1="54" x2="150" y2="54" stroke="#e2e8f0" stroke-width="1"/>
+    
+    <text x="20" y="68" font-family="system-ui, sans-serif" font-size="7" fill="#475569">Matched sections:</text>
+    <text x="30" y="80" font-family="monospace" font-size="6" fill="#0d9488">• § 4.2, § 4.3 (text)</text>
+    <text x="30" y="90" font-family="monospace" font-size="6" fill="#0d9488">• Payment table (tables)</text>
+    
+    <text x="20" y="104" font-family="system-ui, sans-serif" font-size="7" fill="#475569">Entities found:</text>
+    <text x="30" y="114" font-family="monospace" font-size="6" fill="#0d9488">• "30 days" (DATE)</text>
+  </g>
+
+  <!-- Feature Extractors Reference -->
+  <g filter="url(#shadow)">
+    <rect x="100" y="610" width="500" height="130" rx="10" fill="#1e293b"/>
+    <text x="350" y="638" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="white" text-anchor="middle">Feature Extractors</text>
+    <line x1="100" y1="650" x2="600" y2="650" stroke="#334155" stroke-width="1"/>
+  </g>
+  
+  <g transform="translate(120, 665)">
+    <rect x="0" y="0" width="110" height="55" rx="6" fill="#374151"/>
+    <text x="55" y="18" font-family="monospace" font-size="8" fill="#7dd3fc" text-anchor="middle">pdf_extractor</text>
+    <text x="55" y="32" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">Native PDF text</text>
+    <text x="55" y="44" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">Page chunking</text>
+    
+    <rect x="120" y="0" width="110" height="55" rx="6" fill="#374151"/>
+    <text x="175" y="18" font-family="monospace" font-size="8" fill="#7dd3fc" text-anchor="middle">document_extractor</text>
+    <text x="175" y="32" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">OCR for scans</text>
+    <text x="175" y="44" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">Layout detection</text>
+    
+    <rect x="240" y="0" width="110" height="55" rx="6" fill="#374151"/>
+    <text x="295" y="18" font-family="monospace" font-size="8" fill="#7dd3fc" text-anchor="middle">table_extractor</text>
+    <text x="295" y="32" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">Table detection</text>
+    <text x="295" y="44" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">Cell extraction</text>
+    
+    <rect x="360" y="0" width="110" height="55" rx="6" fill="#374151"/>
+    <text x="415" y="18" font-family="monospace" font-size="8" fill="#7dd3fc" text-anchor="middle">text_extractor</text>
+    <text x="415" y="32" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">Embeddings, NER</text>
+    <text x="415" y="44" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">Summarization</text>
+  </g>
+
+  <!-- NER Entities Panel -->
+  <g filter="url(#shadow)">
+    <rect x="620" y="610" width="230" height="130" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="620" y="610" width="230" height="28" rx="10" fill="#6366f1"/>
+    <rect x="620" y="628" width="230" height="10" fill="#6366f1"/>
+    <text x="735" y="630" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">🏷 Named Entity Recognition</text>
+  </g>
+  
+  <g transform="translate(635, 650)">
+    <rect x="0" y="0" width="95" height="22" rx="4" fill="#dbeafe"/>
+    <text x="47" y="15" font-family="monospace" font-size="8" fill="#1d4ed8" text-anchor="middle">PERSON</text>
+    
+    <rect x="105" y="0" width="95" height="22" rx="4" fill="#fce7f3"/>
+    <text x="152" y="15" font-family="monospace" font-size="8" fill="#db2777" text-anchor="middle">ORG</text>
+    
+    <rect x="0" y="28" width="95" height="22" rx="4" fill="#d1fae5"/>
+    <text x="47" y="43" font-family="monospace" font-size="8" fill="#059669" text-anchor="middle">DATE</text>
+    
+    <rect x="105" y="28" width="95" height="22" rx="4" fill="#fef3c7"/>
+    <text x="152" y="43" font-family="monospace" font-size="8" fill="#92400e" text-anchor="middle">MONEY</text>
+    
+    <text x="100" y="70" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Filter by entity in retriever stages</text>
+  </g>
+
+  <!-- Lineage API -->
+  <g filter="url(#shadow)">
+    <rect x="870" y="610" width="230" height="130" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="870" y="610" width="230" height="28" rx="10" fill="#14b8a6"/>
+    <rect x="870" y="628" width="230" height="10" fill="#14b8a6"/>
+    <text x="985" y="630" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">🔗 Document Lineage</text>
+  </g>
+  
+  <g transform="translate(885, 650)">
+    <rect x="0" y="0" width="200" height="35" rx="4" fill="#f0fdfa"/>
+    <text x="100" y="14" font-family="monospace" font-size="8" fill="#0d9488" text-anchor="middle">GET /documents/{id}/lineage</text>
+    <text x="100" y="28" font-family="system-ui, sans-serif" font-size="7" fill="#475569" text-anchor="middle">Retrieve all pages from a document</text>
+    
+    <text x="100" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Returns parent-child relationships:</text>
+    <text x="100" y="66" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">doc → pages → sections → chunks</text>
+  </g>
+
+  <!-- Workflow Summary -->
+  <g transform="translate(100, 760)">
+    <rect x="0" y="0" width="1000" height="50" rx="8" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="500" y="20" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#475569" text-anchor="middle">Complete Workflow</text>
+    <text x="500" y="38" font-family="system-ui, sans-serif" font-size="9" fill="#64748b" text-anchor="middle">Bucket (contracts) → Collections (text, tables, entities) → Retriever (cross-collection search) → Results (with lineage joins)</text>
+  </g>
+
+</svg>

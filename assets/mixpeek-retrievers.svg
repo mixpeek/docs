@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1200 950" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="inputGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ea580c;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="filterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4f46e5;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="sortGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="reduceGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ec4899;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#db2777;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="applyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="outputGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="6"/>
+      <feOffset dx="0" dy="4" result="offsetblur"/>
+      <feFlood flood-color="#000000" flood-opacity="0.15"/>
+      <feComposite in2="offsetblur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
+    </marker>
+    <marker id="arrowTeal" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#14b8a6"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="950" fill="#f8fafc"/>
+  
+  <!-- Title -->
+  <text x="600" y="40" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="600" fill="#0f172a" text-anchor="middle">Retrievers: Stage-Based Search Pipelines</text>
+  <text x="600" y="65" font-family="system-ui, sans-serif" font-size="13" fill="#64748b" text-anchor="middle">Compose filter, sort, reduce, and apply stages into executable search workflows</text>
+
+  <!-- Pipeline Flow -->
+  <g filter="url(#shadow)">
+    <rect x="50" y="90" width="1100" height="200" rx="12" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  </g>
+  <text x="600" y="115" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#475569" text-anchor="middle">Execution Pipeline</text>
+
+  <!-- Stage 1: Input -->
+  <g transform="translate(70, 135)">
+    <rect x="0" y="0" width="130" height="130" rx="8" fill="url(#inputGrad)"/>
+    <text x="65" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Input</text>
+    
+    <rect x="8" y="32" width="114" height="88" rx="5" fill="white" fill-opacity="0.95"/>
+    <text x="65" y="48" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#0f172a" text-anchor="middle">input_schema</text>
+    <text x="15" y="64" font-family="monospace" font-size="7" fill="#475569">query_text: "wireless"</text>
+    <text x="15" y="78" font-family="monospace" font-size="7" fill="#475569">max_price: 150</text>
+    <text x="15" y="92" font-family="monospace" font-size="7" fill="#475569">category: "audio"</text>
+    <rect x="15" y="100" width="99" height="14" rx="2" fill="#fff7ed"/>
+    <text x="65" y="110" font-family="system-ui, sans-serif" font-size="7" fill="#c2410c" text-anchor="middle">Validated</text>
+  </g>
+
+  <!-- Arrow -->
+  <path d="M 200 200 L 230 200" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Stage 2: Filter -->
+  <g transform="translate(240, 135)">
+    <rect x="0" y="0" width="180" height="130" rx="8" fill="url(#filterGrad)"/>
+    <text x="90" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Filter Stages</text>
+    
+    <rect x="8" y="32" width="164" height="88" rx="5" fill="white" fill-opacity="0.95"/>
+    <text x="90" y="48" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#4338ca" text-anchor="middle">Reduce document set</text>
+    
+    <rect x="15" y="55" width="72" height="28" rx="3" fill="#eef2ff"/>
+    <text x="51" y="68" font-family="monospace" font-size="6" fill="#4338ca" text-anchor="middle">feature_search</text>
+    <text x="51" y="78" font-family="system-ui, sans-serif" font-size="6" fill="#64748b" text-anchor="middle">vector sim</text>
+    
+    <rect x="93" y="55" width="72" height="28" rx="3" fill="#eef2ff"/>
+    <text x="129" y="68" font-family="monospace" font-size="6" fill="#4338ca" text-anchor="middle">hybrid_search</text>
+    <text x="129" y="78" font-family="system-ui, sans-serif" font-size="6" fill="#64748b" text-anchor="middle">dense+sparse</text>
+    
+    <rect x="15" y="87" width="72" height="28" rx="3" fill="#eef2ff"/>
+    <text x="51" y="100" font-family="monospace" font-size="6" fill="#4338ca" text-anchor="middle">attribute_filter</text>
+    <text x="51" y="110" font-family="system-ui, sans-serif" font-size="6" fill="#64748b" text-anchor="middle">AND/OR/NOT</text>
+    
+    <rect x="93" y="87" width="72" height="28" rx="3" fill="#eef2ff"/>
+    <text x="129" y="100" font-family="monospace" font-size="6" fill="#4338ca" text-anchor="middle">llm_filter</text>
+    <text x="129" y="110" font-family="system-ui, sans-serif" font-size="6" fill="#64748b" text-anchor="middle">LLM screen</text>
+  </g>
+
+  <!-- Arrow -->
+  <path d="M 420 200 L 450 200" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Stage 3: Sort -->
+  <g transform="translate(460, 135)">
+    <rect x="0" y="0" width="150" height="130" rx="8" fill="url(#sortGrad)"/>
+    <text x="75" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Sort Stages</text>
+    
+    <rect x="8" y="32" width="134" height="88" rx="5" fill="white" fill-opacity="0.95"/>
+    <text x="75" y="48" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#7c3aed" text-anchor="middle">Reorder documents</text>
+    
+    <rect x="15" y="55" width="114" height="22" rx="3" fill="#f3e8ff"/>
+    <text x="72" y="70" font-family="monospace" font-size="7" fill="#7c3aed" text-anchor="middle">sort_attribute</text>
+    
+    <rect x="15" y="80" width="114" height="22" rx="3" fill="#f3e8ff"/>
+    <text x="72" y="95" font-family="monospace" font-size="7" fill="#7c3aed" text-anchor="middle">rerank (bge-v2-m3)</text>
+  </g>
+
+  <!-- Arrow -->
+  <path d="M 610 200 L 640 200" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Stage 4: Reduce -->
+  <g transform="translate(650, 135)">
+    <rect x="0" y="0" width="130" height="130" rx="8" fill="url(#reduceGrad)"/>
+    <text x="65" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Reduce</text>
+    
+    <rect x="8" y="32" width="114" height="88" rx="5" fill="white" fill-opacity="0.95"/>
+    <text x="65" y="48" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#db2777" text-anchor="middle">Aggregate set</text>
+    
+    <rect x="15" y="55" width="94" height="22" rx="3" fill="#fce7f3"/>
+    <text x="62" y="70" font-family="monospace" font-size="7" fill="#db2777" text-anchor="middle">top_k</text>
+    
+    <rect x="15" y="80" width="94" height="22" rx="3" fill="#fce7f3"/>
+    <text x="62" y="95" font-family="monospace" font-size="7" fill="#db2777" text-anchor="middle">deduplicate</text>
+  </g>
+
+  <!-- Arrow -->
+  <path d="M 780 200 L 810 200" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Stage 5: Apply -->
+  <g transform="translate(820, 135)">
+    <rect x="0" y="0" width="180" height="130" rx="8" fill="url(#applyGrad)"/>
+    <text x="90" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Apply Stages</text>
+    
+    <rect x="8" y="32" width="164" height="88" rx="5" fill="white" fill-opacity="0.95"/>
+    <text x="90" y="48" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#059669" text-anchor="middle">Enrich 1:1 transform</text>
+    
+    <rect x="15" y="55" width="72" height="28" rx="3" fill="#d1fae5"/>
+    <text x="51" y="68" font-family="monospace" font-size="6" fill="#047857" text-anchor="middle">document_enrich</text>
+    <text x="51" y="78" font-family="system-ui, sans-serif" font-size="6" fill="#64748b" text-anchor="middle">JOIN data</text>
+    
+    <rect x="93" y="55" width="72" height="28" rx="3" fill="#d1fae5"/>
+    <text x="129" y="68" font-family="monospace" font-size="6" fill="#047857" text-anchor="middle">taxonomy_enrich</text>
+    <text x="129" y="78" font-family="system-ui, sans-serif" font-size="6" fill="#64748b" text-anchor="middle">classify</text>
+    
+    <rect x="15" y="87" width="72" height="28" rx="3" fill="#d1fae5"/>
+    <text x="51" y="100" font-family="monospace" font-size="6" fill="#047857" text-anchor="middle">api_call</text>
+    <text x="51" y="110" font-family="system-ui, sans-serif" font-size="6" fill="#64748b" text-anchor="middle">external API</text>
+    
+    <rect x="93" y="87" width="72" height="28" rx="3" fill="#d1fae5"/>
+    <text x="129" y="100" font-family="monospace" font-size="6" fill="#047857" text-anchor="middle">llm_enrich</text>
+    <text x="129" y="110" font-family="system-ui, sans-serif" font-size="6" fill="#64748b" text-anchor="middle">generate</text>
+  </g>
+
+  <!-- Arrow -->
+  <path d="M 1000 200 L 1030 200" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Stage 6: Output -->
+  <g transform="translate(1040, 135)">
+    <rect x="0" y="0" width="90" height="130" rx="8" fill="url(#outputGrad)"/>
+    <text x="45" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Output</text>
+    
+    <rect x="8" y="32" width="74" height="88" rx="5" fill="white" fill-opacity="0.95"/>
+    <text x="45" y="50" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#0d9488" text-anchor="middle">Results</text>
+    <text x="45" y="68" font-family="monospace" font-size="6" fill="#475569" text-anchor="middle">documents[]</text>
+    <text x="45" y="82" font-family="monospace" font-size="6" fill="#475569" text-anchor="middle">stage_stats</text>
+    <text x="45" y="96" font-family="monospace" font-size="6" fill="#475569" text-anchor="middle">budget</text>
+    <text x="45" y="110" font-family="monospace" font-size="6" fill="#475569" text-anchor="middle">telemetry</text>
+  </g>
+
+  <!-- Stage Categories Legend -->
+  <g filter="url(#shadow)">
+    <rect x="50" y="310" width="1100" height="95" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  </g>
+  <text x="600" y="335" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#475569" text-anchor="middle">Stage Categories</text>
+  
+  <g transform="translate(80, 350)">
+    <!-- Filter -->
+    <rect x="0" y="0" width="240" height="40" rx="6" fill="#eef2ff" stroke="#6366f1" stroke-width="2"/>
+    <rect x="8" y="8" width="24" height="24" rx="4" fill="#6366f1"/>
+    <text x="20" y="25" font-family="system-ui, sans-serif" font-size="12" fill="white" text-anchor="middle">F</text>
+    <text x="45" y="18" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#4338ca">Filter</text>
+    <text x="45" y="32" font-family="system-ui, sans-serif" font-size="8" fill="#475569">Reduce docs, preserve schema</text>
+    
+    <!-- Sort -->
+    <rect x="260" y="0" width="240" height="40" rx="6" fill="#f3e8ff" stroke="#8b5cf6" stroke-width="2"/>
+    <rect x="268" y="8" width="24" height="24" rx="4" fill="#8b5cf6"/>
+    <text x="280" y="25" font-family="system-ui, sans-serif" font-size="12" fill="white" text-anchor="middle">S</text>
+    <text x="305" y="18" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#7c3aed">Sort</text>
+    <text x="305" y="32" font-family="system-ui, sans-serif" font-size="8" fill="#475569">Reorder without changing set</text>
+    
+    <!-- Reduce -->
+    <rect x="520" y="0" width="240" height="40" rx="6" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/>
+    <rect x="528" y="8" width="24" height="24" rx="4" fill="#ec4899"/>
+    <text x="540" y="25" font-family="system-ui, sans-serif" font-size="12" fill="white" text-anchor="middle">R</text>
+    <text x="565" y="18" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#db2777">Reduce</text>
+    <text x="565" y="32" font-family="system-ui, sans-serif" font-size="8" fill="#475569">Aggregate to smaller set</text>
+    
+    <!-- Apply -->
+    <rect x="780" y="0" width="240" height="40" rx="6" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+    <rect x="788" y="8" width="24" height="24" rx="4" fill="#10b981"/>
+    <text x="800" y="25" font-family="system-ui, sans-serif" font-size="12" fill="white" text-anchor="middle">A</text>
+    <text x="825" y="18" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#059669">Apply</text>
+    <text x="825" y="32" font-family="system-ui, sans-serif" font-size="8" fill="#475569">Enrich/transform 1:1</text>
+  </g>
+
+  <!-- Template Namespaces -->
+  <g filter="url(#shadow)">
+    <rect x="50" y="420" width="530" height="200" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="50" y="420" width="530" height="28" rx="10" fill="#1e293b"/>
+    <rect x="50" y="438" width="530" height="10" fill="#1e293b"/>
+    <text x="315" y="440" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Template Namespaces (Jinja2)</text>
+  </g>
+  
+  <g transform="translate(65, 460)">
+    <!-- INPUT -->
+    <rect x="0" y="0" width="240" height="70" rx="6" fill="#fff7ed" stroke="#fed7aa" stroke-width="1"/>
+    <text x="120" y="18" font-family="monospace" font-size="9" font-weight="600" fill="#c2410c" text-anchor="middle">INPUT / inputs</text>
+    <text x="120" y="34" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">User-provided query parameters</text>
+    <rect x="10" y="42" width="220" height="20" rx="3" fill="white"/>
+    <text x="120" y="56" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">{{INPUT.query_text}} {{inputs.max_price}}</text>
+    
+    <!-- DOC -->
+    <rect x="250" y="0" width="240" height="70" rx="6" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+    <text x="370" y="18" font-family="monospace" font-size="9" font-weight="600" fill="#4338ca" text-anchor="middle">DOC / doc</text>
+    <text x="370" y="34" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Current document fields</text>
+    <rect x="260" y="42" width="220" height="20" rx="3" fill="white"/>
+    <text x="370" y="56" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">{{DOC.metadata.category}} {{doc.content_type}}</text>
+    
+    <!-- CONTEXT -->
+    <rect x="0" y="78" width="240" height="70" rx="6" fill="#f3e8ff" stroke="#d8b4fe" stroke-width="1"/>
+    <text x="120" y="96" font-family="monospace" font-size="9" font-weight="600" fill="#7c3aed" text-anchor="middle">CONTEXT / context</text>
+    <text x="120" y="112" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Execution state and budget</text>
+    <rect x="10" y="120" width="220" height="20" rx="3" fill="white"/>
+    <text x="120" y="134" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">{{CONTEXT.budget_remaining}} {{context.time_ms}}</text>
+    
+    <!-- STAGE -->
+    <rect x="250" y="78" width="240" height="70" rx="6" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+    <text x="370" y="96" font-family="monospace" font-size="9" font-weight="600" fill="#047857" text-anchor="middle">STAGE / stage</text>
+    <text x="370" y="112" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Previous stage outputs</text>
+    <rect x="260" y="120" width="220" height="20" rx="3" fill="white"/>
+    <text x="370" y="134" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">{{STAGE.search.top_score}} {{stage.filter.count}}</text>
+  </g>
+
+  <!-- Caching -->
+  <g filter="url(#shadow)">
+    <rect x="600" y="420" width="270" height="200" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="600" y="420" width="270" height="28" rx="10" fill="#6366f1"/>
+    <rect x="600" y="438" width="270" height="10" fill="#6366f1"/>
+    <text x="735" y="440" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Caching Layers</text>
+  </g>
+  
+  <g transform="translate(615, 460)">
+    <rect x="0" y="0" width="240" height="45" rx="5" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+    <text x="120" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#4338ca" text-anchor="middle">Query Cache</text>
+    <text x="120" y="34" font-family="system-ui, sans-serif" font-size="7" fill="#475569" text-anchor="middle">Full response keyed by inputs + index signatures</text>
+    
+    <rect x="0" y="52" width="240" height="45" rx="5" fill="#f3e8ff" stroke="#d8b4fe" stroke-width="1"/>
+    <text x="120" y="70" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#7c3aed" text-anchor="middle">Stage Cache</text>
+    <text x="120" y="86" font-family="system-ui, sans-serif" font-size="7" fill="#475569" text-anchor="middle">Reuse expensive stage outputs (cache_stage_names)</text>
+    
+    <rect x="0" y="104" width="240" height="45" rx="5" fill="#d1fae5" stroke="#6ee7b7" stroke-width="1"/>
+    <text x="120" y="122" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#047857" text-anchor="middle">Inference Cache</text>
+    <text x="120" y="138" font-family="system-ui, sans-serif" font-size="7" fill="#475569" text-anchor="middle">Deduplicate identical model calls</text>
+  </g>
+
+  <!-- Pagination -->
+  <g filter="url(#shadow)">
+    <rect x="890" y="420" width="260" height="200" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="890" y="420" width="260" height="28" rx="10" fill="#14b8a6"/>
+    <rect x="890" y="438" width="260" height="10" fill="#14b8a6"/>
+    <text x="1020" y="440" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Pagination Methods</text>
+  </g>
+  
+  <g transform="translate(905, 460)">
+    <rect x="0" y="0" width="110" height="35" rx="4" fill="#f0fdfa" stroke="#5eead4" stroke-width="1"/>
+    <text x="55" y="15" font-family="monospace" font-size="8" font-weight="600" fill="#0d9488" text-anchor="middle">offset</text>
+    <text x="55" y="28" font-family="system-ui, sans-serif" font-size="7" fill="#475569" text-anchor="middle">Simple paging</text>
+    
+    <rect x="120" y="0" width="110" height="35" rx="4" fill="#f0fdfa" stroke="#5eead4" stroke-width="1"/>
+    <text x="175" y="15" font-family="monospace" font-size="8" font-weight="600" fill="#0d9488" text-anchor="middle">cursor</text>
+    <text x="175" y="28" font-family="system-ui, sans-serif" font-size="7" fill="#475569" text-anchor="middle">Stable iteration</text>
+    
+    <rect x="0" y="42" width="110" height="35" rx="4" fill="#f0fdfa" stroke="#5eead4" stroke-width="1"/>
+    <text x="55" y="57" font-family="monospace" font-size="8" font-weight="600" fill="#0d9488" text-anchor="middle">scroll</text>
+    <text x="55" y="70" font-family="system-ui, sans-serif" font-size="7" fill="#475569" text-anchor="middle">Deep pagination</text>
+    
+    <rect x="120" y="42" width="110" height="35" rx="4" fill="#f0fdfa" stroke="#5eead4" stroke-width="1"/>
+    <text x="175" y="57" font-family="monospace" font-size="8" font-weight="600" fill="#0d9488" text-anchor="middle">keyset</text>
+    <text x="175" y="70" font-family="system-ui, sans-serif" font-size="7" fill="#475569" text-anchor="middle">High-perf browse</text>
+    
+    <!-- Response headers -->
+    <rect x="0" y="88" width="230" height="55" rx="5" fill="#f1f5f9"/>
+    <text x="115" y="106" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#475569" text-anchor="middle">Response Headers</text>
+    <text x="115" y="120" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">ETag | Cache-Control | X-Cache</text>
+    <text x="115" y="134" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">304 support via If-None-Match</text>
+  </g>
+
+  <!-- Example Pipeline -->
+  <g filter="url(#shadow)">
+    <rect x="50" y="640" width="700" height="180" rx="10" fill="#1e293b"/>
+    <text x="400" y="668" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="white" text-anchor="middle">Example: product_search_v2</text>
+    <line x1="50" y1="680" x2="750" y2="680" stroke="#334155" stroke-width="1"/>
+  </g>
+  
+  <g transform="translate(70, 695)">
+    <!-- Stage 1 -->
+    <rect x="0" y="0" width="155" height="105" rx="6" fill="#374151"/>
+    <rect x="8" y="8" width="139" height="20" rx="3" fill="#6366f1"/>
+    <text x="77" y="22" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="white" text-anchor="middle">1. feature_search</text>
+    <text x="15" y="42" font-family="monospace" font-size="7" fill="#7dd3fc">feature_uri:</text>
+    <text x="15" y="54" font-family="monospace" font-size="6" fill="#fcd34d">  "urn:embedding:text:e5"</text>
+    <text x="15" y="68" font-family="monospace" font-size="7" fill="#7dd3fc">input.text:</text>
+    <text x="15" y="80" font-family="monospace" font-size="6" fill="#fcd34d">  "{{INPUT.query_text}}"</text>
+    <text x="15" y="94" font-family="monospace" font-size="7" fill="#7dd3fc">limit: <tspan fill="#c084fc">200</tspan></text>
+    
+    <!-- Arrow -->
+    <path d="M 160 52 L 175 52 M 170 47 L 175 52 L 170 57" stroke="#94a3b8" stroke-width="2" fill="none"/>
+    
+    <!-- Stage 2 -->
+    <rect x="180" y="0" width="155" height="105" rx="6" fill="#374151"/>
+    <rect x="188" y="8" width="139" height="20" rx="3" fill="#6366f1"/>
+    <text x="257" y="22" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="white" text-anchor="middle">2. attribute_filter</text>
+    <text x="195" y="42" font-family="monospace" font-size="7" fill="#7dd3fc">AND:</text>
+    <text x="205" y="56" font-family="monospace" font-size="6" fill="#94a3b8">- in_stock: <tspan fill="#c084fc">true</tspan></text>
+    <text x="205" y="70" font-family="monospace" font-size="6" fill="#94a3b8">- price &lt;=</text>
+    <text x="215" y="84" font-family="monospace" font-size="6" fill="#fcd34d">"{{INPUT.max_price}}"</text>
+    
+    <!-- Arrow -->
+    <path d="M 340 52 L 355 52 M 350 47 L 355 52 L 350 57" stroke="#94a3b8" stroke-width="2" fill="none"/>
+    
+    <!-- Stage 3 -->
+    <rect x="360" y="0" width="155" height="105" rx="6" fill="#374151"/>
+    <rect x="368" y="8" width="139" height="20" rx="3" fill="#8b5cf6"/>
+    <text x="437" y="22" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="white" text-anchor="middle">3. rerank</text>
+    <text x="375" y="42" font-family="monospace" font-size="7" fill="#7dd3fc">model:</text>
+    <text x="385" y="56" font-family="monospace" font-size="6" fill="#fcd34d">"bge-reranker-v2-m3"</text>
+    <text x="375" y="74" font-family="monospace" font-size="7" fill="#7dd3fc">top_k: <tspan fill="#c084fc">50</tspan></text>
+    
+    <!-- Arrow -->
+    <path d="M 520 52 L 535 52 M 530 47 L 535 52 L 530 57" stroke="#94a3b8" stroke-width="2" fill="none"/>
+    
+    <!-- Output -->
+    <rect x="540" y="0" width="120" height="105" rx="6" fill="#374151"/>
+    <rect x="548" y="8" width="104" height="20" rx="3" fill="#14b8a6"/>
+    <text x="600" y="22" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="white" text-anchor="middle">Results</text>
+    <text x="555" y="42" font-family="monospace" font-size="7" fill="#94a3b8">50 documents</text>
+    <text x="555" y="58" font-family="monospace" font-size="7" fill="#94a3b8">reranked by</text>
+    <text x="555" y="74" font-family="monospace" font-size="7" fill="#94a3b8">relevance</text>
+    <rect x="555" y="82" width="98" height="16" rx="2" fill="#0d9488"/>
+    <text x="604" y="94" font-family="system-ui, sans-serif" font-size="7" fill="white" text-anchor="middle">Cached</text>
+  </g>
+
+  <!-- Response and Telemetry -->
+  <g filter="url(#shadow)">
+    <rect x="770" y="640" width="380" height="180" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="770" y="640" width="380" height="28" rx="10" fill="#14b8a6"/>
+    <rect x="770" y="658" width="380" height="10" fill="#14b8a6"/>
+    <text x="960" y="660" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Response Telemetry</text>
+  </g>
+  
+  <g transform="translate(785, 680)">
+    <!-- Stage stats -->
+    <rect x="0" y="0" width="170" height="125" rx="5" fill="#f0fdfa"/>
+    <text x="85" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#0d9488" text-anchor="middle">stage_statistics</text>
+    <rect x="8" y="26" width="154" height="90" rx="3" fill="white"/>
+    <text x="16" y="42" font-family="monospace" font-size="7" fill="#7dd3fc">"feature_search":</text>
+    <text x="24" y="54" font-family="monospace" font-size="6" fill="#64748b">duration_ms: 180</text>
+    <text x="24" y="64" font-family="monospace" font-size="6" fill="#64748b">cache_hit: true</text>
+    <text x="16" y="78" font-family="monospace" font-size="7" fill="#7dd3fc">"filter":</text>
+    <text x="24" y="90" font-family="monospace" font-size="6" fill="#64748b">duration_ms: 8</text>
+    <text x="16" y="104" font-family="monospace" font-size="7" fill="#7dd3fc">"rerank":</text>
+    <text x="24" y="116" font-family="monospace" font-size="6" fill="#64748b">duration_ms: 120</text>
+    
+    <!-- Budget -->
+    <rect x="180" y="0" width="170" height="125" rx="5" fill="#fef3c7"/>
+    <text x="265" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#92400e" text-anchor="middle">budget</text>
+    <rect x="188" y="26" width="154" height="90" rx="3" fill="white"/>
+    <text x="196" y="44" font-family="monospace" font-size="7" fill="#7dd3fc">credits_used:</text>
+    <text x="276" y="44" font-family="monospace" font-size="7" fill="#c084fc">12.4</text>
+    <text x="196" y="62" font-family="monospace" font-size="7" fill="#7dd3fc">credits_limit:</text>
+    <text x="280" y="62" font-family="monospace" font-size="7" fill="#c084fc">100</text>
+    <text x="196" y="80" font-family="monospace" font-size="7" fill="#7dd3fc">time_elapsed_ms:</text>
+    <text x="300" y="80" font-family="monospace" font-size="7" fill="#c084fc">310</text>
+    <text x="196" y="100" font-family="monospace" font-size="7" fill="#7dd3fc">execution_id:</text>
+    <text x="196" y="112" font-family="monospace" font-size="6" fill="#fcd34d">"exec_b8f31e0c"</text>
+  </g>
+
+  <!-- Best Practices -->
+  <g transform="translate(50, 840)">
+    <rect x="0" y="0" width="1100" height="55" rx="8" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="550" y="20" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#475569" text-anchor="middle">Best Practices</text>
+    <text x="550" y="40" font-family="system-ui, sans-serif" font-size="9" fill="#64748b" text-anchor="middle">Start narrow (single search) - Push filters early - Enable caching - Use JOIN strategies wisely - Monitor analytics</text>
+  </g>
+
+</svg>
