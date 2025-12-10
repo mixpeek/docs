@@ -252,6 +252,39 @@
             "api-reference/organization-usage/get-api-key-usage",
             "api-reference/organization-usage/get-api-key-endpoint-breakdown"
           ]
+        },
+        {
+          "group": "Audit",
+          "pages": [
+            "api-reference/organization-audit/list-audit-logs",
+            "api-reference/organization-audit/get-audit-log",
+            "api-reference/organization-audit/get-audit-settings",
+            "api-reference/organization-audit/update-audit-settings"
+          ]
+        },
+        {
+          "group": "Secrets",
+          "pages": [
+            "api-reference/organization-secrets/list-secrets",
+            "api-reference/organization-secrets/create-secret",
+            "api-reference/organization-secrets/update-secret",
+            "api-reference/organization-secrets/delete-secret"
+          ]
+        },
+        {
+          "group": "Billing",
+          "pages": [
+            "api-reference/organization-billing/setup-payment-method",
+            "api-reference/organization-billing/confirm-payment-method",
+            "api-reference/organization-billing/get-payment-method",
+            "api-reference/organization-billing/enable-auto-billing",
+            "api-reference/organization-billing/disable-auto-billing",
+            "api-reference/organization-billing/get-current-usage",
+            "api-reference/organization-billing/get-usage-breakdown",
+            "api-reference/organization-billing/list-invoices",
+            "api-reference/organization-billing/get-spending-caps",
+            "api-reference/organization-billing/update-spending-caps"
+          ]
         }
       ]
     },
@@ -265,12 +298,21 @@
         "api-reference/namespaces/list-namespaces",
         "api-reference/namespaces/delete-namespace",
         {
-          "group": "Templates",
+          "group": "Clone",
           "pages": [
-            "api-reference/namespace-templates/list-templates",
-            "api-reference/namespace-templates/create-template",
-            "api-reference/namespace-templates/get-template",
-            "api-reference/namespace-templates/instantiate-template"
+            "api-reference/namespace-clone/clone-namespace"
+          ]
+        },
+        {
+          "group": "Migrations",
+          "pages": [
+            "api-reference/namespace-migrations/create-migration",
+            "api-reference/namespace-migrations/get-migration",
+            "api-reference/namespace-migrations/delete-migration",
+            "api-reference/namespace-migrations/list-migrations",
+            "api-reference/namespace-migrations/start-migration",
+            "api-reference/namespace-migrations/cancel-migration",
+            "api-reference/namespace-migrations/validate-migration"
           ]
         }
       ]
@@ -293,6 +335,7 @@
             "api-reference/bucket-syncs/update-sync-configuration",
             "api-reference/bucket-syncs/pause-sync-configuration",
             "api-reference/bucket-syncs/resume-sync-configuration",
+            "api-reference/bucket-syncs/trigger-sync-configuration",
             "api-reference/bucket-syncs/delete-sync-configuration"
           ]
         },
@@ -326,11 +369,10 @@
           "pages": [
             "api-reference/bucket-batches/create-batch",
             "api-reference/bucket-batches/add-objects-to-batch",
-            "api-reference/bucket-batches/get-batch",
+            "api-reference/bucket-batches/get-batch-configuration",
             "api-reference/bucket-batches/partially-update-batch",
             "api-reference/bucket-batches/submit-batch-for-processing",
             "api-reference/bucket-batches/list-batches",
-            "api-reference/bucket-batches/get-batch-health",
             "api-reference/bucket-batches/cancel-batch",
             "api-reference/bucket-batches/get-failed-documents-for-batch",
             "api-reference/bucket-batches/retry-failed-documents",
@@ -350,11 +392,18 @@
       "group": "Collections",
       "pages": [
         "api-reference/collections/create-collection",
+        "api-reference/collections/clone-collection",
         "api-reference/collections/get-collection",
         "api-reference/collections/update-collection",
         "api-reference/collections/describe-collection-features",
         "api-reference/collections/list-collections",
         "api-reference/collections/delete-collection",
+        {
+          "group": "Schema",
+          "pages": [
+            "api-reference/collection-schema/sync-collection-schema"
+          ]
+        },
         {
           "group": "Documents",
           "pages": [
@@ -377,22 +426,28 @@
             "api-reference/document-lineage/get-all-documents-derived-from-an-object",
             "api-reference/document-lineage/get-decomposition-tree-visualization"
           ]
+        },
+        {
+          "group": "Taxonomies",
+          "pages": [
+            "api-reference/collection-taxonomies/apply-taxonomy-to-existing-documents"
+          ]
         }
       ]
     },
     {
       "group": "Retrievers",
       "pages": [
-        "api-reference/retrievers/list-retrievers",
         "api-reference/retrievers/create-retriever",
+        "api-reference/retrievers/list-retrievers",
         "api-reference/retrievers/get-retriever",
-        "api-reference/retrievers/delete-retriever",
         "api-reference/retrievers/patch-retriever",
-        "api-reference/retrievers/execute-anonymous-retriever",
-        "api-reference/retrievers/execute-retriever",
+        "api-reference/retrievers/clone-retriever",
+        "api-reference/retrievers/delete-retriever",
+        "api-reference/retrievers/execute-retriever-auto-optimized",
         "api-reference/retrievers/list-executions",
         "api-reference/retrievers/get-execution",
-        "api-reference/retrievers/explain-retriever",
+        "api-reference/retrievers/explain-retriever-execution-plan",
         {
           "group": "Stages",
           "pages": [
@@ -411,7 +466,43 @@
         {
           "group": "Evaluations",
           "pages": [
-            "api-reference/retriever-evaluations/start-retriever-evaluation-task"
+            "api-reference/retriever-evaluations/list-evaluation-datasets",
+            "api-reference/retriever-evaluations/create-evaluation-dataset",
+            "api-reference/retriever-evaluations/get-evaluation-dataset",
+            "api-reference/retriever-evaluations/list-evaluations",
+            "api-reference/retriever-evaluations/run-evaluation",
+            "api-reference/retriever-evaluations/get-evaluation-results"
+          ]
+        },
+        {
+          "group": "Anonymous",
+          "pages": [
+            "api-reference/anonymous-retrievers/execute-anonymous-retriever",
+            "api-reference/anonymous-retrievers/list-anonymous-executions",
+            "api-reference/anonymous-retrievers/get-anonymous-execution"
+          ]
+        },
+        {
+          "group": "Published",
+          "pages": [
+            "api-reference/published-retrievers/list-published-retrievers",
+            "api-reference/published-retrievers/get-organization-publish-stats",
+            "api-reference/published-retrievers/get-published-retriever",
+            "api-reference/published-retrievers/publish-retriever",
+            "api-reference/published-retrievers/unpublish-retriever",
+            "api-reference/published-retrievers/update-published-retriever",
+            "api-reference/published-retrievers/check-name-availability"
+          ]
+        },
+        {
+          "group": "Public API",
+          "pages": [
+            "api-reference/public-retriever-api/list-public-retrievers",
+            "api-reference/public-retriever-api/execute-public-retriever",
+            "api-reference/public-retriever-api/get-public-retriever-config",
+            "api-reference/public-retriever-api/track-interaction",
+            "api-reference/public-retriever-api/track-interaction-batch",
+            "api-reference/public-retriever-api/get-public-retriever-template"
           ]
         }
       ]
@@ -426,7 +517,16 @@
         "api-reference/taxonomies/test-taxonomy-configuration-validation-only",
         "api-reference/taxonomies/list-taxonomy-versions",
         "api-reference/taxonomies/create-taxonomy-version",
-        "api-reference/taxonomies/delete-taxonomy"
+        "api-reference/taxonomies/clone-taxonomy",
+        "api-reference/taxonomies/delete-taxonomy",
+        {
+          "group": "Analytics",
+          "pages": [
+            "api-reference/taxonomy-analytics/compute-step-transition-analytics",
+            "api-reference/taxonomy-analytics/analyze-multi-step-transition-paths",
+            "api-reference/taxonomy-analytics/get-available-steps"
+          ]
+        }
       ]
     },
     {
@@ -437,10 +537,7 @@
         "api-reference/clusters/partially-update-cluster",
         "api-reference/clusters/list-clusters",
         "api-reference/clusters/execute-clustering",
-        "api-reference/clusters/submit-clustering-job",
-        "api-reference/clusters/stream-cluster-data",
         "api-reference/clusters/apply-cluster-enrichment",
-        "api-reference/clusters/get-cluster-artifacts",
         "api-reference/clusters/delete-cluster",
         {
           "group": "Triggers",
@@ -462,7 +559,76 @@
             "api-reference/cluster-executions/get-specific-cluster-execution",
             "api-reference/cluster-executions/list-cluster-execution-history",
             "api-reference/cluster-executions/get-execution-artifacts",
-            "api-reference/cluster-executions/stream-execution-data"
+            "api-reference/cluster-executions/stream-execution-data",
+            "api-reference/cluster-executions/cancel-execution"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Templates",
+      "pages": [
+        {
+          "group": "Namespace",
+          "pages": [
+            "api-reference/templates/list-namespace-templates",
+            "api-reference/templates/get-namespace-template",
+            "api-reference/templates/create-namespace-template",
+            "api-reference/templates/instantiate-namespace-template"
+          ]
+        },
+        {
+          "group": "Retriever",
+          "pages": [
+            "api-reference/templates/list-retriever-templates",
+            "api-reference/templates/get-retriever-template",
+            "api-reference/templates/create-retriever-template",
+            "api-reference/templates/instantiate-retriever-template"
+          ]
+        },
+        {
+          "group": "Cluster",
+          "pages": [
+            "api-reference/templates/list-cluster-templates",
+            "api-reference/templates/get-cluster-template",
+            "api-reference/templates/create-cluster-template",
+            "api-reference/templates/instantiate-cluster-template"
+          ]
+        },
+        {
+          "group": "Collection",
+          "pages": [
+            "api-reference/templates/list-collection-templates",
+            "api-reference/templates/get-collection-template",
+            "api-reference/templates/create-collection-template",
+            "api-reference/templates/instantiate-collection-template"
+          ]
+        },
+        {
+          "group": "Bucket",
+          "pages": [
+            "api-reference/templates/list-bucket-templates",
+            "api-reference/templates/get-bucket-template",
+            "api-reference/templates/create-bucket-template",
+            "api-reference/templates/instantiate-bucket-template"
+          ]
+        },
+        {
+          "group": "Taxonomy",
+          "pages": [
+            "api-reference/templates/list-taxonomy-templates",
+            "api-reference/templates/get-taxonomy-template",
+            "api-reference/templates/create-taxonomy-template",
+            "api-reference/templates/instantiate-taxonomy-template"
+          ]
+        },
+        {
+          "group": "Public",
+          "pages": [
+            "api-reference/public-templates-api/list-public-namespace-templates",
+            "api-reference/public-templates-api/get-public-namespace-template",
+            "api-reference/public-templates-api/list-public-retriever-templates",
+            "api-reference/public-templates-api/get-public-retriever-template"
           ]
         }
       ]
@@ -470,20 +636,106 @@
     {
       "group": "Analytics",
       "pages": [
-        "api-reference/analytics/get-retriever-performance",
-        "api-reference/analytics/get-stage-breakdown",
-        "api-reference/analytics/get-retriever-signals",
-        "api-reference/analytics/get-cache-performance",
-        "api-reference/analytics/analyze-for-tuning",
-        "api-reference/analytics/get-slowest-queries",
-        "api-reference/analytics/get-engine-performance",
-        "api-reference/analytics/get-engine-stage-breakdown",
-        "api-reference/analytics/get-extractor-breakdown",
-        "api-reference/analytics/analyze-bottlenecks",
-        "api-reference/analytics/get-slowest-operations",
-        "api-reference/analytics/get-usage-summary",
-        "api-reference/analytics/get-extractor-performance",
-        "api-reference/analytics/get-inference-performance"
+        {
+          "group": "Retriever",
+          "pages": [
+            "api-reference/analytics/get-retriever-performance",
+            "api-reference/analytics/get-stage-breakdown",
+            "api-reference/analytics/get-retriever-signals",
+            "api-reference/analytics/get-cache-performance",
+            "api-reference/analytics/analyze-for-tuning",
+            "api-reference/analytics/get-slowest-queries"
+          ]
+        },
+        {
+          "group": "Engine",
+          "pages": [
+            "api-reference/analytics/get-engine-performance",
+            "api-reference/analytics/get-engine-stage-breakdown",
+            "api-reference/analytics/get-extractor-breakdown",
+            "api-reference/analytics/get-batch-diagnostics",
+            "api-reference/analytics/analyze-bottlenecks",
+            "api-reference/analytics/get-slowest-operations"
+          ]
+        },
+        {
+          "group": "Usage",
+          "pages": [
+            "api-reference/analytics/get-usage-summary",
+            "api-reference/analytics/get-extractor-performance",
+            "api-reference/analytics/get-inference-performance"
+          ]
+        },
+        {
+          "group": "Namespace",
+          "pages": [
+            "api-reference/analytics/get-most-queried-fields",
+            "api-reference/analytics/get-slow-queries",
+            "api-reference/analytics/get-field-performance",
+            "api-reference/analytics/get-compound-index-patterns",
+            "api-reference/analytics/get-index-recommendations",
+            "api-reference/analytics/get-namespace-summary",
+            "api-reference/analytics/get-index-suggestions",
+            "api-reference/analytics/get-field-usage"
+          ]
+        },
+        {
+          "group": "Bucket",
+          "pages": [
+            "api-reference/analytics/get-bucket-storage",
+            "api-reference/analytics/get-upload-performance",
+            "api-reference/analytics/get-sync-performance",
+            "api-reference/analytics/get-bucket-health",
+            "api-reference/analytics/get-bucket-usage",
+            "api-reference/analytics/get-sync-comparison"
+          ]
+        },
+        {
+          "group": "Collection",
+          "pages": [
+            "api-reference/analytics/get-collection-overview",
+            "api-reference/analytics/get-document-growth",
+            "api-reference/analytics/get-extractor-performance-1",
+            "api-reference/analytics/get-latency-metrics",
+            "api-reference/analytics/get-failure-analysis",
+            "api-reference/analytics/get-execution-history"
+          ]
+        },
+        {
+          "group": "Cluster",
+          "pages": [
+            "api-reference/analytics/get-failure-analysis-1",
+            "api-reference/analytics/get-assignment-metrics",
+            "api-reference/analytics/get-confidence-distribution",
+            "api-reference/analytics/get-label-distribution",
+            "api-reference/analytics/get-enrichment-history"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "Resource Search",
+      "pages": [
+        "api-reference/resource-search/search-resources"
+      ]
+    },
+    {
+      "group": "Inference",
+      "pages": [
+        "api-reference/inference/execute-raw-inference"
+      ]
+    },
+    {
+      "group": "Agent Sessions",
+      "pages": [
+        "api-reference/agent-sessions/create-session",
+        "api-reference/agent-sessions/list-sessions",
+        "api-reference/agent-sessions/get-session",
+        "api-reference/agent-sessions/terminate-session",
+        "api-reference/agent-sessions/patch-session",
+        "api-reference/agent-sessions/send-message",
+        "api-reference/agent-sessions/get-history",
+        "api-reference/agent-sessions/submit-feedback"
       ]
     },
     {
@@ -497,11 +749,38 @@
     {
       "group": "Webhooks",
       "pages": [
-        "api-reference/webhooks/list-webhooks",
         "api-reference/webhooks/create-webhook",
+        "api-reference/webhooks/list-webhooks",
         "api-reference/webhooks/get-webhook",
         "api-reference/webhooks/update-webhook",
         "api-reference/webhooks/delete-webhook"
+      ]
+    },
+    {
+      "group": "Notifications",
+      "pages": [
+        "api-reference/notifications/list-notifications",
+        "api-reference/notifications/get-notification",
+        "api-reference/notifications/delete-notification",
+        "api-reference/notifications/mark-as-read",
+        "api-reference/notifications/mark-all-as-read",
+        "api-reference/notifications/get-preferences",
+        "api-reference/notifications/update-preferences",
+        "api-reference/notifications/get-unread-count"
+      ]
+    },
+    {
+      "group": "Triggers",
+      "pages": [
+        "api-reference/triggers/create-trigger",
+        "api-reference/triggers/list-triggers",
+        "api-reference/triggers/get-trigger",
+        "api-reference/triggers/update-trigger",
+        "api-reference/triggers/pause-trigger",
+        "api-reference/triggers/resume-trigger",
+        "api-reference/triggers/execute-trigger-now",
+        "api-reference/triggers/get-trigger-execution-history",
+        "api-reference/triggers/delete-trigger"
       ]
     }
   ],
