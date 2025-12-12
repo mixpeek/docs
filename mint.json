@@ -466,11 +466,11 @@
           ]
         },
         {
-          "group": "Anonymous",
+          "group": "Adhoc",
           "pages": [
-            "api-reference/anonymous-retrievers/execute-anonymous-retriever",
-            "api-reference/anonymous-retrievers/list-anonymous-executions",
-            "api-reference/anonymous-retrievers/get-anonymous-execution"
+            "api-reference/adhoc-retrievers/execute-adhoc-retriever",
+            "api-reference/adhoc-retrievers/list-adhoc-executions",
+            "api-reference/adhoc-retrievers/get-adhoc-execution"
           ]
         },
         {
