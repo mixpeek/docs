@@ -153,15 +153,6 @@
       ]
     },
     {
-      "group": "Best Practices",
-      "pages": [
-        "best-practices/schema-design",
-        "best-practices/feature-selection",
-        "best-practices/caching-strategies",
-        "best-practices/cost-optimization"
-      ]
-    },
-    {
       "group": "Troubleshoot",
       "pages": [
         "troubleshoot/errors",
