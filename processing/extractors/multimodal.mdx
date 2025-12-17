@@ -1,0 +1,518 @@
+---
+title: "Multimodal Extractor"
+description: "Unified embeddings for video, image, text, and GIF via Google Vertex AI with transcription, OCR, and thumbnails"
+---
+
+<Frame>
+  <img src="/assets/extractors/multimodal.svg" alt="Multimodal extractor pipeline showing video splitting, parallel processing with Whisper and Vertex AI, and output features" />
+</Frame>
+
+The multimodal extractor processes **video, image, text, and GIF content** using unified Vertex embeddings (1408D). Videos and GIFs are decomposed into segments with transcription (Whisper), visual embeddings, OCR, and descriptions. Images and text are embedded directly without decomposition.
+
+<Note>
+  View extractor details at [api.mixpeek.com/v1/collections/features/extractors/multimodal_extractor_v1](https://api.mixpeek.com/v1/collections/features/extractors/multimodal_extractor_v1) or fetch programmatically with `GET /v1/collections/features/extractors/{feature_extractor_id}`.
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Video content libraries** | Search and navigate video segments by content |
+| **Media platforms** | Search across spoken and visual content |
+| **Educational content** | Find moments in lectures and tutorials |
+| **Surveillance/security** | Event detection in footage |
+| **Social media** | Process user-generated video content |
+| **Broadcasting/streaming** | Large video catalog management |
+| **Marketing analytics** | Analyze video campaigns |
+| **Cross-modal search** | Find videos/images using text queries |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Static image collections only | `image_extractor` |
+| Audio-only content | `audio_extractor` |
+| Very short videos (< 5 seconds) | Processing overhead not worth it |
+| Real-time live streams | Specialized streaming extractors |
+| 8K+ resolution video | Consider downsampling first |
+
+## Supported Input Types
+
+| Input | Type | Description | Processing |
+|-------|------|-------------|------------|
+| `video` | string | URL or S3 path | Decomposed into segments |
+| `image` | string | URL or S3 path | Direct embedding (no decomposition) |
+| `text` | string | Plain text content | Direct embedding |
+| `gif` | string | URL or S3 path | Treated as video, frame-by-frame |
+
+**Supported formats:**
+- **Video**: MP4, MOV, AVI, MKV, WebM, FLV
+- **Image**: JPG, PNG, WebP, BMP
+- **GIF**: Animated GIF
+
+## Input Schema
+
+Provide **one** of the following inputs:
+
+```json
+{
+  "video": "s3://bucket/videos/lecture.mp4"
+}
+```
+
+```json
+{
+  "image": "https://cdn.example.com/products/laptop.jpg"
+}
+```
+
+```json
+{
+  "text": "High-performance laptop with M3 chip, perfect for developers"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `video` | string | URL/S3 path to video file. Recommended: 720p-1080p, < 2 hours |
+| `image` | string | URL/S3 path to image file. Recommended: < 10MB |
+| `text` | string | Plain text for cross-modal embedding |
+| `gif` | string | URL/S3 path to GIF file |
+| `custom_thumbnail` | string | Optional custom thumbnail URL instead of auto-generated |
+
+## Output Schema
+
+Each video segment produces one document with the following fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `start_time` | number | Segment start time in seconds |
+| `end_time` | number | Segment end time in seconds |
+| `transcription` | string | Transcribed audio content |
+| `description` | string | AI-generated segment description |
+| `ocr_text` | string | Text extracted from video frames |
+| `thumbnail_url` | string | S3 URL of thumbnail image |
+| `source_video_url` | string | Original source video URL |
+| `video_segment_url` | string | URL of this specific segment |
+| `multimodal_extractor_v1_multimodal_embedding` | float[1408] | Visual/multimodal embedding |
+| `multimodal_extractor_v1_transcription_embedding` | float[1024] | Transcription text embedding |
+
+```json
+{
+  "start_time": 10.0,
+  "end_time": 20.0,
+  "transcription": "Welcome to today's lecture on machine learning fundamentals...",
+  "description": "Instructor standing at whiteboard, introducing ML concepts",
+  "ocr_text": "Machine Learning 101",
+  "thumbnail_url": "s3://mixpeek-storage/ns_123/thumbnails/thumb_1.jpg",
+  "multimodal_extractor_v1_multimodal_embedding": [0.023, -0.041, ...],
+  "multimodal_extractor_v1_transcription_embedding": [0.018, -0.032, ...]
+}
+```
+
+## Parameters
+
+### Video Splitting
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `split_method` | string | `"time"` | Primary video splitting strategy: `time`, `scene`, or `silence` |
+
+#### Split Methods
+
+<Tabs>
+  <Tab title="time">
+    **Fixed interval splitting** - Splits video into segments of equal duration.
+
+    | Parameter | Type | Default | Description |
+    |-----------|------|---------|-------------|
+    | `time_split_interval` | integer | `10` | Interval in seconds for each segment |
+
+    **Characteristics:**
+    - Predictable segment count: `video_duration / interval`
+    - Consistent chunk sizes for uniform processing
+    - May cut mid-sentence or mid-scene
+
+    **Best for:** General purpose, consistent chunking, when you need predictable segment counts
+
+    ```json
+    {
+      "split_method": "time",
+      "time_split_interval": 10
+    }
+    ```
+  </Tab>
+  <Tab title="scene">
+    **Visual change detection** - Splits video when significant visual changes occur (shot changes, transitions).
+
+    | Parameter | Type | Default | Description |
+    |-----------|------|---------|-------------|
+    | `scene_detection_threshold` | float | `0.5` | Sensitivity threshold (0.0-1.0) |
+
+    **Threshold guide:**
+    - `0.3` - High sensitivity, detects subtle changes (more segments)
+    - `0.5` - Balanced (default)
+    - `0.7` - Low sensitivity, only major scene changes (fewer segments)
+
+    **Characteristics:**
+    - Variable segment count (typically 2-20 per minute)
+    - Segments align with visual content boundaries
+    - Better for content with distinct shots/scenes
+
+    **Best for:** Movies, dynamic content, shot changes, music videos, advertisements
+
+    ```json
+    {
+      "split_method": "scene",
+      "scene_detection_threshold": 0.5
+    }
+    ```
+  </Tab>
+  <Tab title="silence">
+    **Audio pause detection** - Splits video at moments of silence or low audio.
+
+    | Parameter | Type | Default | Description |
+    |-----------|------|---------|-------------|
+    | `silence_db_threshold` | integer | `-40` | Decibel level below which audio is considered silent |
+
+    **Threshold guide:**
+    - `-50` dB - Detects very quiet moments (more segments)
+    - `-40` dB - Balanced (default)
+    - `-30` dB - Only detects near-silence (fewer segments)
+
+    **Characteristics:**
+    - Variable segment count (typically 5-30 per minute)
+    - Segments align with natural speech pauses
+    - Preserves complete sentences/thoughts
+
+    **Best for:** Lectures, presentations, conversations, podcasts, interviews
+
+    ```json
+    {
+      "split_method": "silence",
+      "silence_db_threshold": -40
+    }
+    ```
+  </Tab>
+</Tabs>
+
+#### Split Methods Comparison
+
+| Method | Segments/Min | Predictability | Best For |
+|--------|--------------|----------------|----------|
+| `time` | 60 / interval_sec | High | General purpose, batch processing |
+| `scene` | Variable (2-20) | Low | Movies, ads, dynamic visual content |
+| `silence` | Variable (5-30) | Medium | Lectures, podcasts, spoken content |
+
+### Feature Extraction Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `run_transcription` | boolean | `true` | Run Whisper transcription on audio |
+| `transcription_language` | string | `"en"` | Language for transcription |
+| `run_transcription_embedding` | boolean | `true` | Generate embeddings for transcriptions |
+| `run_multimodal_embedding` | boolean | `true` | Generate Vertex multimodal embeddings |
+| `run_video_description` | boolean | `false` | Generate AI descriptions (adds 1-2 min) |
+| `run_ocr` | boolean | `false` | Extract text from video frames |
+
+### Thumbnail Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `enable_thumbnails` | boolean | `true` | Generate thumbnail images |
+| `use_cdn` | boolean | `false` | Use CloudFront CDN for thumbnails |
+
+**CDN benefits**: Faster global delivery, permanent URLs, reduced bandwidth costs.
+
+### Description Generation Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `description_prompt` | string | `"Describe the video segment in detail."` | Prompt for Gemini |
+| `generation_config.temperature` | float | `0.7` | Randomness (higher = more creative) |
+| `generation_config.max_output_tokens` | integer | `1024` | Maximum description length |
+| `generation_config.top_p` | float | `0.8` | Nucleus sampling |
+
+### LLM Structured Extraction
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `response_shape` | string \| object | `null` | Custom structured output schema |
+
+**Natural Language Mode:**
+```json
+{
+  "response_shape": "Extract product names, colors, materials, and aesthetic style labels from this fashion segment"
+}
+```
+
+**JSON Schema Mode:**
+```json
+{
+  "response_shape": {
+    "type": "object",
+    "properties": {
+      "products": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "category": { "type": "string" },
+            "visibility_percentage": { "type": "integer", "minimum": 0, "maximum": 100 }
+          }
+        }
+      },
+      "aesthetic": { "type": "string" }
+    }
+  }
+}
+```
+
+## Configuration Examples
+
+<CodeGroup>
+```json Video with Time-Based Splitting
+{
+  "feature_extractor": {
+    "feature_extractor_name": "multimodal_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "video": "payload.video_url"
+    },
+    "field_passthrough": [
+      { "source_path": "metadata.video_id" }
+    ],
+    "parameters": {
+      "split_method": "time",
+      "time_split_interval": 10,
+      "run_transcription": true,
+      "run_multimodal_embedding": true,
+      "enable_thumbnails": true
+    }
+  }
+}
+```
+
+```json Video with Scene Detection
+{
+  "feature_extractor": {
+    "feature_extractor_name": "multimodal_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "video": "payload.video_url"
+    },
+    "parameters": {
+      "split_method": "scene",
+      "scene_detection_threshold": 0.5,
+      "run_transcription": true,
+      "run_video_description": true,
+      "enable_thumbnails": true
+    }
+  }
+}
+```
+
+```json Lecture Video with Silence Splitting
+{
+  "feature_extractor": {
+    "feature_extractor_name": "multimodal_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "video": "payload.lecture_url"
+    },
+    "parameters": {
+      "split_method": "silence",
+      "silence_db_threshold": -40,
+      "run_transcription": true,
+      "transcription_language": "en",
+      "run_ocr": true,
+      "enable_thumbnails": true
+    }
+  }
+}
+```
+
+```json Image Embedding
+{
+  "feature_extractor": {
+    "feature_extractor_name": "multimodal_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "image": "payload.image_url"
+    },
+    "field_passthrough": [
+      { "source_path": "metadata.product_id" }
+    ],
+    "parameters": {
+      "run_multimodal_embedding": true,
+      "enable_thumbnails": true
+    }
+  }
+}
+```
+
+```json Text Embedding (Cross-Modal Search)
+{
+  "feature_extractor": {
+    "feature_extractor_name": "multimodal_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "text": "payload.product_description"
+    },
+    "parameters": {
+      "run_multimodal_embedding": true
+    }
+  }
+}
+```
+
+```json Full Extraction with All Features
+{
+  "feature_extractor": {
+    "feature_extractor_name": "multimodal_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "video": "payload.video_url"
+    },
+    "parameters": {
+      "split_method": "scene",
+      "scene_detection_threshold": 0.5,
+      "run_transcription": true,
+      "run_transcription_embedding": true,
+      "run_multimodal_embedding": true,
+      "run_video_description": true,
+      "run_ocr": true,
+      "enable_thumbnails": true,
+      "use_cdn": true,
+      "description_prompt": "Describe what is happening in this video segment, including any visible products, people, and actions.",
+      "generation_config": {
+        "temperature": 0.7,
+        "max_output_tokens": 1024
+      }
+    }
+  }
+}
+```
+
+```json Fashion/E-commerce with Structured Extraction
+{
+  "feature_extractor": {
+    "feature_extractor_name": "multimodal_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "video": "payload.fashion_video_url"
+    },
+    "parameters": {
+      "split_method": "scene",
+      "run_multimodal_embedding": true,
+      "run_video_description": true,
+      "response_shape": {
+        "type": "object",
+        "properties": {
+          "products": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "category": { "type": "string" },
+                "color": { "type": "string" },
+                "visibility_percentage": { "type": "integer" }
+              }
+            }
+          },
+          "aesthetic": { "type": "string" },
+          "setting": { "type": "string" }
+        }
+      }
+    }
+  }
+}
+```
+</CodeGroup>
+
+## Performance & Costs
+
+### Processing Speed
+
+| Content Type | Speed |
+|--------------|-------|
+| Video | 0.5-2x realtime (depends on features enabled) |
+| Image | < 1 second |
+| Text | < 100ms |
+
+**Example**: 10-minute video → 5-20 minutes processing time
+
+| Feature | Latency per Segment |
+|---------|-------------------|
+| Transcription | ~200ms per second of audio |
+| Visual embedding | ~50ms |
+| OCR | ~300ms |
+| Description | ~2s |
+
+### Cost Estimates (per minute of video)
+
+| Configuration | Cost |
+|---------------|------|
+| **Minimal** (transcription + embeddings) | $0.01 |
+| **Standard** (+ OCR) | $0.05 |
+| **Full** (+ descriptions) | $0.15 |
+
+**Images**: $0.001 per image
+**Text**: $0.0001 per query
+
+## Vector Indexes
+
+### Multimodal Embedding
+
+| Property | Value |
+|----------|-------|
+| **Index name** | `multimodal_extractor_v1_multimodal_embedding` |
+| **Dimensions** | 1408 |
+| **Type** | Dense |
+| **Distance metric** | Cosine |
+| **Inference model** | `vertex_multimodal_embedding` |
+| **Supported inputs** | video, text, image |
+
+### Transcription Embedding
+
+| Property | Value |
+|----------|-------|
+| **Index name** | `multimodal_extractor_v1_transcription_embedding` |
+| **Dimensions** | 1024 |
+| **Type** | Dense |
+| **Distance metric** | Cosine |
+| **Inference model** | `multilingual_e5_large_instruct_v1` |
+| **Supported inputs** | text, string |
+
+## Limitations
+
+- **Video duration**: Recommend < 2 hours for optimal processing
+- **Resolution**: 8K+ videos should be downsampled
+- **Real-time**: Not suitable for live streaming
+- **Short videos**: < 5 second videos have disproportionate overhead
+- **Audio quality**: Transcription accuracy depends on audio clarity
+- **OCR/Description**: Add significant processing time, enable only when needed
+
+## Collection-to-Collection Pipelines
+
+The `video_segment_url` output enables decomposition chains:
+
+1. **Initial collection**: Time-based segments (5s intervals)
+2. **Downstream collection**: Scene detection within each segment
+3. **Final collection**: Enhanced processing with different models
+
+```json
+{
+  "input_mappings": {
+    "video": "video_segment_url"
+  }
+}
+```
+
+## Related
+
+- [Feature Extractors Overview](/processing/feature-extractors)
+- [Passthrough Extractor](/processing/extractors/passthrough)
+- [Text Extractor](/processing/extractors/text)

@@ -1,0 +1,100 @@
+<svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="objectGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ea580c;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="featureGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="passthroughGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4f46e5;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="300" fill="#f8fafc"/>
+
+  <!-- Title -->
+  <text x="400" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">Passthrough Extractor: Direct Field Copy</text>
+  <text x="400" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">Copy source fields and vectors between collections without processing</text>
+
+  <!-- Input Object -->
+  <g filter="url(#shadow)">
+    <rect x="50" y="80" width="180" height="160" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="50" y="80" width="180" height="28" rx="10" fill="url(#objectGrad)"/>
+    <rect x="50" y="98" width="180" height="10" fill="url(#objectGrad)"/>
+    <text x="140" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Source Object</text>
+  </g>
+  <g transform="translate(60, 120)">
+    <rect x="0" y="0" width="160" height="24" rx="4" fill="#fff7ed"/>
+    <text x="8" y="16" font-family="monospace" font-size="9" fill="#c2410c">metadata.category</text>
+
+    <rect x="0" y="30" width="160" height="24" rx="4" fill="#fff7ed"/>
+    <text x="8" y="46" font-family="monospace" font-size="9" fill="#c2410c">metadata.brand</text>
+
+    <rect x="0" y="60" width="160" height="24" rx="4" fill="#dbeafe"/>
+    <text x="8" y="76" font-family="monospace" font-size="9" fill="#1d4ed8">embedding [1024d]</text>
+
+    <rect x="0" y="90" width="160" height="24" rx="4" fill="#f1f5f9"/>
+    <text x="8" y="106" font-family="monospace" font-size="9" fill="#475569">payload.description</text>
+  </g>
+
+  <!-- Arrow to Passthrough -->
+  <path d="M 230 160 L 290 160" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Passthrough Box -->
+  <g filter="url(#shadow)">
+    <rect x="300" y="100" width="200" height="120" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="300" y="100" width="200" height="28" rx="10" fill="url(#passthroughGrad)"/>
+    <rect x="300" y="118" width="200" height="10" fill="url(#passthroughGrad)"/>
+    <text x="400" y="120" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Passthrough</text>
+  </g>
+  <g transform="translate(310, 140)">
+    <rect x="0" y="0" width="180" height="32" rx="4" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+    <text x="90" y="14" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#4338ca" text-anchor="middle">field_passthrough</text>
+    <text x="90" y="26" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">Select specific fields to copy</text>
+
+    <rect x="0" y="40" width="180" height="32" rx="4" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+    <text x="90" y="54" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#4338ca" text-anchor="middle">include_all_source_fields</text>
+    <text x="90" y="66" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">Copy all fields (default)</text>
+  </g>
+
+  <!-- Arrow to Output -->
+  <path d="M 500 160 L 560 160" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Output Document -->
+  <g filter="url(#shadow)">
+    <rect x="570" y="80" width="180" height="160" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="570" y="80" width="180" height="28" rx="10" fill="url(#featureGrad)"/>
+    <rect x="570" y="98" width="180" height="10" fill="url(#featureGrad)"/>
+    <text x="660" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Output Document</text>
+  </g>
+  <g transform="translate(580, 120)">
+    <rect x="0" y="0" width="160" height="24" rx="4" fill="#f0fdfa"/>
+    <text x="8" y="16" font-family="monospace" font-size="9" fill="#0d9488">metadata.category</text>
+
+    <rect x="0" y="30" width="160" height="24" rx="4" fill="#f0fdfa"/>
+    <text x="8" y="46" font-family="monospace" font-size="9" fill="#0d9488">metadata.brand</text>
+
+    <rect x="0" y="60" width="160" height="24" rx="4" fill="#ccfbf1"/>
+    <text x="8" y="76" font-family="monospace" font-size="9" fill="#0d9488">embedding [1024d]</text>
+
+    <rect x="0" y="90" width="160" height="24" rx="4" fill="#f0fdfa"/>
+    <text x="8" y="106" font-family="monospace" font-size="9" fill="#0d9488">payload.description</text>
+  </g>
+
+  <!-- Bottom info -->
+  <g transform="translate(50, 260)">
+    <rect x="0" y="0" width="700" height="28" rx="6" fill="#f1f5f9"/>
+    <text x="350" y="18" font-family="system-ui, sans-serif" font-size="10" fill="#475569" text-anchor="middle">No ML processing | &lt;1ms latency | Free | Ideal for metadata propagation and vector passthrough between collections</text>
+  </g>
+</svg>

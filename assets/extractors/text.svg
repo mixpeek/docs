@@ -1,0 +1,180 @@
+<svg viewBox="0 0 1000 420" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="objectGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ea580c;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="modelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="featureGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="chunkGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4f46e5;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="llmGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f472b6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ec4899;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1000" height="420" fill="#f8fafc"/>
+
+  <!-- Title -->
+  <text x="500" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">Text Extractor: Semantic Embeddings + Structured Extraction</text>
+  <text x="500" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">E5-Large multilingual model with optional chunking and LLM-powered structured output</text>
+
+  <!-- Input Text -->
+  <g filter="url(#shadow)">
+    <rect x="30" y="80" width="140" height="120" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="30" y="80" width="140" height="28" rx="10" fill="url(#objectGrad)"/>
+    <rect x="30" y="98" width="140" height="10" fill="url(#objectGrad)"/>
+    <text x="100" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Text Input</text>
+  </g>
+  <g transform="translate(40, 120)">
+    <rect x="0" y="0" width="120" height="70" rx="4" fill="#fff7ed"/>
+    <text x="60" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#c2410c" text-anchor="middle">Required</text>
+    <text x="60" y="34" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">"text": string</text>
+    <text x="60" y="50" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">10-400 words optimal</text>
+    <text x="60" y="62" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">512 tokens max</text>
+  </g>
+
+  <!-- Arrow to Chunking -->
+  <path d="M 170 140 L 210 140" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Chunking Stage (Optional) -->
+  <g filter="url(#shadow)">
+    <rect x="220" y="70" width="200" height="180" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="220" y="70" width="200" height="28" rx="10" fill="url(#chunkGrad)"/>
+    <rect x="220" y="88" width="200" height="10" fill="url(#chunkGrad)"/>
+    <text x="320" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Chunking (Optional)</text>
+  </g>
+  <g transform="translate(230, 110)">
+    <text x="90" y="12" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#475569" text-anchor="middle">split_by strategies:</text>
+
+    <rect x="0" y="20" width="85" height="22" rx="3" fill="#eef2ff"/>
+    <text x="42" y="35" font-family="monospace" font-size="8" fill="#4338ca" text-anchor="middle">characters</text>
+
+    <rect x="95" y="20" width="85" height="22" rx="3" fill="#eef2ff"/>
+    <text x="137" y="35" font-family="monospace" font-size="8" fill="#4338ca" text-anchor="middle">words</text>
+
+    <rect x="0" y="48" width="85" height="22" rx="3" fill="#eef2ff"/>
+    <text x="42" y="63" font-family="monospace" font-size="8" fill="#4338ca" text-anchor="middle">sentences</text>
+
+    <rect x="95" y="48" width="85" height="22" rx="3" fill="#eef2ff"/>
+    <text x="137" y="63" font-family="monospace" font-size="8" fill="#4338ca" text-anchor="middle">paragraphs</text>
+
+    <rect x="0" y="76" width="85" height="22" rx="3" fill="#eef2ff"/>
+    <text x="42" y="91" font-family="monospace" font-size="8" fill="#4338ca" text-anchor="middle">pages</text>
+
+    <rect x="95" y="76" width="85" height="22" rx="3" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1"/>
+    <text x="137" y="91" font-family="monospace" font-size="8" fill="#64748b" text-anchor="middle">none (default)</text>
+
+    <text x="90" y="115" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">chunk_size: 1000 | chunk_overlap: 0</text>
+  </g>
+
+  <!-- Arrow to E5 -->
+  <path d="M 420 140 L 460 140" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- E5-Large Model -->
+  <g filter="url(#shadow)">
+    <rect x="470" y="80" width="160" height="120" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="470" y="80" width="160" height="28" rx="10" fill="url(#modelGrad)"/>
+    <rect x="470" y="98" width="160" height="10" fill="url(#modelGrad)"/>
+    <text x="550" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">E5-Large</text>
+  </g>
+  <g transform="translate(480, 120)">
+    <rect x="0" y="0" width="140" height="70" rx="4" fill="#f3e8ff"/>
+    <text x="70" y="16" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#7c3aed" text-anchor="middle">multilingual-e5-large</text>
+    <text x="70" y="32" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">100+ languages</text>
+    <text x="70" y="48" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">~5ms per document</text>
+    <text x="70" y="62" font-family="system-ui, sans-serif" font-size="8" fill="#0d9488" text-anchor="middle">Free (self-hosted)</text>
+  </g>
+
+  <!-- Arrow to Output -->
+  <path d="M 630 140 L 670 140" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Output -->
+  <g filter="url(#shadow)">
+    <rect x="680" y="80" width="160" height="120" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="680" y="80" width="160" height="28" rx="10" fill="url(#featureGrad)"/>
+    <rect x="680" y="98" width="160" height="10" fill="url(#featureGrad)"/>
+    <text x="760" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Outputs</text>
+  </g>
+  <g transform="translate(690, 115)">
+    <rect x="0" y="0" width="140" height="28" rx="4" fill="#ccfbf1"/>
+    <text x="70" y="12" font-family="monospace" font-size="8" fill="#0d9488" text-anchor="middle">text_extractor_v1_</text>
+    <text x="70" y="23" font-family="monospace" font-size="8" fill="#0d9488" text-anchor="middle">embedding [1024d]</text>
+
+    <rect x="0" y="34" width="140" height="22" rx="4" fill="#f0fdfa"/>
+    <text x="70" y="49" font-family="monospace" font-size="8" fill="#0d9488" text-anchor="middle">text: string</text>
+
+    <rect x="0" y="60" width="140" height="22" rx="4" fill="#f1f5f9"/>
+    <text x="70" y="75" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Cosine similarity search</text>
+  </g>
+
+  <!-- Feature URI -->
+  <g transform="translate(860, 120)">
+    <rect x="0" y="0" width="120" height="60" rx="6" fill="#f0fdfa" stroke="#14b8a6" stroke-width="1"/>
+    <text x="60" y="18" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#0d9488" text-anchor="middle">Feature URI</text>
+    <text x="60" y="35" font-family="monospace" font-size="6" fill="#475569" text-anchor="middle">mixpeek://</text>
+    <text x="60" y="47" font-family="monospace" font-size="6" fill="#475569" text-anchor="middle">text_extractor@v1/</text>
+    <text x="60" y="55" font-family="monospace" font-size="6" fill="#475569" text-anchor="middle">text_embedding</text>
+  </g>
+
+  <!-- LLM Extraction Branch (Optional) -->
+  <text x="320" y="275" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#475569" text-anchor="middle">Optional: LLM Structured Extraction (response_shape)</text>
+
+  <g filter="url(#shadow)">
+    <rect x="100" y="295" width="440" height="105" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="100" y="295" width="440" height="28" rx="10" fill="url(#llmGrad)"/>
+    <rect x="100" y="313" width="440" height="10" fill="url(#llmGrad)"/>
+    <text x="320" y="315" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">LLM Extraction (OpenAI, Google, Anthropic)</text>
+  </g>
+  <g transform="translate(110, 335)">
+    <rect x="0" y="0" width="200" height="55" rx="4" fill="#fce7f3"/>
+    <text x="100" y="14" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#db2777" text-anchor="middle">Natural Language Mode</text>
+    <text x="100" y="30" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">"Extract entities, sentiment,</text>
+    <text x="100" y="42" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">and main topics from text"</text>
+
+    <rect x="220" y="0" width="200" height="55" rx="4" fill="#fce7f3"/>
+    <text x="320" y="14" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#db2777" text-anchor="middle">JSON Schema Mode</text>
+    <text x="320" y="30" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">{"properties": {"sentiment":</text>
+    <text x="320" y="42" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">{"enum": ["pos","neg","neu"]}}}</text>
+  </g>
+
+  <!-- LLM Output -->
+  <path d="M 540 350 L 580 350" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+  <g filter="url(#shadow)">
+    <rect x="590" y="295" width="160" height="105" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="590" y="295" width="160" height="28" rx="10" fill="url(#featureGrad)"/>
+    <rect x="590" y="313" width="160" height="10" fill="url(#featureGrad)"/>
+    <text x="670" y="315" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">+ Custom Fields</text>
+  </g>
+  <g transform="translate(600, 335)">
+    <rect x="0" y="0" width="140" height="55" rx="4" fill="#f0fdfa"/>
+    <text x="70" y="14" font-family="monospace" font-size="8" fill="#0d9488" text-anchor="middle">sentiment: "positive"</text>
+    <text x="70" y="28" font-family="monospace" font-size="8" fill="#0d9488" text-anchor="middle">entities: [...]</text>
+    <text x="70" y="42" font-family="monospace" font-size="8" fill="#0d9488" text-anchor="middle">topics: [...]</text>
+  </g>
+
+  <!-- LLM Providers -->
+  <g transform="translate(770, 310)">
+    <rect x="0" y="0" width="100" height="80" rx="6" fill="#f1f5f9"/>
+    <text x="50" y="16" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#475569" text-anchor="middle">Providers</text>
+    <text x="50" y="34" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">openai</text>
+    <text x="50" y="48" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">google</text>
+    <text x="50" y="62" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">anthropic</text>
+  </g>
+</svg>

@@ -1,0 +1,143 @@
+---
+title: "Passthrough Extractor"
+description: "Copy source fields without processing for metadata propagation and vector passthrough"
+---
+
+<Frame>
+  <img src="/assets/extractors/passthrough.svg" alt="Passthrough extractor showing direct field copy from source to output" />
+</Frame>
+
+The passthrough extractor copies source fields without any ML processing. By default, all source fields are included. Use `field_passthrough` to specify specific fields or `include_all_source_fields` to control behavior. Supports vector passthrough from collection to collection.
+
+<Note>
+  View extractor details at [api.mixpeek.com/v1/collections/features/extractors/passthrough_extractor_v1](https://api.mixpeek.com/v1/collections/features/extractors/passthrough_extractor_v1) or fetch programmatically with `GET /v1/collections/features/extractors/{feature_extractor_id}`.
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Metadata propagation** | Pass metadata fields from bucket objects to collection documents without transformation |
+| **Vector passthrough** | Copy pre-computed embeddings from one collection to another |
+| **Schema normalization** | Select specific fields to include in the output schema |
+| **Collection-to-collection pipelines** | Route data through multi-tier processing without re-embedding |
+
+## When NOT to Use
+
+- When you need to generate embeddings → Use [text_extractor](/processing/extractors/text) or [multimodal_extractor](/processing/extractors/multimodal)
+- When you need to transform or enrich data → Use extractors with ML models
+- When you need to decompose content (chunking, video splitting) → Use appropriate extractors
+
+## Input Schema
+
+The passthrough extractor accepts **any input type** and copies fields as-is.
+
+```json
+{
+  "type": "object",
+  "properties": {},
+  "description": "Accepts any fields - no required inputs"
+}
+```
+
+## Output Schema
+
+The output mirrors the input based on configuration:
+
+| Configuration | Behavior |
+|--------------|----------|
+| Default (`include_all_source_fields: true`) | All source fields copied to output |
+| `field_passthrough` specified | Only listed fields copied |
+| `include_all_source_fields: false` | Must specify `field_passthrough` |
+
+## Parameters
+
+The passthrough extractor has **no required parameters**. Configuration is handled through `field_passthrough` and `input_mappings` at the collection level.
+
+## Configuration Examples
+
+<CodeGroup>
+```json Copy All Fields
+{
+  "feature_extractor": {
+    "feature_extractor_name": "passthrough_extractor",
+    "version": "v1",
+    "input_mappings": {},
+    "field_passthrough": [],
+    "parameters": {}
+  }
+}
+```
+
+```json Select Specific Fields
+{
+  "feature_extractor": {
+    "feature_extractor_name": "passthrough_extractor",
+    "version": "v1",
+    "input_mappings": {},
+    "field_passthrough": [
+      { "source_path": "metadata.category" },
+      { "source_path": "metadata.brand" },
+      { "source_path": "metadata.price" }
+    ],
+    "parameters": {}
+  }
+}
+```
+
+```json Vector Passthrough
+{
+  "feature_extractor": {
+    "feature_extractor_name": "passthrough_extractor",
+    "version": "v1",
+    "input_mappings": {},
+    "field_passthrough": [
+      { "source_path": "text_extractor_v1_embedding" },
+      { "source_path": "metadata.product_id" }
+    ],
+    "parameters": {}
+  }
+}
+```
+
+```json Rename Fields During Passthrough
+{
+  "feature_extractor": {
+    "feature_extractor_name": "passthrough_extractor",
+    "version": "v1",
+    "input_mappings": {},
+    "field_passthrough": [
+      { "source_path": "metadata.old_name", "target_path": "new_name" },
+      { "source_path": "payload.description", "target_path": "content" }
+    ],
+    "parameters": {}
+  }
+}
+```
+</CodeGroup>
+
+## Performance & Costs
+
+| Metric | Value |
+|--------|-------|
+| **Latency** | < 1ms |
+| **Cost** | Free |
+| **GPU Required** | No |
+| **Max Throughput** | Unlimited (no ML processing) |
+
+## Vector Indexes
+
+The passthrough extractor creates **no vector indexes**. If you pass through existing embeddings, they retain their original index configuration from the source collection.
+
+## Best Practices
+
+1. **Use for multi-tier pipelines** – When downstream collections need upstream data without reprocessing
+2. **Minimize field selection** – Only pass through fields you need to reduce storage and query overhead
+3. **Preserve lineage** – The passthrough extractor maintains `root_object_id` and `source_collection_id` for data lineage tracking
+4. **Combine with other extractors** – Use passthrough fields alongside ML extractors in the same collection to include metadata with generated features
+
+## Related
+
+- [Feature Extractors Overview](/processing/feature-extractors)
+- [Text Extractor](/processing/extractors/text)
+- [Multimodal Extractor](/processing/extractors/multimodal)

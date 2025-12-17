@@ -1,5 +1,5 @@
 ---
-title: "Feature Extractors"
+title: "Overview"
 description: "Distributed pipelines that turn raw objects into reusable features"
 ---
 
@@ -39,9 +39,9 @@ When a new version ships, your existing collections continue using the pinned ve
 
 | Extractor | Description | Input Types | Dimensions | Latency | Cost |
 |-----------|-------------|-------------|------------|---------|------|
-| `passthrough_extractor_v1` | Copies source fields without processing. Use for passing metadata or vectors between collections. | Any | N/A | &lt;1ms | Free |
-| `text_extractor_v1` | Dense embeddings via E5-Large multilingual. Supports chunking (characters, words, sentences, paragraphs, pages) and LLM extraction via `response_shape`. | `text`, `string` | 1024 | ~5ms/doc | Free |
-| `multimodal_extractor_v1` | Unified embeddings for video, image, text, and GIF via Google Vertex AI. Videos decomposed by time, scene, or silence with transcription, OCR, and thumbnails. | `video`, `image`, `text`, `string` | 1408 | 0.5-2x realtime | $0.01-0.15/min |
+| [`passthrough_extractor_v1`](/processing/extractors/passthrough) | Copies source fields without processing. Use for passing metadata or vectors between collections. | Any | N/A | &lt;1ms | Free |
+| [`text_extractor_v1`](/processing/extractors/text) | Dense embeddings via E5-Large multilingual. Supports chunking (characters, words, sentences, paragraphs, pages) and LLM extraction via `response_shape`. | `text`, `string` | 1024 | ~5ms/doc | Free |
+| [`multimodal_extractor_v1`](/processing/extractors/multimodal) | Unified embeddings for video, image, text, and GIF via Google Vertex AI. Videos decomposed by time, scene, or silence with transcription, OCR, and thumbnails. | `video`, `image`, `text`, `string` | 1408 | 0.5-2x realtime | $0.01-0.15/min |
 
 Need something custom? Enterprise customers can [bring their own models](#fully-managed--versioned) or contact support to enable additional extractors.
 

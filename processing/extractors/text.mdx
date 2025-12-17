@@ -1,0 +1,342 @@
+---
+title: "Text Extractor"
+description: "Dense vector embeddings from text using E5-Large multilingual with chunking and LLM extraction"
+---
+
+<Frame>
+  <img src="/assets/extractors/text.svg" alt="Text extractor pipeline showing chunking, E5-Large embedding, and optional LLM extraction" />
+</Frame>
+
+The text extractor generates dense vector embeddings from text using the E5-Large multilingual model. Optimized for semantic search, RAG applications, and general-purpose text retrieval. Supports text chunking/decomposition with multiple splitting strategies. Fast (5ms/doc), cost-effective (free), and supports 100+ languages.
+
+<Note>
+  View extractor details at [api.mixpeek.com/v1/collections/features/extractors/text_extractor_v1](https://api.mixpeek.com/v1/collections/features/extractors/text_extractor_v1) or fetch programmatically with `GET /v1/collections/features/extractors/{feature_extractor_id}`.
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Product search** | Search products by natural language descriptions |
+| **FAQ matching** | Match user questions to knowledge base articles |
+| **Document retrieval** | Find relevant documents from large corpora |
+| **Content discovery** | Recommend similar content based on semantic similarity |
+| **RAG chunking** | Split documents into chunks for retrieval-augmented generation |
+| **Multi-language search** | Search across 100+ languages with a single model |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Exact phrase matching | `colbert_extractor` |
+| Keyword-heavy queries | `splade_extractor` |
+| High-precision legal/medical search | `colbert_extractor` |
+| Need for explainability (which keywords matched) | `splade_extractor` |
+| Documents with critical technical terms | `colbert_extractor` |
+| Very short texts (1-5 words) | `splade_extractor` |
+
+## Input Schema
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `text` | string | **Yes** | Text content to process. Recommended: 10-400 words for optimal quality. Maximum: 512 tokens (~400 words), longer text is truncated. |
+
+```json
+{
+  "text": "Premium wireless Bluetooth headphones with active noise cancellation, 30-hour battery life, and premium sound quality."
+}
+```
+
+**Input Examples:**
+
+| Type | Example |
+|------|---------|
+| Product description | "Premium wireless Bluetooth headphones with active noise cancellation" |
+| FAQ question | "How do I reset my password if I forgot it?" |
+| Article paragraph | "Machine learning models have revolutionized natural language processing..." |
+| User query | "best restaurants near Times Square" |
+
+## Output Schema
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `text` | string | The processed text content (full text or chunk) |
+| `text_extractor_v1_embedding` | float[1024] | Dense vector embedding, L2 normalized |
+
+```json
+{
+  "text": "Premium wireless Bluetooth headphones with active noise cancellation",
+  "text_extractor_v1_embedding": [0.023, -0.041, 0.018, ...]
+}
+```
+
+When chunking is enabled, each chunk becomes a separate document with tracking metadata stored in `metadata` (not in the document payload):
+- `chunk_index` – Position of this chunk in the original document
+- `chunk_text` – The text content of this chunk
+- `total_chunks` – Total number of chunks from the source
+
+## Parameters
+
+### Chunking Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `split_by` | string | `"none"` | Strategy for splitting text into chunks |
+| `chunk_size` | integer | `1000` | Target size for each chunk (units depend on `split_by`) |
+| `chunk_overlap` | integer | `0` | Number of units to overlap between consecutive chunks |
+
+#### Split Strategies
+
+| Strategy | Description | Best For |
+|----------|-------------|----------|
+| `characters` | Split by character count | Uniform sizes, quick testing |
+| `words` | Split by word boundaries | General text, preserves words |
+| `sentences` | Split by sentence boundaries | Q&A, precise retrieval, preserves semantic units |
+| `paragraphs` | Split by paragraph (double newlines) | Articles, documentation, natural structure |
+| `pages` | Split by page breaks | PDFs, paginated documents |
+| `none` | No splitting (default) | Short texts < 400 words |
+
+**Recommended chunk sizes:**
+- `characters`: 500-2000
+- `words`: 100-400
+- `sentences`: 3-10
+- `paragraphs`: 1-3
+- `pages`: 1
+
+**Chunk overlap:** 10-20% of `chunk_size` helps preserve context across boundaries. Example: `chunk_size: 1000`, `chunk_overlap: 100-200`.
+
+### LLM Structured Extraction Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `response_shape` | string \| object | `null` | Define custom structured output using LLM extraction |
+| `llm_provider` | string | `null` | LLM provider: `openai`, `google`, `anthropic` |
+| `llm_model` | string | `null` | Specific model for extraction |
+
+#### response_shape Modes
+
+**Natural Language Mode (string):**
+```json
+{
+  "response_shape": "Extract key entities, sentiment (positive/negative/neutral), and main topics from the text"
+}
+```
+The service automatically infers JSON schema from your description.
+
+**JSON Schema Mode (object):**
+```json
+{
+  "response_shape": {
+    "type": "object",
+    "properties": {
+      "sentiment": {
+        "type": "string",
+        "enum": ["positive", "negative", "neutral"]
+      },
+      "entities": {
+        "type": "array",
+        "items": { "type": "string" }
+      },
+      "topics": {
+        "type": "array",
+        "items": { "type": "string" },
+        "maxItems": 5
+      }
+    },
+    "required": ["sentiment"]
+  }
+}
+```
+
+#### LLM Provider & Model Options
+
+| Provider | Example Models |
+|----------|---------------|
+| `openai` | `gpt-4o-mini-2024-07-18` (cost-effective), `gpt-4o-2024-08-06` (best quality) |
+| `google` | `gemini-2.5-flash` (fastest), `gemini-1.5-flash-001` |
+| `anthropic` | `claude-3-5-haiku-20241022` (fast), `claude-3-5-sonnet-20241022` (best reasoning) |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Basic Embedding (No Chunking)
+{
+  "feature_extractor": {
+    "feature_extractor_name": "text_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "text": "payload.description"
+    },
+    "field_passthrough": [
+      { "source_path": "metadata.product_id" }
+    ],
+    "parameters": {}
+  }
+}
+```
+
+```json Sentence Chunking for RAG
+{
+  "feature_extractor": {
+    "feature_extractor_name": "text_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "text": "payload.document_content"
+    },
+    "field_passthrough": [
+      { "source_path": "metadata.document_id" }
+    ],
+    "parameters": {
+      "split_by": "sentences",
+      "chunk_size": 5,
+      "chunk_overlap": 1
+    }
+  }
+}
+```
+
+```json Paragraph Chunking for Articles
+{
+  "feature_extractor": {
+    "feature_extractor_name": "text_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "text": "payload.article_body"
+    },
+    "field_passthrough": [
+      { "source_path": "metadata.title" },
+      { "source_path": "metadata.author" }
+    ],
+    "parameters": {
+      "split_by": "paragraphs",
+      "chunk_size": 2,
+      "chunk_overlap": 0
+    }
+  }
+}
+```
+
+```json Word-Level Chunking with Overlap
+{
+  "feature_extractor": {
+    "feature_extractor_name": "text_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "text": "payload.content"
+    },
+    "parameters": {
+      "split_by": "words",
+      "chunk_size": 300,
+      "chunk_overlap": 50
+    }
+  }
+}
+```
+
+```json LLM Extraction (Natural Language)
+{
+  "feature_extractor": {
+    "feature_extractor_name": "text_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "text": "payload.review_text"
+    },
+    "parameters": {
+      "response_shape": "Extract sentiment (positive/negative/neutral), key product features mentioned, and overall rating impression",
+      "llm_provider": "openai",
+      "llm_model": "gpt-4o-mini-2024-07-18"
+    }
+  }
+}
+```
+
+```json LLM Extraction (JSON Schema)
+{
+  "feature_extractor": {
+    "feature_extractor_name": "text_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "text": "payload.document"
+    },
+    "parameters": {
+      "response_shape": {
+        "type": "object",
+        "properties": {
+          "entities": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Named entities mentioned"
+          },
+          "sentiment": {
+            "type": "string",
+            "enum": ["positive", "negative", "neutral"]
+          },
+          "topics": {
+            "type": "array",
+            "items": { "type": "string" },
+            "maxItems": 5
+          }
+        },
+        "required": ["sentiment"]
+      },
+      "llm_provider": "anthropic",
+      "llm_model": "claude-3-5-haiku-20241022"
+    }
+  }
+}
+```
+</CodeGroup>
+
+## Performance & Costs
+
+| Metric | Value |
+|--------|-------|
+| **Embedding latency** | ~5ms per document (batched: ~2ms/doc) |
+| **Query latency** | 5-10ms for top-100 results |
+| **Cost** | Free (self-hosted E5-Large) |
+| **GPU required** | No (but 5-10x faster with GPU) |
+| **Memory** | ~4GB per 1M documents |
+| **Index build** | ~1 hour per 10M documents |
+
+**LLM extraction** adds cost and latency based on provider pricing. Only use when structured extraction is needed.
+
+## Comparison with Other Text Extractors
+
+| Feature | text_extractor | colbert_extractor | splade_extractor |
+|---------|----------------|-------------------|------------------|
+| **Accuracy (BEIR avg)** | 88% | 92% | 90% |
+| **Speed (per doc)** | 5ms | 15ms | 10ms |
+| **Storage per doc** | 4KB | 500KB (125x more) | 20KB (5x more) |
+| **Query Latency** | < 10ms | 50-100ms | 20-30ms |
+| **Best For** | General search | Precision | Hybrid |
+| **Storage Cost (1M docs)** | $0.40 | $50 | $2 |
+| **Multi-language** | Excellent | Good | Good |
+| **Exact Matching** | Poor | Excellent | Excellent |
+| **Semantic Matching** | Excellent | Excellent | Good |
+
+## Vector Index
+
+| Property | Value |
+|----------|-------|
+| **Index name** | `text_extractor_v1_embedding` |
+| **Dimensions** | 1024 |
+| **Type** | Dense |
+| **Distance metric** | Cosine |
+| **Datatype** | float32 |
+| **Inference model** | `multilingual_e5_large_instruct_v1` |
+| **Normalization** | L2 normalized |
+
+## Limitations
+
+- **Token limit**: 512 tokens (~400 words). Longer text is automatically truncated.
+- **Exact phrases**: Cannot reliably match exact phrases or technical terms.
+- **Domain jargon**: Struggles with very domain-specific jargon or acronyms.
+- **Terminology variance**: May miss documents that use different terminology for the same concept.
+- **Short texts**: Less effective for very short texts (1-5 words) where lexical matching is sufficient.
+- **Keyword-heavy queries**: Less effective for queries like "iPhone 15 Pro Max 256GB".
+
+## Related
+
+- [Feature Extractors Overview](/processing/feature-extractors)
+- [Passthrough Extractor](/processing/extractors/passthrough)
+- [Multimodal Extractor](/processing/extractors/multimodal)

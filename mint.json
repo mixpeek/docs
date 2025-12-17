@@ -120,7 +120,15 @@
     {
       "group": "Process Data",
       "pages": [
-        "processing/feature-extractors",
+        {
+          "group": "Feature Extractors",
+          "pages": [
+            "processing/feature-extractors",
+            "processing/extractors/multimodal",
+            "processing/extractors/passthrough",
+            "processing/extractors/text"
+          ]
+        },
         "processing/batching",
         "processing/model-registry",
         "processing/tasks",
