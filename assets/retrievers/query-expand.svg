@@ -1,0 +1,181 @@
+<svg viewBox="0 0 1000 420" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="inputGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="llmGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f472b6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ec4899;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="searchGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ea580c;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="fusionGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="outputGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="420" fill="#f8fafc"/>
+
+  <text x="500" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">Query Expand: LLM-Powered Query Variations</text>
+  <text x="500" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">Generate multiple query phrasings, search each, and fuse results for improved recall</text>
+
+  <!-- Original Query -->
+  <g filter="url(#shadow)">
+    <rect x="30" y="80" width="140" height="100" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="30" y="80" width="140" height="28" rx="10" fill="url(#inputGrad)"/>
+    <rect x="30" y="98" width="140" height="10" fill="url(#inputGrad)"/>
+    <text x="100" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Original Query</text>
+  </g>
+  <g transform="translate(40, 120)">
+    <rect x="0" y="0" width="120" height="50" rx="4" fill="#eff6ff"/>
+    <text x="60" y="20" font-family="system-ui, sans-serif" font-size="8" fill="#2563eb" text-anchor="middle">"how to fix</text>
+    <text x="60" y="34" font-family="system-ui, sans-serif" font-size="8" fill="#2563eb" text-anchor="middle">memory leaks"</text>
+  </g>
+
+  <path d="M 170 130 L 200 130" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- LLM Expansion -->
+  <g filter="url(#shadow)">
+    <rect x="210" y="70" width="180" height="160" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="210" y="70" width="180" height="28" rx="10" fill="url(#llmGrad)"/>
+    <rect x="210" y="88" width="180" height="10" fill="url(#llmGrad)"/>
+    <text x="300" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">LLM Expansion</text>
+  </g>
+  <g transform="translate(220, 110)">
+    <text x="80" y="12" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#db2777" text-anchor="middle">Generates variations:</text>
+
+    <rect x="0" y="20" width="160" height="24" rx="3" fill="#fce7f3"/>
+    <text x="80" y="36" font-family="system-ui, sans-serif" font-size="7" fill="#9d174d" text-anchor="middle">1. "memory leak detection"</text>
+
+    <rect x="0" y="48" width="160" height="24" rx="3" fill="#fce7f3"/>
+    <text x="80" y="64" font-family="system-ui, sans-serif" font-size="7" fill="#9d174d" text-anchor="middle">2. "debugging memory issues"</text>
+
+    <rect x="0" y="76" width="160" height="24" rx="3" fill="#fce7f3"/>
+    <text x="80" y="92" font-family="system-ui, sans-serif" font-size="7" fill="#9d174d" text-anchor="middle">3. "prevent memory leaks"</text>
+
+    <text x="80" y="112" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">num_variations: 3</text>
+  </g>
+
+  <path d="M 390 150 L 420 150" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Parallel Searches -->
+  <g filter="url(#shadow)">
+    <rect x="430" y="60" width="180" height="180" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="430" y="60" width="180" height="28" rx="10" fill="url(#searchGrad)"/>
+    <rect x="430" y="78" width="180" height="10" fill="url(#searchGrad)"/>
+    <text x="520" y="80" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Parallel Searches</text>
+  </g>
+  <g transform="translate(440, 100)">
+    <rect x="0" y="0" width="160" height="38" rx="3" fill="#fff7ed"/>
+    <text x="80" y="14" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#ea580c" text-anchor="middle">Search 1</text>
+    <text x="80" y="28" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">top_k: 20 results</text>
+
+    <rect x="0" y="44" width="160" height="38" rx="3" fill="#fff7ed"/>
+    <text x="80" y="58" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#ea580c" text-anchor="middle">Search 2</text>
+    <text x="80" y="72" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">top_k: 20 results</text>
+
+    <rect x="0" y="88" width="160" height="38" rx="3" fill="#fff7ed"/>
+    <text x="80" y="102" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#ea580c" text-anchor="middle">Search 3</text>
+    <text x="80" y="116" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">top_k: 20 results</text>
+  </g>
+
+  <path d="M 610 150 L 640 150" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Fusion -->
+  <g filter="url(#shadow)">
+    <rect x="650" y="80" width="150" height="140" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="650" y="80" width="150" height="28" rx="10" fill="url(#fusionGrad)"/>
+    <rect x="650" y="98" width="150" height="10" fill="url(#fusionGrad)"/>
+    <text x="725" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Result Fusion</text>
+  </g>
+  <g transform="translate(660, 120)">
+    <rect x="0" y="0" width="130" height="40" rx="3" fill="#f3e8ff"/>
+    <text x="65" y="16" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#7c3aed" text-anchor="middle">RRF (default)</text>
+    <text x="65" y="32" font-family="monospace" font-size="6" fill="#475569" text-anchor="middle">1/(k + rank)</text>
+
+    <rect x="0" y="48" width="130" height="24" rx="3" fill="#ede9fe"/>
+    <text x="65" y="64" font-family="system-ui, sans-serif" font-size="7" fill="#7c3aed" text-anchor="middle">linear | max</text>
+
+    <text x="65" y="90" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Deduplicate + rank</text>
+  </g>
+
+  <path d="M 800 150 L 830 150" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Output -->
+  <g filter="url(#shadow)">
+    <rect x="840" y="80" width="130" height="140" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="840" y="80" width="130" height="28" rx="10" fill="url(#outputGrad)"/>
+    <rect x="840" y="98" width="130" height="10" fill="url(#outputGrad)"/>
+    <text x="905" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Output</text>
+  </g>
+  <g transform="translate(850, 120)">
+    <rect x="0" y="0" width="110" height="24" rx="3" fill="#ccfbf1"/>
+    <text x="55" y="16" font-family="monospace" font-size="7" fill="#0d9488" text-anchor="middle">Fused results</text>
+
+    <rect x="0" y="30" width="110" height="24" rx="3" fill="#d1fae5"/>
+    <text x="55" y="46" font-family="system-ui, sans-serif" font-size="7" fill="#16a34a" text-anchor="middle">Higher recall</text>
+
+    <rect x="0" y="60" width="110" height="24" rx="3" fill="#ecfdf5"/>
+    <text x="55" y="76" font-family="system-ui, sans-serif" font-size="7" fill="#22c55e" text-anchor="middle">Broader coverage</text>
+  </g>
+
+  <!-- Performance Note -->
+  <g transform="translate(30, 270)">
+    <rect x="0" y="0" width="300" height="70" rx="6" fill="#fef3c7" stroke="#fcd34d" stroke-width="1"/>
+    <text x="150" y="20" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#d97706" text-anchor="middle">Performance</text>
+    <text x="150" y="38" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Latency: 300-800ms (LLM + N searches)</text>
+    <text x="150" y="54" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Best for recall-critical applications</text>
+  </g>
+
+  <!-- Pipeline -->
+  <g transform="translate(350, 270)">
+    <text x="0" y="0" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#475569">Common Pipeline:</text>
+
+    <rect x="0" y="15" width="150" height="45" rx="4" fill="#fce7f3"/>
+    <text x="75" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#db2777" text-anchor="middle">1. query_expand</text>
+    <text x="75" y="50" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">variations: 3, top_k: 50</text>
+
+    <text x="165" y="38" font-family="system-ui, sans-serif" font-size="14" fill="#94a3b8">-&gt;</text>
+
+    <rect x="180" y="15" width="150" height="45" rx="4" fill="#fff7ed"/>
+    <text x="255" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#ea580c" text-anchor="middle">2. rerank</text>
+    <text x="255" y="50" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">top_n: 10</text>
+
+    <text x="345" y="38" font-family="system-ui, sans-serif" font-size="14" fill="#94a3b8">-&gt;</text>
+
+    <rect x="360" y="15" width="150" height="45" rx="4" fill="#ccfbf1"/>
+    <text x="435" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#0d9488" text-anchor="middle">High recall + precision</text>
+    <text x="435" y="50" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Best of both worlds</text>
+  </g>
+
+  <!-- Models -->
+  <g transform="translate(30, 355)">
+    <text x="0" y="0" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#475569">LLM Models:</text>
+    <rect x="100" y="-12" width="100" height="20" rx="3" fill="#fce7f3"/>
+    <text x="150" y="2" font-family="monospace" font-size="8" fill="#db2777" text-anchor="middle">gpt-4o-mini</text>
+    <rect x="210" y="-12" width="80" height="20" rx="3" fill="#fce7f3"/>
+    <text x="250" y="2" font-family="monospace" font-size="8" fill="#db2777" text-anchor="middle">gpt-4o</text>
+
+    <text x="320" y="0" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#475569">Fusion:</text>
+    <rect x="370" y="-12" width="50" height="20" rx="3" fill="#f3e8ff"/>
+    <text x="395" y="2" font-family="monospace" font-size="8" fill="#7c3aed" text-anchor="middle">rrf</text>
+    <rect x="430" y="-12" width="50" height="20" rx="3" fill="#ede9fe"/>
+    <text x="455" y="2" font-family="monospace" font-size="8" fill="#7c3aed" text-anchor="middle">linear</text>
+    <rect x="490" y="-12" width="50" height="20" rx="3" fill="#ede9fe"/>
+    <text x="515" y="2" font-family="monospace" font-size="8" fill="#7c3aed" text-anchor="middle">max</text>
+  </g>
+</svg>

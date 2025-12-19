@@ -1,0 +1,103 @@
+<svg viewBox="0 0 900 320" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="inputGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="groupGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ea580c;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="outputGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <rect width="900" height="320" fill="#f8fafc"/>
+
+  <text x="450" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">Group By: Organize Results by Field Values</text>
+  <text x="450" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">Group documents by a field value - perfect for faceted navigation and categorized results</text>
+
+  <!-- Input -->
+  <g filter="url(#shadow)">
+    <rect x="30" y="80" width="200" height="150" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="30" y="80" width="200" height="28" rx="10" fill="url(#inputGrad)"/>
+    <rect x="30" y="98" width="200" height="10" fill="url(#inputGrad)"/>
+    <text x="130" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Flat Results</text>
+  </g>
+  <g transform="translate(40, 120)">
+    <rect x="0" y="0" width="180" height="24" rx="3" fill="#eff6ff"/>
+    <text x="90" y="16" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">category: "electronics"</text>
+    <rect x="0" y="28" width="180" height="24" rx="3" fill="#eff6ff"/>
+    <text x="90" y="44" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">category: "clothing"</text>
+    <rect x="0" y="56" width="180" height="24" rx="3" fill="#eff6ff"/>
+    <text x="90" y="72" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">category: "electronics"</text>
+    <rect x="0" y="84" width="180" height="24" rx="3" fill="#eff6ff"/>
+    <text x="90" y="100" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">category: "books"</text>
+  </g>
+
+  <path d="M 230 155 L 270 155" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Group By -->
+  <g filter="url(#shadow)">
+    <rect x="280" y="80" width="220" height="150" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="280" y="80" width="220" height="28" rx="10" fill="url(#groupGrad)"/>
+    <rect x="280" y="98" width="220" height="10" fill="url(#groupGrad)"/>
+    <text x="390" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Group By Field</text>
+  </g>
+  <g transform="translate(290, 120)">
+    <rect x="0" y="0" width="200" height="35" rx="4" fill="#fff7ed"/>
+    <text x="100" y="14" font-family="monospace" font-size="9" fill="#ea580c" text-anchor="middle">field: "category"</text>
+    <text x="100" y="28" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Group by field value</text>
+
+    <rect x="0" y="42" width="200" height="35" rx="4" fill="#fef3c7"/>
+    <text x="100" y="56" font-family="monospace" font-size="9" fill="#d97706" text-anchor="middle">max_groups: 10</text>
+    <text x="100" y="70" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Limit number of groups</text>
+
+    <rect x="0" y="84" width="200" height="28" rx="4" fill="#f1f5f9"/>
+    <text x="100" y="102" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">docs_per_group: 5</text>
+  </g>
+
+  <path d="M 500 155 L 540 155" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Output -->
+  <g filter="url(#shadow)">
+    <rect x="550" y="70" width="220" height="170" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="550" y="70" width="220" height="28" rx="10" fill="url(#outputGrad)"/>
+    <rect x="550" y="88" width="220" height="10" fill="url(#outputGrad)"/>
+    <text x="660" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Grouped Results</text>
+  </g>
+  <g transform="translate(560, 110)">
+    <rect x="0" y="0" width="200" height="40" rx="3" fill="#ccfbf1"/>
+    <text x="100" y="16" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#0d9488" text-anchor="middle">electronics (2)</text>
+    <text x="100" y="32" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">[Doc 1, Doc 3]</text>
+
+    <rect x="0" y="46" width="200" height="40" rx="3" fill="#d1fae5"/>
+    <text x="100" y="62" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#16a34a" text-anchor="middle">clothing (1)</text>
+    <text x="100" y="78" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">[Doc 2]</text>
+
+    <rect x="0" y="92" width="200" height="40" rx="3" fill="#ecfdf5"/>
+    <text x="100" y="108" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#22c55e" text-anchor="middle">books (1)</text>
+    <text x="100" y="124" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">[Doc 4]</text>
+  </g>
+
+  <!-- Info -->
+  <g transform="translate(790, 100)">
+    <rect x="0" y="0" width="90" height="80" rx="6" fill="#f0fdfa" stroke="#14b8a6" stroke-width="1"/>
+    <text x="45" y="18" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#0d9488" text-anchor="middle">Use for</text>
+    <text x="45" y="36" font-family="system-ui, sans-serif" font-size="7" fill="#475569" text-anchor="middle">Facets</text>
+    <text x="45" y="50" font-family="system-ui, sans-serif" font-size="7" fill="#475569" text-anchor="middle">Categories</text>
+    <text x="45" y="64" font-family="system-ui, sans-serif" font-size="7" fill="#475569" text-anchor="middle">Navigation</text>
+  </g>
+
+  <g transform="translate(30, 270)">
+    <text x="0" y="0" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#475569">Output: Nested groups object | Latency: 1-5ms | Cost: Free | Different from Cluster (field-based vs embedding-based)</text>
+  </g>
+</svg>

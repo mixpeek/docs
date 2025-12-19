@@ -120,10 +120,10 @@
     {
       "group": "Process Data",
       "pages": [
+        "processing/feature-extractors",
         {
           "group": "Feature Extractors",
           "pages": [
-            "processing/feature-extractors",
             "processing/extractors/multimodal",
             "processing/extractors/image",
             "processing/extractors/face",
@@ -142,7 +142,6 @@
         {
           "group": "Retriever Stages",
           "pages": [
-            "retrieval/stages/overview",
             "retrieval/stages/semantic-search",
             "retrieval/stages/hybrid-search",
             "retrieval/stages/structured-filter",
