@@ -1,0 +1,346 @@
+---
+title: "Cluster"
+description: "Group documents by embedding similarity into semantic clusters"
+---
+
+<Frame>
+  <img src="/assets/retrievers/cluster.svg" alt="Cluster stage showing semantic grouping of search results" />
+</Frame>
+
+The Cluster stage groups documents based on embedding similarity, creating semantic clusters of related content. This helps organize search results into meaningful groups and discover themes within your results.
+
+<Note>
+  **Stage Category**: REDUCE (Groups documents)
+
+  **Transformation**: N documents → K clusters with documents
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Theme discovery** | Find topics within search results |
+| **Result organization** | Group similar items together |
+| **Deduplication** | Find near-duplicate content |
+| **Exploration** | Understand result diversity |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Grouping by field value | `group_by` |
+| Removing duplicates | `deduplicate` |
+| Pre-defined categories | `taxonomy_enrich` |
+| Single representative | `sample` per group |
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `num_clusters` | integer | `5` | Number of clusters to create |
+| `embedding_field` | string | *auto* | Field containing embeddings |
+| `algorithm` | string | `kmeans` | Clustering algorithm |
+| `min_cluster_size` | integer | `2` | Minimum documents per cluster |
+| `include_outliers` | boolean | `true` | Include documents that don't fit clusters |
+| `label_clusters` | boolean | `false` | Generate cluster labels with LLM |
+
+## Clustering Algorithms
+
+| Algorithm | Description | Best For |
+|-----------|-------------|----------|
+| `kmeans` | K-means clustering | Fixed number of clusters |
+| `hdbscan` | Density-based clustering | Unknown cluster count |
+| `agglomerative` | Hierarchical clustering | Nested clusters |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Basic Clustering
+{
+  "stage_type": "reduce",
+  "stage_id": "cluster",
+  "parameters": {
+    "num_clusters": 5
+  }
+}
+```
+
+```json Auto-Labeled Clusters
+{
+  "stage_type": "reduce",
+  "stage_id": "cluster",
+  "parameters": {
+    "num_clusters": 8,
+    "label_clusters": true
+  }
+}
+```
+
+```json Density-Based Clustering
+{
+  "stage_type": "reduce",
+  "stage_id": "cluster",
+  "parameters": {
+    "algorithm": "hdbscan",
+    "min_cluster_size": 3,
+    "include_outliers": false
+  }
+}
+```
+
+```json Custom Embedding Field
+{
+  "stage_type": "reduce",
+  "stage_id": "cluster",
+  "parameters": {
+    "num_clusters": 6,
+    "embedding_field": "features.semantic_embedding",
+    "label_clusters": true
+  }
+}
+```
+
+```json Fine-Grained Clustering
+{
+  "stage_type": "reduce",
+  "stage_id": "cluster",
+  "parameters": {
+    "num_clusters": 15,
+    "min_cluster_size": 2,
+    "algorithm": "kmeans"
+  }
+}
+```
+</CodeGroup>
+
+## How Clustering Works
+
+1. **Extract Embeddings**: Get embedding vectors from each document
+2. **Apply Algorithm**: Run clustering algorithm (e.g., k-means)
+3. **Assign Documents**: Each document assigned to nearest cluster
+4. **Compute Centroids**: Calculate cluster centers
+5. **Label (optional)**: Generate human-readable cluster names
+
+## Output Schema
+
+```json
+{
+  "clusters": [
+    {
+      "cluster_id": 0,
+      "label": "Machine Learning Tutorials",
+      "centroid": [0.12, -0.34, ...],
+      "size": 12,
+      "documents": [
+        {
+          "document_id": "doc_123",
+          "content": "Introduction to neural networks...",
+          "score": 0.95,
+          "cluster": {
+            "cluster_id": 0,
+            "distance_to_centroid": 0.15
+          }
+        }
+      ]
+    },
+    {
+      "cluster_id": 1,
+      "label": "Data Engineering",
+      "centroid": [0.45, 0.23, ...],
+      "size": 8,
+      "documents": [...]
+    }
+  ],
+  "outliers": [
+    {
+      "document_id": "doc_789",
+      "content": "Unrelated content...",
+      "outlier_reason": "distance_threshold_exceeded"
+    }
+  ],
+  "metadata": {
+    "algorithm": "kmeans",
+    "num_clusters": 5,
+    "total_documents": 50,
+    "clustered_documents": 48,
+    "outlier_count": 2
+  }
+}
+```
+
+## Performance
+
+| Metric | Value |
+|--------|-------|
+| **Latency** | 50-200ms |
+| **Memory** | O(N × embedding_dim) |
+| **Cost** | Free (+ LLM cost if labeling) |
+| **Scalability** | Up to ~10K documents |
+
+<Warning>
+  Clustering large document sets (10K+) can be slow. Consider pre-filtering or sampling before clustering.
+</Warning>
+
+## Common Pipeline Patterns
+
+### Search + Cluster
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "semantic_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 100
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "cluster",
+    "parameters": {
+      "num_clusters": 5,
+      "label_clusters": true
+    }
+  }
+]
+```
+
+### Cluster + Sample Representatives
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "hybrid_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 200
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "cluster",
+    "parameters": {
+      "num_clusters": 10,
+      "label_clusters": true
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "sample",
+    "parameters": {
+      "method": "stratified",
+      "group_field": "cluster.cluster_id",
+      "samples_per_group": 2
+    }
+  }
+]
+```
+
+### Theme Discovery Pipeline
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "structured_filter",
+    "parameters": {
+      "conditions": {
+        "field": "metadata.date",
+        "operator": "gte",
+        "value": "2024-01-01"
+      }
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "cluster",
+    "parameters": {
+      "algorithm": "hdbscan",
+      "min_cluster_size": 5,
+      "label_clusters": true
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "summarize",
+    "parameters": {
+      "model": "gpt-4o-mini",
+      "prompt": "Summarize the main themes found in these clusters",
+      "mode": "aggregate"
+    }
+  }
+]
+```
+
+### Diverse Results Pipeline
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "semantic_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 100
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "cluster",
+    "parameters": {
+      "num_clusters": 5
+    }
+  },
+  {
+    "stage_type": "apply",
+    "stage_id": "code_execution",
+    "parameters": {
+      "code": "def transform(doc):\n    # Select top doc from each cluster\n    clusters = doc.get('clusters', [])\n    results = []\n    for c in clusters:\n        if c['documents']:\n            results.append(c['documents'][0])\n    doc['diverse_results'] = results\n    return doc"
+    }
+  }
+]
+```
+
+## Cluster Labeling
+
+When `label_clusters: true`, an LLM generates descriptive labels:
+
+| Cluster Documents | Generated Label |
+|-------------------|-----------------|
+| Docs about Python ML | "Python Machine Learning" |
+| Docs about cloud infra | "Cloud Infrastructure" |
+| Docs about API design | "REST API Design Patterns" |
+
+## Choosing num_clusters
+
+| Result Size | Recommended Clusters |
+|-------------|---------------------|
+| < 50 docs | 3-5 clusters |
+| 50-200 docs | 5-10 clusters |
+| 200-500 docs | 8-15 clusters |
+| 500+ docs | 10-20 clusters |
+
+<Tip>
+  Start with fewer clusters and increase if clusters are too broad. Use HDBSCAN if you don't know the optimal number.
+</Tip>
+
+## Error Handling
+
+| Error | Behavior |
+|-------|----------|
+| Missing embeddings | Skip document |
+| Too few documents | Reduce num_clusters |
+| Clustering fails | Return unclustered docs |
+| Labeling fails | Use numeric labels |
+
+## Related
+
+- [Group By](/retrieval/stages/group-by) - Group by field values
+- [Sample](/retrieval/stages/sample) - Select representatives
+- [MMR](/retrieval/stages/mmr) - Diversity in ranking
+- [Deduplicate](/retrieval/stages/deduplicate) - Remove duplicates

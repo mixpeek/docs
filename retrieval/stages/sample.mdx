@@ -1,0 +1,412 @@
+---
+title: "Sample"
+description: "Select a random or stratified sample of documents from results"
+---
+
+<Frame>
+  <img src="/assets/retrievers/sample.svg" alt="Sample stage showing random and stratified sampling of results" />
+</Frame>
+
+The Sample stage selects a subset of documents from your results using random or stratified sampling. This is useful for creating representative samples, reducing result sets, or ensuring diversity across categories.
+
+<Note>
+  **Stage Category**: REDUCE (Samples documents)
+
+  **Transformation**: N documents → S sampled documents (where S ≤ N)
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Representative samples** | Get a sample of large result sets |
+| **A/B testing** | Random document selection |
+| **Stratified selection** | Equal representation per category |
+| **Cost reduction** | Sample before expensive operations |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Top-N by relevance | `limit` or `rerank` |
+| Diversity by similarity | `mmr` |
+| Remove duplicates | `deduplicate` |
+| All results needed | Skip sampling |
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `method` | string | `random` | Sampling method: `random`, `stratified`, `systematic` |
+| `size` | integer | `10` | Number of samples to return |
+| `seed` | integer | *random* | Random seed for reproducibility |
+| `group_field` | string | *none* | Field for stratified sampling |
+| `samples_per_group` | integer | *auto* | Samples per stratum |
+
+## Sampling Methods
+
+| Method | Description | Best For |
+|--------|-------------|----------|
+| `random` | Uniform random selection | General sampling |
+| `stratified` | Equal samples per group | Category balance |
+| `systematic` | Every Nth document | Ordered data |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Random Sample
+{
+  "stage_type": "reduce",
+  "stage_id": "sample",
+  "parameters": {
+    "method": "random",
+    "size": 20
+  }
+}
+```
+
+```json Reproducible Random Sample
+{
+  "stage_type": "reduce",
+  "stage_id": "sample",
+  "parameters": {
+    "method": "random",
+    "size": 10,
+    "seed": 42
+  }
+}
+```
+
+```json Stratified by Category
+{
+  "stage_type": "reduce",
+  "stage_id": "sample",
+  "parameters": {
+    "method": "stratified",
+    "group_field": "metadata.category",
+    "samples_per_group": 3
+  }
+}
+```
+
+```json Systematic Sampling
+{
+  "stage_type": "reduce",
+  "stage_id": "sample",
+  "parameters": {
+    "method": "systematic",
+    "size": 25
+  }
+}
+```
+
+```json Stratified with Total Limit
+{
+  "stage_type": "reduce",
+  "stage_id": "sample",
+  "parameters": {
+    "method": "stratified",
+    "group_field": "metadata.source",
+    "size": 30
+  }
+}
+```
+</CodeGroup>
+
+## How Sampling Works
+
+### Random Sampling
+
+Selects documents with uniform probability:
+
+```
+Input: [A, B, C, D, E, F, G, H, I, J] (10 docs)
+Sample(size=3): [D, G, B] (random selection)
+```
+
+### Stratified Sampling
+
+Ensures representation from each group:
+
+```
+Input:
+  - Category A: [A1, A2, A3, A4, A5]
+  - Category B: [B1, B2, B3]
+  - Category C: [C1, C2]
+
+Stratified(samples_per_group=2):
+  [A1, A3, B2, B1, C1, C2]
+```
+
+### Systematic Sampling
+
+Selects every Nth document:
+
+```
+Input: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+Systematic(size=3): [1, 4, 7] (every 3rd, starting from 1)
+```
+
+## Output Schema
+
+```json
+{
+  "documents": [
+    {
+      "document_id": "doc_123",
+      "content": "Sampled document content...",
+      "score": 0.85,
+      "sample": {
+        "method": "stratified",
+        "stratum": "electronics",
+        "sample_index": 0
+      }
+    }
+  ],
+  "metadata": {
+    "method": "stratified",
+    "total_input": 100,
+    "sample_size": 15,
+    "strata": {
+      "electronics": {"input": 45, "sampled": 5},
+      "clothing": {"input": 35, "sampled": 5},
+      "books": {"input": 20, "sampled": 5}
+    }
+  }
+}
+```
+
+## Performance
+
+| Metric | Value |
+|--------|-------|
+| **Latency** | < 5ms |
+| **Memory** | O(N) |
+| **Cost** | Free |
+| **Complexity** | O(N) random, O(N log N) stratified |
+
+## Common Pipeline Patterns
+
+### Search + Sample for Testing
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "semantic_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 1000
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "sample",
+    "parameters": {
+      "method": "random",
+      "size": 50,
+      "seed": 42
+    }
+  }
+]
+```
+
+### Balanced Category Sample
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "hybrid_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 500
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "sample",
+    "parameters": {
+      "method": "stratified",
+      "group_field": "metadata.category",
+      "samples_per_group": 5
+    }
+  }
+]
+```
+
+### Sample Before LLM Processing
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "semantic_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 200
+    }
+  },
+  {
+    "stage_type": "sort",
+    "stage_id": "rerank",
+    "parameters": {
+      "model": "bge-reranker-v2-m3",
+      "top_n": 50
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "sample",
+    "parameters": {
+      "method": "random",
+      "size": 10
+    }
+  },
+  {
+    "stage_type": "apply",
+    "stage_id": "llm_enrichment",
+    "parameters": {
+      "model": "gpt-4o",
+      "prompt": "Extract key insights",
+      "output_field": "insights"
+    }
+  }
+]
+```
+
+### Cluster + Sample Representatives
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "semantic_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 200
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "cluster",
+    "parameters": {
+      "num_clusters": 10
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "sample",
+    "parameters": {
+      "method": "stratified",
+      "group_field": "cluster.cluster_id",
+      "samples_per_group": 2
+    }
+  }
+]
+```
+
+### Multi-Source Balanced Sample
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "structured_filter",
+    "parameters": {
+      "conditions": {
+        "field": "metadata.date",
+        "operator": "gte",
+        "value": "2024-01-01"
+      }
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "sample",
+    "parameters": {
+      "method": "stratified",
+      "group_field": "metadata.source",
+      "samples_per_group": 10
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "summarize",
+    "parameters": {
+      "model": "gpt-4o",
+      "prompt": "Compare perspectives from different sources on this topic"
+    }
+  }
+]
+```
+
+## Stratified Sampling Details
+
+### Equal Allocation
+
+```json
+{
+  "method": "stratified",
+  "group_field": "metadata.category",
+  "samples_per_group": 5
+}
+```
+
+Each group gets exactly 5 samples (if available).
+
+### Proportional Allocation
+
+```json
+{
+  "method": "stratified",
+  "group_field": "metadata.category",
+  "size": 30,
+  "allocation": "proportional"
+}
+```
+
+Samples proportional to group size.
+
+## Reproducibility
+
+Use `seed` for reproducible results:
+
+```json
+{
+  "method": "random",
+  "size": 20,
+  "seed": 12345
+}
+```
+
+Same seed + same input = same output.
+
+## Error Handling
+
+| Error | Behavior |
+|-------|----------|
+| size > input | Return all documents |
+| Empty stratum | Skip that stratum |
+| Invalid group_field | Fall back to random |
+| size = 0 | Return empty |
+
+## Sample vs Other Reduction Stages
+
+| Stage | Selection Basis | Deterministic |
+|-------|-----------------|---------------|
+| `sample` | Random/Stratified | With seed |
+| `limit` | Position | Yes |
+| `mmr` | Diversity + relevance | Yes |
+| `deduplicate` | Uniqueness | Yes |
+
+## Related
+
+- [Aggregate](/retrieval/stages/aggregate) - Statistical analysis
+- [Group By](/retrieval/stages/group-by) - Group before sampling
+- [Cluster](/retrieval/stages/cluster) - Semantic grouping
+- [MMR](/retrieval/stages/mmr) - Diversity-based selection

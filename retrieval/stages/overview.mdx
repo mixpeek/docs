@@ -13,25 +13,25 @@ Stages are organized into four categories based on how they transform the docume
   <Card title="FILTER" icon="filter">
     Reduce the document set by matching criteria. Outputs a subset of input documents.
 
-    **Examples**: semantic_search, hybrid_search, structured_filter, llm_filter
+    **Examples**: semantic_search, hybrid_search, structured_filter, llm_filter, query_expand
   </Card>
 
   <Card title="SORT" icon="arrow-up-arrow-down">
     Reorder documents by relevance or field values. Same documents, different order.
 
-    **Examples**: rerank, sort_by_field
+    **Examples**: rerank, sort_by_field, sort_relevance, mmr, learned_rerank
   </Card>
 
   <Card title="REDUCE" icon="compress">
     Aggregate or reduce the document count. Combine, deduplicate, or limit results.
 
-    **Examples**: summarize, deduplicate, limit
+    **Examples**: summarize, aggregate, cluster, group_by, sample
   </Card>
 
   <Card title="APPLY" icon="wand-magic-sparkles">
     Enrich documents with additional data. Same count, added fields.
 
-    **Examples**: api_call, llm_enrichment, document_enrich, rag_prepare
+    **Examples**: api_call, llm_enrichment, document_enrich, code_execution, rag_prepare
   </Card>
 </CardGroup>
 
@@ -45,6 +45,7 @@ Stages are organized into four categories based on how they transform the docume
 | [Hybrid Search](/retrieval/stages/hybrid-search) | FILTER | Combined vector + text search with RRF |
 | [Structured Filter](/retrieval/stages/structured-filter) | FILTER | Filter by metadata fields and conditions |
 | [LLM Filter](/retrieval/stages/llm-filter) | FILTER | Content-based filtering using LLMs |
+| [Query Expand](/retrieval/stages/query-expand) | FILTER | LLM-powered query expansion with result fusion |
 
 ### Sorting Stages
 
@@ -52,14 +53,19 @@ Stages are organized into four categories based on how they transform the docume
 |-------|----------|-------------|
 | [Rerank](/retrieval/stages/rerank) | SORT | Neural re-scoring with cross-encoders |
 | [Sort By Field](/retrieval/stages/sort-by-field) | SORT | Order by any metadata field |
+| [Sort Relevance](/retrieval/stages/sort-relevance) | SORT | Reorder by relevance scores |
+| [MMR](/retrieval/stages/mmr) | SORT | Diversify results with Maximal Marginal Relevance |
+| [Learned Rerank](/retrieval/stages/learned-rerank) | SORT | Personalized reranking with bandit learning |
 
 ### Reduction Stages
 
 | Stage | Category | Description |
 |-------|----------|-------------|
 | [Summarize](/retrieval/stages/summarize) | REDUCE | LLM-powered document summarization |
-| [Deduplicate](/retrieval/stages/deduplicate) | REDUCE | Remove duplicate documents |
-| [Limit](/retrieval/stages/limit) | REDUCE | Control result count |
+| [Aggregate](/retrieval/stages/aggregate) | REDUCE | Compute statistical aggregations |
+| [Cluster](/retrieval/stages/cluster) | REDUCE | Group documents by embedding similarity |
+| [Group By](/retrieval/stages/group-by) | REDUCE | Aggregate documents by field values |
+| [Sample](/retrieval/stages/sample) | REDUCE | Random or stratified sampling |
 
 ### Enrichment Stages
 
@@ -72,6 +78,7 @@ Stages are organized into four categories based on how they transform the docume
 | [LLM Enrichment](/retrieval/stages/llm-enrichment) | APPLY | Extract structured data with LLMs |
 | [JSON Transform](/retrieval/stages/json-transform) | APPLY | Template-based transformations |
 | [RAG Prepare](/retrieval/stages/rag-prepare) | APPLY | Format for LLM context windows |
+| [Code Execution](/retrieval/stages/code-execution) | APPLY | Execute custom Python code |
 | [External Web Search](/retrieval/stages/external-web-search) | APPLY | Augment with Exa web search |
 | [Web Scrape](/retrieval/stages/web-scrape) | APPLY | Extract content from URLs |
 
@@ -253,11 +260,17 @@ Stages are organized into four categories based on how they transform the docume
 | Match exact keywords + meaning | hybrid_search |
 | Filter by metadata fields | structured_filter |
 | Filter by content meaning | llm_filter |
+| Improve recall with query variations | query_expand |
 | Get best relevance ranking | rerank |
 | Order by price/date/rating | sort_by_field |
+| Re-sort by relevance scores | sort_relevance |
+| Diversify results | mmr |
+| Personalized ranking | learned_rerank |
 | Answer questions from docs | summarize |
-| Remove duplicates | deduplicate |
-| Control result count | limit |
+| Compute statistics on results | aggregate |
+| Find themes in results | cluster |
+| Group by category/author | group_by |
+| Random/stratified sampling | sample |
 | Add external API data | api_call |
 | Add database data | sql_lookup |
 | Join Mixpeek collections | document_enrich |
@@ -265,6 +278,7 @@ Stages are organized into four categories based on how they transform the docume
 | Extract structured data | llm_enrichment |
 | Transform document structure | json_transform |
 | Prepare for LLM context | rag_prepare |
+| Custom transformations | code_execution |
 | Add web search results | external_web_search |
 | Extract URL content | web_scrape |
 
@@ -275,15 +289,22 @@ Stages are organized into four categories based on how they transform the docume
 | semantic_search | 5-50ms | Index storage |
 | hybrid_search | 20-100ms | Index storage |
 | structured_filter | < 5ms | Free |
+| llm_filter | 200-500ms | LLM API |
+| query_expand | 300-800ms | LLM API |
 | rerank | 50-100ms | API calls |
 | sort_by_field | < 5ms | Free |
-| limit | < 1ms | Free |
-| deduplicate | 10-200ms | Free |
+| sort_relevance | < 5ms | Free |
+| mmr | 10-50ms | Free |
+| learned_rerank | 20-50ms | Free |
 | summarize | 500-2000ms | LLM API |
+| aggregate | 5-50ms | Free |
+| cluster | 50-200ms | Free |
+| group_by | 5-20ms | Free |
+| sample | < 5ms | Free |
 | llm_enrichment | 300-800ms | LLM API |
-| llm_filter | 200-500ms | LLM API |
 | api_call | 50-500ms | External API |
 | sql_lookup | 10-100ms | Database |
+| code_execution | 5-50ms | Free |
 | rag_prepare | < 10ms | Free |
 
 <Tip>

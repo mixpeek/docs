@@ -1,0 +1,362 @@
+---
+title: "Group By"
+description: "Aggregate documents by shared field values into logical groups"
+---
+
+<Frame>
+  <img src="/assets/retrievers/group-by.svg" alt="Group By stage showing document aggregation by field values" />
+</Frame>
+
+The Group By stage aggregates documents that share the same value for a specified field, creating logical groups. This is useful for organizing results by category, author, date, or any other attribute.
+
+<Note>
+  **Stage Category**: REDUCE (Groups documents)
+
+  **Transformation**: N documents → G groups (where G = unique field values)
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Category grouping** | Group products by category |
+| **Author aggregation** | Group articles by author |
+| **Date grouping** | Group by day/month/year |
+| **Source organization** | Group by data source |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Semantic similarity grouping | `cluster` |
+| Statistical aggregations only | `aggregate` |
+| Removing duplicates | `deduplicate` |
+| Top-N per group | Use with `sample` |
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `field` | string | *Required* | Field to group by |
+| `max_groups` | integer | `100` | Maximum number of groups |
+| `sort_groups_by` | string | `count` | Sort groups: `count`, `field`, `score` |
+| `sort_order` | string | `desc` | Group sort order: `asc`, `desc` |
+| `docs_per_group` | integer | *all* | Limit documents per group |
+| `sort_docs_by` | string | `score` | Sort docs within group |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Basic Group By
+{
+  "stage_type": "reduce",
+  "stage_id": "group_by",
+  "parameters": {
+    "field": "metadata.category"
+  }
+}
+```
+
+```json Limited Docs Per Group
+{
+  "stage_type": "reduce",
+  "stage_id": "group_by",
+  "parameters": {
+    "field": "metadata.author",
+    "docs_per_group": 5,
+    "sort_docs_by": "score"
+  }
+}
+```
+
+```json Sorted Groups
+{
+  "stage_type": "reduce",
+  "stage_id": "group_by",
+  "parameters": {
+    "field": "metadata.brand",
+    "sort_groups_by": "count",
+    "sort_order": "desc",
+    "max_groups": 10
+  }
+}
+```
+
+```json Date Grouping
+{
+  "stage_type": "reduce",
+  "stage_id": "group_by",
+  "parameters": {
+    "field": "metadata.publish_date",
+    "sort_groups_by": "field",
+    "sort_order": "desc"
+  }
+}
+```
+
+```json Nested Field Grouping
+{
+  "stage_type": "reduce",
+  "stage_id": "group_by",
+  "parameters": {
+    "field": "metadata.source.type",
+    "docs_per_group": 3,
+    "sort_docs_by": "metadata.date"
+  }
+}
+```
+</CodeGroup>
+
+## Output Schema
+
+```json
+{
+  "groups": [
+    {
+      "key": "electronics",
+      "count": 25,
+      "documents": [
+        {
+          "document_id": "doc_123",
+          "content": "Latest smartphone review...",
+          "score": 0.95,
+          "metadata": {"category": "electronics", "price": 999}
+        },
+        {
+          "document_id": "doc_456",
+          "content": "Laptop comparison guide...",
+          "score": 0.89,
+          "metadata": {"category": "electronics", "price": 1299}
+        }
+      ]
+    },
+    {
+      "key": "clothing",
+      "count": 18,
+      "documents": [...]
+    }
+  ],
+  "metadata": {
+    "total_groups": 5,
+    "total_documents": 100,
+    "field": "metadata.category"
+  }
+}
+```
+
+## Performance
+
+| Metric | Value |
+|--------|-------|
+| **Latency** | 5-20ms |
+| **Memory** | O(N) |
+| **Cost** | Free |
+| **Scalability** | Efficient |
+
+## Common Pipeline Patterns
+
+### Search + Group by Category
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "semantic_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 100
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "group_by",
+    "parameters": {
+      "field": "metadata.category",
+      "docs_per_group": 5
+    }
+  }
+]
+```
+
+### Grouped Results with Aggregations
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "hybrid_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 200
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "group_by",
+    "parameters": {
+      "field": "metadata.brand",
+      "sort_groups_by": "count",
+      "max_groups": 10
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "aggregate",
+    "parameters": {
+      "aggregations": [
+        {"type": "avg", "field": "metadata.price", "name": "avg_price"},
+        {"type": "avg", "field": "metadata.rating", "name": "avg_rating"}
+      ],
+      "group_by": "metadata.brand"
+    }
+  }
+]
+```
+
+### Author-Grouped Search
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "semantic_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 100
+    }
+  },
+  {
+    "stage_type": "apply",
+    "stage_id": "document_enrich",
+    "parameters": {
+      "collection_id": "authors",
+      "lookup_field": "author_id",
+      "source_field": "metadata.author_id",
+      "result_field": "author"
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "group_by",
+    "parameters": {
+      "field": "author.name",
+      "docs_per_group": 3,
+      "sort_groups_by": "count"
+    }
+  }
+]
+```
+
+### Time-Based Grouping
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "structured_filter",
+    "parameters": {
+      "conditions": {
+        "field": "metadata.date",
+        "operator": "gte",
+        "value": "2024-01-01"
+      }
+    }
+  },
+  {
+    "stage_type": "apply",
+    "stage_id": "code_execution",
+    "parameters": {
+      "code": "def transform(doc):\n    date = doc.get('metadata', {}).get('date', '')\n    doc['metadata']['month'] = date[:7]  # YYYY-MM\n    return doc"
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "group_by",
+    "parameters": {
+      "field": "metadata.month",
+      "sort_groups_by": "field",
+      "sort_order": "desc"
+    }
+  }
+]
+```
+
+## Group Sorting Options
+
+### By Count (default)
+
+```json
+{"sort_groups_by": "count", "sort_order": "desc"}
+```
+
+Groups with most documents first.
+
+### By Field Value
+
+```json
+{"sort_groups_by": "field", "sort_order": "asc"}
+```
+
+Alphabetical or chronological ordering.
+
+### By Best Score
+
+```json
+{"sort_groups_by": "score", "sort_order": "desc"}
+```
+
+Groups containing highest-scoring documents first.
+
+## Document Sorting Within Groups
+
+| Sort By | Description |
+|---------|-------------|
+| `score` | Relevance score (default) |
+| `metadata.date` | Any metadata field |
+| `_random` | Random order |
+
+## Handling Missing Values
+
+| Behavior | Description |
+|----------|-------------|
+| `null` key | Documents with missing field grouped as "null" |
+| Exclude | Set `exclude_null: true` to skip |
+
+```json
+{
+  "stage_type": "reduce",
+  "stage_id": "group_by",
+  "parameters": {
+    "field": "metadata.category",
+    "exclude_null": true
+  }
+}
+```
+
+## Error Handling
+
+| Error | Behavior |
+|-------|----------|
+| Missing field | Group as "null" or exclude |
+| Too many groups | Truncate to max_groups |
+| Empty results | Return empty groups array |
+| Invalid field path | Stage fails |
+
+## Group By vs Cluster
+
+| Aspect | Group By | Cluster |
+|--------|----------|---------|
+| Grouping basis | Field value | Embedding similarity |
+| Groups known | Yes (field values) | No (discovered) |
+| Speed | Fast | Slower |
+| Use case | Category organization | Theme discovery |
+
+## Related
+
+- [Aggregate](/retrieval/stages/aggregate) - Statistical aggregations
+- [Cluster](/retrieval/stages/cluster) - Semantic grouping
+- [Sample](/retrieval/stages/sample) - Select from groups
+- [Sort By Field](/retrieval/stages/sort-by-field) - Simple sorting
