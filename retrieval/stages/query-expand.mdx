@@ -1,0 +1,262 @@
+---
+title: "Query Expand"
+description: "Generate query variations using LLMs and fuse results for improved recall"
+---
+
+<Frame>
+  <img src="/assets/retrievers/query-expand.svg" alt="Query Expand stage showing LLM-powered query variations and result fusion" />
+</Frame>
+
+The Query Expand stage uses language models to generate multiple query variations from the original query, executes searches for each variation, and fuses the results. This improves recall by capturing different phrasings and aspects of the user's intent.
+
+<Note>
+  **Stage Category**: FILTER (Generates and fuses search results)
+
+  **Transformation**: 1 query → N query variations → fused results
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Improved recall** | Capture documents that match alternative phrasings |
+| **Ambiguous queries** | Handle queries with multiple interpretations |
+| **Synonym expansion** | Find documents using different terminology |
+| **Multi-aspect search** | Break complex queries into sub-queries |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Simple keyword search | `semantic_search` directly |
+| Low latency requirements | Pre-compute expansions |
+| Precise single-intent queries | Standard search |
+| Cost-sensitive applications | Use simpler search |
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `model` | string | *Required* | LLM model for query generation |
+| `query` | string | `{{INPUT.query}}` | Original query to expand |
+| `num_variations` | integer | `3` | Number of query variations to generate |
+| `vector_index` | string | *Required* | Vector index for searches |
+| `top_k` | integer | `20` | Results per query variation |
+| `fusion_method` | string | `rrf` | Result fusion method: `rrf`, `linear`, `max` |
+| `expansion_prompt` | string | *auto* | Custom prompt for query generation |
+
+## Fusion Methods
+
+| Method | Description | Best For |
+|--------|-------------|----------|
+| `rrf` | Reciprocal Rank Fusion | General purpose, balanced |
+| `linear` | Weighted score combination | When scores are comparable |
+| `max` | Take maximum score | When any match is good |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Basic Query Expansion
+{
+  "stage_type": "filter",
+  "stage_id": "query_expand",
+  "parameters": {
+    "model": "gpt-4o-mini",
+    "query": "{{INPUT.query}}",
+    "vector_index": "text_extractor_v1_embedding",
+    "num_variations": 3,
+    "top_k": 30
+  }
+}
+```
+
+```json Custom Expansion Prompt
+{
+  "stage_type": "filter",
+  "stage_id": "query_expand",
+  "parameters": {
+    "model": "gpt-4o-mini",
+    "query": "{{INPUT.query}}",
+    "vector_index": "text_extractor_v1_embedding",
+    "num_variations": 5,
+    "top_k": 20,
+    "expansion_prompt": "Generate {{num_variations}} alternative phrasings of this query, focusing on different synonyms and related concepts: {{query}}"
+  }
+}
+```
+
+```json High-Recall Configuration
+{
+  "stage_type": "filter",
+  "stage_id": "query_expand",
+  "parameters": {
+    "model": "gpt-4o",
+    "query": "{{INPUT.query}}",
+    "vector_index": "text_extractor_v1_embedding",
+    "num_variations": 5,
+    "top_k": 50,
+    "fusion_method": "rrf"
+  }
+}
+```
+
+```json Domain-Specific Expansion
+{
+  "stage_type": "filter",
+  "stage_id": "query_expand",
+  "parameters": {
+    "model": "gpt-4o-mini",
+    "query": "{{INPUT.query}}",
+    "vector_index": "medical_embedding",
+    "num_variations": 4,
+    "expansion_prompt": "Generate {{num_variations}} medical search queries that capture different aspects of: {{query}}. Include medical terminology and layman's terms."
+  }
+}
+```
+</CodeGroup>
+
+## How Query Expansion Works
+
+1. **Original Query**: "how to fix memory leaks"
+2. **LLM Generates Variations**:
+   - "memory leak detection and resolution"
+   - "debugging memory issues in applications"
+   - "preventing memory leaks in code"
+3. **Execute Searches**: Run vector search for each variation
+4. **Fuse Results**: Combine using RRF or other fusion method
+5. **Return**: Deduplicated, ranked result set
+
+## Reciprocal Rank Fusion (RRF)
+
+RRF combines results from multiple queries using the formula:
+
+```
+score(doc) = Σ 1 / (k + rank_i)
+```
+
+Where `k` is typically 60, and `rank_i` is the document's rank in query i's results.
+
+| Advantage | Description |
+|-----------|-------------|
+| Score-agnostic | Works with different scoring scales |
+| Rank-based | Focuses on relative ordering |
+| Self-balancing | No manual weight tuning |
+
+## Output Schema
+
+Each document includes fusion metadata:
+
+```json
+{
+  "document_id": "doc_123",
+  "content": "Document content...",
+  "score": 0.87,
+  "query_expand": {
+    "matched_variations": ["memory leak detection", "debugging memory issues"],
+    "fusion_score": 0.87,
+    "individual_ranks": [2, 5, null]
+  }
+}
+```
+
+## Performance
+
+| Metric | Value |
+|--------|-------|
+| **Latency** | 300-800ms (LLM + searches) |
+| **LLM calls** | 1 per execution |
+| **Search calls** | N (num_variations) |
+| **Token usage** | ~50-100 tokens |
+
+<Warning>
+  Query expansion adds latency due to LLM generation and multiple searches. Use judiciously for queries where recall improvement justifies the cost.
+</Warning>
+
+## Common Pipeline Patterns
+
+### Expanded Search + Rerank
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "query_expand",
+    "parameters": {
+      "model": "gpt-4o-mini",
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "num_variations": 3,
+      "top_k": 50
+    }
+  },
+  {
+    "stage_type": "sort",
+    "stage_id": "rerank",
+    "parameters": {
+      "model": "bge-reranker-v2-m3",
+      "top_n": 10
+    }
+  }
+]
+```
+
+### Expansion + Filter + Summarize
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "query_expand",
+    "parameters": {
+      "model": "gpt-4o-mini",
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "num_variations": 4,
+      "top_k": 30
+    }
+  },
+  {
+    "stage_type": "filter",
+    "stage_id": "structured_filter",
+    "parameters": {
+      "conditions": {
+        "field": "metadata.verified",
+        "operator": "eq",
+        "value": true
+      }
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "summarize",
+    "parameters": {
+      "model": "gpt-4o",
+      "prompt": "Answer based on the documents: {{INPUT.query}}"
+    }
+  }
+]
+```
+
+## Cost Optimization
+
+| Strategy | Impact |
+|----------|--------|
+| Reduce num_variations | Fewer searches |
+| Use cheaper LLM | `gpt-4o-mini` vs `gpt-4o` |
+| Lower top_k per variation | Less fusion overhead |
+| Cache common expansions | Reduce LLM calls |
+
+## Error Handling
+
+| Error | Behavior |
+|-------|----------|
+| LLM failure | Fall back to original query |
+| Search failure | Skip that variation |
+| Empty expansions | Use original query only |
+| Timeout | Return partial results |
+
+## Related
+
+- [Semantic Search](/retrieval/stages/semantic-search) - Single query search
+- [Hybrid Search](/retrieval/stages/hybrid-search) - Vector + text search
+- [Rerank](/retrieval/stages/rerank) - Re-score fused results

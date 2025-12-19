@@ -150,8 +150,6 @@
             "retrieval/stages/rerank",
             "retrieval/stages/sort-by-field",
             "retrieval/stages/summarize",
-            "retrieval/stages/deduplicate",
-            "retrieval/stages/limit",
             "retrieval/stages/api-call",
             "retrieval/stages/sql-lookup",
             "retrieval/stages/document-enrich",
