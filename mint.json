@@ -125,6 +125,8 @@
           "pages": [
             "processing/feature-extractors",
             "processing/extractors/multimodal",
+            "processing/extractors/image",
+            "processing/extractors/face",
             "processing/extractors/text"
           ]
         },

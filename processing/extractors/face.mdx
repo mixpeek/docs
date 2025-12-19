@@ -1,0 +1,351 @@
+---
+title: "Face Identity Extractor"
+description: "Production-grade face recognition using SCRFD + ArcFace with 99.8%+ verification accuracy"
+---
+
+<Frame>
+  <img src="/assets/extractors/face.svg" alt="Face identity extractor pipeline showing detection, alignment, and embedding generation" />
+</Frame>
+
+The face identity extractor provides production-grade face recognition using state-of-the-art models (SCRFD for detection + ArcFace for embeddings). Detects faces, aligns to canonical template, and generates 512-dimensional embeddings with 99.8%+ verification accuracy (LFW benchmark).
+
+<Note>
+  View extractor details at [api.mixpeek.com/v1/collections/features/extractors/face_identity_extractor_v1](https://api.mixpeek.com/v1/collections/features/extractors/face_identity_extractor_v1) or fetch programmatically with `GET /v1/collections/features/extractors/{feature_extractor_id}`.
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Face verification** | 1:1 matching to verify identity |
+| **Face identification** | 1:N search to identify a person in a database |
+| **Face clustering** | Group photos by person automatically |
+| **Employee verification** | Workplace identity systems |
+| **Photo organization** | Organize photo libraries by people |
+| **Surveillance** | Security and monitoring applications |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| General image search | `image_extractor` |
+| Object/scene detection | `multimodal_extractor` |
+| Video content analysis | `multimodal_extractor` |
+| Non-face biometrics | Specialized extractors |
+
+## Supported Input Types
+
+| Input | Type | Description | Processing |
+|-------|------|-------------|------------|
+| `image` | string | URL or S3 path | Detect and embed all faces |
+| `video` | string | URL or S3 path | Sample frames, detect faces, deduplicate |
+| `video_frame` | string | URL or S3 path | Treated as image |
+
+**Supported formats:**
+- **Image**: JPEG, PNG, WebP, BMP
+- **Video**: MP4, MOV, AVI, MKV, WebM
+
+**Recommended resolution**: 640px+ for optimal face detection
+
+## Input Schema
+
+Provide **one** of the following inputs:
+
+```json
+{
+  "image": "s3://photos/john-doe-portrait.jpg"
+}
+```
+
+```json
+{
+  "video": "s3://segments/interview-clip.mp4"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `image` | string | Image URL or S3 path containing faces |
+| `video` | string | Video URL or S3 path. Subject to `max_video_length` limit |
+| `video_frame` | string | Single video frame URL or S3 path (treated as image) |
+
+## Output Schema
+
+Each detected face produces one document with the following fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `face_identity_extractor_v1_embedding` | float[512] | ArcFace embedding, L2 normalized |
+| `face_index` | integer | Index of this face in source image (0-based) |
+| `bbox` | object | Bounding box `{x1, y1, x2, y2, width, height}` |
+| `detection_score` | number | SCRFD detection confidence (0.0-1.0) |
+| `landmarks` | object | 5 facial landmarks for alignment |
+| `quality_score` | number | Face quality score (0.0-1.0) |
+| `quality_components` | object | Quality component scores (blur, size, etc.) |
+| `aligned_face_crop` | string | Base64 aligned 112x112 face crop (optional) |
+| `frame_number` | integer | Frame number in source video |
+| `timestamp` | number | Timestamp in source video (seconds) |
+| `embedding_model` | string | Embedding model used |
+| `detection_model` | string | Detection model used |
+| `processing_time_ms` | number | Processing time (milliseconds) |
+
+```json
+{
+  "face_identity_extractor_v1_embedding": [0.023, -0.041, 0.018, ...],
+  "face_index": 0,
+  "bbox": {"x1": 120, "y1": 80, "x2": 280, "y2": 300, "width": 160, "height": 220},
+  "detection_score": 0.98,
+  "landmarks": {"left_eye": [150, 140], "right_eye": [230, 142], ...},
+  "quality_score": 0.85,
+  "embedding_model": "arcface_r100",
+  "detection_model": "scrfd_2.5g",
+  "processing_time_ms": 45.2
+}
+```
+
+## Parameters
+
+### Detection Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `detection_model` | string | `"scrfd_2.5g"` | SCRFD model variant |
+| `min_face_size` | integer | `20` | Minimum face size in pixels to detect |
+| `detection_threshold` | float | `0.5` | Confidence threshold (0.0-1.0) |
+| `max_faces_per_image` | integer | `null` | Maximum faces to process per image |
+
+#### Detection Models
+
+| Model | Speed | Accuracy | Best For |
+|-------|-------|----------|----------|
+| `scrfd_500m` | 2-3ms | Good | Real-time applications |
+| `scrfd_2.5g` | 5-7ms | Better | **Recommended** - balanced |
+| `scrfd_10g` | 10-15ms | Best | Maximum accuracy |
+
+### Embedding Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `embedding_model` | string | `"arcface_r100"` | Face embedding model |
+| `normalize_embeddings` | boolean | `true` | L2-normalize to unit vectors |
+
+#### Embedding Models
+
+| Model | Accuracy (LFW) | Speed | Notes |
+|-------|---------------|-------|-------|
+| `arcface_r100` | 99.8%+ | Standard | **Recommended** - highest accuracy |
+| `arcface_r50` | 99.5%+ | Faster | Slightly lower accuracy |
+| `magface_r100` | 99.7%+ | Standard | Includes built-in quality score |
+
+### Quality Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `enable_quality_scoring` | boolean | `true` | Compute quality scores (adds ~5ms per face) |
+| `quality_threshold` | float | `null` | Minimum quality to index (null = index all) |
+
+**Quality threshold guide:**
+- `null` - Index all detected faces
+- `0.5` - Moderate filtering (removes low quality)
+- `0.7` - High quality only
+
+### Video Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `max_video_length` | integer | `60` | Maximum video length in seconds |
+| `video_sampling_fps` | float | `1.0` | Frames per second to sample |
+| `video_deduplication` | boolean | `true` | Remove duplicate faces across frames |
+| `video_deduplication_threshold` | float | `0.8` | Cosine similarity for deduplication |
+
+### Output Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `output_mode` | string | `"per_face"` | `per_face` or `per_image` |
+| `include_face_crops` | boolean | `false` | Include aligned 112x112 face crops as base64 |
+| `store_detection_metadata` | boolean | `true` | Store bbox, landmarks, detection scores |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Employee Verification (High Quality)
+{
+  "feature_extractor": {
+    "feature_extractor_name": "face_identity_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "image": "payload.photo_url"
+    },
+    "field_passthrough": [
+      { "source_path": "metadata.employee_id" }
+    ],
+    "parameters": {
+      "detection_model": "scrfd_2.5g",
+      "detection_threshold": 0.7,
+      "embedding_model": "arcface_r100",
+      "enable_quality_scoring": true,
+      "quality_threshold": 0.5,
+      "max_faces_per_image": 1,
+      "min_face_size": 40
+    }
+  }
+}
+```
+
+```json Group Photo Processing
+{
+  "feature_extractor": {
+    "feature_extractor_name": "face_identity_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "image": "payload.image_url"
+    },
+    "field_passthrough": [
+      { "source_path": "metadata.photo_id" },
+      { "source_path": "metadata.event_name" }
+    ],
+    "parameters": {
+      "detection_model": "scrfd_10g",
+      "detection_threshold": 0.5,
+      "embedding_model": "arcface_r100",
+      "max_faces_per_image": null,
+      "enable_quality_scoring": true
+    }
+  }
+}
+```
+
+```json Surveillance Video
+{
+  "feature_extractor": {
+    "feature_extractor_name": "face_identity_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "video": "payload.video_url"
+    },
+    "field_passthrough": [
+      { "source_path": "metadata.camera_id" },
+      { "source_path": "metadata.location" }
+    ],
+    "parameters": {
+      "detection_model": "scrfd_10g",
+      "detection_threshold": 0.6,
+      "embedding_model": "arcface_r100",
+      "max_video_length": 300,
+      "video_sampling_fps": 1.0,
+      "video_deduplication": true,
+      "video_deduplication_threshold": 0.8,
+      "min_face_size": 30,
+      "quality_threshold": 0.4
+    }
+  }
+}
+```
+
+```json Photo Library Organization
+{
+  "feature_extractor": {
+    "feature_extractor_name": "face_identity_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "image": "payload.photo_url"
+    },
+    "field_passthrough": [
+      { "source_path": "metadata.album" },
+      { "source_path": "metadata.date_taken" }
+    ],
+    "parameters": {
+      "detection_model": "scrfd_2.5g",
+      "embedding_model": "arcface_r100",
+      "enable_quality_scoring": true,
+      "include_face_crops": true,
+      "store_detection_metadata": true
+    }
+  }
+}
+```
+
+```json Real-time Access Control
+{
+  "feature_extractor": {
+    "feature_extractor_name": "face_identity_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "image": "payload.capture_url"
+    },
+    "parameters": {
+      "detection_model": "scrfd_500m",
+      "detection_threshold": 0.8,
+      "embedding_model": "arcface_r50",
+      "max_faces_per_image": 1,
+      "min_face_size": 60,
+      "enable_quality_scoring": false
+    }
+  }
+}
+```
+</CodeGroup>
+
+## Face Matching
+
+Use cosine similarity to match faces:
+
+| Similarity Score | Interpretation |
+|------------------|----------------|
+| > 0.30 | Very likely same person |
+| 0.25 - 0.30 | Likely same person |
+| 0.20 - 0.25 | Possibly same person |
+| < 0.20 | Different people |
+
+**Recommended threshold**: 0.25-0.30 for same person verification
+
+## Performance & Costs
+
+| Metric | Value |
+|--------|-------|
+| **Detection accuracy** | 99%+ (WIDER FACE benchmark) |
+| **Verification accuracy** | 99.8%+ (LFW benchmark) |
+| **Processing speed** | Detection: 5-7ms, Embedding: 10-15ms per face |
+| **Cost per image** | 30 credits base |
+| **Cost per face** | 30 credits additional per detected face |
+
+### Video Processing
+
+- **Deduplication**: Reduces 90-95% redundancy in video
+- **Sampling**: 1 FPS recommended for most use cases
+- **Max length**: 300 seconds (extraction only)
+
+## Vector Index
+
+| Property | Value |
+|----------|-------|
+| **Index name** | `face_identity_extractor_v1_embedding` |
+| **Dimensions** | 512 |
+| **Type** | Dense |
+| **Distance metric** | Cosine |
+| **Datatype** | float32 |
+| **Inference model** | `face_identity_arcface_r100_v1` |
+
+## Pipeline Overview
+
+1. **SCRFD Detection** - Bounding boxes + 5 landmarks
+2. **5-Point Affine Alignment** - 112x112 canonical face
+3. **ArcFace Embedding** - 512-d L2-normalized vector
+4. **Quality Scoring** (optional) - Filter low-quality faces
+
+## Limitations
+
+- **Face only**: Does not identify age, gender, or expressions
+- **Pose sensitivity**: Extreme angles may reduce accuracy
+- **Occlusion**: Masks, glasses, hair may affect detection
+- **Resolution**: Minimum 20px face size, 40px+ recommended
+- **Lighting**: Poor lighting reduces quality scores
+- **Video length**: Maximum 300 seconds per video
+
+## Related
+
+- [Feature Extractors Overview](/processing/feature-extractors)
+- [Image Extractor](/processing/extractors/image)
+- [Multimodal Extractor](/processing/extractors/multimodal)
+- [Text Extractor](/processing/extractors/text)

@@ -1,0 +1,125 @@
+<svg viewBox="0 0 900 380" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="objectGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ea580c;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="modelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="featureGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="processGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="380" fill="#f8fafc"/>
+
+  <!-- Title -->
+  <text x="450" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">Image Extractor: Visual Similarity Search</text>
+  <text x="450" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">Google SigLIP model for 768-dimensional image embeddings with cross-modal text search</text>
+
+  <!-- Input Image -->
+  <g filter="url(#shadow)">
+    <rect x="30" y="80" width="180" height="140" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="30" y="80" width="180" height="28" rx="10" fill="url(#objectGrad)"/>
+    <rect x="30" y="98" width="180" height="10" fill="url(#objectGrad)"/>
+    <text x="120" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Image Input</text>
+  </g>
+  <g transform="translate(40, 120)">
+    <rect x="0" y="0" width="160" height="90" rx="4" fill="#fff7ed"/>
+    <text x="80" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#c2410c" text-anchor="middle">Required</text>
+    <text x="80" y="36" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">"image": URL or S3 path</text>
+    <text x="80" y="54" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">JPEG, PNG, WebP, BMP</text>
+    <text x="80" y="70" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Any resolution (224x224 internal)</text>
+    <text x="80" y="84" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">Max 10MB recommended</text>
+  </g>
+
+  <!-- Arrow to SigLIP -->
+  <path d="M 210 150 L 260 150" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- SigLIP Model -->
+  <g filter="url(#shadow)">
+    <rect x="270" y="70" width="220" height="160" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="270" y="70" width="220" height="28" rx="10" fill="url(#modelGrad)"/>
+    <rect x="270" y="88" width="220" height="10" fill="url(#modelGrad)"/>
+    <text x="380" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Google SigLIP</text>
+  </g>
+  <g transform="translate(280, 110)">
+    <rect x="0" y="0" width="200" height="110" rx="4" fill="#f3e8ff"/>
+    <text x="100" y="18" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#7c3aed" text-anchor="middle">siglip-base-patch16-224</text>
+    <text x="100" y="38" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">Sigmoid Language-Image</text>
+    <text x="100" y="52" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">Pre-training</text>
+
+    <rect x="20" y="65" width="160" height="38" rx="3" fill="#ede9fe"/>
+    <text x="100" y="80" font-family="system-ui, sans-serif" font-size="8" fill="#6d28d9" text-anchor="middle">768-dimensional embedding</text>
+    <text x="100" y="94" font-family="system-ui, sans-serif" font-size="7" fill="#7c3aed" text-anchor="middle">~50-100ms per image</text>
+  </g>
+
+  <!-- Arrow to Output -->
+  <path d="M 490 150 L 540 150" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Output -->
+  <g filter="url(#shadow)">
+    <rect x="550" y="70" width="200" height="160" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="550" y="70" width="200" height="28" rx="10" fill="url(#featureGrad)"/>
+    <rect x="550" y="88" width="200" height="10" fill="url(#featureGrad)"/>
+    <text x="650" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Output</text>
+  </g>
+  <g transform="translate(560, 110)">
+    <rect x="0" y="0" width="180" height="35" rx="4" fill="#ccfbf1"/>
+    <text x="90" y="14" font-family="monospace" font-size="8" fill="#0d9488" text-anchor="middle">image_extractor_v1_</text>
+    <text x="90" y="28" font-family="monospace" font-size="8" fill="#0d9488" text-anchor="middle">embedding [768D]</text>
+
+    <rect x="0" y="42" width="180" height="25" rx="4" fill="#f0fdfa"/>
+    <text x="90" y="59" font-family="monospace" font-size="8" fill="#0d9488" text-anchor="middle">processing_time_ms</text>
+
+    <rect x="0" y="74" width="180" height="25" rx="4" fill="#f0fdfa"/>
+    <text x="90" y="91" font-family="monospace" font-size="8" fill="#0d9488" text-anchor="middle">thumbnail_url (optional)</text>
+  </g>
+
+  <!-- Feature URI -->
+  <g transform="translate(770, 100)">
+    <rect x="0" y="0" width="110" height="70" rx="6" fill="#f0fdfa" stroke="#14b8a6" stroke-width="1"/>
+    <text x="55" y="18" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#0d9488" text-anchor="middle">Feature URI</text>
+    <text x="55" y="35" font-family="monospace" font-size="6" fill="#475569" text-anchor="middle">mixpeek://</text>
+    <text x="55" y="47" font-family="monospace" font-size="6" fill="#475569" text-anchor="middle">image_extractor@v1/</text>
+    <text x="55" y="59" font-family="monospace" font-size="6" fill="#475569" text-anchor="middle">embedding</text>
+  </g>
+
+  <!-- Cross-Modal Search Section -->
+  <text x="450" y="260" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#475569" text-anchor="middle">Cross-Modal Search Compatibility</text>
+
+  <g filter="url(#shadow)">
+    <rect x="100" y="280" width="700" height="80" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="100" y="280" width="700" height="28" rx="10" fill="url(#processGrad)"/>
+    <rect x="100" y="298" width="700" height="10" fill="url(#processGrad)"/>
+    <text x="450" y="300" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">SigLIP Unified Embedding Space</text>
+  </g>
+  <g transform="translate(120, 320)">
+    <rect x="0" y="0" width="200" height="30" rx="4" fill="#dbeafe"/>
+    <text x="100" y="19" font-family="system-ui, sans-serif" font-size="9" fill="#1d4ed8" text-anchor="middle">Image embeddings (768D)</text>
+
+    <text x="220" y="19" font-family="system-ui, sans-serif" font-size="14" fill="#94a3b8" text-anchor="middle">+</text>
+
+    <rect x="240" y="0" width="200" height="30" rx="4" fill="#fce7f3"/>
+    <text x="340" y="19" font-family="system-ui, sans-serif" font-size="9" fill="#db2777" text-anchor="middle">Text embeddings (768D)</text>
+
+    <text x="460" y="19" font-family="system-ui, sans-serif" font-size="14" fill="#94a3b8" text-anchor="middle">=</text>
+
+    <rect x="480" y="0" width="180" height="30" rx="4" fill="#ccfbf1"/>
+    <text x="570" y="19" font-family="system-ui, sans-serif" font-size="9" fill="#0d9488" text-anchor="middle">Find images with text queries</text>
+  </g>
+</svg>

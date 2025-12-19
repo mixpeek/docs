@@ -1,0 +1,208 @@
+<svg viewBox="0 0 1100 450" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="objectGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ea580c;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="detectGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4f46e5;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="alignGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#d97706;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="embedGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="featureGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="qualityGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1100" height="450" fill="#f8fafc"/>
+
+  <!-- Title -->
+  <text x="550" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">Face Identity Extractor: Production-Grade Face Recognition</text>
+  <text x="550" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">SCRFD detection + ArcFace embeddings with 99.8%+ verification accuracy (LFW benchmark)</text>
+
+  <!-- Input -->
+  <g filter="url(#shadow)">
+    <rect x="30" y="80" width="140" height="160" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="30" y="80" width="140" height="28" rx="10" fill="url(#objectGrad)"/>
+    <rect x="30" y="98" width="140" height="10" fill="url(#objectGrad)"/>
+    <text x="100" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Input</text>
+  </g>
+  <g transform="translate(40, 120)">
+    <rect x="0" y="0" width="120" height="28" rx="4" fill="#fff7ed"/>
+    <text x="12" y="18" font-family="system-ui, sans-serif" font-size="10" fill="#c2410c">image</text>
+    <text x="60" y="18" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">URL/S3</text>
+
+    <rect x="0" y="34" width="120" height="28" rx="4" fill="#fff7ed"/>
+    <text x="12" y="52" font-family="system-ui, sans-serif" font-size="10" fill="#c2410c">video</text>
+    <text x="60" y="52" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">URL/S3</text>
+
+    <rect x="0" y="68" width="120" height="28" rx="4" fill="#fff7ed"/>
+    <text x="12" y="86" font-family="system-ui, sans-serif" font-size="10" fill="#c2410c">video_frame</text>
+
+    <text x="60" y="110" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">640px+ recommended</text>
+  </g>
+
+  <!-- Arrow to Detection -->
+  <path d="M 170 160 L 210 160" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Stage 1: SCRFD Detection -->
+  <g filter="url(#shadow)">
+    <rect x="220" y="70" width="180" height="180" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="220" y="70" width="180" height="28" rx="10" fill="url(#detectGrad)"/>
+    <rect x="220" y="88" width="180" height="10" fill="url(#detectGrad)"/>
+    <text x="310" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">1. SCRFD Detection</text>
+  </g>
+  <g transform="translate(230, 110)">
+    <rect x="0" y="0" width="160" height="55" rx="4" fill="#eef2ff"/>
+    <text x="80" y="16" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#4338ca" text-anchor="middle">Detection Models</text>
+    <text x="80" y="32" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">scrfd_500m (2-3ms)</text>
+    <text x="80" y="44" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">scrfd_2.5g (5-7ms) default</text>
+
+    <rect x="0" y="62" width="160" height="70" rx="4" fill="#f0f0ff"/>
+    <text x="80" y="78" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#4338ca" text-anchor="middle">Output per face:</text>
+    <text x="80" y="94" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">bbox {x1,y1,x2,y2}</text>
+    <text x="80" y="106" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">5 landmarks</text>
+    <text x="80" y="118" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">detection_score</text>
+  </g>
+
+  <!-- Arrow to Alignment -->
+  <path d="M 400 160 L 440 160" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Stage 2: Alignment -->
+  <g filter="url(#shadow)">
+    <rect x="450" y="70" width="160" height="180" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="450" y="70" width="160" height="28" rx="10" fill="url(#alignGrad)"/>
+    <rect x="450" y="88" width="160" height="10" fill="url(#alignGrad)"/>
+    <text x="530" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">2. Alignment</text>
+  </g>
+  <g transform="translate(460, 110)">
+    <rect x="0" y="0" width="140" height="55" rx="4" fill="#fef3c7"/>
+    <text x="70" y="16" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#92400e" text-anchor="middle">5-Point Affine</text>
+    <text x="70" y="32" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Transform to canonical</text>
+    <text x="70" y="46" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">112x112 face template</text>
+
+    <rect x="0" y="62" width="140" height="70" rx="4" fill="#fefce8"/>
+    <text x="70" y="78" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#92400e" text-anchor="middle">Landmarks used:</text>
+    <text x="70" y="94" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">left_eye, right_eye</text>
+    <text x="70" y="106" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">nose</text>
+    <text x="70" y="118" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">left_mouth, right_mouth</text>
+  </g>
+
+  <!-- Arrow to Embedding -->
+  <path d="M 610 160 L 650 160" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Stage 3: ArcFace Embedding -->
+  <g filter="url(#shadow)">
+    <rect x="660" y="70" width="180" height="180" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="660" y="70" width="180" height="28" rx="10" fill="url(#embedGrad)"/>
+    <rect x="660" y="88" width="180" height="10" fill="url(#embedGrad)"/>
+    <text x="750" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">3. ArcFace Embed</text>
+  </g>
+  <g transform="translate(670, 110)">
+    <rect x="0" y="0" width="160" height="55" rx="4" fill="#f3e8ff"/>
+    <text x="80" y="16" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#7c3aed" text-anchor="middle">Embedding Models</text>
+    <text x="80" y="32" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">arcface_r100 (99.8% LFW)</text>
+    <text x="80" y="44" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">arcface_r50, magface_r100</text>
+
+    <rect x="0" y="62" width="160" height="70" rx="4" fill="#ede9fe"/>
+    <text x="80" y="78" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#7c3aed" text-anchor="middle">Output:</text>
+    <text x="80" y="94" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">512-D embedding</text>
+    <text x="80" y="108" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">L2 normalized</text>
+    <text x="80" y="120" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Cosine similarity</text>
+  </g>
+
+  <!-- Arrow to Output -->
+  <path d="M 840 160 L 880 160" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Output -->
+  <g filter="url(#shadow)">
+    <rect x="890" y="70" width="180" height="180" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="890" y="70" width="180" height="28" rx="10" fill="url(#featureGrad)"/>
+    <rect x="890" y="88" width="180" height="10" fill="url(#featureGrad)"/>
+    <text x="980" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Output (per face)</text>
+  </g>
+  <g transform="translate(900, 110)">
+    <rect x="0" y="0" width="160" height="30" rx="4" fill="#ccfbf1"/>
+    <text x="80" y="12" font-family="monospace" font-size="7" fill="#0d9488" text-anchor="middle">face_identity_extractor_v1</text>
+    <text x="80" y="24" font-family="monospace" font-size="7" fill="#0d9488" text-anchor="middle">_embedding [512D]</text>
+
+    <rect x="0" y="36" width="160" height="90" rx="4" fill="#f0fdfa"/>
+    <text x="80" y="50" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">face_index</text>
+    <text x="80" y="64" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">bbox, landmarks</text>
+    <text x="80" y="78" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">detection_score</text>
+    <text x="80" y="92" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">quality_score</text>
+    <text x="80" y="106" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">aligned_face_crop</text>
+  </g>
+
+  <!-- Quality Scoring (Optional) -->
+  <g filter="url(#shadow)">
+    <rect x="450" y="270" width="200" height="80" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="450" y="270" width="200" height="28" rx="10" fill="url(#qualityGrad)"/>
+    <rect x="450" y="288" width="200" height="10" fill="url(#qualityGrad)"/>
+    <text x="550" y="290" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">4. Quality Scoring</text>
+  </g>
+  <g transform="translate(460, 310)">
+    <rect x="0" y="0" width="180" height="30" rx="4" fill="#d1fae5"/>
+    <text x="90" y="12" font-family="system-ui, sans-serif" font-size="8" fill="#065f46" text-anchor="middle">Optional: +5ms per face</text>
+    <text x="90" y="24" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">blur, size, pose quality</text>
+  </g>
+
+  <!-- Matching Thresholds -->
+  <g filter="url(#shadow)">
+    <rect x="700" y="270" width="370" height="160" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="700" y="270" width="370" height="28" rx="10" fill="#1e293b"/>
+    <rect x="700" y="288" width="370" height="10" fill="#1e293b"/>
+    <text x="885" y="290" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Face Matching Thresholds (Cosine Similarity)</text>
+  </g>
+  <g transform="translate(720, 310)">
+    <rect x="0" y="0" width="160" height="25" rx="4" fill="#dcfce7"/>
+    <text x="80" y="16" font-family="system-ui, sans-serif" font-size="9" fill="#166534" text-anchor="middle">> 0.30  Very likely same</text>
+
+    <rect x="170" y="0" width="160" height="25" rx="4" fill="#fef9c3"/>
+    <text x="85" y="16" font-family="system-ui, sans-serif" font-size="9" fill="#854d0e" text-anchor="middle">0.25-0.30  Likely same</text>
+
+    <rect x="0" y="32" width="160" height="25" rx="4" fill="#fed7aa"/>
+    <text x="80" y="48" font-family="system-ui, sans-serif" font-size="9" fill="#9a3412" text-anchor="middle">0.20-0.25  Possibly same</text>
+
+    <rect x="170" y="32" width="160" height="25" rx="4" fill="#fecaca"/>
+    <text x="85" y="48" font-family="system-ui, sans-serif" font-size="9" fill="#991b1b" text-anchor="middle">< 0.20  Different people</text>
+
+    <rect x="0" y="68" width="330" height="40" rx="4" fill="#f1f5f9"/>
+    <text x="165" y="84" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#475569" text-anchor="middle">Recommended threshold: 0.25 - 0.30</text>
+    <text x="165" y="100" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">99.8%+ accuracy on LFW benchmark</text>
+  </g>
+
+  <!-- Performance Info -->
+  <g transform="translate(30, 270)">
+    <rect x="0" y="0" width="180" height="80" rx="6" fill="#fef3c7"/>
+    <text x="90" y="18" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#92400e" text-anchor="middle">Performance</text>
+    <text x="90" y="36" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Detection: 5-7ms</text>
+    <text x="90" y="50" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Embedding: 10-15ms per face</text>
+    <text x="90" y="64" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Quality: +5ms per face</text>
+
+    <rect x="200" y="0" width="180" height="80" rx="6" fill="#dbeafe"/>
+    <text x="90" y="18" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#1d4ed8" text-anchor="middle">Cost</text>
+    <text x="90" y="36" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">30 credits base/image</text>
+    <text x="90" y="50" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">+30 credits per face</text>
+    <text x="90" y="64" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Video: 90-95% dedup</text>
+  </g>
+</svg>

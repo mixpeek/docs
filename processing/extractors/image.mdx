@@ -1,0 +1,210 @@
+---
+title: "Image Extractor"
+description: "Dense vector embeddings for images using Google SigLIP (768D) for visual similarity search"
+---
+
+<Frame>
+  <img src="/assets/extractors/image.svg" alt="Image extractor pipeline showing SigLIP processing and embedding generation" />
+</Frame>
+
+The image extractor generates dense vector embeddings from images using Google's SigLIP model (768D). Optimized for visual similarity search, product matching, and cross-modal search with text queries. Fast (~50-100ms per image) and cost-effective.
+
+<Note>
+  View extractor details at [api.mixpeek.com/v1/collections/features/extractors/image_extractor_v1](https://api.mixpeek.com/v1/collections/features/extractors/image_extractor_v1) or fetch programmatically with `GET /v1/collections/features/extractors/{feature_extractor_id}`.
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Image search** | Find visually similar images in large collections |
+| **Visual similarity** | Match products, artwork, or content by appearance |
+| **Content discovery** | Recommend similar visual content |
+| **Cross-modal search** | Find images using text queries (via SigLIP text encoder) |
+| **E-commerce** | Product image search and visual recommendations |
+| **Stock photo search** | Media library search by visual content |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Face recognition | `face_identity_extractor` |
+| Video content | `multimodal_extractor` |
+| Text-heavy images requiring OCR | `multimodal_extractor` with OCR enabled |
+| Audio content | `audio_extractor` |
+
+## Input Schema
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `image` | string | **Yes** | URL or S3 path to image file. Formats: JPEG, PNG, WebP, BMP. Any resolution (resized to 224x224 internally). |
+
+```json
+{
+  "image": "s3://my-bucket/products/laptop-pro.jpg"
+}
+```
+
+**Input Examples:**
+
+| Type | Example |
+|------|---------|
+| Product image | `s3://my-bucket/products/laptop-pro.jpg` |
+| Stock photo | `https://cdn.example.com/photos/sunset-beach.jpg` |
+| Catalog image | `s3://catalog/items/SKU-12345.png` |
+
+**Supported Formats**: JPEG, PNG, WebP, BMP, GIF (static)
+**Recommended Resolution**: 224x224 or larger (automatically resized)
+**Max File Size**: 10MB recommended
+
+## Output Schema
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `image_extractor_v1_embedding` | float[768] | SigLIP image embedding, L2 normalized |
+| `processing_time_ms` | number | Processing time in milliseconds |
+| `thumbnail_url` | string | S3 URL of the thumbnail image (if generated) |
+
+```json
+{
+  "image_extractor_v1_embedding": [0.023, -0.041, 0.018, ...],
+  "processing_time_ms": 85.2,
+  "thumbnail_url": "s3://mixpeek-storage/ns_123/thumbnails/thumb_001.jpg"
+}
+```
+
+## Parameters
+
+The image extractor uses sensible defaults and requires no additional parameters for basic usage.
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| *None required* | - | - | All parameters use optimized defaults |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Basic Image Embedding
+{
+  "feature_extractor": {
+    "feature_extractor_name": "image_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "image": "payload.image_url"
+    },
+    "field_passthrough": [
+      { "source_path": "metadata.product_id" }
+    ],
+    "parameters": {}
+  }
+}
+```
+
+```json E-commerce Product Images
+{
+  "feature_extractor": {
+    "feature_extractor_name": "image_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "image": "payload.product_image"
+    },
+    "field_passthrough": [
+      { "source_path": "metadata.sku" },
+      { "source_path": "metadata.category" },
+      { "source_path": "metadata.brand" }
+    ],
+    "parameters": {}
+  }
+}
+```
+
+```json Stock Photo Library
+{
+  "feature_extractor": {
+    "feature_extractor_name": "image_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "image": "payload.photo_url"
+    },
+    "field_passthrough": [
+      { "source_path": "metadata.photographer" },
+      { "source_path": "metadata.tags" },
+      { "source_path": "metadata.license" }
+    ],
+    "parameters": {}
+  }
+}
+```
+
+```json Art Collection
+{
+  "feature_extractor": {
+    "feature_extractor_name": "image_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "image": "payload.artwork_url"
+    },
+    "field_passthrough": [
+      { "source_path": "metadata.artist" },
+      { "source_path": "metadata.title" },
+      { "source_path": "metadata.year" },
+      { "source_path": "metadata.medium" }
+    ],
+    "parameters": {}
+  }
+}
+```
+</CodeGroup>
+
+## Performance & Costs
+
+| Metric | Value |
+|--------|-------|
+| **Processing speed** | ~50-100ms per image |
+| **Batch processing** | Up to 16 images per batch |
+| **GPU acceleration** | Supported for faster inference |
+| **Cost** | 10 credits per image |
+
+## Vector Index
+
+| Property | Value |
+|----------|-------|
+| **Index name** | `image_extractor_v1_embedding` |
+| **Dimensions** | 768 |
+| **Type** | Dense |
+| **Distance metric** | Cosine |
+| **Datatype** | float32 |
+| **Inference model** | `google_siglip_base_v1` |
+
+### Cross-Modal Search
+
+The SigLIP embeddings are compatible with SigLIP text embeddings, enabling cross-modal search where you can:
+- Find images using natural language text queries
+- Match images to text descriptions
+- Build hybrid search combining visual and textual similarity
+
+## Comparison with Other Image Extractors
+
+| Feature | image_extractor | multimodal_extractor |
+|---------|-----------------|---------------------|
+| **Dimensions** | 768 | 1408 |
+| **Model** | SigLIP | Vertex AI Multimodal |
+| **Processing** | Image only | Video, Image, Text, GIF |
+| **Cross-modal** | SigLIP text encoder | Vertex text encoder |
+| **Best For** | Fast image search | Unified multimodal search |
+| **Cost** | 10 credits/image | Higher (includes more features) |
+
+## Limitations
+
+- **Image only**: Does not process video, audio, or text content
+- **No OCR**: Cannot extract text from images; use `multimodal_extractor` with OCR
+- **No face recognition**: For face matching, use `face_identity_extractor`
+- **Single image**: Processes one image at a time (batch via API)
+- **Resolution**: Input is resized to 224x224 internally
+
+## Related
+
+- [Feature Extractors Overview](/processing/feature-extractors)
+- [Multimodal Extractor](/processing/extractors/multimodal)
+- [Face Identity Extractor](/processing/extractors/face)
+- [Text Extractor](/processing/extractors/text)
