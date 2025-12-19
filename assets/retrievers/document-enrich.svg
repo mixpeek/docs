@@ -1,0 +1,142 @@
+<svg viewBox="0 0 1000 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="docGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="joinGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="targetGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#d97706;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="outputGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="400" fill="#f8fafc"/>
+
+  <text x="500" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">Document Enrich Stage: Collection Joins</text>
+  <text x="500" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">Join and enrich documents with data from another collection (SQL LEFT JOIN style)</text>
+
+  <!-- Source Documents -->
+  <g filter="url(#shadow)">
+    <rect x="30" y="80" width="160" height="140" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="30" y="80" width="160" height="28" rx="10" fill="url(#docGrad)"/>
+    <rect x="30" y="98" width="160" height="10" fill="url(#docGrad)"/>
+    <text x="110" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Source Documents</text>
+  </g>
+  <g transform="translate(40, 120)">
+    <rect x="0" y="0" width="140" height="90" rx="4" fill="#eff6ff"/>
+    <text x="70" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#2563eb" text-anchor="middle">N documents</text>
+    <text x="70" y="38" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">document_id</text>
+    <text x="70" y="54" font-family="monospace" font-size="8" fill="#0d9488" text-anchor="middle">metadata.product_id</text>
+    <text x="70" y="68" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">(source_field for join)</text>
+    <text x="70" y="82" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">content, score...</text>
+  </g>
+
+  <!-- Join Configuration -->
+  <g filter="url(#shadow)">
+    <rect x="220" y="70" width="260" height="200" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="220" y="70" width="260" height="28" rx="10" fill="url(#joinGrad)"/>
+    <rect x="220" y="88" width="260" height="10" fill="url(#joinGrad)"/>
+    <text x="350" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Join Configuration</text>
+  </g>
+  <g transform="translate(230, 110)">
+    <rect x="0" y="0" width="240" height="24" rx="3" fill="#f3e8ff"/>
+    <text x="120" y="16" font-family="monospace" font-size="8" fill="#7c3aed" text-anchor="middle">target_collection_id: "col_products"</text>
+
+    <rect x="0" y="30" width="115" height="24" rx="3" fill="#eff6ff"/>
+    <text x="57" y="46" font-family="monospace" font-size="7" fill="#2563eb" text-anchor="middle">source_field:</text>
+
+    <rect x="125" y="30" width="115" height="24" rx="3" fill="#fef3c7"/>
+    <text x="182" y="46" font-family="monospace" font-size="7" fill="#d97706" text-anchor="middle">target_field:</text>
+
+    <rect x="0" y="60" width="115" height="24" rx="3" fill="#dbeafe"/>
+    <text x="57" y="76" font-family="monospace" font-size="7" fill="#2563eb" text-anchor="middle">meta.product_id</text>
+
+    <rect x="125" y="60" width="115" height="24" rx="3" fill="#fef3c7"/>
+    <text x="182" y="76" font-family="monospace" font-size="7" fill="#d97706" text-anchor="middle">product_id</text>
+
+    <rect x="0" y="94" width="240" height="35" rx="3" fill="#dcfce7"/>
+    <text x="120" y="108" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#16a34a" text-anchor="middle">fields_to_merge:</text>
+    <text x="120" y="122" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">["name", "price", "category"]</text>
+
+    <rect x="0" y="136" width="115" height="24" rx="3" fill="#f0fdf4"/>
+    <text x="57" y="152" font-family="monospace" font-size="7" fill="#0d9488" text-anchor="middle">output_field</text>
+
+    <rect x="125" y="136" width="115" height="24" rx="3" fill="#f0fdf4"/>
+    <text x="182" y="152" font-family="monospace" font-size="7" fill="#0d9488" text-anchor="middle">"product_data"</text>
+  </g>
+
+  <!-- Target Collection -->
+  <g filter="url(#shadow)">
+    <rect x="510" y="80" width="160" height="140" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="510" y="80" width="160" height="28" rx="10" fill="url(#targetGrad)"/>
+    <rect x="510" y="98" width="160" height="10" fill="url(#targetGrad)"/>
+    <text x="590" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Target Collection</text>
+  </g>
+  <g transform="translate(520, 120)">
+    <rect x="0" y="0" width="140" height="90" rx="4" fill="#fef3c7"/>
+    <text x="70" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#d97706" text-anchor="middle">col_products</text>
+    <text x="70" y="38" font-family="monospace" font-size="8" fill="#0d9488" text-anchor="middle">product_id (key)</text>
+    <text x="70" y="54" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">name</text>
+    <text x="70" y="68" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">price</text>
+    <text x="70" y="82" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">category</text>
+  </g>
+
+  <path d="M 190 150 L 220 150" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+  <path d="M 480 170 L 510 170" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+  <path d="M 670 150 L 710 150" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Output Documents -->
+  <g filter="url(#shadow)">
+    <rect x="720" y="80" width="200" height="140" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="720" y="80" width="200" height="28" rx="10" fill="url(#outputGrad)"/>
+    <rect x="720" y="98" width="200" height="10" fill="url(#outputGrad)"/>
+    <text x="820" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Enriched Documents</text>
+  </g>
+  <g transform="translate(730, 120)">
+    <rect x="0" y="0" width="180" height="90" rx="4" fill="#ccfbf1"/>
+    <text x="90" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#0d9488" text-anchor="middle">N documents (LEFT JOIN)</text>
+    <text x="90" y="38" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">+ product_data: {</text>
+    <text x="90" y="52" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">name: "Widget",</text>
+    <text x="90" y="66" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">price: 29.99,</text>
+    <text x="90" y="80" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">category: "Tools"}</text>
+  </g>
+
+  <!-- Join Modes -->
+  <g transform="translate(50, 290)">
+    <text x="0" y="0" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#475569">Join Strategies:</text>
+
+    <rect x="0" y="15" width="200" height="60" rx="4" fill="#eff6ff"/>
+    <text x="100" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#2563eb" text-anchor="middle">Direct Field Join</text>
+    <text x="100" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">source_field = target_field</text>
+    <text x="100" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Fast key-based lookup</text>
+
+    <rect x="220" y="15" width="200" height="60" rx="4" fill="#f3e8ff"/>
+    <text x="320" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#7c3aed" text-anchor="middle">Retriever-Based Join</text>
+    <text x="320" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">retriever_id for similarity</text>
+    <text x="320" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Semantic matching</text>
+
+    <rect x="440" y="15" width="200" height="60" rx="4" fill="#fef3c7"/>
+    <text x="540" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#d97706" text-anchor="middle">strategy: enrich</text>
+    <text x="540" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Merge fields into doc</text>
+    <text x="540" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">(default)</text>
+
+    <rect x="660" y="15" width="200" height="60" rx="4" fill="#dcfce7"/>
+    <text x="760" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#16a34a" text-anchor="middle">strategy: append</text>
+    <text x="760" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Add as nested object</text>
+    <text x="760" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Preserves structure</text>
+  </g>
+</svg>

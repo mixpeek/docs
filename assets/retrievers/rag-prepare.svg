@@ -1,0 +1,147 @@
+<svg viewBox="0 0 1000 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="docGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="ragGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ec4899;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#db2777;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="outputGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="tokenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#d97706;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="400" fill="#f8fafc"/>
+
+  <text x="500" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">RAG Prepare Stage: LLM Context Preparation</text>
+  <text x="500" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">Format documents for LLM context windows with token management and citations</text>
+
+  <!-- Input Documents -->
+  <g filter="url(#shadow)">
+    <rect x="30" y="80" width="160" height="160" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="30" y="80" width="160" height="28" rx="10" fill="url(#docGrad)"/>
+    <rect x="30" y="98" width="160" height="10" fill="url(#docGrad)"/>
+    <text x="110" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Search Results</text>
+  </g>
+  <g transform="translate(40, 120)">
+    <rect x="0" y="8" width="140" height="24" rx="3" fill="#eff6ff"/>
+    <text x="70" y="24" font-family="monospace" font-size="8" fill="#2563eb" text-anchor="middle">[1] Doc A - 2500 tokens</text>
+
+    <rect x="0" y="38" width="140" height="24" rx="3" fill="#eff6ff"/>
+    <text x="70" y="54" font-family="monospace" font-size="8" fill="#2563eb" text-anchor="middle">[2] Doc B - 1800 tokens</text>
+
+    <rect x="0" y="68" width="140" height="24" rx="3" fill="#eff6ff"/>
+    <text x="70" y="84" font-family="monospace" font-size="8" fill="#2563eb" text-anchor="middle">[3] Doc C - 3200 tokens</text>
+
+    <text x="70" y="110" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">N documents</text>
+  </g>
+
+  <path d="M 190 160 L 230 160" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- RAG Prepare Processing -->
+  <g filter="url(#shadow)">
+    <rect x="240" y="70" width="280" height="200" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="240" y="70" width="280" height="28" rx="10" fill="url(#ragGrad)"/>
+    <rect x="240" y="88" width="280" height="10" fill="url(#ragGrad)"/>
+    <text x="380" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">RAG Preparation Engine</text>
+  </g>
+  <g transform="translate(250, 110)">
+    <!-- Token Management -->
+    <rect x="0" y="0" width="125" height="70" rx="4" fill="#fef3c7"/>
+    <text x="62" y="16" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#d97706" text-anchor="middle">Token Budget</text>
+    <text x="62" y="32" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">max_tokens: 8000</text>
+    <text x="62" y="46" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">tokenizer: cl100k</text>
+    <text x="62" y="60" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">GPT-4 compatible</text>
+
+    <!-- Truncation Strategy -->
+    <rect x="135" y="0" width="125" height="70" rx="4" fill="#fce7f3"/>
+    <text x="197" y="16" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#db2777" text-anchor="middle">Truncation</text>
+    <text x="197" y="32" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">priority_truncate</text>
+    <text x="197" y="46" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">proportional</text>
+    <text x="197" y="60" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">drop_last</text>
+
+    <!-- Citations -->
+    <rect x="0" y="80" width="260" height="70" rx="4" fill="#f0fdf4"/>
+    <text x="130" y="96" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#16a34a" text-anchor="middle">Citation Tracking</text>
+
+    <rect x="10" y="105" width="75" height="20" rx="3" fill="#dcfce7"/>
+    <text x="47" y="119" font-family="monospace" font-size="8" fill="#16a34a" text-anchor="middle">[1], [2], [3]</text>
+
+    <rect x="95" y="105" width="75" height="20" rx="3" fill="#dcfce7"/>
+    <text x="132" y="119" font-family="monospace" font-size="8" fill="#16a34a" text-anchor="middle">[doc_id]</text>
+
+    <rect x="180" y="105" width="70" height="20" rx="3" fill="#dcfce7"/>
+    <text x="215" y="119" font-family="monospace" font-size="8" fill="#16a34a" text-anchor="middle">footnotes</text>
+  </g>
+
+  <path d="M 520 160 L 560 160" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Output Modes -->
+  <g filter="url(#shadow)">
+    <rect x="570" y="70" width="200" height="200" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="570" y="70" width="200" height="28" rx="10" fill="url(#outputGrad)"/>
+    <rect x="570" y="88" width="200" height="10" fill="url(#outputGrad)"/>
+    <text x="670" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Output Modes</text>
+  </g>
+  <g transform="translate(580, 110)">
+    <!-- Single Context Mode -->
+    <rect x="0" y="0" width="180" height="70" rx="4" fill="#ccfbf1"/>
+    <text x="90" y="16" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#0d9488" text-anchor="middle">single_context</text>
+    <text x="90" y="32" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">N docs -> 1 combined context</text>
+    <text x="90" y="48" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">"rag_context": "[1] Doc A...</text>
+    <text x="90" y="60" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">[2] Doc B...[3] Doc C..."</text>
+
+    <!-- Formatted List Mode -->
+    <rect x="0" y="80" width="180" height="70" rx="4" fill="#f0fdfa"/>
+    <text x="90" y="96" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#0d9488" text-anchor="middle">formatted_list</text>
+    <text x="90" y="112" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">N docs -> N formatted docs</text>
+    <text x="90" y="128" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">"formatted_content":</text>
+    <text x="90" y="140" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">"[1] {title}\n{content}"</text>
+  </g>
+
+  <!-- Template Example -->
+  <g transform="translate(790, 90)">
+    <rect x="0" y="0" width="180" height="180" rx="6" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+    <text x="90" y="20" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#4338ca" text-anchor="middle">Document Template</text>
+    <text x="90" y="42" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">[{{CONTEXT.INDEX}}]</text>
+    <text x="90" y="56" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">{{DOC.metadata.title}}</text>
+    <text x="90" y="70" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">{{DOC.content}}</text>
+
+    <text x="90" y="100" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#4338ca" text-anchor="middle">Placeholders:</text>
+    <text x="90" y="118" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">{{CONTEXT.INDEX}}</text>
+    <text x="90" y="132" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">{{CONTEXT.CITATION}}</text>
+    <text x="90" y="146" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">{{DOC.*}}</text>
+
+    <text x="90" y="170" font-family="system-ui, sans-serif" font-size="8" fill="#16a34a" text-anchor="middle">Does NOT call LLM</text>
+  </g>
+
+  <!-- Use Case -->
+  <g transform="translate(50, 300)">
+    <text x="0" y="0" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#475569">Pipeline Position: search -> rerank -> rag_prepare -> (external LLM call)</text>
+
+    <rect x="0" y="20" width="280" height="50" rx="4" fill="#fce7f3"/>
+    <text x="140" y="40" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#db2777" text-anchor="middle">Token Management</text>
+    <text x="140" y="56" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Fit multiple docs into context window budget</text>
+
+    <rect x="300" y="20" width="280" height="50" rx="4" fill="#f0fdf4"/>
+    <text x="440" y="40" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#16a34a" text-anchor="middle">Citation Tracking</text>
+    <text x="440" y="56" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Enable source attribution in LLM responses</text>
+
+    <rect x="600" y="20" width="280" height="50" rx="4" fill="#eff6ff"/>
+    <text x="740" y="40" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#2563eb" text-anchor="middle">Consistent Formatting</text>
+    <text x="740" y="56" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Standardize document format for LLM input</text>
+  </g>
+</svg>

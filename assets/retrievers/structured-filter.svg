@@ -1,0 +1,147 @@
+<svg viewBox="0 0 1000 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="inputGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="filterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ea580c;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="outputGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="400" fill="#f8fafc"/>
+
+  <text x="500" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">Structured Filter Stage: Metadata Filtering</text>
+  <text x="500" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">Filter documents using structured conditions on metadata fields (fast, indexed)</text>
+
+  <!-- Input Documents -->
+  <g filter="url(#shadow)">
+    <rect x="30" y="80" width="180" height="160" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="30" y="80" width="180" height="28" rx="10" fill="url(#inputGrad)"/>
+    <rect x="30" y="98" width="180" height="10" fill="url(#inputGrad)"/>
+    <text x="120" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Input Documents</text>
+  </g>
+  <g transform="translate(40, 120)">
+    <rect x="0" y="0" width="160" height="110" rx="4" fill="#eff6ff"/>
+    <text x="80" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#2563eb" text-anchor="middle">N documents</text>
+    <text x="80" y="40" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">price: 299</text>
+    <text x="80" y="54" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">category: "Electronics"</text>
+    <text x="80" y="68" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">in_stock: true</text>
+    <text x="80" y="82" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">rating: 4.5</text>
+    <text x="80" y="100" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Various metadata fields</text>
+  </g>
+
+  <path d="M 210 160 L 250 160" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Filter Configuration -->
+  <g filter="url(#shadow)">
+    <rect x="260" y="70" width="340" height="220" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="260" y="70" width="340" height="28" rx="10" fill="url(#filterGrad)"/>
+    <rect x="260" y="88" width="340" height="10" fill="url(#filterGrad)"/>
+    <text x="430" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Filter Expression</text>
+  </g>
+  <g transform="translate(270, 110)">
+    <text x="160" y="14" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#475569" text-anchor="middle">Operators:</text>
+
+    <rect x="0" y="24" width="65" height="22" rx="3" fill="#fef3c7"/>
+    <text x="32" y="39" font-family="monospace" font-size="8" fill="#d97706" text-anchor="middle">eq</text>
+
+    <rect x="75" y="24" width="45" height="22" rx="3" fill="#fef3c7"/>
+    <text x="97" y="39" font-family="monospace" font-size="8" fill="#d97706" text-anchor="middle">ne</text>
+
+    <rect x="130" y="24" width="45" height="22" rx="3" fill="#fef3c7"/>
+    <text x="152" y="39" font-family="monospace" font-size="8" fill="#d97706" text-anchor="middle">gt</text>
+
+    <rect x="185" y="24" width="45" height="22" rx="3" fill="#fef3c7"/>
+    <text x="207" y="39" font-family="monospace" font-size="8" fill="#d97706" text-anchor="middle">lt</text>
+
+    <rect x="240" y="24" width="45" height="22" rx="3" fill="#fef3c7"/>
+    <text x="262" y="39" font-family="monospace" font-size="8" fill="#d97706" text-anchor="middle">in</text>
+
+    <rect x="295" y="24" width="25" height="22" rx="3" fill="#fef3c7"/>
+    <text x="307" y="39" font-family="monospace" font-size="8" fill="#d97706" text-anchor="middle">...</text>
+
+    <text x="160" y="68" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#475569" text-anchor="middle">Logical Operators:</text>
+
+    <rect x="60" y="78" width="60" height="22" rx="3" fill="#dcfce7"/>
+    <text x="90" y="93" font-family="monospace" font-size="8" fill="#16a34a" text-anchor="middle">AND</text>
+
+    <rect x="130" y="78" width="60" height="22" rx="3" fill="#dcfce7"/>
+    <text x="160" y="93" font-family="monospace" font-size="8" fill="#16a34a" text-anchor="middle">OR</text>
+
+    <rect x="200" y="78" width="60" height="22" rx="3" fill="#dcfce7"/>
+    <text x="230" y="93" font-family="monospace" font-size="8" fill="#16a34a" text-anchor="middle">NOT</text>
+
+    <rect x="0" y="110" width="320" height="70" rx="4" fill="#fff7ed"/>
+    <text x="160" y="126" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#ea580c" text-anchor="middle">Example:</text>
+    <text x="160" y="144" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">{"AND": [</text>
+    <text x="160" y="158" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">{"field": "price", "operator": "lte", "value": 500},</text>
+    <text x="160" y="172" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">{"field": "in_stock", "operator": "eq", "value": true}]}</text>
+  </g>
+
+  <path d="M 600 160 L 640 160" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Output -->
+  <g filter="url(#shadow)">
+    <rect x="650" y="80" width="180" height="160" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="650" y="80" width="180" height="28" rx="10" fill="url(#outputGrad)"/>
+    <rect x="650" y="98" width="180" height="10" fill="url(#outputGrad)"/>
+    <text x="740" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Filtered Results</text>
+  </g>
+  <g transform="translate(660, 120)">
+    <rect x="0" y="0" width="160" height="110" rx="4" fill="#ccfbf1"/>
+    <text x="80" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#0d9488" text-anchor="middle">M documents (M ≤ N)</text>
+    <text x="80" y="40" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Only matching docs</text>
+    <text x="80" y="58" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Schema preserved</text>
+    <text x="80" y="78" font-family="system-ui, sans-serif" font-size="8" fill="#16a34a" text-anchor="middle">Fast: indexed queries</text>
+    <text x="80" y="96" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">Sub-ms performance</text>
+  </g>
+
+  <!-- Features -->
+  <g transform="translate(850, 100)">
+    <rect x="0" y="0" width="120" height="140" rx="6" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+    <text x="60" y="20" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#16a34a" text-anchor="middle">Features</text>
+    <text x="60" y="42" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Index-backed</text>
+    <text x="60" y="58" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Nested fields</text>
+    <text x="60" y="74" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Array contains</text>
+    <text x="60" y="90" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Regex patterns</text>
+    <text x="60" y="106" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Exists/null</text>
+    <text x="60" y="126" font-family="system-ui, sans-serif" font-size="8" fill="#16a34a" text-anchor="middle">Dynamic values</text>
+  </g>
+
+  <!-- Use Cases -->
+  <g transform="translate(50, 310)">
+    <text x="0" y="0" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#475569">Common Use Cases:</text>
+
+    <rect x="0" y="15" width="200" height="60" rx="4" fill="#fef3c7"/>
+    <text x="100" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#d97706" text-anchor="middle">E-commerce Filters</text>
+    <text x="100" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Price, category, brand,</text>
+    <text x="100" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">availability, ratings</text>
+
+    <rect x="220" y="15" width="200" height="60" rx="4" fill="#eff6ff"/>
+    <text x="320" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#2563eb" text-anchor="middle">Access Control</text>
+    <text x="320" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">User permissions,</text>
+    <text x="320" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">visibility, tenant isolation</text>
+
+    <rect x="440" y="15" width="200" height="60" rx="4" fill="#f3e8ff"/>
+    <text x="540" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#7c3aed" text-anchor="middle">Time-Based</text>
+    <text x="540" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Date ranges, recency,</text>
+    <text x="540" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">publication status</text>
+
+    <rect x="660" y="15" width="200" height="60" rx="4" fill="#dcfce7"/>
+    <text x="760" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#16a34a" text-anchor="middle">Pre-filter for Search</text>
+    <text x="760" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Narrow before semantic</text>
+    <text x="760" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">search for performance</text>
+  </g>
+</svg>

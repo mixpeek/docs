@@ -1,0 +1,312 @@
+---
+title: "API Call"
+description: "Enrich documents with external API calls (Stripe, GitHub, weather APIs, etc.)"
+---
+
+<Frame>
+  <img src="/assets/retrievers/api-call.svg" alt="API Call stage showing documents enriched with external HTTP API data" />
+</Frame>
+
+The API Call stage enriches documents by calling external HTTP APIs. This enables integration with third-party services like Stripe, GitHub, weather APIs, and more to augment documents with real-time data.
+
+<Note>
+  **Stage Category**: APPLY (1-1 Enrichment)
+
+  **Transformation**: N documents → N documents (same count, expanded schema)
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Customer data lookup** | Enrich with Stripe billing data, CRM info |
+| **Repository info** | Fetch GitHub commit stats, stars |
+| **Real-time data** | Add weather, stock prices, currency rates |
+| **Data validation** | Verify addresses, phone numbers |
+| **External context** | Lookup additional context from any API |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Untrusted/user-provided URLs | Major security risk (SSRF) |
+| API credentials can't be secured | Use organization secrets vault |
+| High-volume enrichment | Rate limits apply |
+| Time-critical responses | Network latency adds 100-500ms |
+| Internal-only APIs behind firewalls | Use `sql_lookup` for databases |
+
+## Parameters
+
+### Required Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `url` | string | API endpoint URL. Supports `{DOC.field}` and `{INPUT.field}` templates. |
+| `allowed_domains` | string[] | Domain allowlist for SSRF protection. **Never use `*`**. |
+| `output_field` | string | Dot-path where API response should be stored (e.g., `metadata.stripe_data`). |
+
+### Optional Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `method` | string | `GET` | HTTP method: `GET`, `POST`, `PUT`, `PATCH`, `DELETE` |
+| `auth` | object | `null` | Authentication configuration (see below) |
+| `headers` | object | `{}` | Additional HTTP headers (supports templates) |
+| `body` | object | `null` | Request body for POST/PUT/PATCH (JSON) |
+| `timeout` | integer | `10` | Request timeout in seconds (1-60) |
+| `max_response_size` | integer | `10485760` | Maximum response size in bytes (default: 10MB) |
+| `response_path` | string | `null` | JSONPath to extract specific field from response |
+| `rate_limit` | object | `null` | Rate limiting per domain |
+| `when` | object | `null` | Conditional filter for selective enrichment |
+| `on_error` | string | `skip` | Error handling: `skip`, `remove`, or `raise` |
+
+## Authentication Types
+
+<Tabs>
+  <Tab title="Bearer Token">
+    **OAuth 2.0, JWT tokens** - Most modern APIs (GitHub, OpenAI, Stripe)
+
+    ```json
+    {
+      "auth": {
+        "type": "bearer",
+        "secret_ref": "stripe_api_key"
+      }
+    }
+    ```
+
+    Adds header: `Authorization: Bearer {secret_value}`
+  </Tab>
+  <Tab title="API Key">
+    **Header or query parameter** - Weather APIs, Maps, etc.
+
+    ```json
+    {
+      "auth": {
+        "type": "api_key",
+        "key": "X-API-Key",
+        "location": "header",
+        "secret_ref": "weather_api_key"
+      }
+    }
+    ```
+
+    | Field | Description |
+    |-------|-------------|
+    | `key` | Header name or query param name |
+    | `location` | `header` (recommended) or `query` |
+    | `secret_ref` | Secret name in vault |
+  </Tab>
+  <Tab title="Basic Auth">
+    **HTTP Basic Authentication** - Legacy systems
+
+    ```json
+    {
+      "auth": {
+        "type": "basic",
+        "secret_ref": "basic_credentials"
+      }
+    }
+    ```
+
+    Secret format: `username:password`
+
+    Adds header: `Authorization: Basic {base64(username:password)}`
+  </Tab>
+  <Tab title="Custom Header">
+    **Non-standard auth headers**
+
+    ```json
+    {
+      "auth": {
+        "type": "custom_header",
+        "key": "X-Custom-Auth",
+        "secret_ref": "custom_token"
+      }
+    }
+    ```
+
+    Adds header: `{key}: {secret_value}`
+  </Tab>
+</Tabs>
+
+## Error Handling
+
+| Strategy | Behavior | Best For |
+|----------|----------|----------|
+| `skip` | Keep document unchanged | Optional enrichment |
+| `remove` | Remove document from results | Mandatory enrichment |
+| `raise` | Fail entire pipeline | Debugging, critical failures |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Stripe Customer Lookup
+{
+  "stage_type": "apply",
+  "stage_id": "api_call",
+  "parameters": {
+    "url": "https://api.stripe.com/v1/customers/{DOC.metadata.stripe_id}",
+    "method": "GET",
+    "allowed_domains": ["api.stripe.com"],
+    "auth": {
+      "type": "bearer",
+      "secret_ref": "stripe_api_key"
+    },
+    "output_field": "metadata.stripe_data",
+    "timeout": 10,
+    "on_error": "skip"
+  }
+}
+```
+
+```json GitHub Repository Stats
+{
+  "stage_type": "apply",
+  "stage_id": "api_call",
+  "parameters": {
+    "url": "https://api.github.com/repos/{INPUT.owner}/{INPUT.repo}",
+    "method": "GET",
+    "allowed_domains": ["api.github.com"],
+    "output_field": "metadata.github_info",
+    "response_path": "$.stargazers_count"
+  }
+}
+```
+
+```json POST with JSON Body
+{
+  "stage_type": "apply",
+  "stage_id": "api_call",
+  "parameters": {
+    "url": "https://api.example.com/v1/analyze",
+    "method": "POST",
+    "allowed_domains": ["api.example.com"],
+    "auth": {
+      "type": "api_key",
+      "key": "X-API-Key",
+      "location": "header",
+      "secret_ref": "example_api_key"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "text": "{DOC.content}",
+      "language": "en"
+    },
+    "output_field": "metadata.analysis"
+  }
+}
+```
+
+```json Conditional Enrichment
+{
+  "stage_type": "apply",
+  "stage_id": "api_call",
+  "parameters": {
+    "url": "https://api.stripe.com/v1/customers/{DOC.metadata.customer_id}",
+    "method": "GET",
+    "allowed_domains": ["api.stripe.com"],
+    "auth": {
+      "type": "bearer",
+      "secret_ref": "stripe_api_key"
+    },
+    "output_field": "metadata.billing",
+    "when": {
+      "field": "metadata.is_premium",
+      "operator": "eq",
+      "value": true
+    },
+    "on_error": "skip"
+  }
+}
+```
+
+```json Rate Limited with JSONPath
+{
+  "stage_type": "apply",
+  "stage_id": "api_call",
+  "parameters": {
+    "url": "https://api.weatherapi.com/v1/current.json?q={DOC.metadata.location}",
+    "method": "GET",
+    "allowed_domains": ["api.weatherapi.com"],
+    "auth": {
+      "type": "api_key",
+      "key": "key",
+      "location": "query",
+      "secret_ref": "weather_api_key"
+    },
+    "output_field": "metadata.weather",
+    "response_path": "$.current",
+    "rate_limit": {
+      "requests_per_minute": 60
+    },
+    "timeout": 5
+  }
+}
+```
+</CodeGroup>
+
+## Security
+
+<Warning>
+  **SSRF Protection Required**
+
+  This stage makes external HTTP requests which can be exploited for Server-Side Request Forgery attacks. **Always use `allowed_domains`** to whitelist permitted domains.
+</Warning>
+
+### Security Best Practices
+
+1. **Never use `*` in allowed_domains** - Explicitly list each domain
+2. **Never store credentials in configuration** - Always use `auth.secret_ref` to reference vault secrets
+3. **Set rate limits** - Prevent abuse and excessive costs
+4. **Use HTTPS** - HTTP URLs are automatically upgraded
+5. **Audit configurations** - Review before deployment to prevent data exfiltration
+
+### Storing Secrets
+
+```bash
+# Create a secret in the organization vault
+curl -X POST "$MP_API_URL/v1/organizations/secrets" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "secret_name": "stripe_api_key",
+    "secret_value": "sk_live_..."
+  }'
+```
+
+Then reference in configuration:
+```json
+{
+  "auth": {
+    "type": "bearer",
+    "secret_ref": "stripe_api_key"
+  }
+}
+```
+
+## Performance
+
+| Metric | Value |
+|--------|-------|
+| **Latency per request** | 100-500ms (network dependent) |
+| **Timeout range** | 1-60 seconds |
+| **Max response size** | 10MB (configurable) |
+| **Parallelization** | Documents processed concurrently |
+
+## Template Variables
+
+URLs, headers, and body values support template variables:
+
+| Namespace | Description | Example |
+|-----------|-------------|---------|
+| `DOC` | Current document fields | `{DOC.metadata.customer_id}` |
+| `INPUT` | Query inputs | `{INPUT.api_version}` |
+
+## Related
+
+- [SQL Lookup](/retrieval/stages/sql-lookup) - For database enrichment
+- [Document Enrich](/retrieval/stages/document-enrich) - For collection joins
+- [Organization Secrets](/api-reference/organization-secrets/create-secret) - Managing API credentials

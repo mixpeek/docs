@@ -1,0 +1,303 @@
+---
+title: "Sort By Field"
+description: "Reorder documents by any metadata field value"
+---
+
+<Frame>
+  <img src="/assets/retrievers/sort-by-field.svg" alt="Sort By Field stage showing attribute-based document ordering" />
+</Frame>
+
+The Sort By Field stage reorders documents based on metadata field values. It supports ascending/descending order, nested fields, and multiple sort criteria.
+
+<Note>
+  **Stage Category**: SORT (Reorders documents)
+
+  **Transformation**: N documents → N documents (reordered by field value)
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Price sorting** | Order products by price |
+| **Recency sorting** | Most recent first |
+| **Rating sorting** | Highest rated first |
+| **Alphabetical** | Sort by name or title |
+| **Custom ranking** | Sort by any numeric field |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Relevance ranking | `rerank` (neural re-scoring) |
+| Complex scoring logic | `api_call` to custom service |
+| Already sorted by search | Skip this stage |
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `sort_field` | string | *Required* | Field path to sort by |
+| `order` | string | `desc` | Sort direction: `asc` or `desc` |
+| `null_handling` | string | `last` | Where to place nulls: `first`, `last` |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Price Low to High
+{
+  "stage_type": "sort",
+  "stage_id": "sort_by_field",
+  "parameters": {
+    "sort_field": "metadata.price",
+    "order": "asc"
+  }
+}
+```
+
+```json Newest First
+{
+  "stage_type": "sort",
+  "stage_id": "sort_by_field",
+  "parameters": {
+    "sort_field": "metadata.created_at",
+    "order": "desc"
+  }
+}
+```
+
+```json Highest Rated
+{
+  "stage_type": "sort",
+  "stage_id": "sort_by_field",
+  "parameters": {
+    "sort_field": "metadata.rating",
+    "order": "desc",
+    "null_handling": "last"
+  }
+}
+```
+
+```json Alphabetical
+{
+  "stage_type": "sort",
+  "stage_id": "sort_by_field",
+  "parameters": {
+    "sort_field": "metadata.title",
+    "order": "asc"
+  }
+}
+```
+
+```json Nested Field
+{
+  "stage_type": "sort",
+  "stage_id": "sort_by_field",
+  "parameters": {
+    "sort_field": "metadata.reviews.average_rating",
+    "order": "desc"
+  }
+}
+```
+
+```json By Relevance Score
+{
+  "stage_type": "sort",
+  "stage_id": "sort_by_field",
+  "parameters": {
+    "sort_field": "score",
+    "order": "desc"
+  }
+}
+```
+</CodeGroup>
+
+## Field Types
+
+The stage handles various field types:
+
+| Type | Sort Behavior |
+|------|---------------|
+| Number | Numeric comparison |
+| String | Lexicographic (alphabetical) |
+| Date/ISO8601 | Chronological |
+| Boolean | false < true |
+
+## Null Handling
+
+| Setting | Behavior |
+|---------|----------|
+| `first` | Null/missing values appear first |
+| `last` | Null/missing values appear last (default) |
+
+```json
+{
+  "sort_field": "metadata.optional_field",
+  "order": "desc",
+  "null_handling": "last"
+}
+```
+
+## Performance
+
+| Metric | Value |
+|--------|-------|
+| **Latency** | < 5ms |
+| **Complexity** | O(n log n) |
+| **Memory** | In-place sort |
+| **Index support** | Uses indexes when available |
+
+<Tip>
+  Sorting is very fast. Unlike `rerank`, it doesn't require model inference, making it ideal for simple ordering by attributes.
+</Tip>
+
+## Common Pipeline Patterns
+
+### Search + Filter + Sort
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "semantic_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 50
+    }
+  },
+  {
+    "stage_type": "filter",
+    "stage_id": "structured_filter",
+    "parameters": {
+      "conditions": {
+        "field": "metadata.in_stock",
+        "operator": "eq",
+        "value": true
+      }
+    }
+  },
+  {
+    "stage_type": "sort",
+    "stage_id": "sort_by_field",
+    "parameters": {
+      "sort_field": "metadata.price",
+      "order": "asc"
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "limit",
+    "parameters": {
+      "limit": 10
+    }
+  }
+]
+```
+
+### Rerank + Sort (Tie-Breaking)
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "hybrid_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 100
+    }
+  },
+  {
+    "stage_type": "sort",
+    "stage_id": "rerank",
+    "parameters": {
+      "model": "bge-reranker-v2-m3",
+      "top_n": 20
+    }
+  },
+  {
+    "stage_type": "sort",
+    "stage_id": "sort_by_field",
+    "parameters": {
+      "sort_field": "metadata.created_at",
+      "order": "desc"
+    }
+  }
+]
+```
+
+### Dynamic Sort Direction
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "semantic_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 100
+    }
+  },
+  {
+    "stage_type": "sort",
+    "stage_id": "sort_by_field",
+    "parameters": {
+      "sort_field": "{{INPUT.sort_by}}",
+      "order": "{{INPUT.sort_order}}"
+    }
+  }
+]
+```
+
+## Comparison: sort_by_field vs rerank
+
+| Feature | sort_by_field | rerank |
+|---------|---------------|--------|
+| Based on | Field values | Query relevance |
+| Speed | < 5ms | 50-100ms |
+| Model required | No | Yes |
+| Use case | Attribute ordering | Relevance scoring |
+| Cost | Free | API calls |
+
+## Multiple Sort Criteria
+
+For multi-field sorting, chain multiple sort stages (last sort is primary):
+
+```json
+[
+  {
+    "stage_type": "sort",
+    "stage_id": "sort_by_field",
+    "parameters": {
+      "sort_field": "metadata.created_at",
+      "order": "desc"
+    }
+  },
+  {
+    "stage_type": "sort",
+    "stage_id": "sort_by_field",
+    "parameters": {
+      "sort_field": "metadata.featured",
+      "order": "desc"
+    }
+  }
+]
+```
+
+This sorts by `featured` first, then by `created_at` for ties.
+
+## Error Handling
+
+| Error | Behavior |
+|-------|----------|
+| Field not found | Treated as null |
+| Type mismatch | String comparison fallback |
+| Invalid order | Defaults to `desc` |
+
+## Related
+
+- [Rerank](/retrieval/stages/rerank) - Neural relevance ranking
+- [Limit](/retrieval/stages/limit) - Reduce result count
+- [Structured Filter](/retrieval/stages/structured-filter) - Filter before sorting

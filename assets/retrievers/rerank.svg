@@ -1,0 +1,143 @@
+<svg viewBox="0 0 1000 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="inputGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="rerankGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ea580c;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="outputGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="400" fill="#f8fafc"/>
+
+  <text x="500" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">Rerank Stage: Neural Re-Ranking</text>
+  <text x="500" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">Re-score and reorder search results using cross-encoder models for higher precision</text>
+
+  <!-- Input Documents -->
+  <g filter="url(#shadow)">
+    <rect x="30" y="80" width="200" height="180" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="30" y="80" width="200" height="28" rx="10" fill="url(#inputGrad)"/>
+    <rect x="30" y="98" width="200" height="10" fill="url(#inputGrad)"/>
+    <text x="130" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Initial Results</text>
+  </g>
+  <g transform="translate(40, 120)">
+    <text x="90" y="14" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#2563eb" text-anchor="middle">From search stage (100+)</text>
+
+    <rect x="0" y="24" width="180" height="24" rx="3" fill="#eff6ff"/>
+    <text x="90" y="40" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">[1] score: 0.85 - Doc A</text>
+
+    <rect x="0" y="54" width="180" height="24" rx="3" fill="#eff6ff"/>
+    <text x="90" y="70" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">[2] score: 0.82 - Doc B</text>
+
+    <rect x="0" y="84" width="180" height="24" rx="3" fill="#eff6ff"/>
+    <text x="90" y="100" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">[3] score: 0.79 - Doc C</text>
+
+    <text x="90" y="124" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">... more candidates ...</text>
+
+    <text x="90" y="144" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Approximate ranking</text>
+  </g>
+
+  <path d="M 230 170 L 270 170" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Reranker -->
+  <g filter="url(#shadow)">
+    <rect x="280" y="70" width="280" height="200" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="280" y="70" width="280" height="28" rx="10" fill="url(#rerankGrad)"/>
+    <rect x="280" y="88" width="280" height="10" fill="url(#rerankGrad)"/>
+    <text x="420" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Cross-Encoder Model</text>
+  </g>
+  <g transform="translate(290, 110)">
+    <text x="130" y="14" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#475569" text-anchor="middle">Available Models:</text>
+
+    <rect x="0" y="24" width="125" height="30" rx="3" fill="#fff7ed"/>
+    <text x="62" y="38" font-family="monospace" font-size="7" fill="#ea580c" text-anchor="middle">bge-reranker-v2-m3</text>
+    <text x="62" y="50" font-family="system-ui, sans-serif" font-size="6" fill="#64748b" text-anchor="middle">Fast, multilingual</text>
+
+    <rect x="135" y="24" width="125" height="30" rx="3" fill="#fff7ed"/>
+    <text x="197" y="38" font-family="monospace" font-size="7" fill="#ea580c" text-anchor="middle">cohere-rerank-v3</text>
+    <text x="197" y="50" font-family="system-ui, sans-serif" font-size="6" fill="#64748b" text-anchor="middle">High accuracy</text>
+
+    <rect x="0" y="62" width="260" height="60" rx="4" fill="#fef3c7"/>
+    <text x="130" y="80" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#d97706" text-anchor="middle">How It Works</text>
+    <text x="130" y="96" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Query + Document -> Relevance Score</text>
+    <text x="130" y="112" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Full attention between query and each doc</text>
+
+    <text x="130" y="136" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">top_n: 10 (default)</text>
+    <text x="130" y="152" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Only top_n results are returned</text>
+  </g>
+
+  <path d="M 560 170 L 600 170" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Output -->
+  <g filter="url(#shadow)">
+    <rect x="610" y="80" width="200" height="180" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="610" y="80" width="200" height="28" rx="10" fill="url(#outputGrad)"/>
+    <rect x="610" y="98" width="200" height="10" fill="url(#outputGrad)"/>
+    <text x="710" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Reranked Results</text>
+  </g>
+  <g transform="translate(620, 120)">
+    <text x="90" y="14" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#0d9488" text-anchor="middle">Precision-optimized (top_n)</text>
+
+    <rect x="0" y="24" width="180" height="24" rx="3" fill="#a7f3d0"/>
+    <text x="90" y="40" font-family="monospace" font-size="8" fill="#0d9488" text-anchor="middle">[1] score: 0.94 - Doc C</text>
+
+    <rect x="0" y="54" width="180" height="24" rx="3" fill="#bbf7d0"/>
+    <text x="90" y="70" font-family="monospace" font-size="8" fill="#16a34a" text-anchor="middle">[2] score: 0.91 - Doc A</text>
+
+    <rect x="0" y="84" width="180" height="24" rx="3" fill="#dcfce7"/>
+    <text x="90" y="100" font-family="monospace" font-size="8" fill="#22c55e" text-anchor="middle">[3] score: 0.88 - Doc B</text>
+
+    <text x="90" y="124" font-family="system-ui, sans-serif" font-size="8" fill="#16a34a" text-anchor="middle">Doc C promoted!</text>
+    <text x="90" y="142" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Better relevance ranking</text>
+  </g>
+
+  <!-- Comparison -->
+  <g transform="translate(830, 100)">
+    <rect x="0" y="0" width="140" height="160" rx="6" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/>
+    <text x="70" y="20" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#dc2626" text-anchor="middle">Trade-offs</text>
+    <text x="70" y="45" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">+ Higher precision</text>
+    <text x="70" y="62" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">+ Better top results</text>
+    <text x="70" y="79" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">+ Cross-attention</text>
+    <text x="70" y="100" font-family="system-ui, sans-serif" font-size="8" fill="#dc2626" text-anchor="middle">- Slower (~50-100ms)</text>
+    <text x="70" y="117" font-family="system-ui, sans-serif" font-size="8" fill="#dc2626" text-anchor="middle">- Limited batch size</text>
+    <text x="70" y="138" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Best for top 10-50</text>
+    <text x="70" y="152" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">candidates only</text>
+  </g>
+
+  <!-- Pipeline Position -->
+  <g transform="translate(50, 310)">
+    <text x="0" y="0" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#475569">Common Pipeline:</text>
+
+    <rect x="0" y="15" width="150" height="50" rx="4" fill="#eff6ff"/>
+    <text x="75" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#2563eb" text-anchor="middle">1. semantic_search</text>
+    <text x="75" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">top_k: 100</text>
+
+    <text x="170" y="40" font-family="system-ui, sans-serif" font-size="14" fill="#94a3b8">→</text>
+
+    <rect x="190" y="15" width="150" height="50" rx="4" fill="#fff7ed"/>
+    <text x="265" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#ea580c" text-anchor="middle">2. rerank</text>
+    <text x="265" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">top_n: 10</text>
+
+    <text x="360" y="40" font-family="system-ui, sans-serif" font-size="14" fill="#94a3b8">→</text>
+
+    <rect x="380" y="15" width="150" height="50" rx="4" fill="#ccfbf1"/>
+    <text x="455" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#0d9488" text-anchor="middle">High-quality results</text>
+    <text x="455" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">for final display</text>
+
+    <rect x="560" y="15" width="320" height="50" rx="4" fill="#f3e8ff"/>
+    <text x="720" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#7c3aed" text-anchor="middle">Two-stage retrieval pattern</text>
+    <text x="720" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Fast recall (search) + Precise ranking (rerank)</text>
+  </g>
+</svg>

@@ -1,0 +1,92 @@
+<svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="inputGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="limitGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4f46e5;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="outputGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <rect width="800" height="300" fill="#f8fafc"/>
+
+  <text x="400" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">Limit Stage: Result Count Control</text>
+  <text x="400" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">Limit the number of documents returned from the pipeline</text>
+
+  <!-- Input Documents -->
+  <g filter="url(#shadow)">
+    <rect x="30" y="80" width="180" height="150" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="30" y="80" width="180" height="28" rx="10" fill="url(#inputGrad)"/>
+    <rect x="30" y="98" width="180" height="10" fill="url(#inputGrad)"/>
+    <text x="120" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Input Documents</text>
+  </g>
+  <g transform="translate(40, 120)">
+    <rect x="0" y="0" width="160" height="100" rx="4" fill="#eff6ff"/>
+    <text x="80" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#2563eb" text-anchor="middle">N documents (100+)</text>
+    <text x="80" y="40" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">[1], [2], [3], [4], [5]</text>
+    <text x="80" y="56" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">[6], [7], [8], [9], [10]</text>
+    <text x="80" y="72" font-family="monospace" font-size="8" fill="#64748b" text-anchor="middle">... [100+]</text>
+    <text x="80" y="92" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Large candidate set</text>
+  </g>
+
+  <path d="M 210 155 L 260 155" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Limit Configuration -->
+  <g filter="url(#shadow)">
+    <rect x="270" y="80" width="200" height="150" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="270" y="80" width="200" height="28" rx="10" fill="url(#limitGrad)"/>
+    <rect x="270" y="98" width="200" height="10" fill="url(#limitGrad)"/>
+    <text x="370" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Limit Stage</text>
+  </g>
+  <g transform="translate(280, 120)">
+    <rect x="0" y="0" width="180" height="100" rx="4" fill="#eef2ff"/>
+    <text x="90" y="22" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#4338ca" text-anchor="middle">Parameters</text>
+    <text x="90" y="48" font-family="monospace" font-size="9" fill="#475569" text-anchor="middle">limit: 10</text>
+    <text x="90" y="70" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Returns first N documents</text>
+    <text x="90" y="88" font-family="system-ui, sans-serif" font-size="8" fill="#16a34a" text-anchor="middle">Preserves order</text>
+  </g>
+
+  <path d="M 470 155 L 520 155" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Output -->
+  <g filter="url(#shadow)">
+    <rect x="530" y="80" width="180" height="150" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="530" y="80" width="180" height="28" rx="10" fill="url(#outputGrad)"/>
+    <rect x="530" y="98" width="180" height="10" fill="url(#outputGrad)"/>
+    <text x="620" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Limited Results</text>
+  </g>
+  <g transform="translate(540, 120)">
+    <rect x="0" y="0" width="160" height="100" rx="4" fill="#ccfbf1"/>
+    <text x="80" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#0d9488" text-anchor="middle">10 documents</text>
+    <text x="80" y="40" font-family="monospace" font-size="8" fill="#0d9488" text-anchor="middle">[1], [2], [3], [4], [5]</text>
+    <text x="80" y="56" font-family="monospace" font-size="8" fill="#0d9488" text-anchor="middle">[6], [7], [8], [9], [10]</text>
+    <text x="80" y="78" font-family="system-ui, sans-serif" font-size="8" fill="#16a34a" text-anchor="middle">Top N preserved</text>
+    <text x="80" y="92" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Rest discarded</text>
+  </g>
+
+  <!-- Note -->
+  <g transform="translate(730, 100)">
+    <rect x="0" y="0" width="50" height="130" rx="6" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+    <text x="25" y="20" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#16a34a" text-anchor="middle">Fast</text>
+    <text x="25" y="45" font-family="system-ui, sans-serif" font-size="7" fill="#475569" text-anchor="middle" writing-mode="tb">O(1)</text>
+    <text x="25" y="80" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle" writing-mode="tb">Simple</text>
+    <text x="25" y="115" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle" writing-mode="tb">truncation</text>
+  </g>
+
+  <!-- Use Case Note -->
+  <g transform="translate(50, 260)">
+    <text x="0" y="0" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#475569">Usage: Often used at the end of pipelines to return final top-N results. Also useful mid-pipeline to reduce candidates before expensive operations (rerank, LLM).</text>
+  </g>
+</svg>

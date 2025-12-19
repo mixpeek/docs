@@ -1,0 +1,269 @@
+---
+title: "External Web Search"
+description: "Augment results with real-time web search using Exa's neural search API"
+---
+
+<Frame>
+  <img src="/assets/retrievers/external-web-search.svg" alt="External Web Search stage showing Exa API integration for web results" />
+</Frame>
+
+The External Web Search stage integrates Exa's neural search API to augment your results with real-time web content. This enables hybrid retrieval combining your indexed documents with fresh web results.
+
+<Note>
+  **Stage Category**: APPLY (Enriches pipeline with web results)
+
+  **Transformation**: N documents → N + M documents (web results added)
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Knowledge augmentation** | Supplement internal docs with web content |
+| **Real-time information** | Access current events, news, updates |
+| **Research expansion** | Broaden search beyond your corpus |
+| **Competitive intelligence** | Include competitor content in results |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Internal-only search | Skip this stage |
+| Sensitive/confidential queries | Use only indexed content |
+| Low-latency requirements | Web search adds 200-500ms |
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `query` | string | *Required* | Search query (supports templates) |
+| `num_results` | integer | `10` | Number of web results to retrieve |
+| `include_domains` | array | `null` | Whitelist of domains to search |
+| `exclude_domains` | array | `null` | Blacklist of domains to exclude |
+| `start_published_date` | string | `null` | Filter by publish date (ISO 8601) |
+| `category` | string | `null` | Content category filter |
+| `use_autoprompt` | boolean | `true` | Let Exa optimize the query |
+| `contents` | object | `{}` | Content extraction options |
+
+## Available Categories
+
+| Category | Description |
+|----------|-------------|
+| `company` | Company websites and profiles |
+| `research_paper` | Academic and research content |
+| `news` | News articles |
+| `pdf` | PDF documents |
+| `github` | GitHub repositories |
+| `tweet` | Twitter/X content |
+| `personal_site` | Personal websites and blogs |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Basic Web Search
+{
+  "stage_type": "apply",
+  "stage_id": "external_web_search",
+  "parameters": {
+    "query": "{{INPUT.query}}",
+    "num_results": 10
+  }
+}
+```
+
+```json Domain-Filtered Search
+{
+  "stage_type": "apply",
+  "stage_id": "external_web_search",
+  "parameters": {
+    "query": "{{INPUT.query}}",
+    "num_results": 5,
+    "include_domains": ["arxiv.org", "nature.com", "sciencedirect.com"]
+  }
+}
+```
+
+```json Recent News Search
+{
+  "stage_type": "apply",
+  "stage_id": "external_web_search",
+  "parameters": {
+    "query": "{{INPUT.query}}",
+    "num_results": 10,
+    "category": "news",
+    "start_published_date": "2024-01-01T00:00:00Z"
+  }
+}
+```
+
+```json Research Papers
+{
+  "stage_type": "apply",
+  "stage_id": "external_web_search",
+  "parameters": {
+    "query": "{{INPUT.query}}",
+    "num_results": 20,
+    "category": "research_paper",
+    "exclude_domains": ["wikipedia.org"],
+    "contents": {
+      "text": true,
+      "highlights": true
+    }
+  }
+}
+```
+
+```json GitHub Code Search
+{
+  "stage_type": "apply",
+  "stage_id": "external_web_search",
+  "parameters": {
+    "query": "{{INPUT.query}} implementation",
+    "num_results": 10,
+    "category": "github",
+    "use_autoprompt": false
+  }
+}
+```
+</CodeGroup>
+
+## Content Extraction Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `text` | boolean | Extract full page text |
+| `highlights` | boolean | Extract relevant snippets |
+| `summary` | boolean | Generate content summary |
+
+## Output Schema
+
+Web results are added to the document set with a `source: "web"` marker:
+
+```json
+{
+  "document_id": "web_abc123",
+  "source": "web",
+  "url": "https://example.com/article",
+  "title": "Article Title",
+  "content": "Full extracted text content...",
+  "highlights": ["Relevant snippet 1", "Relevant snippet 2"],
+  "published_date": "2024-03-15T10:30:00Z",
+  "author": "John Doe",
+  "score": 0.95,
+  "metadata": {
+    "domain": "example.com",
+    "category": "news"
+  }
+}
+```
+
+## Exa Neural Search
+
+Exa uses neural search rather than keyword matching:
+
+| Feature | Description |
+|---------|-------------|
+| **Semantic understanding** | Understands query intent |
+| **Neural ranking** | ML-based relevance scoring |
+| **Content extraction** | Automatic text extraction |
+| **Autoprompt** | Query optimization for better results |
+
+<Tip>
+  Enable `use_autoprompt` (default) for natural language queries. Disable it when you need exact phrase matching or have already optimized your query.
+</Tip>
+
+## Performance
+
+| Metric | Value |
+|--------|-------|
+| **Latency** | 200-500ms |
+| **Rate limits** | Based on Exa plan |
+| **Parallel execution** | Concurrent with pipeline |
+| **Caching** | Results cached for 1 hour |
+
+## Common Pipeline Patterns
+
+### Internal + Web Hybrid Search
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "semantic_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 20
+    }
+  },
+  {
+    "stage_type": "apply",
+    "stage_id": "external_web_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "num_results": 10
+    }
+  },
+  {
+    "stage_type": "sort",
+    "stage_id": "rerank",
+    "parameters": {
+      "model": "bge-reranker-v2-m3",
+      "top_n": 10
+    }
+  }
+]
+```
+
+### Web-Augmented RAG
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "hybrid_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 30
+    }
+  },
+  {
+    "stage_type": "apply",
+    "stage_id": "external_web_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "num_results": 5,
+      "category": "news",
+      "start_published_date": "{{INPUT.date_filter}}"
+    }
+  },
+  {
+    "stage_type": "apply",
+    "stage_id": "rag_prepare",
+    "parameters": {
+      "max_tokens": 8000,
+      "output_mode": "single_context"
+    }
+  }
+]
+```
+
+## Error Handling
+
+| Error | Behavior |
+|-------|----------|
+| API rate limit | Retry with backoff |
+| Network timeout | Stage fails gracefully, no web results |
+| Invalid domain | Ignored, other domains searched |
+| No results found | Empty web result set |
+
+<Warning>
+  Web search results may include content from untrusted sources. Consider filtering or validating web content before using in sensitive applications.
+</Warning>
+
+## Related
+
+- [Web Scrape](/retrieval/stages/web-scrape) - Extract content from specific URLs
+- [Semantic Search](/retrieval/stages/semantic-search) - Search your indexed content
+- [Rerank](/retrieval/stages/rerank) - Combine and rank mixed results

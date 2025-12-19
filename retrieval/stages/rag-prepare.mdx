@@ -1,0 +1,240 @@
+---
+title: "RAG Prepare"
+description: "Prepare documents for LLM context windows with token management and citations"
+---
+
+<Frame>
+  <img src="/assets/retrievers/rag-prepare.svg" alt="RAG Prepare stage showing document formatting for LLM context" />
+</Frame>
+
+The RAG Prepare stage formats search results for LLM consumption by managing token budgets, formatting documents, and adding citations. This is a **preparation stage that does NOT call an LLM** - it prepares content for downstream LLM stages or external LLM calls.
+
+<Note>
+  **Stage Category**: APPLY
+
+  **Transformation**:
+  - `single_context` mode: N documents → 1 combined context document
+  - `formatted_list` mode: N documents → N formatted documents
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Before LLM generation** | Prepare context for summarization or Q&A |
+| **Token budget management** | Fit multiple docs into context window |
+| **Citation tracking** | Enable source attribution in responses |
+| **Consistent formatting** | Standardize document format for LLM input |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Want LLM to generate summary | `summarize` stage (calls LLM) |
+| Don't need token management | Pass documents directly |
+| Simple pass-through | Skip this stage |
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `max_tokens` | integer | `8000` | Maximum tokens for combined output |
+| `tokenizer` | string | `cl100k_base` | Tokenizer to use (GPT-4 compatible) |
+| `truncation_strategy` | string | `priority_truncate` | How to handle token overflow |
+| `output_mode` | string | `single_context` | Output format |
+| `document_template` | string | `[{{CONTEXT.INDEX}}] {{DOC.content}}\n\n` | Template for each document |
+| `content_field` | string | `content` | Field to extract content from |
+| `separator` | string | `\n` | Separator between documents |
+| `citation` | object | `{style: "numbered"}` | Citation configuration |
+
+### Truncation Strategies
+
+| Strategy | Behavior |
+|----------|----------|
+| `priority_truncate` | Include docs in score order, truncate last to fit |
+| `proportional` | Give each doc proportional token budget |
+| `drop_last` | Include complete docs until limit, drop remaining |
+
+### Output Modes
+
+| Mode | Output | Use Case |
+|------|--------|----------|
+| `single_context` | 1 document with combined `context` string | Direct LLM input |
+| `formatted_list` | N documents with `formatted_content` field | Custom processing |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Basic RAG Context
+{
+  "stage_type": "apply",
+  "stage_id": "rag_prepare",
+  "parameters": {
+    "max_tokens": 8000,
+    "output_mode": "single_context"
+  }
+}
+```
+
+```json With Numbered Citations
+{
+  "stage_type": "apply",
+  "stage_id": "rag_prepare",
+  "parameters": {
+    "max_tokens": 4000,
+    "document_template": "[{{CONTEXT.INDEX}}] {{DOC.metadata.title}}\n{{DOC.content}}\n\n",
+    "truncation_strategy": "priority_truncate",
+    "citation": {
+      "style": "numbered",
+      "include_title": true
+    }
+  }
+}
+```
+
+```json Large Context Window (GPT-4 Turbo)
+{
+  "stage_type": "apply",
+  "stage_id": "rag_prepare",
+  "parameters": {
+    "max_tokens": 32000,
+    "tokenizer": "cl100k_base",
+    "truncation_strategy": "proportional"
+  }
+}
+```
+
+```json Formatted List Mode
+{
+  "stage_type": "apply",
+  "stage_id": "rag_prepare",
+  "parameters": {
+    "output_mode": "formatted_list",
+    "document_template": "Source: {{DOC.metadata.source}}\n{{DOC.content}}"
+  }
+}
+```
+
+```json Custom Template with URL
+{
+  "stage_type": "apply",
+  "stage_id": "rag_prepare",
+  "parameters": {
+    "max_tokens": 8000,
+    "document_template": "Document {{CONTEXT.INDEX}}:\nTitle: {{DOC.metadata.title}}\nURL: {{DOC.metadata.url}}\n\n{{DOC.content}}\n\n---\n",
+    "citation": {
+      "style": "bracketed",
+      "include_url": true
+    }
+  }
+}
+```
+</CodeGroup>
+
+## Template Placeholders
+
+| Placeholder | Description |
+|-------------|-------------|
+| `{{CONTEXT.INDEX}}` | 1-based position in result set (1, 2, 3...) |
+| `{{CONTEXT.CITATION}}` | Citation marker based on citation.style |
+| `{{DOC.*}}` | Any document field (e.g., `{{DOC.content}}`, `{{DOC.metadata.title}}`) |
+
+## Citation Styles
+
+| Style | Output | Example |
+|-------|--------|---------|
+| `numbered` | `[1]`, `[2]`, `[3]` | Default, clean |
+| `bracketed` | `[doc_id]` | Document ID references |
+| `footnote` | Superscript numbers | Academic style |
+| `none` | No citations | When not needed |
+
+## Output Schema
+
+### single_context Mode
+
+```json
+{
+  "rag_context": "[1] First document content...\n\n[2] Second document content...",
+  "citations": [
+    {"index": 1, "title": "Document Title", "document_id": "doc_123"},
+    {"index": 2, "title": "Another Title", "document_id": "doc_456"}
+  ]
+}
+```
+
+### formatted_list Mode
+
+Each document gets:
+```json
+{
+  "document_id": "doc_123",
+  "formatted_content": "[1] Title\nContent here...",
+  "original_content": "Content here...",
+  "metadata": {...}
+}
+```
+
+## Performance
+
+| Metric | Value |
+|--------|-------|
+| **Latency** | < 10ms |
+| **Token counting** | Uses tiktoken (accurate) |
+| **No LLM calls** | Pure formatting |
+
+<Tip>
+  This stage does NOT call an LLM. It only formats content for LLM consumption. Use the `summarize` stage if you want LLM-generated summaries.
+</Tip>
+
+## Common Pipeline Patterns
+
+### Search + Prepare + External LLM
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "semantic_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 50
+    }
+  },
+  {
+    "stage_type": "sort",
+    "stage_id": "rerank",
+    "parameters": {
+      "model": "bge-reranker-v2-m3",
+      "top_n": 10
+    }
+  },
+  {
+    "stage_type": "apply",
+    "stage_id": "rag_prepare",
+    "parameters": {
+      "max_tokens": 8000,
+      "output_mode": "single_context",
+      "citation": {"style": "numbered"}
+    }
+  }
+]
+```
+
+The output `rag_context` can then be passed to an external LLM call.
+
+### vs Summarize Stage
+
+| Feature | rag_prepare | summarize |
+|---------|-------------|-----------|
+| Calls LLM | No | Yes |
+| Output | Formatted context | Generated summary |
+| Latency | < 10ms | 500-2000ms |
+| Cost | Free | LLM API costs |
+| Use case | Prepare for external LLM | End-to-end RAG |
+
+## Related
+
+- [Summarize](/retrieval/stages/summarize) - LLM-powered summarization
+- [JSON Transform](/retrieval/stages/json-transform) - Custom document formatting
+- [LLM Enrichment](/retrieval/stages/llm-enrichment) - Extract structured data with LLM

@@ -1,0 +1,261 @@
+---
+title: "SQL Lookup"
+description: "Enrich documents with data from SQL databases using parameterized queries"
+---
+
+<Frame>
+  <img src="/assets/retrievers/sql-lookup.svg" alt="SQL Lookup stage showing database enrichment with parameterized queries" />
+</Frame>
+
+The SQL Lookup stage enriches documents by querying external SQL databases. It executes parameterized queries using document fields as inputs, joining external structured data with your search results.
+
+<Note>
+  **Stage Category**: APPLY (Enriches documents)
+
+  **Transformation**: N documents → N documents (with SQL data added)
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Customer data enrichment** | Join customer details from CRM database |
+| **Inventory lookups** | Add real-time stock levels to product results |
+| **Pricing data** | Enrich with current pricing from ERP |
+| **Cross-system joins** | Combine vector search with relational data |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Simple key-value lookups | `document_enrich` (collection join) |
+| Read-heavy, cacheable data | Consider pre-indexing in Mixpeek |
+| Real-time transactional queries | Direct database access |
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `connection_id` | string | *Required* | Database connection identifier |
+| `query` | string | *Required* | SQL query with parameter placeholders |
+| `parameters` | object | *Required* | Mapping of placeholder names to document fields |
+| `result_field` | string | `sql_result` | Field name for query results |
+| `multiple_rows` | boolean | `false` | Return all rows or just first |
+| `timeout_ms` | integer | `5000` | Query timeout in milliseconds |
+
+## Supported Databases
+
+| Database | Connection Type | Notes |
+|----------|----------------|-------|
+| PostgreSQL | `postgres` | Full support |
+| MySQL | `mysql` | Full support |
+| SQL Server | `mssql` | Full support |
+| SQLite | `sqlite` | Read-only |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Basic Customer Lookup
+{
+  "stage_type": "apply",
+  "stage_id": "sql_lookup",
+  "parameters": {
+    "connection_id": "crm_postgres",
+    "query": "SELECT name, email, tier FROM customers WHERE id = :customer_id",
+    "parameters": {
+      "customer_id": "{{DOC.metadata.customer_id}}"
+    },
+    "result_field": "customer_data"
+  }
+}
+```
+
+```json Inventory Enrichment
+{
+  "stage_type": "apply",
+  "stage_id": "sql_lookup",
+  "parameters": {
+    "connection_id": "inventory_db",
+    "query": "SELECT stock_level, warehouse_location, last_updated FROM inventory WHERE sku = :sku",
+    "parameters": {
+      "sku": "{{DOC.metadata.sku}}"
+    },
+    "result_field": "inventory",
+    "timeout_ms": 2000
+  }
+}
+```
+
+```json Multiple Row Results
+{
+  "stage_type": "apply",
+  "stage_id": "sql_lookup",
+  "parameters": {
+    "connection_id": "orders_db",
+    "query": "SELECT order_id, status, total FROM orders WHERE customer_id = :cid ORDER BY created_at DESC LIMIT 5",
+    "parameters": {
+      "cid": "{{DOC.metadata.customer_id}}"
+    },
+    "result_field": "recent_orders",
+    "multiple_rows": true
+  }
+}
+```
+
+```json Join with Multiple Fields
+{
+  "stage_type": "apply",
+  "stage_id": "sql_lookup",
+  "parameters": {
+    "connection_id": "product_db",
+    "query": "SELECT price, currency, discount_pct FROM pricing WHERE product_id = :pid AND region = :region",
+    "parameters": {
+      "pid": "{{DOC.document_id}}",
+      "region": "{{INPUT.user_region}}"
+    },
+    "result_field": "pricing"
+  }
+}
+```
+</CodeGroup>
+
+## Query Syntax
+
+### Parameter Placeholders
+
+Use `:name` syntax for parameter placeholders:
+
+```sql
+SELECT * FROM users WHERE id = :user_id AND status = :status
+```
+
+Parameters are properly escaped to prevent SQL injection.
+
+### Template Variables
+
+| Variable | Description |
+|----------|-------------|
+| `{{DOC.*}}` | Any document field |
+| `{{INPUT.*}}` | Input parameters from retriever call |
+| `{{CONTEXT.*}}` | Pipeline context variables |
+
+## Output Schema
+
+### Single Row (default)
+
+```json
+{
+  "document_id": "doc_123",
+  "content": "...",
+  "sql_result": {
+    "name": "John Doe",
+    "email": "john@example.com",
+    "tier": "premium"
+  }
+}
+```
+
+### Multiple Rows
+
+```json
+{
+  "document_id": "doc_123",
+  "content": "...",
+  "recent_orders": [
+    {"order_id": "ord_1", "status": "delivered", "total": 99.99},
+    {"order_id": "ord_2", "status": "shipped", "total": 149.99}
+  ]
+}
+```
+
+### No Results
+
+```json
+{
+  "document_id": "doc_123",
+  "content": "...",
+  "sql_result": null
+}
+```
+
+## Security
+
+<Warning>
+  SQL queries are parameterized to prevent injection attacks. Never concatenate user input directly into query strings.
+</Warning>
+
+| Security Feature | Description |
+|------------------|-------------|
+| **Parameterized queries** | All parameters are escaped |
+| **Connection isolation** | Each connection uses dedicated credentials |
+| **Read-only option** | Configure connections as read-only |
+| **Query timeout** | Prevent long-running queries |
+
+## Performance
+
+| Metric | Value |
+|--------|-------|
+| **Latency** | 10-100ms (depends on query complexity) |
+| **Connection pooling** | Automatic |
+| **Parallel execution** | Up to 10 concurrent queries |
+| **Timeout handling** | Graceful with null result |
+
+<Tip>
+  For high-volume lookups, ensure your database has appropriate indexes on the queried columns. Consider caching frequently accessed data.
+</Tip>
+
+## Common Pipeline Patterns
+
+### Search + SQL Enrichment
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "semantic_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 20
+    }
+  },
+  {
+    "stage_type": "apply",
+    "stage_id": "sql_lookup",
+    "parameters": {
+      "connection_id": "product_db",
+      "query": "SELECT price, stock FROM products WHERE id = :id",
+      "parameters": {
+        "id": "{{DOC.metadata.product_id}}"
+      },
+      "result_field": "product_data"
+    }
+  },
+  {
+    "stage_type": "filter",
+    "stage_id": "structured_filter",
+    "parameters": {
+      "conditions": {
+        "field": "product_data.stock",
+        "operator": "gt",
+        "value": 0
+      }
+    }
+  }
+]
+```
+
+## Error Handling
+
+| Error | Behavior |
+|-------|----------|
+| Query timeout | `result_field` set to `null` |
+| Connection failure | Stage fails, pipeline stops |
+| No rows returned | `result_field` set to `null` |
+| Invalid SQL | Stage fails with error message |
+
+## Related
+
+- [Document Enrich](/retrieval/stages/document-enrich) - Collection-based joins
+- [API Call](/retrieval/stages/api-call) - REST API enrichment
+- [JSON Transform](/retrieval/stages/json-transform) - Transform enriched data

@@ -125,12 +125,10 @@
           "pages": [
             "processing/feature-extractors",
             "processing/extractors/multimodal",
-            "processing/extractors/passthrough",
             "processing/extractors/text"
           ]
         },
         "processing/batching",
-        "processing/model-registry",
         "processing/tasks",
         "processing/pipelines"
       ]
@@ -139,6 +137,30 @@
       "group": "Search & Retrieve",
       "pages": [
         "retrieval/retrievers",
+        {
+          "group": "Retriever Stages",
+          "pages": [
+            "retrieval/stages/overview",
+            "retrieval/stages/semantic-search",
+            "retrieval/stages/hybrid-search",
+            "retrieval/stages/structured-filter",
+            "retrieval/stages/llm-filter",
+            "retrieval/stages/rerank",
+            "retrieval/stages/sort-by-field",
+            "retrieval/stages/summarize",
+            "retrieval/stages/deduplicate",
+            "retrieval/stages/limit",
+            "retrieval/stages/api-call",
+            "retrieval/stages/sql-lookup",
+            "retrieval/stages/document-enrich",
+            "retrieval/stages/taxonomy-enrich",
+            "retrieval/stages/llm-enrichment",
+            "retrieval/stages/json-transform",
+            "retrieval/stages/rag-prepare",
+            "retrieval/stages/external-web-search",
+            "retrieval/stages/web-scrape"
+          ]
+        },
         "retrieval/filters",
         "retrieval/interactions"
       ]

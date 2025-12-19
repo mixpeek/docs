@@ -1,0 +1,341 @@
+---
+title: "LLM Enrichment"
+description: "Extract structured data from documents using language model analysis"
+---
+
+<Frame>
+  <img src="/assets/retrievers/llm-enrichment.svg" alt="LLM Enrichment stage showing structured data extraction with language models" />
+</Frame>
+
+The LLM Enrichment stage uses language models to extract structured data from document content. It can identify entities, classify content, extract key information, and generate structured outputs.
+
+<Note>
+  **Stage Category**: APPLY (Enriches documents)
+
+  **Transformation**: N documents → N documents (with extracted data added)
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Entity extraction** | Extract names, dates, amounts from text |
+| **Content classification** | Categorize documents by topic/type |
+| **Key information extraction** | Pull specific facts from unstructured text |
+| **Structured output generation** | Convert prose to structured data |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Simple field transformation | `json_transform` |
+| Predefined taxonomy classification | `taxonomy_enrich` |
+| Large-scale processing | Pre-process during indexing |
+| Real-time low-latency | Use cached extractions |
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `model` | string | *Required* | LLM model to use |
+| `prompt` | string | *Required* | Extraction instructions |
+| `content_field` | string | `content` | Field to analyze |
+| `output_field` | string | `extracted` | Field for extracted data |
+| `output_schema` | object | `null` | JSON schema for structured output |
+| `batch_size` | integer | `5` | Documents per LLM call |
+
+## Available Models
+
+| Model | Speed | Quality | Best For |
+|-------|-------|---------|----------|
+| `gpt-4o-mini` | Fast | Good | Simple extractions |
+| `gpt-4o` | Medium | Excellent | Complex analysis |
+| `claude-3-haiku` | Fast | Good | Quick processing |
+| `claude-3-sonnet` | Medium | Excellent | Nuanced extraction |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Basic Entity Extraction
+{
+  "stage_type": "apply",
+  "stage_id": "llm_enrichment",
+  "parameters": {
+    "model": "gpt-4o-mini",
+    "prompt": "Extract all company names and person names mentioned in this document.",
+    "output_field": "entities"
+  }
+}
+```
+
+```json Structured Output with Schema
+{
+  "stage_type": "apply",
+  "stage_id": "llm_enrichment",
+  "parameters": {
+    "model": "gpt-4o",
+    "prompt": "Extract the following information from this product review.",
+    "output_field": "review_analysis",
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "sentiment": {"type": "string", "enum": ["positive", "neutral", "negative"]},
+        "rating_mentioned": {"type": "number", "minimum": 1, "maximum": 5},
+        "pros": {"type": "array", "items": {"type": "string"}},
+        "cons": {"type": "array", "items": {"type": "string"}},
+        "would_recommend": {"type": "boolean"}
+      }
+    }
+  }
+}
+```
+
+```json Key Facts Extraction
+{
+  "stage_type": "apply",
+  "stage_id": "llm_enrichment",
+  "parameters": {
+    "model": "gpt-4o-mini",
+    "prompt": "Extract key facts from this news article: main event, date, location, people involved, and outcome.",
+    "output_field": "key_facts",
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "main_event": {"type": "string"},
+        "date": {"type": "string"},
+        "location": {"type": "string"},
+        "people": {"type": "array", "items": {"type": "string"}},
+        "outcome": {"type": "string"}
+      }
+    }
+  }
+}
+```
+
+```json Topic Classification
+{
+  "stage_type": "apply",
+  "stage_id": "llm_enrichment",
+  "parameters": {
+    "model": "claude-3-haiku",
+    "prompt": "Classify this document into primary and secondary topics. Be specific.",
+    "output_field": "topics",
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "primary_topic": {"type": "string"},
+        "secondary_topics": {"type": "array", "items": {"type": "string"}},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    }
+  }
+}
+```
+
+```json Contact Information Extraction
+{
+  "stage_type": "apply",
+  "stage_id": "llm_enrichment",
+  "parameters": {
+    "model": "gpt-4o-mini",
+    "prompt": "Extract all contact information (emails, phone numbers, addresses) from this document.",
+    "output_field": "contacts",
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "emails": {"type": "array", "items": {"type": "string", "format": "email"}},
+        "phones": {"type": "array", "items": {"type": "string"}},
+        "addresses": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}
+```
+</CodeGroup>
+
+## Output Schema
+
+Define structured output using JSON Schema:
+
+```json
+{
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "field_name": {"type": "string"},
+      "numeric_field": {"type": "number"},
+      "boolean_field": {"type": "boolean"},
+      "array_field": {"type": "array", "items": {"type": "string"}},
+      "enum_field": {"type": "string", "enum": ["option1", "option2", "option3"]}
+    },
+    "required": ["field_name"]
+  }
+}
+```
+
+### Supported Types
+
+| Type | Description |
+|------|-------------|
+| `string` | Text values |
+| `number` | Numeric values |
+| `boolean` | True/false |
+| `array` | Lists of items |
+| `object` | Nested objects |
+
+## Output Examples
+
+### Without Schema
+
+```json
+{
+  "document_id": "doc_123",
+  "content": "Apple Inc. announced...",
+  "entities": "Companies: Apple Inc., Microsoft\nPeople: Tim Cook, Satya Nadella"
+}
+```
+
+### With Schema
+
+```json
+{
+  "document_id": "doc_123",
+  "content": "Great product, 5 stars!...",
+  "review_analysis": {
+    "sentiment": "positive",
+    "rating_mentioned": 5,
+    "pros": ["easy to use", "great value", "fast shipping"],
+    "cons": ["packaging could be better"],
+    "would_recommend": true
+  }
+}
+```
+
+## Performance
+
+| Metric | Value |
+|--------|-------|
+| **Latency** | 300-800ms per batch |
+| **Batch size** | 5 documents default |
+| **Token usage** | ~200 tokens per document |
+| **Parallel** | Batches processed concurrently |
+
+<Warning>
+  LLM enrichment is expensive. Consider pre-computing extractions during indexing for frequently accessed data.
+</Warning>
+
+## Common Pipeline Patterns
+
+### Search + Extract + Filter
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "semantic_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 20
+    }
+  },
+  {
+    "stage_type": "apply",
+    "stage_id": "llm_enrichment",
+    "parameters": {
+      "model": "gpt-4o-mini",
+      "prompt": "Extract the main topic and sentiment.",
+      "output_field": "analysis",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "topic": {"type": "string"},
+          "sentiment": {"type": "string", "enum": ["positive", "neutral", "negative"]}
+        }
+      }
+    }
+  },
+  {
+    "stage_type": "filter",
+    "stage_id": "structured_filter",
+    "parameters": {
+      "conditions": {
+        "field": "analysis.sentiment",
+        "operator": "eq",
+        "value": "positive"
+      }
+    }
+  }
+]
+```
+
+### Entity Extraction Pipeline
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "hybrid_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 10
+    }
+  },
+  {
+    "stage_type": "apply",
+    "stage_id": "llm_enrichment",
+    "parameters": {
+      "model": "gpt-4o",
+      "prompt": "Extract all entities with their types and relationships.",
+      "output_field": "entities",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "people": {"type": "array", "items": {"type": "object", "properties": {"name": {"type": "string"}, "role": {"type": "string"}}}},
+          "organizations": {"type": "array", "items": {"type": "string"}},
+          "locations": {"type": "array", "items": {"type": "string"}},
+          "dates": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    }
+  }
+]
+```
+
+## Writing Effective Prompts
+
+### Good Prompts
+
+```
+✓ "Extract the product name, price, and key features from this product listing."
+✓ "Identify all dates mentioned and their associated events."
+✓ "Classify the sentiment as positive, neutral, or negative, and explain why."
+```
+
+### Poor Prompts
+
+```
+✗ "Analyze this document" (too vague)
+✗ "Get the data" (not specific)
+✗ "Tell me about it" (unclear output)
+```
+
+<Tip>
+  Be specific about what to extract and in what format. When using `output_schema`, the LLM will conform to the structure.
+</Tip>
+
+## Error Handling
+
+| Error | Behavior |
+|-------|----------|
+| LLM timeout | Retry once, then null result |
+| Schema validation fail | Raw text in output_field |
+| Rate limit | Automatic backoff |
+| Empty content | Skip enrichment |
+
+## Related
+
+- [LLM Filter](/retrieval/stages/llm-filter) - Filter using LLM evaluation
+- [Taxonomy Enrich](/retrieval/stages/taxonomy-enrich) - Predefined classification
+- [JSON Transform](/retrieval/stages/json-transform) - Template-based transformation

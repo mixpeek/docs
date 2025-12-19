@@ -1,0 +1,308 @@
+---
+title: "Summarize"
+description: "Generate LLM-powered summaries from document sets"
+---
+
+<Frame>
+  <img src="/assets/retrievers/summarize.svg" alt="Summarize stage showing LLM-powered document summarization" />
+</Frame>
+
+The Summarize stage uses language models to generate summaries from document sets. It can create single summaries from multiple documents, per-document summaries, or answer questions based on the retrieved content.
+
+<Note>
+  **Stage Category**: REDUCE (Aggregates documents)
+
+  **Transformation**: N documents → 1 summary document (or N documents with summaries)
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **RAG summarization** | Generate answers from search results |
+| **Document synthesis** | Combine multiple sources into one summary |
+| **Key points extraction** | Distill long documents to essentials |
+| **Question answering** | Answer user questions from retrieved docs |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Just formatting for LLM | `rag_prepare` (no LLM call) |
+| Extracting structured data | `llm_enrichment` |
+| Real-time low-latency | Pre-compute summaries |
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `model` | string | *Required* | LLM model to use |
+| `prompt` | string | *Required* | Summarization instructions |
+| `content_field` | string | `content` | Field containing text to summarize |
+| `mode` | string | `aggregate` | `aggregate` (all→1) or `per_document` |
+| `max_input_tokens` | integer | `8000` | Max tokens to send to LLM |
+| `include_citations` | boolean | `true` | Add source citations to summary |
+| `output_field` | string | `summary` | Field for summary output |
+
+## Available Models
+
+| Model | Speed | Quality | Context | Cost |
+|-------|-------|---------|---------|------|
+| `gpt-4o-mini` | Fast | Good | 128K | Low |
+| `gpt-4o` | Medium | Excellent | 128K | Medium |
+| `claude-3-haiku` | Fast | Good | 200K | Low |
+| `claude-3-sonnet` | Medium | Excellent | 200K | Medium |
+| `claude-3-opus` | Slow | Best | 200K | High |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Basic RAG Summary
+{
+  "stage_type": "reduce",
+  "stage_id": "summarize",
+  "parameters": {
+    "model": "gpt-4o-mini",
+    "prompt": "Based on the provided documents, answer the user's question: {{INPUT.query}}",
+    "mode": "aggregate",
+    "include_citations": true
+  }
+}
+```
+
+```json Detailed Summary
+{
+  "stage_type": "reduce",
+  "stage_id": "summarize",
+  "parameters": {
+    "model": "gpt-4o",
+    "prompt": "Synthesize the following documents into a comprehensive summary. Include key findings, important details, and any contradictions between sources.",
+    "mode": "aggregate",
+    "max_input_tokens": 16000,
+    "include_citations": true
+  }
+}
+```
+
+```json Per-Document Summaries
+{
+  "stage_type": "reduce",
+  "stage_id": "summarize",
+  "parameters": {
+    "model": "gpt-4o-mini",
+    "prompt": "Summarize this document in 2-3 sentences, focusing on the main points.",
+    "mode": "per_document",
+    "output_field": "document_summary"
+  }
+}
+```
+
+```json Executive Brief
+{
+  "stage_type": "reduce",
+  "stage_id": "summarize",
+  "parameters": {
+    "model": "claude-3-sonnet",
+    "prompt": "Create an executive summary of these documents. Include: key takeaways (3-5 bullet points), recommendations, and any risks or concerns mentioned.",
+    "mode": "aggregate",
+    "include_citations": true
+  }
+}
+```
+
+```json Q&A with Sources
+{
+  "stage_type": "reduce",
+  "stage_id": "summarize",
+  "parameters": {
+    "model": "gpt-4o",
+    "prompt": "Answer the following question based only on the provided documents. If the answer cannot be found in the documents, say so. Question: {{INPUT.question}}",
+    "mode": "aggregate",
+    "include_citations": true,
+    "max_input_tokens": 12000
+  }
+}
+```
+</CodeGroup>
+
+## Modes
+
+### Aggregate Mode (default)
+
+Combines all documents into a single summary:
+
+```
+[Doc1, Doc2, Doc3] → "Combined summary of all documents..."
+```
+
+### Per-Document Mode
+
+Creates a summary for each document:
+
+```
+[Doc1, Doc2, Doc3] → [Doc1 + summary, Doc2 + summary, Doc3 + summary]
+```
+
+## Output Schema
+
+### Aggregate Mode
+
+```json
+{
+  "summary": "Based on the documents, the answer is...\n\n[1] First source mentioned...\n[2] Second source confirmed...",
+  "citations": [
+    {"index": 1, "document_id": "doc_123", "title": "Source Document 1"},
+    {"index": 2, "document_id": "doc_456", "title": "Source Document 2"}
+  ],
+  "model": "gpt-4o-mini",
+  "tokens_used": 1250
+}
+```
+
+### Per-Document Mode
+
+Each document includes:
+
+```json
+{
+  "document_id": "doc_123",
+  "content": "Original content...",
+  "document_summary": "This document discusses...",
+  "metadata": {...}
+}
+```
+
+## Performance
+
+| Metric | Value |
+|--------|-------|
+| **Latency** | 500-2000ms |
+| **Token usage** | Depends on input size |
+| **Max input** | Model context window |
+| **Streaming** | Supported |
+
+<Warning>
+  Summarization calls the LLM and incurs API costs. Use `rag_prepare` if you only need to format content for external LLM calls.
+</Warning>
+
+## Common Pipeline Patterns
+
+### Full RAG Pipeline
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "hybrid_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 50
+    }
+  },
+  {
+    "stage_type": "sort",
+    "stage_id": "rerank",
+    "parameters": {
+      "model": "bge-reranker-v2-m3",
+      "top_n": 10
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "summarize",
+    "parameters": {
+      "model": "gpt-4o",
+      "prompt": "Answer the user's question based on the provided documents: {{INPUT.query}}",
+      "include_citations": true
+    }
+  }
+]
+```
+
+### Multi-Document Synthesis
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "semantic_search",
+    "parameters": {
+      "query": "{{INPUT.topic}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 20
+    }
+  },
+  {
+    "stage_type": "filter",
+    "stage_id": "structured_filter",
+    "parameters": {
+      "conditions": {
+        "field": "metadata.type",
+        "operator": "eq",
+        "value": "research_paper"
+      }
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "summarize",
+    "parameters": {
+      "model": "claude-3-sonnet",
+      "prompt": "Synthesize the research findings from these papers on {{INPUT.topic}}. Identify common themes, contradictions, and gaps in the research.",
+      "max_input_tokens": 32000
+    }
+  }
+]
+```
+
+### Preview Summaries
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "semantic_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 10
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "summarize",
+    "parameters": {
+      "model": "gpt-4o-mini",
+      "prompt": "Create a one-sentence summary of this document.",
+      "mode": "per_document",
+      "output_field": "preview"
+    }
+  }
+]
+```
+
+## Comparison: summarize vs rag_prepare
+
+| Feature | summarize | rag_prepare |
+|---------|-----------|-------------|
+| Calls LLM | Yes | No |
+| Output | Generated summary | Formatted context |
+| Latency | 500-2000ms | < 10ms |
+| Cost | LLM API costs | Free |
+| Use case | End-to-end RAG | Prepare for external LLM |
+
+## Error Handling
+
+| Error | Behavior |
+|-------|----------|
+| Token limit exceeded | Truncates input, continues |
+| LLM timeout | Retry once, then fail |
+| Rate limit | Automatic backoff |
+| Empty input | Returns empty summary |
+
+## Related
+
+- [RAG Prepare](/retrieval/stages/rag-prepare) - Format for LLM without calling
+- [LLM Enrichment](/retrieval/stages/llm-enrichment) - Structured extraction
+- [Rerank](/retrieval/stages/rerank) - Improve input quality first

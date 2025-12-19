@@ -1,0 +1,147 @@
+<svg viewBox="0 0 1000 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="docGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="scrapeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ea580c;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="webGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="outputGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="400" fill="#f8fafc"/>
+
+  <text x="500" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">Web Scrape Stage: Content Extraction via Firecrawl</text>
+  <text x="500" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">Fetch and extract clean content from web pages with JavaScript rendering support</text>
+
+  <!-- Input Documents -->
+  <g filter="url(#shadow)">
+    <rect x="30" y="80" width="180" height="130" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="30" y="80" width="180" height="28" rx="10" fill="url(#docGrad)"/>
+    <rect x="30" y="98" width="180" height="10" fill="url(#docGrad)"/>
+    <text x="120" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Documents with URLs</text>
+  </g>
+  <g transform="translate(40, 120)">
+    <rect x="0" y="0" width="160" height="80" rx="4" fill="#eff6ff"/>
+    <text x="80" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#2563eb" text-anchor="middle">N documents</text>
+    <text x="80" y="38" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">metadata.url:</text>
+    <text x="80" y="52" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">"https://example.com/..."</text>
+    <text x="80" y="68" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">or INPUT.url template</text>
+  </g>
+
+  <path d="M 210 145 L 250 145" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Scrape Configuration -->
+  <g filter="url(#shadow)">
+    <rect x="260" y="70" width="220" height="200" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="260" y="70" width="220" height="28" rx="10" fill="url(#scrapeGrad)"/>
+    <rect x="260" y="88" width="220" height="10" fill="url(#scrapeGrad)"/>
+    <text x="370" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Firecrawl Configuration</text>
+  </g>
+  <g transform="translate(270, 110)">
+    <rect x="0" y="0" width="200" height="28" rx="3" fill="#fff7ed"/>
+    <text x="100" y="18" font-family="monospace" font-size="8" fill="#ea580c" text-anchor="middle">url: "{{DOC.metadata.url}}"</text>
+
+    <text x="100" y="50" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#475569" text-anchor="middle">Output Formats:</text>
+
+    <rect x="0" y="58" width="95" height="22" rx="3" fill="#fef3c7"/>
+    <text x="47" y="73" font-family="monospace" font-size="8" fill="#d97706" text-anchor="middle">markdown</text>
+
+    <rect x="105" y="58" width="95" height="22" rx="3" fill="#fef3c7"/>
+    <text x="152" y="73" font-family="monospace" font-size="8" fill="#d97706" text-anchor="middle">html</text>
+
+    <rect x="0" y="86" width="95" height="22" rx="3" fill="#fef3c7"/>
+    <text x="47" y="101" font-family="monospace" font-size="8" fill="#d97706" text-anchor="middle">rawHtml</text>
+
+    <rect x="105" y="86" width="95" height="22" rx="3" fill="#fef3c7"/>
+    <text x="152" y="101" font-family="monospace" font-size="8" fill="#d97706" text-anchor="middle">screenshot</text>
+
+    <text x="100" y="126" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">timeout: 60s (max)</text>
+    <text x="100" y="142" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">wait_for: 0 (JS render)</text>
+    <text x="100" y="158" font-family="monospace" font-size="8" fill="#16a34a" text-anchor="middle">Handles JS-heavy pages</text>
+  </g>
+
+  <path d="M 480 145 L 520 145" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Web Page -->
+  <g filter="url(#shadow)">
+    <rect x="530" y="80" width="160" height="130" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="530" y="80" width="160" height="28" rx="10" fill="url(#webGrad)"/>
+    <rect x="530" y="98" width="160" height="10" fill="url(#webGrad)"/>
+    <text x="610" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Web Page</text>
+  </g>
+  <g transform="translate(540, 120)">
+    <rect x="0" y="0" width="140" height="80" rx="4" fill="#f3e8ff"/>
+    <text x="70" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#7c3aed" text-anchor="middle">Content Extraction</text>
+    <text x="70" y="36" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Removes ads, nav, etc.</text>
+    <text x="70" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Extracts main content</text>
+    <text x="70" y="68" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Renders JavaScript</text>
+  </g>
+
+  <path d="M 690 145 L 730 145" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Output Documents -->
+  <g filter="url(#shadow)">
+    <rect x="740" y="80" width="200" height="130" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="740" y="80" width="200" height="28" rx="10" fill="url(#outputGrad)"/>
+    <rect x="740" y="98" width="200" height="10" fill="url(#outputGrad)"/>
+    <text x="840" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Enriched Documents</text>
+  </g>
+  <g transform="translate(750, 120)">
+    <rect x="0" y="0" width="180" height="80" rx="4" fill="#ccfbf1"/>
+    <text x="90" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#0d9488" text-anchor="middle">N documents (same)</text>
+    <text x="90" y="36" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">+ scraped_content:</text>
+    <text x="90" y="50" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">markdown: "# Title..."</text>
+    <text x="90" y="64" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">metadata: {title, desc...}</text>
+  </g>
+
+  <!-- Output Schema -->
+  <g transform="translate(50, 250)">
+    <text x="0" y="0" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#475569">Output Fields Added:</text>
+
+    <rect x="0" y="15" width="180" height="110" rx="4" fill="#ccfbf1"/>
+    <text x="90" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#0d9488" text-anchor="middle">Content Fields</text>
+    <text x="10" y="52" font-family="monospace" font-size="8" fill="#475569">markdown (clean text)</text>
+    <text x="10" y="66" font-family="monospace" font-size="8" fill="#475569">html (sanitized)</text>
+    <text x="10" y="80" font-family="monospace" font-size="8" fill="#475569">rawHtml (original)</text>
+    <text x="10" y="94" font-family="monospace" font-size="8" fill="#475569">screenshot (base64)</text>
+    <text x="10" y="108" font-family="monospace" font-size="8" fill="#475569">links[] (extracted)</text>
+
+    <rect x="200" y="15" width="180" height="110" rx="4" fill="#eff6ff"/>
+    <text x="290" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#2563eb" text-anchor="middle">Metadata Fields</text>
+    <text x="210" y="52" font-family="monospace" font-size="8" fill="#475569">title</text>
+    <text x="210" y="66" font-family="monospace" font-size="8" fill="#475569">description</text>
+    <text x="210" y="80" font-family="monospace" font-size="8" fill="#475569">language</text>
+    <text x="210" y="94" font-family="monospace" font-size="8" fill="#475569">sourceURL</text>
+    <text x="210" y="108" font-family="monospace" font-size="8" fill="#475569">statusCode</text>
+
+    <rect x="400" y="15" width="250" height="110" rx="4" fill="#fef2f2"/>
+    <text x="525" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#dc2626" text-anchor="middle">Error Handling</text>
+    <text x="410" y="55" font-family="system-ui, sans-serif" font-size="8" fill="#475569">on_error: skip - keep doc unchanged</text>
+    <text x="410" y="72" font-family="system-ui, sans-serif" font-size="8" fill="#475569">on_error: remove - filter out failed</text>
+    <text x="410" y="89" font-family="system-ui, sans-serif" font-size="8" fill="#475569">on_error: raise - fail pipeline</text>
+    <text x="525" y="110" font-family="system-ui, sans-serif" font-size="8" fill="#dc2626" text-anchor="middle">Domain allowlist required for security</text>
+
+    <rect x="670" y="15" width="230" height="110" rx="4" fill="#fef3c7"/>
+    <text x="785" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#d97706" text-anchor="middle">Common Pipeline</text>
+    <text x="680" y="55" font-family="system-ui, sans-serif" font-size="8" fill="#475569">1. external_web_search</text>
+    <text x="680" y="72" font-family="system-ui, sans-serif" font-size="8" fill="#475569">   (get URLs from search)</text>
+    <text x="680" y="89" font-family="system-ui, sans-serif" font-size="8" fill="#475569">2. web_scrape</text>
+    <text x="680" y="106" font-family="system-ui, sans-serif" font-size="8" fill="#475569">   (fetch full page content)</text>
+  </g>
+</svg>

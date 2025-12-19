@@ -1,0 +1,257 @@
+---
+title: "Hybrid Search"
+description: "Combine semantic and lexical search with Reciprocal Rank Fusion (RRF)"
+---
+
+<Frame>
+  <img src="/assets/retrievers/hybrid-search.svg" alt="Hybrid search stage combining vector and full-text search with RRF fusion" />
+</Frame>
+
+The Hybrid Search stage combines semantic (vector) search with full-text (BM25) search, merging results using Reciprocal Rank Fusion (RRF). This provides the best of both worlds: semantic understanding of meaning plus exact keyword matching.
+
+<Note>
+  **Stage Category**: FILTER (Reduces document set)
+
+  **Transformation**: Collection → top_k documents (ranked by fused score)
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Product search** | Exact model numbers + semantic descriptions |
+| **Technical documentation** | Function names + conceptual explanations |
+| **Mixed queries** | Users mix exact terms with natural language |
+| **E-commerce** | "iPhone 15 Pro Max 256GB black" |
+| **Better recall** | When pure semantic search misses exact matches |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Pure semantic queries | `semantic_search` (faster) |
+| Exact field matching only | `structured_filter` |
+| Low latency requirements | `semantic_search` (single index) |
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `query` | string | *Required* | Search query (supports templates) |
+| `vector_index` | string | *Required* | Vector index for semantic search |
+| `text_field` | string | `content` | Field for full-text search |
+| `top_k` | integer | `100` | Number of candidates to retrieve |
+| `vector_weight` | float | `0.7` | Weight for semantic results (0.0-1.0) |
+| `text_weight` | float | `0.3` | Weight for text results (0.0-1.0) |
+| `rrf_k` | integer | `60` | RRF constant (higher = less rank sensitivity) |
+| `min_score` | float | `0.0` | Minimum fused score threshold |
+| `filters` | object | `null` | Pre-filter conditions |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Balanced Hybrid Search
+{
+  "stage_type": "filter",
+  "stage_id": "hybrid_search",
+  "parameters": {
+    "query": "{{INPUT.query}}",
+    "vector_index": "text_extractor_v1_embedding",
+    "top_k": 100,
+    "vector_weight": 0.7,
+    "text_weight": 0.3
+  }
+}
+```
+
+```json Keyword-Heavy (E-commerce)
+{
+  "stage_type": "filter",
+  "stage_id": "hybrid_search",
+  "parameters": {
+    "query": "{{INPUT.query}}",
+    "vector_index": "text_extractor_v1_embedding",
+    "top_k": 50,
+    "vector_weight": 0.5,
+    "text_weight": 0.5
+  }
+}
+```
+
+```json Semantic-Heavy (Natural Language)
+{
+  "stage_type": "filter",
+  "stage_id": "hybrid_search",
+  "parameters": {
+    "query": "{{INPUT.query}}",
+    "vector_index": "text_extractor_v1_embedding",
+    "top_k": 100,
+    "vector_weight": 0.85,
+    "text_weight": 0.15
+  }
+}
+```
+
+```json With Pre-Filtering
+{
+  "stage_type": "filter",
+  "stage_id": "hybrid_search",
+  "parameters": {
+    "query": "{{INPUT.query}}",
+    "vector_index": "text_extractor_v1_embedding",
+    "top_k": 100,
+    "vector_weight": 0.7,
+    "text_weight": 0.3,
+    "filters": {
+      "AND": [
+        {"field": "metadata.category", "operator": "in", "value": ["electronics", "computers"]},
+        {"field": "metadata.in_stock", "operator": "eq", "value": true}
+      ]
+    }
+  }
+}
+```
+
+```json Custom Text Field
+{
+  "stage_type": "filter",
+  "stage_id": "hybrid_search",
+  "parameters": {
+    "query": "{{INPUT.query}}",
+    "vector_index": "text_extractor_v1_embedding",
+    "text_field": "metadata.description",
+    "top_k": 100,
+    "vector_weight": 0.6,
+    "text_weight": 0.4
+  }
+}
+```
+</CodeGroup>
+
+## How RRF Works
+
+Reciprocal Rank Fusion combines ranked lists from multiple search systems:
+
+```
+RRF_score = Σ (1 / (k + rank_i)) × weight_i
+```
+
+| Parameter | Effect |
+|-----------|--------|
+| Higher `rrf_k` | More equal treatment of all ranks |
+| Lower `rrf_k` | Top ranks dominate more |
+| Higher `vector_weight` | Semantic results prioritized |
+| Higher `text_weight` | Exact matches prioritized |
+
+<Tip>
+  The default `rrf_k=60` works well for most cases. Decrease to 10-20 if you want top results to matter more; increase to 100+ for more equal rank treatment.
+</Tip>
+
+## Weight Selection Guide
+
+| Query Type | Vector Weight | Text Weight | Example |
+|------------|---------------|-------------|---------|
+| Natural language | 0.85 | 0.15 | "comfortable shoes for running" |
+| Mixed | 0.7 | 0.3 | "Nike running shoes comfortable" |
+| Product search | 0.5 | 0.5 | "iPhone 15 Pro Max 256GB" |
+| Technical docs | 0.6 | 0.4 | "async/await error handling" |
+| Code search | 0.4 | 0.6 | "function calculateTotal" |
+
+## Output
+
+Each returned document includes:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `document_id` | string | Unique document identifier |
+| `score` | float | Fused RRF score |
+| `vector_score` | float | Semantic similarity score |
+| `text_score` | float | BM25 text match score |
+| `content` | string | Document content |
+| `metadata` | object | Document metadata |
+
+## Performance
+
+| Metric | Value |
+|--------|-------|
+| **Latency** | 20-100ms (depends on index sizes) |
+| **Parallel execution** | Vector and text search run concurrently |
+| **Fusion overhead** | < 5ms |
+
+## Common Pipeline Patterns
+
+### Hybrid Search + Rerank
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "hybrid_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 100,
+      "vector_weight": 0.7,
+      "text_weight": 0.3
+    }
+  },
+  {
+    "stage_type": "sort",
+    "stage_id": "rerank",
+    "parameters": {
+      "model": "bge-reranker-v2-m3",
+      "top_n": 10
+    }
+  }
+]
+```
+
+### Hybrid Search + Post-Filter
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "hybrid_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 200
+    }
+  },
+  {
+    "stage_type": "filter",
+    "stage_id": "structured_filter",
+    "parameters": {
+      "conditions": {
+        "field": "metadata.price",
+        "operator": "lte",
+        "value": "{{INPUT.max_price}}"
+      }
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "limit",
+    "parameters": {
+      "limit": 10
+    }
+  }
+]
+```
+
+## Comparison: Semantic vs Hybrid
+
+| Feature | Semantic Search | Hybrid Search |
+|---------|-----------------|---------------|
+| **Exact matches** | May miss | Captured |
+| **Conceptual matches** | Excellent | Excellent |
+| **Latency** | 5-50ms | 20-100ms |
+| **Best for** | Natural language | Mixed queries |
+| **Product/SKU search** | Poor | Good |
+
+## Related
+
+- [Semantic Search](/retrieval/stages/semantic-search) - Pure vector search
+- [Rerank](/retrieval/stages/rerank) - Re-score with cross-encoder
+- [Structured Filter](/retrieval/stages/structured-filter) - Metadata filtering

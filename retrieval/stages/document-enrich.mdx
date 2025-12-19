@@ -1,0 +1,286 @@
+---
+title: "Document Enrich"
+description: "Join documents across collections for cross-reference enrichment"
+---
+
+<Frame>
+  <img src="/assets/retrievers/document-enrich.svg" alt="Document Enrich stage showing collection joins and cross-reference lookups" />
+</Frame>
+
+The Document Enrich stage performs collection joins by looking up related documents from other Mixpeek collections. This enables cross-reference enrichment without external database calls.
+
+<Note>
+  **Stage Category**: APPLY (Enriches documents)
+
+  **Transformation**: N documents → N documents (with joined data added)
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Cross-collection joins** | Link products to reviews, users to profiles |
+| **Reference resolution** | Expand foreign keys to full documents |
+| **Denormalization** | Flatten related data for display |
+| **Multi-index search** | Combine results from different collections |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| External database joins | `sql_lookup` |
+| Single collection search | No enrichment needed |
+| Real-time external data | `api_call` |
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `collection_id` | string | *Required* | Target collection to join from |
+| `lookup_field` | string | *Required* | Field in target to match against |
+| `source_field` | string | *Required* | Field in source document to use as key |
+| `result_field` | string | `enriched_data` | Field to store joined data |
+| `select_fields` | array | `null` | Specific fields to return (null = all) |
+| `multiple` | boolean | `false` | Return multiple matching documents |
+| `limit` | integer | `10` | Max documents when `multiple: true` |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Basic Collection Join
+{
+  "stage_type": "apply",
+  "stage_id": "document_enrich",
+  "parameters": {
+    "collection_id": "user_profiles",
+    "lookup_field": "user_id",
+    "source_field": "metadata.author_id",
+    "result_field": "author"
+  }
+}
+```
+
+```json Select Specific Fields
+{
+  "stage_type": "apply",
+  "stage_id": "document_enrich",
+  "parameters": {
+    "collection_id": "products",
+    "lookup_field": "product_id",
+    "source_field": "metadata.product_id",
+    "result_field": "product_details",
+    "select_fields": ["name", "price", "category", "image_url"]
+  }
+}
+```
+
+```json Multiple Related Documents
+{
+  "stage_type": "apply",
+  "stage_id": "document_enrich",
+  "parameters": {
+    "collection_id": "reviews",
+    "lookup_field": "product_id",
+    "source_field": "document_id",
+    "result_field": "reviews",
+    "multiple": true,
+    "limit": 5
+  }
+}
+```
+
+```json Nested Field Lookup
+{
+  "stage_type": "apply",
+  "stage_id": "document_enrich",
+  "parameters": {
+    "collection_id": "categories",
+    "lookup_field": "category_code",
+    "source_field": "metadata.taxonomy.primary_category",
+    "result_field": "category_info"
+  }
+}
+```
+</CodeGroup>
+
+## Output Schema
+
+### Single Document Join
+
+```json
+{
+  "document_id": "doc_123",
+  "content": "Product review content...",
+  "metadata": {
+    "product_id": "prod_456"
+  },
+  "product_details": {
+    "name": "Wireless Headphones",
+    "price": 199.99,
+    "category": "Electronics",
+    "image_url": "https://..."
+  }
+}
+```
+
+### Multiple Documents Join
+
+```json
+{
+  "document_id": "prod_456",
+  "content": "Product description...",
+  "reviews": [
+    {
+      "document_id": "rev_1",
+      "rating": 5,
+      "text": "Great product!"
+    },
+    {
+      "document_id": "rev_2",
+      "rating": 4,
+      "text": "Good value"
+    }
+  ]
+}
+```
+
+### No Match Found
+
+```json
+{
+  "document_id": "doc_123",
+  "content": "...",
+  "enriched_data": null
+}
+```
+
+## Performance
+
+| Metric | Value |
+|--------|-------|
+| **Latency** | 5-20ms per document |
+| **Batch processing** | Automatic batching |
+| **Index usage** | Uses collection indexes |
+| **Parallel execution** | Up to 10 concurrent lookups |
+
+<Tip>
+  Ensure `lookup_field` is indexed in the target collection for optimal performance. Use `select_fields` to reduce payload size.
+</Tip>
+
+## Common Pipeline Patterns
+
+### Search + Author Enrichment
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "semantic_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 20
+    }
+  },
+  {
+    "stage_type": "apply",
+    "stage_id": "document_enrich",
+    "parameters": {
+      "collection_id": "users",
+      "lookup_field": "user_id",
+      "source_field": "metadata.author_id",
+      "result_field": "author",
+      "select_fields": ["name", "avatar", "bio"]
+    }
+  }
+]
+```
+
+### Product Search with Reviews
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "hybrid_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 10
+    }
+  },
+  {
+    "stage_type": "apply",
+    "stage_id": "document_enrich",
+    "parameters": {
+      "collection_id": "reviews",
+      "lookup_field": "product_id",
+      "source_field": "document_id",
+      "result_field": "recent_reviews",
+      "multiple": true,
+      "limit": 3,
+      "select_fields": ["rating", "text", "author_name", "created_at"]
+    }
+  }
+]
+```
+
+### Hierarchical Category Enrichment
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "semantic_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "vector_index": "text_extractor_v1_embedding",
+      "top_k": 50
+    }
+  },
+  {
+    "stage_type": "apply",
+    "stage_id": "document_enrich",
+    "parameters": {
+      "collection_id": "categories",
+      "lookup_field": "category_id",
+      "source_field": "metadata.category_id",
+      "result_field": "category"
+    }
+  },
+  {
+    "stage_type": "apply",
+    "stage_id": "document_enrich",
+    "parameters": {
+      "collection_id": "categories",
+      "lookup_field": "category_id",
+      "source_field": "category.parent_id",
+      "result_field": "parent_category"
+    }
+  }
+]
+```
+
+## Error Handling
+
+| Error | Behavior |
+|-------|----------|
+| Collection not found | Stage fails |
+| No matching document | `result_field` set to `null` |
+| Invalid field path | Stage fails with error |
+| Timeout | Continues with null result |
+
+## vs Other Enrichment Stages
+
+| Feature | document_enrich | sql_lookup | api_call |
+|---------|-----------------|------------|----------|
+| Data source | Mixpeek collections | SQL database | External API |
+| Latency | 5-20ms | 10-100ms | 50-500ms |
+| Best for | Cross-collection | External relational | REST APIs |
+| Setup | None | Connection config | Endpoint config |
+
+## Related
+
+- [SQL Lookup](/retrieval/stages/sql-lookup) - External database joins
+- [API Call](/retrieval/stages/api-call) - REST API enrichment
+- [Taxonomy Enrich](/retrieval/stages/taxonomy-enrich) - Classification enrichment

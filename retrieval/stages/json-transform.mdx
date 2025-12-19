@@ -1,0 +1,230 @@
+---
+title: "JSON Transform"
+description: "Transform document structure using Jinja2 templates for API payloads or custom schemas"
+---
+
+<Frame>
+  <img src="/assets/retrievers/json-transform.svg" alt="JSON Transform stage showing Jinja2 template transformation of documents" />
+</Frame>
+
+The JSON Transform stage applies a Jinja2 template to each document, rendering the template with full document context and replacing the document with the parsed JSON output. Use this to reformat documents for external APIs or reshape data for downstream consumers.
+
+<Note>
+  **Stage Category**: APPLY (1-1 Transformation)
+
+  **Transformation**: N documents → N documents (or fewer with `fail_on_error=False`)
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **External API formatting** | Format documents for webhook payloads |
+| **Response optimization** | Remove unused fields to reduce bandwidth |
+| **Schema adaptation** | Convert internal format to client-specific format |
+| **Conditional outputs** | Include fields based on document properties |
+| **Array flattening** | Transform nested structures to flat arrays |
+| **Field renaming** | Rename or reorganize document fields |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Filtering documents | `structured_filter` or `llm_filter` |
+| Sorting documents | `sort_by_field` or `rerank` |
+| Enriching with new data | `document_enrich` or `api_call` |
+| Joining external data | `taxonomy_enrich` |
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `template` | string | *Required* | Jinja2 template that must render to valid JSON |
+| `fail_on_error` | boolean | `false` | Fail entire pipeline on transformation error |
+
+## Template Context
+
+Templates have access to the full retriever execution context:
+
+| Namespace | Description | Example |
+|-----------|-------------|---------|
+| `DOC` / `doc` | Current document fields and metadata | `{{ DOC.document_id }}` |
+| `INPUT` / `inputs` | Original query inputs from search request | `{{ INPUT.query }}` |
+| `CONTEXT` / `context` | Execution context (namespace_id, etc.) | `{{ CONTEXT.namespace_id }}` |
+| `STAGE` / `stage` | Current stage execution data | `{{ STAGE.name }}` |
+
+<Note>
+  Both uppercase and lowercase namespace formats work identically (`DOC` == `doc`).
+</Note>
+
+## Template Features
+
+### Jinja2 Syntax
+
+| Feature | Syntax | Description |
+|---------|--------|-------------|
+| Variables | `{{ DOC.field }}` | Output field values |
+| Conditionals | `{% if %}...{% endif %}` | Conditional content |
+| Loops | `{% for item in items %}` | Iterate over arrays |
+| Filters | `{{ value \| tojson }}` | Transform values |
+| Comments | `{# comment #}` | Template comments |
+
+### Useful Filters
+
+| Filter | Description | Example |
+|--------|-------------|---------|
+| `tojson` | JSON-safe encoding | `{{ DOC.data \| tojson }}` |
+| `length` | Get array/string length | `{{ DOC.tags \| length }}` |
+| `default` | Fallback value | `{{ DOC.optional \| default('N/A') }}` |
+| `first` / `last` | Array element | `{{ DOC.items \| first }}` |
+| `join` | Join array | `{{ DOC.tags \| join(', ') }}` |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Simple Field Selection
+{
+  "stage_type": "apply",
+  "stage_id": "json_transform",
+  "parameters": {
+    "template": "{\"id\": \"{{ DOC.document_id }}\", \"content\": \"{{ DOC.text }}\", \"score\": {{ DOC.score }}}"
+  }
+}
+```
+
+```json With JSON Escaping
+{
+  "stage_type": "apply",
+  "stage_id": "json_transform",
+  "parameters": {
+    "template": "{\"id\": \"{{ DOC.document_id }}\", \"content\": {{ DOC.text | tojson }}, \"metadata\": {{ DOC.metadata | tojson }}}"
+  }
+}
+```
+
+```json Conditional Field Inclusion
+{
+  "stage_type": "apply",
+  "stage_id": "json_transform",
+  "parameters": {
+    "template": "{\"workflow_name\": \"process-asset\", \"inputs\": [{\"name\": \"id\", \"value\": \"{{ DOC.id }}\"}{% if DOC.asset_type == \"VIDEO\" %}, {\"name\": \"video\", \"value\": {\"src\": \"{{ DOC.url }}\"}}{% endif %}]}"
+  }
+}
+```
+
+```json Array Iteration
+{
+  "stage_type": "apply",
+  "stage_id": "json_transform",
+  "parameters": {
+    "template": "{\"title\": \"{{ DOC.title }}\", \"tags\": [{% for tag in DOC.tags %}\"{{ tag }}\"{% if not loop.last %}, {% endif %}{% endfor %}]}"
+  }
+}
+```
+
+```json Nested Field Access
+{
+  "stage_type": "apply",
+  "stage_id": "json_transform",
+  "parameters": {
+    "template": "{\"user_id\": \"{{ DOC.metadata.user_id }}\", \"category\": \"{{ DOC.metadata.category }}\", \"raw_data\": {{ DOC.metadata.raw | tojson }}}"
+  }
+}
+```
+
+```json Strict Mode (Fail on Error)
+{
+  "stage_type": "apply",
+  "stage_id": "json_transform",
+  "parameters": {
+    "template": "{\"required_field\": \"{{ DOC.must_exist }}\", \"value\": {{ DOC.number }}}",
+    "fail_on_error": true
+  }
+}
+```
+
+```json External Workflow API Format
+{
+  "stage_type": "apply",
+  "stage_id": "json_transform",
+  "parameters": {
+    "template": "{\"workflow\": \"{{ DOC.workflow_name }}\", \"inputs\": [{\"name\": \"variant_id\", \"value\": \"{{ DOC.variant_id }}\"}{% if DOC.asset_type == \"VIDEO\" %}, {\"name\": \"video\", \"value\": {\"src\": \"{{ DOC.asset_url }}\"}}{% endif %}]}"
+  }
+}
+```
+</CodeGroup>
+
+## Error Handling
+
+| Setting | Behavior |
+|---------|----------|
+| `fail_on_error: false` (default) | Skip failed documents with warning, continue processing |
+| `fail_on_error: true` | Fail entire retrieval on first transformation error |
+
+**Common failure causes:**
+- Invalid template syntax
+- Template rendering errors (missing fields)
+- Invalid JSON output from template
+- Document missing required fields
+
+<Tip>
+  Use `fail_on_error: false` for public APIs where partial results are acceptable. Use `fail_on_error: true` for internal workflows where data integrity is critical.
+</Tip>
+
+## Performance
+
+| Metric | Value |
+|--------|-------|
+| **Latency** | < 1ms per document |
+| **Processing** | Sequential (fast, no caching needed) |
+| **Schema** | Output completely defined by template |
+
+## Multi-line Templates
+
+For complex templates, use HEREDOC syntax in the API call:
+
+```bash
+curl -X POST "$MP_API_URL/v1/retrievers" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -d '{
+    "stages": [{
+      "stage_type": "apply",
+      "stage_id": "json_transform",
+      "parameters": {
+        "template": "{\n  \"id\": \"{{ DOC.document_id }}\",\n  \"title\": {{ DOC.title | tojson }},\n  \"items\": [\n    {% for item in DOC.items %}{\n      \"name\": \"{{ item.name }}\",\n      \"value\": {{ item.value }}\n    }{% if not loop.last %},{% endif %}\n    {% endfor %}\n  ]\n}"
+      }
+    }]
+  }'
+```
+
+## Common Patterns
+
+### Drop Unused Fields
+
+```json
+{
+  "template": "{\"id\": \"{{ DOC.document_id }}\", \"title\": \"{{ DOC.title }}\", \"url\": \"{{ DOC.url }}\"}"
+}
+```
+
+### Flatten Nested Metadata
+
+```json
+{
+  "template": "{\"doc_id\": \"{{ DOC.document_id }}\", \"user_id\": \"{{ DOC.metadata.user_id }}\", \"category\": \"{{ DOC.metadata.category }}\", \"score\": {{ DOC.score }}}"
+}
+```
+
+### Add Query Context
+
+```json
+{
+  "template": "{\"query\": \"{{ INPUT.query }}\", \"result_id\": \"{{ DOC.document_id }}\", \"score\": {{ DOC.score }}}"
+}
+```
+
+## Related
+
+- [RAG Prepare](/retrieval/stages/rag-prepare) - Format documents for LLM context
+- [LLM Enrichment](/retrieval/stages/llm-enrichment) - Extract structured data with LLMs
+- [API Call](/retrieval/stages/api-call) - Format for external API calls
