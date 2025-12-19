@@ -57,9 +57,9 @@
 
     <rect x="0" y="58" width="220" height="80" rx="4" fill="#fdf2f8"/>
     <text x="20" y="78" font-family="monospace" font-size="8" fill="#db2777">Electronics</text>
-    <text x="35" y="94" font-family="monospace" font-size="8" fill="#be185d">├─ Computers</text>
-    <text x="50" y="110" font-family="monospace" font-size="8" fill="#9d174d">│  ├─ Laptops</text>
-    <text x="50" y="126" font-family="monospace" font-size="8" fill="#9d174d">│  └─ Desktops</text>
+    <text x="35" y="94" font-family="monospace" font-size="8" fill="#be185d">|-- Computers</text>
+    <text x="50" y="110" font-family="monospace" font-size="8" fill="#9d174d">|   |-- Laptops</text>
+    <text x="50" y="126" font-family="monospace" font-size="8" fill="#9d174d">|   +-- Desktops</text>
   </g>
 
   <path d="M 480 145 L 520 145" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
@@ -121,7 +121,7 @@
 
     <rect x="660" y="15" width="200" height="60" rx="4" fill="#fef3c7"/>
     <text x="760" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#d97706" text-anchor="middle">Compliance Labels</text>
-    <text x="760" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Sensitivity & access</text>
+    <text x="760" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Sensitivity and access</text>
     <text x="760" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">control classification</text>
   </g>
 </svg>

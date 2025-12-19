@@ -175,7 +175,7 @@
   </g>
   <g transform="translate(720, 310)">
     <rect x="0" y="0" width="160" height="25" rx="4" fill="#dcfce7"/>
-    <text x="80" y="16" font-family="system-ui, sans-serif" font-size="9" fill="#166534" text-anchor="middle">> 0.30  Very likely same</text>
+    <text x="80" y="16" font-family="system-ui, sans-serif" font-size="9" fill="#166534" text-anchor="middle">&gt; 0.30  Very likely same</text>
 
     <rect x="170" y="0" width="160" height="25" rx="4" fill="#fef9c3"/>
     <text x="85" y="16" font-family="system-ui, sans-serif" font-size="9" fill="#854d0e" text-anchor="middle">0.25-0.30  Likely same</text>
@@ -184,7 +184,7 @@
     <text x="80" y="48" font-family="system-ui, sans-serif" font-size="9" fill="#9a3412" text-anchor="middle">0.20-0.25  Possibly same</text>
 
     <rect x="170" y="32" width="160" height="25" rx="4" fill="#fecaca"/>
-    <text x="85" y="48" font-family="system-ui, sans-serif" font-size="9" fill="#991b1b" text-anchor="middle">< 0.20  Different people</text>
+    <text x="85" y="48" font-family="system-ui, sans-serif" font-size="9" fill="#991b1b" text-anchor="middle">&lt; 0.20  Different people</text>
 
     <rect x="0" y="68" width="330" height="40" rx="4" fill="#f1f5f9"/>
     <text x="165" y="84" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#475569" text-anchor="middle">Recommended threshold: 0.25 - 0.30</text>

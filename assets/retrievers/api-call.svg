@@ -57,7 +57,7 @@
     <text x="100" y="12" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#475569" text-anchor="middle">Request Parameters</text>
 
     <rect x="0" y="20" width="200" height="22" rx="3" fill="#f3e8ff"/>
-    <text x="100" y="35" font-family="monospace" font-size="8" fill="#7c3aed" text-anchor="middle">url: "https://api.stripe.com/..."</text>
+    <text x="100" y="35" font-family="monospace" font-size="8" fill="#7c3aed" text-anchor="middle">url: https://api.stripe.com/...</text>
 
     <rect x="0" y="48" width="95" height="22" rx="3" fill="#fef3c7"/>
     <text x="47" y="63" font-family="monospace" font-size="8" fill="#d97706" text-anchor="middle">method: GET</text>
@@ -66,11 +66,11 @@
     <text x="152" y="63" font-family="monospace" font-size="8" fill="#d97706" text-anchor="middle">timeout: 10s</text>
 
     <rect x="0" y="76" width="200" height="22" rx="3" fill="#fee2e2"/>
-    <text x="100" y="91" font-family="monospace" font-size="8" fill="#dc2626" text-anchor="middle">allowed_domains: ["api.stripe.com"]</text>
+    <text x="100" y="91" font-family="monospace" font-size="8" fill="#dc2626" text-anchor="middle">allowed_domains: [api.stripe.com]</text>
 
     <rect x="0" y="104" width="200" height="40" rx="3" fill="#dcfce7"/>
     <text x="100" y="119" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#16a34a" text-anchor="middle">Auth: Bearer Token</text>
-    <text x="100" y="135" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">secret_ref: "stripe_api_key"</text>
+    <text x="100" y="135" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">secret_ref: stripe_api_key</text>
   </g>
 
   <path d="M 460 145 L 500 145" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
@@ -87,7 +87,7 @@
     <text x="70" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#d97706" text-anchor="middle">HTTP Request</text>
     <text x="70" y="36" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">GET /v1/customers/...</text>
     <text x="70" y="54" font-family="system-ui, sans-serif" font-size="8" fill="#16a34a" text-anchor="middle">200 OK</text>
-    <text x="70" y="70" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">{"name": "...", "plan": "..."}</text>
+    <text x="70" y="70" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">{name: ..., plan: ...}</text>
   </g>
 
   <path d="M 670 145 L 710 145" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
@@ -103,14 +103,14 @@
     <rect x="0" y="0" width="160" height="80" rx="4" fill="#ccfbf1"/>
     <text x="80" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#0d9488" text-anchor="middle">N documents (same)</text>
     <text x="80" y="36" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">+ metadata.billing</text>
-    <text x="80" y="50" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">{"name": "John"}</text>
-    <text x="80" y="64" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">{"plan": "pro"}</text>
+    <text x="80" y="50" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">{name: John}</text>
+    <text x="80" y="64" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">{plan: pro}</text>
   </g>
 
   <!-- Error Handling -->
   <g transform="translate(100, 290)">
     <rect x="0" y="0" width="800" height="90" rx="8" fill="#fef2f2" stroke="#fecaca" stroke-width="1"/>
-    <text x="400" y="20" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#dc2626" text-anchor="middle">Error Handling & Security</text>
+    <text x="400" y="20" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#dc2626" text-anchor="middle">Error Handling and Security</text>
 
     <rect x="20" y="35" width="150" height="40" rx="4" fill="white"/>
     <text x="95" y="52" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#475569" text-anchor="middle">on_error: skip</text>

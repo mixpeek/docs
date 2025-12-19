@@ -64,7 +64,7 @@
 
     <rect x="10" y="105" width="140" height="28" rx="3" fill="#ddd6fe"/>
     <text x="80" y="118" font-family="system-ui, sans-serif" font-size="8" fill="#7c3aed" text-anchor="middle">Same model used for</text>
-    <text x="80" y="130" font-family="system-ui, sans-serif" font-size="8" fill="#7c3aed" text-anchor="middle">indexing & querying</text>
+    <text x="80" y="130" font-family="system-ui, sans-serif" font-size="8" fill="#7c3aed" text-anchor="middle">indexing and querying</text>
   </g>
 
   <path d="M 440 145 L 480 145" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
@@ -132,7 +132,7 @@
 
     <rect x="440" y="15" width="200" height="60" rx="4" fill="#dcfce7"/>
     <text x="540" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#16a34a" text-anchor="middle">Fast at Scale</text>
-    <text x="540" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">&lt;10ms for millions</text>
+    <text x="540" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Under 10ms for millions</text>
     <text x="540" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">of documents</text>
 
     <rect x="660" y="15" width="200" height="60" rx="4" fill="#fef3c7"/>
