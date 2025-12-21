@@ -211,7 +211,7 @@ curl -sS -X POST "$MP_API_URL/v1/retrievers" \
         "stage_type": "filter",
         "stage_id": "feature_search",
         "parameters": {
-          "feature_uri": "urn:embedding:text:multilingual_e5_large:1",
+          "feature_uri": "mixpeek://text_extractor@v1/multilingual_e5_large_instruct_v1",
           "input": { "text": "{{INPUT.query_text}}" },
           "limit": 20
         }
@@ -248,7 +248,7 @@ curl -sS -X POST "$MP_API_URL/v1/retrievers" \
         "stage_type": "filter",
         "stage_id": "feature_search",
         "parameters": {
-          "feature_uri": "urn:embedding:text:multilingual_e5_large:1",
+          "feature_uri": "mixpeek://text_extractor@v1/multilingual_e5_large_instruct_v1",
           "input": { "text": "{{INPUT.query_text}}" },
           "limit": 20
         }

@@ -43,14 +43,14 @@ The Feature Search stage is the **primary search stage** for retrieval pipelines
 Feature URIs identify which embedding index to search. They follow the pattern:
 
 ```
-{extractor_name}_{version}_{feature_type}
+mixpeek://{extractor_name}@{version}/{output_name}
 ```
 
 **Examples:**
-- `multimodal_base_v1_embedding` - Multimodal text/image embeddings
-- `text_extractor_v1_embedding` - Text-only embeddings
-- `image_embedding_base_v1_embedding` - Image embeddings
-- `video_embedding_base_v1_embedding` - Video frame embeddings
+- `mixpeek://multimodal_extractor@v1/vertex_multimodal_embedding` - Multimodal text/image embeddings
+- `mixpeek://text_extractor@v1/multilingual_e5_large_instruct_v1` - Text-only embeddings
+- `mixpeek://image_extractor@v1/embedding` - Image embeddings
+- `mixpeek://multimodal_extractor@v1/vertex_multimodal_embedding` - Video frame embeddings
 
 ### Fusion Strategies
 
@@ -96,7 +96,7 @@ Each item in the `searches` array supports:
   "parameters": {
     "searches": [
       {
-        "feature_uri": "multimodal_base_v1_embedding",
+        "feature_uri": "mixpeek://multimodal_extractor@v1/vertex_multimodal_embedding",
         "query": "{{INPUT.query}}",
         "top_k": 100
       }
@@ -113,7 +113,7 @@ Each item in the `searches` array supports:
   "parameters": {
     "searches": [
       {
-        "feature_uri": "image_embedding_base_v1_embedding",
+        "feature_uri": "mixpeek://image_extractor@v1/embedding",
         "query": "{{INPUT.image_url}}",
         "top_k": 50
       }
@@ -130,12 +130,12 @@ Each item in the `searches` array supports:
   "parameters": {
     "searches": [
       {
-        "feature_uri": "multimodal_base_v1_embedding",
+        "feature_uri": "mixpeek://multimodal_extractor@v1/vertex_multimodal_embedding",
         "query": "{{INPUT.query}}",
         "top_k": 100
       },
       {
-        "feature_uri": "image_embedding_base_v1_embedding",
+        "feature_uri": "mixpeek://image_extractor@v1/embedding",
         "query": "{{INPUT.image_url}}",
         "top_k": 100
       }
@@ -153,13 +153,13 @@ Each item in the `searches` array supports:
   "parameters": {
     "searches": [
       {
-        "feature_uri": "text_extractor_v1_embedding",
+        "feature_uri": "mixpeek://text_extractor@v1/multilingual_e5_large_instruct_v1",
         "query": "{{INPUT.query}}",
         "top_k": 100,
         "weight": 0.7
       },
       {
-        "feature_uri": "image_embedding_base_v1_embedding",
+        "feature_uri": "mixpeek://image_extractor@v1/embedding",
         "query": "{{INPUT.image_url}}",
         "top_k": 100,
         "weight": 0.3
@@ -178,7 +178,7 @@ Each item in the `searches` array supports:
   "parameters": {
     "searches": [
       {
-        "feature_uri": "multimodal_base_v1_embedding",
+        "feature_uri": "mixpeek://multimodal_extractor@v1/vertex_multimodal_embedding",
         "query": "{{INPUT.query}}",
         "top_k": 100,
         "filters": {
@@ -201,7 +201,7 @@ Each item in the `searches` array supports:
   "parameters": {
     "searches": [
       {
-        "feature_uri": "multimodal_base_v1_embedding",
+        "feature_uri": "mixpeek://multimodal_extractor@v1/vertex_multimodal_embedding",
         "query": "{{INPUT.query}}",
         "top_k": 200
       }
@@ -223,7 +223,7 @@ Each item in the `searches` array supports:
   "parameters": {
     "searches": [
       {
-        "feature_uri": "multimodal_base_v1_embedding",
+        "feature_uri": "mixpeek://multimodal_extractor@v1/vertex_multimodal_embedding",
         "query": "{{INPUT.query}}",
         "top_k": 100
       }
@@ -347,7 +347,7 @@ Pre-filters use boolean logic with AND/OR/NOT:
     "parameters": {
       "searches": [
         {
-          "feature_uri": "multimodal_base_v1_embedding",
+          "feature_uri": "mixpeek://multimodal_extractor@v1/vertex_multimodal_embedding",
           "query": "{{INPUT.query}}",
           "top_k": 100
         }
@@ -376,12 +376,12 @@ Pre-filters use boolean logic with AND/OR/NOT:
     "parameters": {
       "searches": [
         {
-          "feature_uri": "multimodal_base_v1_embedding",
+          "feature_uri": "mixpeek://multimodal_extractor@v1/vertex_multimodal_embedding",
           "query": "{{INPUT.query}}",
           "top_k": 100
         },
         {
-          "feature_uri": "image_embedding_base_v1_embedding",
+          "feature_uri": "mixpeek://image_extractor@v1/embedding",
           "query": "{{INPUT.image}}",
           "top_k": 100
         }
@@ -419,7 +419,7 @@ Pre-filters use boolean logic with AND/OR/NOT:
     "parameters": {
       "searches": [
         {
-          "feature_uri": "video_embedding_base_v1_embedding",
+          "feature_uri": "mixpeek://multimodal_extractor@v1/vertex_multimodal_embedding",
           "query": "{{INPUT.query}}",
           "top_k": 500
         }
@@ -453,7 +453,7 @@ Pre-filters use boolean logic with AND/OR/NOT:
     "parameters": {
       "searches": [
         {
-          "feature_uri": "multimodal_base_v1_embedding",
+          "feature_uri": "mixpeek://multimodal_extractor@v1/vertex_multimodal_embedding",
           "query": "{{INPUT.query}}",
           "top_k": 200,
           "filters": {
@@ -503,10 +503,10 @@ Each result includes:
     "created_at": "2024-01-15T10:30:00Z"
   },
   "features": {
-    "multimodal_base_v1_embedding": {
+    "mixpeek://multimodal_extractor@v1/vertex_multimodal_embedding": {
       "score": 0.91
     },
-    "image_embedding_base_v1_embedding": {
+    "mixpeek://image_extractor@v1/embedding": {
       "score": 0.87
     }
   }
