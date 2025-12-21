@@ -35,7 +35,7 @@ mintlify dev --port 3333
 To generate API reference documentation from the OpenAPI specification:
 
 ```bash
-npx @mintlify/scraping@latest openapi-file api-reference/openapi.json
+npx @mintlify/scraping@latest openapi-file openapi.json
 ```
 
 This will automatically create API reference pages in the `api-reference/` directory based on your OpenAPI spec.

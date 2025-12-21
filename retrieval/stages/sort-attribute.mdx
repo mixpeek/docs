@@ -1,13 +1,13 @@
 ---
-title: "Sort By Field"
+title: "Sort Attribute"
 description: "Reorder documents by any metadata field value"
 ---
 
 <Frame>
-  <img src="/assets/retrievers/sort-by-field.svg" alt="Sort By Field stage showing attribute-based document ordering" />
+  <img src="/assets/retrievers/sort-attribute.svg" alt="Sort Attribute stage showing attribute-based document ordering" />
 </Frame>
 
-The Sort By Field stage reorders documents based on metadata field values. It supports ascending/descending order, nested fields, and multiple sort criteria.
+The Sort Attribute stage reorders documents based on metadata field values. It supports ascending/descending order, nested fields, and multiple sort criteria.
 
 <Note>
   **Stage Category**: SORT (Reorders documents)
@@ -47,7 +47,7 @@ The Sort By Field stage reorders documents based on metadata field values. It su
 ```json Price Low to High
 {
   "stage_type": "sort",
-  "stage_id": "sort_by_field",
+  "stage_id": "sort_attribute",
   "parameters": {
     "sort_field": "metadata.price",
     "order": "asc"
@@ -58,7 +58,7 @@ The Sort By Field stage reorders documents based on metadata field values. It su
 ```json Newest First
 {
   "stage_type": "sort",
-  "stage_id": "sort_by_field",
+  "stage_id": "sort_attribute",
   "parameters": {
     "sort_field": "metadata.created_at",
     "order": "desc"
@@ -69,7 +69,7 @@ The Sort By Field stage reorders documents based on metadata field values. It su
 ```json Highest Rated
 {
   "stage_type": "sort",
-  "stage_id": "sort_by_field",
+  "stage_id": "sort_attribute",
   "parameters": {
     "sort_field": "metadata.rating",
     "order": "desc",
@@ -81,7 +81,7 @@ The Sort By Field stage reorders documents based on metadata field values. It su
 ```json Alphabetical
 {
   "stage_type": "sort",
-  "stage_id": "sort_by_field",
+  "stage_id": "sort_attribute",
   "parameters": {
     "sort_field": "metadata.title",
     "order": "asc"
@@ -92,7 +92,7 @@ The Sort By Field stage reorders documents based on metadata field values. It su
 ```json Nested Field
 {
   "stage_type": "sort",
-  "stage_id": "sort_by_field",
+  "stage_id": "sort_attribute",
   "parameters": {
     "sort_field": "metadata.reviews.average_rating",
     "order": "desc"
@@ -103,7 +103,7 @@ The Sort By Field stage reorders documents based on metadata field values. It su
 ```json By Relevance Score
 {
   "stage_type": "sort",
-  "stage_id": "sort_by_field",
+  "stage_id": "sort_attribute",
   "parameters": {
     "sort_field": "score",
     "order": "desc"
@@ -159,27 +159,30 @@ The stage handles various field types:
 [
   {
     "stage_type": "filter",
-    "stage_id": "semantic_search",
+    "stage_id": "feature_search",
     "parameters": {
-      "query": "{{INPUT.query}}",
-      "vector_index": "text_extractor_v1_embedding",
-      "top_k": 50
+      "searches": [
+        {
+          "feature_uri": "multimodal_base_v1_embedding",
+          "query": "{{INPUT.query}}",
+          "top_k": 50
+        }
+      ],
+      "final_top_k": 50
     }
   },
   {
     "stage_type": "filter",
-    "stage_id": "structured_filter",
+    "stage_id": "attribute_filter",
     "parameters": {
-      "conditions": {
-        "field": "metadata.in_stock",
-        "operator": "eq",
-        "value": true
-      }
+      "field": "metadata.in_stock",
+      "operator": "eq",
+      "value": true
     }
   },
   {
     "stage_type": "sort",
-    "stage_id": "sort_by_field",
+    "stage_id": "sort_attribute",
     "parameters": {
       "sort_field": "metadata.price",
       "order": "asc"
@@ -187,7 +190,7 @@ The stage handles various field types:
   },
   {
     "stage_type": "reduce",
-    "stage_id": "limit",
+    "stage_id": "sample",
     "parameters": {
       "limit": 10
     }
@@ -201,11 +204,16 @@ The stage handles various field types:
 [
   {
     "stage_type": "filter",
-    "stage_id": "hybrid_search",
+    "stage_id": "feature_search",
     "parameters": {
-      "query": "{{INPUT.query}}",
-      "vector_index": "text_extractor_v1_embedding",
-      "top_k": 100
+      "searches": [
+        {
+          "feature_uri": "multimodal_base_v1_embedding",
+          "query": "{{INPUT.query}}",
+          "top_k": 100
+        }
+      ],
+      "final_top_k": 100
     }
   },
   {
@@ -218,7 +226,7 @@ The stage handles various field types:
   },
   {
     "stage_type": "sort",
-    "stage_id": "sort_by_field",
+    "stage_id": "sort_attribute",
     "parameters": {
       "sort_field": "metadata.created_at",
       "order": "desc"
@@ -233,16 +241,21 @@ The stage handles various field types:
 [
   {
     "stage_type": "filter",
-    "stage_id": "semantic_search",
+    "stage_id": "feature_search",
     "parameters": {
-      "query": "{{INPUT.query}}",
-      "vector_index": "text_extractor_v1_embedding",
-      "top_k": 100
+      "searches": [
+        {
+          "feature_uri": "multimodal_base_v1_embedding",
+          "query": "{{INPUT.query}}",
+          "top_k": 100
+        }
+      ],
+      "final_top_k": 100
     }
   },
   {
     "stage_type": "sort",
-    "stage_id": "sort_by_field",
+    "stage_id": "sort_attribute",
     "parameters": {
       "sort_field": "{{INPUT.sort_by}}",
       "order": "{{INPUT.sort_order}}"
@@ -251,10 +264,10 @@ The stage handles various field types:
 ]
 ```
 
-## Comparison: sort_by_field vs rerank
+## Comparison: sort_attribute vs rerank
 
-| Feature | sort_by_field | rerank |
-|---------|---------------|--------|
+| Feature | sort_attribute | rerank |
+|---------|----------------|--------|
 | Based on | Field values | Query relevance |
 | Speed | < 5ms | 50-100ms |
 | Model required | No | Yes |
@@ -269,7 +282,7 @@ For multi-field sorting, chain multiple sort stages (last sort is primary):
 [
   {
     "stage_type": "sort",
-    "stage_id": "sort_by_field",
+    "stage_id": "sort_attribute",
     "parameters": {
       "sort_field": "metadata.created_at",
       "order": "desc"
@@ -277,7 +290,7 @@ For multi-field sorting, chain multiple sort stages (last sort is primary):
   },
   {
     "stage_type": "sort",
-    "stage_id": "sort_by_field",
+    "stage_id": "sort_attribute",
     "parameters": {
       "sort_field": "metadata.featured",
       "order": "desc"
@@ -299,5 +312,5 @@ This sorts by `featured` first, then by `created_at` for ties.
 ## Related
 
 - [Rerank](/retrieval/stages/rerank) - Neural relevance ranking
-- [Limit](/retrieval/stages/limit) - Reduce result count
-- [Structured Filter](/retrieval/stages/structured-filter) - Filter before sorting
+- [Sample](/retrieval/stages/sample) - Reduce result count
+- [Attribute Filter](/retrieval/stages/attribute-filter) - Filter before sorting

@@ -1,0 +1,128 @@
+---
+title: "Manifests"
+description: "Declarative resource configuration with YAML manifests"
+---
+
+Manifests let you define Mixpeek resources in YAML files and apply them in a single operation. This enables version-controlled, reproducible infrastructure across environments.
+
+## Quick Start
+
+```yaml
+# mixpeek.yaml
+version: "1.0"
+metadata:
+  name: "video-search-env"
+
+namespaces:
+  - name: video_search
+    feature_extractors:
+      - name: multimodal_extractor
+        version: v1
+
+buckets:
+  - name: raw_videos
+    namespace: video_search
+    schema:
+      properties:
+        video: { type: video }
+
+collections:
+  - name: video_index
+    namespace: video_search
+```
+
+```bash
+curl -X POST https://api.mixpeek.com/v1/manifest/apply \
+  -H "Authorization: Bearer $API_KEY" \
+  -F "manifest_file=@mixpeek.yaml"
+```
+
+## Core Operations
+
+| Operation | Description |
+|-----------|-------------|
+| **Apply** | Create all resources defined in the manifest |
+| **Validate** | Check syntax, schema, and references without changes |
+| **Export** | Generate a manifest from existing resources |
+| **Diff** | Compare manifest against current state |
+
+## Resource Types
+
+Manifests support these resource types, applied in dependency order:
+
+1. **Namespaces** - Isolation boundaries with feature extractors
+2. **Buckets** - Object storage with schemas
+3. **Collections** - Document stores with indexing
+4. **Taxonomies** - Classification hierarchies
+5. **Clusters** - Grouping configurations
+6. **Retrievers** - Search pipelines
+
+## Secret References
+
+Use `${{ secrets.NAME }}` to reference organization secrets:
+
+```yaml
+buckets:
+  - name: external_data
+    namespace: my_namespace
+    sync:
+      connection_id: ${{ secrets.S3_CONNECTION_ID }}
+```
+
+Secrets must exist before applying. Use the validate endpoint to check for missing secrets.
+
+## Dependency Resolution
+
+Resources are created in topological order. The manifest engine:
+
+- Resolves cross-resource references automatically
+- Detects circular dependencies
+- Rolls back all changes if any creation fails
+
+## Workflows
+
+### Environment Replication
+
+```bash
+# Export from production
+curl https://api.mixpeek.com/v1/manifest/export \
+  -H "Authorization: Bearer $PROD_KEY" \
+  -o prod-manifest.yaml
+
+# Apply to staging
+curl -X POST https://api.mixpeek.com/v1/manifest/apply \
+  -H "Authorization: Bearer $STAGING_KEY" \
+  -F "manifest_file=@prod-manifest.yaml"
+```
+
+### Pre-deployment Validation
+
+```bash
+# Validate without applying
+curl -X POST https://api.mixpeek.com/v1/manifest/validate \
+  -H "Authorization: Bearer $API_KEY" \
+  -F "manifest_file=@mixpeek.yaml"
+
+# Check what would change
+curl -X POST https://api.mixpeek.com/v1/manifest/diff \
+  -H "Authorization: Bearer $API_KEY" \
+  -F "manifest_file=@mixpeek.yaml"
+```
+
+### CI/CD Integration
+
+```yaml
+# GitHub Actions example
+- name: Deploy Mixpeek Resources
+  run: |
+    curl -X POST https://api.mixpeek.com/v1/manifest/apply \
+      -H "Authorization: Bearer ${{ secrets.MIXPEEK_API_KEY }}" \
+      -F "manifest_file=@mixpeek.yaml"
+```
+
+## References
+
+- [Apply Manifest](/api-reference/manifest/apply-manifest)
+- [Validate Manifest](/api-reference/manifest/validate-manifest)
+- [Export Manifest](/api-reference/manifest/export-manifest)
+- [Diff Manifest](/api-reference/manifest/diff-manifest)

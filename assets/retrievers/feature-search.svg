@@ -1,0 +1,179 @@
+<svg viewBox="0 0 1000 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="queryGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="searchGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="fusionGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ea580c;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="outputGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="400" fill="#f8fafc"/>
+
+  <text x="500" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">Feature Search: Unified Semantic &amp; Hybrid Search</text>
+  <text x="500" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">Multi-vector search across embedding features with configurable fusion strategies</text>
+
+  <!-- Query Input -->
+  <g filter="url(#shadow)">
+    <rect x="20" y="75" width="140" height="160" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="20" y="75" width="140" height="28" rx="10" fill="url(#queryGrad)"/>
+    <rect x="20" y="93" width="140" height="10" fill="url(#queryGrad)"/>
+    <text x="90" y="95" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Query Input</text>
+  </g>
+  <g transform="translate(30, 115)">
+    <rect x="0" y="0" width="120" height="30" rx="4" fill="#f3e8ff"/>
+    <text x="10" y="12" font-family="system-ui, sans-serif" font-size="7" fill="#7c3aed">Text</text>
+    <text x="60" y="24" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">"find similar..."</text>
+
+    <rect x="0" y="36" width="120" height="30" rx="4" fill="#fce7f3"/>
+    <text x="10" y="48" font-family="system-ui, sans-serif" font-size="7" fill="#db2777">Image</text>
+    <text x="60" y="60" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">image_url</text>
+
+    <rect x="0" y="72" width="120" height="30" rx="4" fill="#dbeafe"/>
+    <text x="10" y="84" font-family="system-ui, sans-serif" font-size="7" fill="#2563eb">Video</text>
+    <text x="60" y="96" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">video_url</text>
+  </g>
+
+  <path d="M 160 155 L 190 155" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Feature Searches -->
+  <g filter="url(#shadow)">
+    <rect x="200" y="65" width="280" height="180" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="200" y="65" width="280" height="28" rx="10" fill="url(#searchGrad)"/>
+    <rect x="200" y="83" width="280" height="10" fill="url(#searchGrad)"/>
+    <text x="340" y="85" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Vector Searches (parallel)</text>
+  </g>
+  <g transform="translate(210, 105)">
+    <rect x="0" y="0" width="125" height="55" rx="4" fill="#eff6ff"/>
+    <text x="62" y="14" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#2563eb" text-anchor="middle">Text Embedding</text>
+    <text x="62" y="28" font-family="monospace" font-size="6" fill="#475569" text-anchor="middle">multimodal_base_v1</text>
+    <text x="62" y="42" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">top_k: 100</text>
+
+    <rect x="135" y="0" width="125" height="55" rx="4" fill="#fce7f3"/>
+    <text x="197" y="14" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#db2777" text-anchor="middle">Image Embedding</text>
+    <text x="197" y="28" font-family="monospace" font-size="6" fill="#475569" text-anchor="middle">image_embedding_v1</text>
+    <text x="197" y="42" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">top_k: 100</text>
+
+    <rect x="0" y="62" width="260" height="65" rx="4" fill="#fef3c7"/>
+    <text x="130" y="78" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#d97706" text-anchor="middle">Pre-Filters (optional)</text>
+    <text x="130" y="94" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">status = "active" AND category IN [...]</text>
+    <text x="130" y="110" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Applied at index level for speed</text>
+  </g>
+
+  <path d="M 480 155 L 510 155" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Fusion -->
+  <g filter="url(#shadow)">
+    <rect x="520" y="75" width="180" height="160" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="520" y="75" width="180" height="28" rx="10" fill="url(#fusionGrad)"/>
+    <rect x="520" y="93" width="180" height="10" fill="url(#fusionGrad)"/>
+    <text x="610" y="95" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Result Fusion</text>
+  </g>
+  <g transform="translate(530, 115)">
+    <text x="80" y="12" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#ea580c" text-anchor="middle">Fusion Strategies:</text>
+
+    <rect x="0" y="20" width="75" height="22" rx="3" fill="#fff7ed"/>
+    <text x="37" y="35" font-family="monospace" font-size="7" fill="#ea580c" text-anchor="middle">rrf</text>
+
+    <rect x="85" y="20" width="75" height="22" rx="3" fill="#fff7ed"/>
+    <text x="122" y="35" font-family="monospace" font-size="7" fill="#ea580c" text-anchor="middle">dbsf</text>
+
+    <rect x="0" y="48" width="75" height="22" rx="3" fill="#fff7ed"/>
+    <text x="37" y="63" font-family="monospace" font-size="7" fill="#ea580c" text-anchor="middle">weighted</text>
+
+    <rect x="85" y="48" width="75" height="22" rx="3" fill="#fff7ed"/>
+    <text x="122" y="63" font-family="monospace" font-size="7" fill="#ea580c" text-anchor="middle">max</text>
+
+    <rect x="0" y="80" width="160" height="35" rx="4" fill="#fef3c7"/>
+    <text x="80" y="96" font-family="system-ui, sans-serif" font-size="7" fill="#d97706" text-anchor="middle">Combines scores from</text>
+    <text x="80" y="108" font-family="system-ui, sans-serif" font-size="7" fill="#d97706" text-anchor="middle">multiple feature searches</text>
+  </g>
+
+  <path d="M 700 155 L 730 155" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Output -->
+  <g filter="url(#shadow)">
+    <rect x="740" y="75" width="150" height="160" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="740" y="75" width="150" height="28" rx="10" fill="url(#outputGrad)"/>
+    <rect x="740" y="93" width="150" height="10" fill="url(#outputGrad)"/>
+    <text x="815" y="95" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Results</text>
+  </g>
+  <g transform="translate(750, 115)">
+    <text x="65" y="12" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#0d9488" text-anchor="middle">final_top_k: 25</text>
+
+    <rect x="0" y="20" width="130" height="22" rx="3" fill="#a7f3d0"/>
+    <text x="65" y="35" font-family="monospace" font-size="7" fill="#0d9488" text-anchor="middle">[1] score: 0.94</text>
+
+    <rect x="0" y="48" width="130" height="22" rx="3" fill="#bbf7d0"/>
+    <text x="65" y="63" font-family="monospace" font-size="7" fill="#16a34a" text-anchor="middle">[2] score: 0.89</text>
+
+    <rect x="0" y="76" width="130" height="22" rx="3" fill="#dcfce7"/>
+    <text x="65" y="91" font-family="monospace" font-size="7" fill="#22c55e" text-anchor="middle">[3] score: 0.85</text>
+
+    <text x="65" y="112" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">+ facets, groups</text>
+  </g>
+
+  <!-- Features & Use Cases -->
+  <g transform="translate(30, 265)">
+    <text x="0" y="0" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#475569">Key Features:</text>
+
+    <rect x="0" y="15" width="220" height="50" rx="4" fill="#f3e8ff"/>
+    <text x="110" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#7c3aed" text-anchor="middle">Multimodal Search</text>
+    <text x="110" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Text + Image + Video in one query</text>
+
+    <rect x="240" y="15" width="220" height="50" rx="4" fill="#eff6ff"/>
+    <text x="350" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#2563eb" text-anchor="middle">Group By (Decompose/Recompose)</text>
+    <text x="350" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Group chunks by parent document</text>
+
+    <rect x="480" y="15" width="220" height="50" rx="4" fill="#fff7ed"/>
+    <text x="590" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#ea580c" text-anchor="middle">Faceted Search</text>
+    <text x="590" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Get counts by field values</text>
+
+    <rect x="720" y="15" width="220" height="50" rx="4" fill="#ccfbf1"/>
+    <text x="830" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#0d9488" text-anchor="middle">Pre-Filters</text>
+    <text x="830" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Filter at index level for speed</text>
+  </g>
+
+  <!-- Pipeline Position -->
+  <g transform="translate(30, 340)">
+    <text x="0" y="0" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#475569">Common Pipeline:</text>
+
+    <rect x="0" y="12" width="180" height="40" rx="4" fill="#f3e8ff"/>
+    <text x="90" y="32" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#7c3aed" text-anchor="middle">1. feature_search</text>
+    <text x="90" y="46" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Semantic retrieval</text>
+
+    <text x="200" y="32" font-family="system-ui, sans-serif" font-size="14" fill="#94a3b8">-></text>
+
+    <rect x="220" y="12" width="180" height="40" rx="4" fill="#eff6ff"/>
+    <text x="310" y="32" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#2563eb" text-anchor="middle">2. attribute_filter</text>
+    <text x="310" y="46" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Metadata filtering</text>
+
+    <text x="420" y="32" font-family="system-ui, sans-serif" font-size="14" fill="#94a3b8">-></text>
+
+    <rect x="440" y="12" width="180" height="40" rx="4" fill="#fff7ed"/>
+    <text x="530" y="32" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#ea580c" text-anchor="middle">3. rerank</text>
+    <text x="530" y="46" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Neural re-scoring</text>
+
+    <text x="640" y="32" font-family="system-ui, sans-serif" font-size="14" fill="#94a3b8">-></text>
+
+    <rect x="660" y="12" width="180" height="40" rx="4" fill="#ccfbf1"/>
+    <text x="750" y="32" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#0d9488" text-anchor="middle">4. Results</text>
+    <text x="750" y="46" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Top-k final output</text>
+  </g>
+</svg>

@@ -1,0 +1,444 @@
+---
+title: "Attribute Filter"
+description: "Filter documents by metadata field conditions with boolean logic support"
+---
+
+<Frame>
+  <img src="/assets/retrievers/attribute-filter.svg" alt="Attribute Filter stage showing metadata-based document filtering" />
+</Frame>
+
+The Attribute Filter stage filters documents based on metadata field conditions. It supports simple single-field filtering and complex boolean logic (AND/OR/NOT). When used as a first stage, it retrieves documents directly from the database; when used after other stages, it filters in-memory results.
+
+<Note>
+  **Stage Category**: FILTER (Reduces document set)
+
+  **Transformation**: N documents → M documents (where M ≤ N, based on conditions)
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Metadata filtering** | Filter by status, category, date, etc. |
+| **Post-search refinement** | Narrow semantic search results |
+| **Access control** | Filter by user permissions |
+| **Business logic** | Active items, published content |
+| **Initial retrieval** | Fetch documents by attributes (no embeddings) |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Semantic similarity | `feature_search` |
+| Content-based filtering | `llm_filter` |
+| Complex text matching | `feature_search` with text features |
+| Scoring/ranking | Use sort stages after filtering |
+
+## Parameters
+
+### Simple Mode
+
+Use for single-condition filtering:
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `field` | string | *Required* | Field path to filter on |
+| `operator` | string | `eq` | Comparison operator |
+| `value` | any | *Required* | Value to compare against |
+| `case_insensitive` | boolean | `false` | Case-insensitive string matching |
+
+### Boolean Mode
+
+Use for complex multi-condition filtering:
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `conditions` | object | *Required* | Boolean condition object |
+| `batch_size` | integer | `100` | Documents per batch (first-stage only) |
+
+## Supported Operators
+
+| Operator | Description | Example Value |
+|----------|-------------|---------------|
+| `eq` | Equals | `"active"`, `42`, `true` |
+| `ne` | Not equals | `"deleted"` |
+| `gt` | Greater than | `100` |
+| `gte` | Greater than or equal | `4.5` |
+| `lt` | Less than | `50` |
+| `lte` | Less than or equal | `10` |
+| `in` | In array | `["tech", "science"]` |
+| `nin` | Not in array | `["spam", "deleted"]` |
+| `contains` | Contains substring | `"guide"` |
+| `starts_with` | Starts with | `"intro"` |
+| `ends_with` | Ends with | `".pdf"` |
+| `regex` | Regular expression | `"^[A-Z].*"` |
+| `exists` | Field exists | `true` or `false` |
+| `is_null` | Field is null | `true` or `false` |
+| `text` | Full-text search | `"machine learning"` |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Simple Equality
+{
+  "stage_type": "filter",
+  "stage_id": "attribute_filter",
+  "parameters": {
+    "field": "metadata.status",
+    "operator": "eq",
+    "value": "published"
+  }
+}
+```
+
+```json Numeric Comparison
+{
+  "stage_type": "filter",
+  "stage_id": "attribute_filter",
+  "parameters": {
+    "field": "metadata.price",
+    "operator": "lte",
+    "value": 100
+  }
+}
+```
+
+```json In Array
+{
+  "stage_type": "filter",
+  "stage_id": "attribute_filter",
+  "parameters": {
+    "field": "metadata.category",
+    "operator": "in",
+    "value": ["electronics", "computers", "phones"]
+  }
+}
+```
+
+```json Contains Substring
+{
+  "stage_type": "filter",
+  "stage_id": "attribute_filter",
+  "parameters": {
+    "field": "metadata.title",
+    "operator": "contains",
+    "value": "guide",
+    "case_insensitive": true
+  }
+}
+```
+
+```json Field Exists
+{
+  "stage_type": "filter",
+  "stage_id": "attribute_filter",
+  "parameters": {
+    "field": "metadata.premium_features",
+    "operator": "exists",
+    "value": true
+  }
+}
+```
+
+```json Dynamic Value
+{
+  "stage_type": "filter",
+  "stage_id": "attribute_filter",
+  "parameters": {
+    "field": "metadata.category",
+    "operator": "eq",
+    "value": "{{INPUT.category}}"
+  }
+}
+```
+</CodeGroup>
+
+## Boolean Conditions
+
+For complex filtering, use the `conditions` parameter with AND/OR/NOT logic:
+
+<CodeGroup>
+```json AND Conditions
+{
+  "stage_type": "filter",
+  "stage_id": "attribute_filter",
+  "parameters": {
+    "conditions": {
+      "AND": [
+        {"field": "metadata.status", "operator": "eq", "value": "active"},
+        {"field": "metadata.in_stock", "operator": "eq", "value": true},
+        {"field": "metadata.price", "operator": "lte", "value": 500}
+      ]
+    }
+  }
+}
+```
+
+```json OR Conditions
+{
+  "stage_type": "filter",
+  "stage_id": "attribute_filter",
+  "parameters": {
+    "conditions": {
+      "OR": [
+        {"field": "metadata.category", "operator": "eq", "value": "featured"},
+        {"field": "metadata.rating", "operator": "gte", "value": 4.5}
+      ]
+    }
+  }
+}
+```
+
+```json NOT Conditions
+{
+  "stage_type": "filter",
+  "stage_id": "attribute_filter",
+  "parameters": {
+    "conditions": {
+      "NOT": [
+        {"field": "metadata.status", "operator": "eq", "value": "deleted"},
+        {"field": "metadata.spam", "operator": "eq", "value": true}
+      ]
+    }
+  }
+}
+```
+
+```json Nested Boolean Logic
+{
+  "stage_type": "filter",
+  "stage_id": "attribute_filter",
+  "parameters": {
+    "conditions": {
+      "AND": [
+        {"field": "metadata.status", "operator": "eq", "value": "active"},
+        {
+          "OR": [
+            {"field": "metadata.category", "operator": "eq", "value": "premium"},
+            {"field": "metadata.featured", "operator": "eq", "value": true}
+          ]
+        },
+        {
+          "NOT": [
+            {"field": "metadata.region", "operator": "eq", "value": "restricted"}
+          ]
+        }
+      ]
+    }
+  }
+}
+```
+</CodeGroup>
+
+## First-Stage vs Later-Stage Behavior
+
+| Position | Behavior |
+|----------|----------|
+| **First stage** | Fetches documents directly from database (up to 1,000 per collection) |
+| **Later stage** | Filters in-memory results from previous stages |
+
+### First-Stage Example
+
+When no documents exist in the pipeline yet:
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "attribute_filter",
+    "parameters": {
+      "field": "metadata.status",
+      "operator": "eq",
+      "value": "published",
+      "batch_size": 100
+    }
+  }
+]
+```
+
+### Later-Stage Example
+
+After semantic search:
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "feature_search",
+    "parameters": {
+      "searches": [{"feature_uri": "multimodal_base_v1_embedding", "query": "{{INPUT.query}}"}],
+      "final_top_k": 100
+    }
+  },
+  {
+    "stage_type": "filter",
+    "stage_id": "attribute_filter",
+    "parameters": {
+      "field": "metadata.in_stock",
+      "operator": "eq",
+      "value": true
+    }
+  }
+]
+```
+
+## Performance
+
+| Metric | Value |
+|--------|-------|
+| **Latency** | 5-20ms |
+| **First-stage limit** | 1,000 documents per collection |
+| **In-memory filtering** | < 5ms for 1,000 docs |
+| **Index utilization** | Uses indexes when available |
+
+<Tip>
+  For best performance with `feature_search`, use pre-filters in the search stage instead of a separate `attribute_filter` stage. Pre-filters are applied at the vector index level.
+</Tip>
+
+## Common Pipeline Patterns
+
+### Search + Filter + Sort
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "feature_search",
+    "parameters": {
+      "searches": [
+        {
+          "feature_uri": "multimodal_base_v1_embedding",
+          "query": "{{INPUT.query}}",
+          "top_k": 100
+        }
+      ],
+      "final_top_k": 50
+    }
+  },
+  {
+    "stage_type": "filter",
+    "stage_id": "attribute_filter",
+    "parameters": {
+      "conditions": {
+        "AND": [
+          {"field": "metadata.status", "operator": "eq", "value": "active"},
+          {"field": "metadata.category", "operator": "in", "value": "{{INPUT.categories}}"}
+        ]
+      }
+    }
+  },
+  {
+    "stage_type": "sort",
+    "stage_id": "sort_attribute",
+    "parameters": {
+      "sort_field": "metadata.created_at",
+      "order": "desc"
+    }
+  }
+]
+```
+
+### Attribute-Only Retrieval (No Embeddings)
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "attribute_filter",
+    "parameters": {
+      "conditions": {
+        "AND": [
+          {"field": "metadata.type", "operator": "eq", "value": "product"},
+          {"field": "metadata.featured", "operator": "eq", "value": true}
+        ]
+      },
+      "batch_size": 50
+    }
+  },
+  {
+    "stage_type": "sort",
+    "stage_id": "sort_attribute",
+    "parameters": {
+      "sort_field": "metadata.priority",
+      "order": "desc"
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "sample",
+    "parameters": {
+      "limit": 10
+    }
+  }
+]
+```
+
+### Multi-Stage Filtering
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "feature_search",
+    "parameters": {
+      "searches": [{"feature_uri": "multimodal_base_v1_embedding", "query": "{{INPUT.query}}"}],
+      "final_top_k": 200
+    }
+  },
+  {
+    "stage_type": "filter",
+    "stage_id": "attribute_filter",
+    "parameters": {
+      "field": "metadata.category",
+      "operator": "eq",
+      "value": "{{INPUT.category}}"
+    }
+  },
+  {
+    "stage_type": "sort",
+    "stage_id": "rerank",
+    "parameters": {
+      "model": "bge-reranker-v2-m3",
+      "top_n": 20
+    }
+  },
+  {
+    "stage_type": "filter",
+    "stage_id": "attribute_filter",
+    "parameters": {
+      "field": "metadata.in_stock",
+      "operator": "eq",
+      "value": true
+    }
+  }
+]
+```
+
+## Comparison: attribute_filter vs feature_search Pre-Filters
+
+| Aspect | attribute_filter (stage) | feature_search pre-filters |
+|--------|--------------------------|---------------------------|
+| **When applied** | After search results | During vector search |
+| **Performance** | Good | Best (index-level) |
+| **Use case** | Post-filtering, first-stage retrieval | Always when possible |
+| **Flexibility** | Can be placed anywhere | Only with feature_search |
+
+**Recommendation:** When filtering during semantic search, prefer pre-filters in `feature_search`. Use `attribute_filter` for:
+- Post-search refinement based on previous stage outputs
+- First-stage attribute-only retrieval
+- Dynamic filters that depend on earlier stage results
+
+## Error Handling
+
+| Error | Behavior |
+|-------|----------|
+| Field not found | Document excluded (treated as no match) |
+| Invalid operator | Stage fails with error |
+| Type mismatch | Attempts type coercion, then excludes |
+| Invalid regex | Stage fails with error |
+
+## Related Stages
+
+- [Feature Search](/retrieval/stages/feature-search) - Semantic vector search
+- [LLM Filter](/retrieval/stages/llm-filter) - Content-based LLM filtering
+- [Sort Attribute](/retrieval/stages/sort-attribute) - Sort by field values

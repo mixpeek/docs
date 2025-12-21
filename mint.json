@@ -142,16 +142,14 @@
         {
           "group": "Retriever Stages",
           "pages": [
-            "retrieval/stages/semantic-search",
-            "retrieval/stages/hybrid-search",
-            "retrieval/stages/structured-filter",
-            "retrieval/stages/llm-filter",
+            "retrieval/stages/feature-search",
+            "retrieval/stages/attribute-filter",
             "retrieval/stages/query-expand",
+            "retrieval/stages/llm-filter",
             "retrieval/stages/rerank",
-            "retrieval/stages/sort-by-field",
+            "retrieval/stages/sort-attribute",
             "retrieval/stages/sort-relevance",
             "retrieval/stages/mmr",
-            "retrieval/stages/learned-rerank",
             "retrieval/stages/summarize",
             "retrieval/stages/aggregate",
             "retrieval/stages/cluster",
@@ -161,7 +159,7 @@
             "retrieval/stages/sql-lookup",
             "retrieval/stages/document-enrich",
             "retrieval/stages/taxonomy-enrich",
-            "retrieval/stages/llm-enrichment",
+            "retrieval/stages/llm-enrich",
             "retrieval/stages/json-transform",
             "retrieval/stages/rag-prepare",
             "retrieval/stages/code-execution",
@@ -186,6 +184,7 @@
         "operations/security",
         "operations/observability",
         "operations/webhooks",
+        "operations/manifests",
         "operations/analytics-overview",
         "operations/rate-limits-quotas"
       ]
@@ -660,6 +659,15 @@
             "api-reference/public-templates-api/get-public-retriever-template"
           ]
         }
+      ]
+    },
+    {
+      "group": "Manifest",
+      "pages": [
+        "api-reference/manifest/apply-manifest",
+        "api-reference/manifest/validate-manifest",
+        "api-reference/manifest/export-manifest",
+        "api-reference/manifest/diff-manifest"
       ]
     },
     {

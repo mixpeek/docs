@@ -1,13 +1,13 @@
 ---
-title: "LLM Enrichment"
+title: "LLM Enrich"
 description: "Extract structured data from documents using language model analysis"
 ---
 
 <Frame>
-  <img src="/assets/retrievers/llm-enrichment.svg" alt="LLM Enrichment stage showing structured data extraction with language models" />
+  <img src="/assets/retrievers/llm-enrich.svg" alt="LLM Enrich stage showing structured data extraction with language models" />
 </Frame>
 
-The LLM Enrichment stage uses language models to extract structured data from document content. It can identify entities, classify content, extract key information, and generate structured outputs.
+The LLM Enrich stage uses language models to extract structured data from document content. It can identify entities, classify content, extract key information, and generate structured outputs.
 
 <Note>
   **Stage Category**: APPLY (Enriches documents)
@@ -59,7 +59,7 @@ The LLM Enrichment stage uses language models to extract structured data from do
 ```json Basic Entity Extraction
 {
   "stage_type": "apply",
-  "stage_id": "llm_enrichment",
+  "stage_id": "llm_enrich",
   "parameters": {
     "model": "gpt-4o-mini",
     "prompt": "Extract all company names and person names mentioned in this document.",
@@ -71,7 +71,7 @@ The LLM Enrichment stage uses language models to extract structured data from do
 ```json Structured Output with Schema
 {
   "stage_type": "apply",
-  "stage_id": "llm_enrichment",
+  "stage_id": "llm_enrich",
   "parameters": {
     "model": "gpt-4o",
     "prompt": "Extract the following information from this product review.",
@@ -93,7 +93,7 @@ The LLM Enrichment stage uses language models to extract structured data from do
 ```json Key Facts Extraction
 {
   "stage_type": "apply",
-  "stage_id": "llm_enrichment",
+  "stage_id": "llm_enrich",
   "parameters": {
     "model": "gpt-4o-mini",
     "prompt": "Extract key facts from this news article: main event, date, location, people involved, and outcome.",
@@ -115,7 +115,7 @@ The LLM Enrichment stage uses language models to extract structured data from do
 ```json Topic Classification
 {
   "stage_type": "apply",
-  "stage_id": "llm_enrichment",
+  "stage_id": "llm_enrich",
   "parameters": {
     "model": "claude-3-haiku",
     "prompt": "Classify this document into primary and secondary topics. Be specific.",
@@ -135,7 +135,7 @@ The LLM Enrichment stage uses language models to extract structured data from do
 ```json Contact Information Extraction
 {
   "stage_type": "apply",
-  "stage_id": "llm_enrichment",
+  "stage_id": "llm_enrich",
   "parameters": {
     "model": "gpt-4o-mini",
     "prompt": "Extract all contact information (emails, phone numbers, addresses) from this document.",
@@ -232,16 +232,21 @@ Define structured output using JSON Schema:
 [
   {
     "stage_type": "filter",
-    "stage_id": "semantic_search",
+    "stage_id": "feature_search",
     "parameters": {
-      "query": "{{INPUT.query}}",
-      "vector_index": "text_extractor_v1_embedding",
-      "top_k": 20
+      "searches": [
+        {
+          "feature_uri": "multimodal_base_v1_embedding",
+          "query": "{{INPUT.query}}",
+          "top_k": 20
+        }
+      ],
+      "final_top_k": 20
     }
   },
   {
     "stage_type": "apply",
-    "stage_id": "llm_enrichment",
+    "stage_id": "llm_enrich",
     "parameters": {
       "model": "gpt-4o-mini",
       "prompt": "Extract the main topic and sentiment.",
@@ -257,13 +262,11 @@ Define structured output using JSON Schema:
   },
   {
     "stage_type": "filter",
-    "stage_id": "structured_filter",
+    "stage_id": "attribute_filter",
     "parameters": {
-      "conditions": {
-        "field": "analysis.sentiment",
-        "operator": "eq",
-        "value": "positive"
-      }
+      "field": "analysis.sentiment",
+      "operator": "eq",
+      "value": "positive"
     }
   }
 ]
@@ -275,16 +278,21 @@ Define structured output using JSON Schema:
 [
   {
     "stage_type": "filter",
-    "stage_id": "hybrid_search",
+    "stage_id": "feature_search",
     "parameters": {
-      "query": "{{INPUT.query}}",
-      "vector_index": "text_extractor_v1_embedding",
-      "top_k": 10
+      "searches": [
+        {
+          "feature_uri": "multimodal_base_v1_embedding",
+          "query": "{{INPUT.query}}",
+          "top_k": 10
+        }
+      ],
+      "final_top_k": 10
     }
   },
   {
     "stage_type": "apply",
-    "stage_id": "llm_enrichment",
+    "stage_id": "llm_enrich",
     "parameters": {
       "model": "gpt-4o",
       "prompt": "Extract all entities with their types and relationships.",

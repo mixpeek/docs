@@ -1,0 +1,540 @@
+---
+title: "Feature Search"
+description: "Unified semantic and hybrid search across multiple embedding features with configurable fusion strategies"
+---
+
+<Frame>
+  <img src="/assets/retrievers/feature-search.svg" alt="Feature Search stage showing multi-vector semantic search with fusion" />
+</Frame>
+
+The Feature Search stage is the **primary search stage** for retrieval pipelines. It performs vector similarity search across one or more embedding features, supporting single-modal, multimodal, and hybrid search patterns. Results from multiple searches are fused using configurable strategies (RRF, DBSF, weighted, max, or learned).
+
+<Note>
+  **Stage Category**: FILTER (Retrieves documents)
+
+  **Transformation**: 0 documents → N documents (retrieves from collection based on vector similarity)
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Semantic search** | Find documents similar in meaning to a query |
+| **Image search** | Search by image embeddings |
+| **Video search** | Search by video frame embeddings |
+| **Multimodal search** | Combine text + image + video in one query |
+| **Hybrid search** | Fuse results from multiple embedding types |
+| **Decompose/recompose** | Group results by parent document |
+| **Faceted search** | Get result counts by field values |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Exact field matching | `attribute_filter` |
+| Full-text keyword search | Combine with text features |
+| No embeddings in collection | `attribute_filter` |
+| Post-search filtering only | Use after `feature_search` |
+
+## Core Concepts
+
+### Feature URIs
+
+Feature URIs identify which embedding index to search. They follow the pattern:
+
+```
+{extractor_name}_{version}_{feature_type}
+```
+
+**Examples:**
+- `multimodal_base_v1_embedding` - Multimodal text/image embeddings
+- `text_extractor_v1_embedding` - Text-only embeddings
+- `image_embedding_base_v1_embedding` - Image embeddings
+- `video_embedding_base_v1_embedding` - Video frame embeddings
+
+### Fusion Strategies
+
+When searching multiple features, results are combined using fusion:
+
+| Strategy | Description | Best For |
+|----------|-------------|----------|
+| `rrf` | Reciprocal Rank Fusion | General purpose, balanced results |
+| `dbsf` | Distribution-Based Score Fusion | When scores have different distributions |
+| `weighted` | Weighted combination | When you know relative importance |
+| `max` | Maximum score wins | When any match is sufficient |
+| `learned` | ML-based fusion | Optimized from interaction data |
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `searches` | array | *Required* | Array of search configurations |
+| `final_top_k` | integer | `25` | Total results to return after fusion |
+| `fusion` | string | `rrf` | Fusion strategy for multi-search |
+| `group_by` | object | `null` | Group results by field |
+| `facets` | array | `null` | Fields to compute facet counts |
+
+### Search Object Parameters
+
+Each item in the `searches` array supports:
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `feature_uri` | string | *Required* | Embedding index to search |
+| `query` | string/object | *Required* | Query text or embedding |
+| `top_k` | integer | `100` | Candidates per search |
+| `filters` | object | `null` | Pre-filter conditions |
+| `weight` | number | `1.0` | Weight for fusion (weighted strategy) |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Basic Text Search
+{
+  "stage_type": "filter",
+  "stage_id": "feature_search",
+  "parameters": {
+    "searches": [
+      {
+        "feature_uri": "multimodal_base_v1_embedding",
+        "query": "{{INPUT.query}}",
+        "top_k": 100
+      }
+    ],
+    "final_top_k": 25
+  }
+}
+```
+
+```json Image Search
+{
+  "stage_type": "filter",
+  "stage_id": "feature_search",
+  "parameters": {
+    "searches": [
+      {
+        "feature_uri": "image_embedding_base_v1_embedding",
+        "query": "{{INPUT.image_url}}",
+        "top_k": 50
+      }
+    ],
+    "final_top_k": 20
+  }
+}
+```
+
+```json Multimodal Hybrid Search
+{
+  "stage_type": "filter",
+  "stage_id": "feature_search",
+  "parameters": {
+    "searches": [
+      {
+        "feature_uri": "multimodal_base_v1_embedding",
+        "query": "{{INPUT.query}}",
+        "top_k": 100
+      },
+      {
+        "feature_uri": "image_embedding_base_v1_embedding",
+        "query": "{{INPUT.image_url}}",
+        "top_k": 100
+      }
+    ],
+    "fusion": "rrf",
+    "final_top_k": 25
+  }
+}
+```
+
+```json Weighted Fusion
+{
+  "stage_type": "filter",
+  "stage_id": "feature_search",
+  "parameters": {
+    "searches": [
+      {
+        "feature_uri": "text_extractor_v1_embedding",
+        "query": "{{INPUT.query}}",
+        "top_k": 100,
+        "weight": 0.7
+      },
+      {
+        "feature_uri": "image_embedding_base_v1_embedding",
+        "query": "{{INPUT.image_url}}",
+        "top_k": 100,
+        "weight": 0.3
+      }
+    ],
+    "fusion": "weighted",
+    "final_top_k": 20
+  }
+}
+```
+
+```json With Pre-Filters
+{
+  "stage_type": "filter",
+  "stage_id": "feature_search",
+  "parameters": {
+    "searches": [
+      {
+        "feature_uri": "multimodal_base_v1_embedding",
+        "query": "{{INPUT.query}}",
+        "top_k": 100,
+        "filters": {
+          "AND": [
+            {"field": "metadata.status", "operator": "eq", "value": "published"},
+            {"field": "metadata.category", "operator": "in", "value": ["tech", "science"]}
+          ]
+        }
+      }
+    ],
+    "final_top_k": 25
+  }
+}
+```
+
+```json With Grouping (Decompose/Recompose)
+{
+  "stage_type": "filter",
+  "stage_id": "feature_search",
+  "parameters": {
+    "searches": [
+      {
+        "feature_uri": "multimodal_base_v1_embedding",
+        "query": "{{INPUT.query}}",
+        "top_k": 200
+      }
+    ],
+    "group_by": {
+      "field": "metadata.parent_id",
+      "limit": 10,
+      "group_size": 3
+    },
+    "final_top_k": 30
+  }
+}
+```
+
+```json With Facets
+{
+  "stage_type": "filter",
+  "stage_id": "feature_search",
+  "parameters": {
+    "searches": [
+      {
+        "feature_uri": "multimodal_base_v1_embedding",
+        "query": "{{INPUT.query}}",
+        "top_k": 100
+      }
+    ],
+    "facets": ["metadata.category", "metadata.author", "metadata.year"],
+    "final_top_k": 25
+  }
+}
+```
+</CodeGroup>
+
+## Grouping (Decompose/Recompose)
+
+When documents are decomposed into chunks (e.g., video frames, document pages), use `group_by` to recompose results by parent:
+
+```json
+{
+  "group_by": {
+    "field": "metadata.parent_id",
+    "limit": 10,
+    "group_size": 3
+  }
+}
+```
+
+| Parameter | Description |
+|-----------|-------------|
+| `field` | Field to group by (e.g., parent document ID) |
+| `limit` | Maximum number of groups to return |
+| `group_size` | Maximum documents per group |
+
+**Use cases:**
+- Video search: Group frames by video, return top 3 frames per video
+- Document search: Group chunks by document, return best chunks per doc
+- Product search: Group variants by product family
+
+## Faceted Search
+
+Get counts of results by field values for building filter UIs:
+
+```json
+{
+  "facets": ["metadata.category", "metadata.brand", "metadata.price_range"]
+}
+```
+
+**Response includes:**
+```json
+{
+  "facets": {
+    "metadata.category": [
+      {"value": "electronics", "count": 45},
+      {"value": "clothing", "count": 23}
+    ],
+    "metadata.brand": [
+      {"value": "Apple", "count": 12},
+      {"value": "Samsung", "count": 8}
+    ]
+  }
+}
+```
+
+## Filter Syntax
+
+Pre-filters use boolean logic with AND/OR/NOT:
+
+```json
+{
+  "filters": {
+    "AND": [
+      {"field": "metadata.status", "operator": "eq", "value": "active"},
+      {
+        "OR": [
+          {"field": "metadata.category", "operator": "eq", "value": "tech"},
+          {"field": "metadata.category", "operator": "eq", "value": "science"}
+        ]
+      }
+    ]
+  }
+}
+```
+
+### Supported Operators
+
+| Operator | Description | Example |
+|----------|-------------|---------|
+| `eq` | Equals | `{"field": "status", "operator": "eq", "value": "active"}` |
+| `ne` | Not equals | `{"field": "status", "operator": "ne", "value": "deleted"}` |
+| `gt` | Greater than | `{"field": "price", "operator": "gt", "value": 100}` |
+| `gte` | Greater than or equal | `{"field": "rating", "operator": "gte", "value": 4}` |
+| `lt` | Less than | `{"field": "age", "operator": "lt", "value": 30}` |
+| `lte` | Less than or equal | `{"field": "count", "operator": "lte", "value": 10}` |
+| `in` | In array | `{"field": "category", "operator": "in", "value": ["a", "b"]}` |
+| `nin` | Not in array | `{"field": "status", "operator": "nin", "value": ["deleted", "archived"]}` |
+| `contains` | Contains substring | `{"field": "title", "operator": "contains", "value": "guide"}` |
+| `exists` | Field exists | `{"field": "metadata.optional", "operator": "exists", "value": true}` |
+
+## Performance
+
+| Metric | Value |
+|--------|-------|
+| **Latency** | 10-50ms (single search) |
+| **Latency** | 20-80ms (multi-search with fusion) |
+| **Optimal top_k** | 100-500 per search |
+| **Maximum top_k** | 10,000 per search |
+| **Fusion overhead** | < 5ms |
+
+<Tip>
+  For best performance, use pre-filters to reduce the search space. Filtering at the vector index level is much faster than post-filtering in later stages.
+</Tip>
+
+## Common Pipeline Patterns
+
+### Basic Search + Rerank
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "feature_search",
+    "parameters": {
+      "searches": [
+        {
+          "feature_uri": "multimodal_base_v1_embedding",
+          "query": "{{INPUT.query}}",
+          "top_k": 100
+        }
+      ],
+      "final_top_k": 50
+    }
+  },
+  {
+    "stage_type": "sort",
+    "stage_id": "rerank",
+    "parameters": {
+      "model": "bge-reranker-v2-m3",
+      "top_n": 10
+    }
+  }
+]
+```
+
+### Multimodal Search + Filter + Limit
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "feature_search",
+    "parameters": {
+      "searches": [
+        {
+          "feature_uri": "multimodal_base_v1_embedding",
+          "query": "{{INPUT.query}}",
+          "top_k": 100
+        },
+        {
+          "feature_uri": "image_embedding_base_v1_embedding",
+          "query": "{{INPUT.image}}",
+          "top_k": 100
+        }
+      ],
+      "fusion": "rrf",
+      "final_top_k": 50
+    }
+  },
+  {
+    "stage_type": "filter",
+    "stage_id": "attribute_filter",
+    "parameters": {
+      "field": "metadata.in_stock",
+      "operator": "eq",
+      "value": true
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "sample",
+    "parameters": {
+      "limit": 20
+    }
+  }
+]
+```
+
+### Video Search with Frame Grouping
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "feature_search",
+    "parameters": {
+      "searches": [
+        {
+          "feature_uri": "video_embedding_base_v1_embedding",
+          "query": "{{INPUT.query}}",
+          "top_k": 500
+        }
+      ],
+      "group_by": {
+        "field": "metadata.video_id",
+        "limit": 10,
+        "group_size": 5
+      },
+      "final_top_k": 50
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "summarize",
+    "parameters": {
+      "model": "gpt-4o-mini",
+      "prompt": "Summarize why these video segments match the query"
+    }
+  }
+]
+```
+
+### E-commerce Search with Facets
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "feature_search",
+    "parameters": {
+      "searches": [
+        {
+          "feature_uri": "multimodal_base_v1_embedding",
+          "query": "{{INPUT.query}}",
+          "top_k": 200,
+          "filters": {
+            "AND": [
+              {"field": "metadata.in_stock", "operator": "eq", "value": true},
+              {"field": "metadata.price", "operator": "lte", "value": "{{INPUT.max_price}}"}
+            ]
+          }
+        }
+      ],
+      "facets": ["metadata.category", "metadata.brand", "metadata.color"],
+      "final_top_k": 50
+    }
+  },
+  {
+    "stage_type": "sort",
+    "stage_id": "sort_attribute",
+    "parameters": {
+      "sort_field": "{{INPUT.sort_by}}",
+      "order": "{{INPUT.sort_order}}"
+    }
+  }
+]
+```
+
+## Output Schema
+
+Each result includes:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `document_id` | string | Unique document identifier |
+| `score` | float | Combined similarity score |
+| `content` | string | Document content |
+| `metadata` | object | Document metadata |
+| `features` | object | Feature data and scores per search |
+
+**Example output:**
+```json
+{
+  "document_id": "doc_abc123",
+  "score": 0.892,
+  "content": "Document content here...",
+  "metadata": {
+    "title": "Example Document",
+    "category": "tech",
+    "created_at": "2024-01-15T10:30:00Z"
+  },
+  "features": {
+    "multimodal_base_v1_embedding": {
+      "score": 0.91
+    },
+    "image_embedding_base_v1_embedding": {
+      "score": 0.87
+    }
+  }
+}
+```
+
+## Comparison: feature_search vs attribute_filter
+
+| Aspect | feature_search | attribute_filter |
+|--------|----------------|------------------|
+| **Purpose** | Semantic similarity | Exact matching |
+| **Input** | Query text/embedding | Field conditions |
+| **Scoring** | Vector similarity | Binary match |
+| **Speed** | 10-50ms | 5-20ms |
+| **Use when** | Finding similar content | Filtering by metadata |
+
+## Error Handling
+
+| Error | Behavior |
+|-------|----------|
+| Invalid feature_uri | Stage fails with error |
+| Empty query | Returns empty results |
+| Filter syntax error | Stage fails with error |
+| No matching documents | Returns empty results |
+
+## Related Stages
+
+- [Attribute Filter](/retrieval/stages/attribute-filter) - Metadata-based filtering
+- [Rerank](/retrieval/stages/rerank) - Neural re-ranking
+- [Query Expand](/retrieval/stages/query-expand) - Query expansion before search
+- [MMR](/retrieval/stages/mmr) - Diversity-optimized selection
