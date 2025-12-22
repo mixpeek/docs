@@ -1,0 +1,625 @@
+---
+title: "Auto-Labeling Datasets"
+description: "Build a self-improving classification system using taxonomy auto-labeling"
+icon: 'tag'
+---
+
+**Build a labeled dataset from scratch and auto-classify new data using taxonomy-based matching.**
+
+This tutorial shows how to:
+1. Start with unlabeled data
+2. Use feature extraction to find relevant items
+3. Manually label a small reference set
+4. Automatically classify new items based on the reference set
+5. Create a self-improving system that gets better over time
+
+  <img src="/assets/tutorials/bootstrap-labeled-dataset.svg" alt="Bootstrap Labeled Dataset Workflow" />
+
+---
+
+## Overview
+
+This tutorial demonstrates two approaches to building an auto-labeling system:
+
+- **Option A: Unified Approach** (Recommended) - Single bucket/collection that grows smarter over time
+- **Option B: Separate Approach** - Dedicated reference set with production data separated
+
+Both approaches follow the same core workflow:
+1. Upload unlabeled data with feature extraction
+2. Manually label a small reference set (10-20 examples per category)
+3. Configure taxonomy to auto-label new items based on similarity
+4. Review and label unknowns to continuously improve
+
+---
+
+## Use Cases
+
+- **Product Recognition**: Label product images, auto-tag new inventory
+- **People Identification**: Build a face recognition system from photos
+- **Document Classification**: Categorize documents by type or topic
+- **Object Detection**: Label objects in images for training data
+
+---
+
+## Option A: Unified Approach (Recommended)
+
+The unified approach uses a single bucket and collection that references itself. As you label items, they immediately become part of the reference set for future matches.
+
+### Step 1: Create Bucket and Collection
+
+Create a bucket and collection with self-referencing taxonomy:
+
+```bash
+# Create bucket
+POST /v1/buckets
+{
+  "bucket_name": "products_unified",
+  "schema": {
+    "properties": {
+      "product_label": { "type": "text" },
+      "image_url": { "type": "text" }
+    }
+  }
+}
+
+# Create retriever (do this first, before collection)
+POST /v1/retrievers
+{
+  "retriever_name": "products_unified_classifier",
+  "collection_identifiers": ["products_unified"],
+  "stages": [
+    {
+      "stage_type": "filter",
+      "filters": {
+        "must": [
+          {
+            "key": "product_label",
+            "match": { "operator": "ne", "value": null }
+          }
+        ]
+      }
+    },
+    {
+      "stage_type": "feature_search",
+      "feature_extractor": {
+        "feature_extractor_name": "image_extractor",
+        "version": "v1",
+        "input_mappings": { "image": "query_image" }
+      },
+      "top_k": 1,
+      "score_threshold": 0.30
+    }
+  ]
+}
+
+# Create collection that references itself
+POST /v1/collections
+{
+  "collection_name": "products_unified",
+  "source": {
+    "type": "bucket",
+    "bucket_id": "bkt_products_unified"
+  },
+  "feature_extractor": {
+    "feature_extractor_name": "image_extractor",
+    "version": "v1",
+    "input_mappings": { "image": "image_url" },
+    "field_passthrough": ["product_label"]
+  },
+  "taxonomy": {
+    "retriever_id": "ret_products_unified_classifier",
+    "field_to_enrich": "product_label",
+    "confidence_threshold": 0.30
+  }
+}
+```
+
+### Step 2: Upload Initial Unlabeled Data
+
+```bash
+POST /v1/buckets/{bucket_id}/objects
+{
+  "key_prefix": "/bootstrap",
+  "metadata": {
+    "product_label": null
+  },
+  "blobs": [{
+    "property": "image_url",
+    "type": "image",
+    "data": {
+      "url": "s3://my-bucket/products/shoe-001.jpg"
+    }
+  }]
+}
+```
+
+Upload 50-100 images. Feature extraction happens automatically, but no auto-labeling occurs yet (no labeled examples to match against).
+
+### Step 3: Manually Label Reference Set
+
+Query documents and label them:
+
+```bash
+# Get documents
+GET /v1/collections/{collection_id}/documents?return_presigned_urls=true
+
+# Label via bucket (syncs to collection automatically)
+PATCH /v1/buckets/{bucket_id}/objects/{object_id}
+{
+  "metadata": {
+    "product_label": "Red Running Shoes"
+  }
+}
+```
+
+**Labeling tips:**
+- Label 10-20 examples per category minimum
+- Include diverse examples (angles, lighting, backgrounds)
+- Use consistent naming conventions
+
+### Step 4: Upload New Items - Auto-Labeling Works!
+
+Now that you have labeled examples, new uploads auto-label automatically:
+
+```bash
+POST /v1/buckets/{bucket_id}/objects
+{
+  "key_prefix": "/new-arrivals",
+  "blobs": [{
+    "property": "image_url",
+    "type": "image",
+    "data": {
+      "url": "s3://my-bucket/new-arrivals/shoe-new.jpg"
+    }
+  }]
+}
+```
+
+**What happens automatically:**
+1. Feature extraction runs on the new image
+2. Taxonomy searches your labeled items for similar matches
+3. If similarity > 0.30 → Auto-labels (e.g., `"Red Running Shoes"`)
+4. If similarity < 0.30 → Leaves as `null` for manual review
+
+**Check the result:**
+```bash
+GET /v1/collections/{collection_id}/documents/{document_id}
+```
+
+**Matched:**
+```json
+{
+  "metadata": {
+    "product_label": "Red Running Shoes"
+  },
+  "taxonomy_match": {
+    "matched": true,
+    "confidence": 0.87,
+    "source_document_id": "doc_xyz123"
+  }
+}
+```
+
+**Unknown (needs manual review):**
+```json
+{
+  "metadata": {
+    "product_label": null
+  },
+  "taxonomy_match": {
+    "matched": false,
+    "confidence": 0.21
+  }
+}
+```
+
+### Step 5: Review and Label Unknowns
+
+Find items that need manual labeling:
+
+```bash
+GET /v1/collections/{collection_id}/documents?filters={
+  "must": [
+    {
+      "key": "product_label",
+      "match": { "operator": "eq", "value": null }
+    }
+  ]
+}
+```
+
+Label them via bucket (automatically syncs to collection):
+
+```bash
+PATCH /v1/buckets/{bucket_id}/objects/{object_id}
+{
+  "metadata": {
+    "product_label": "Blue Basketball Shoes"
+  }
+}
+```
+
+**Self-improvement in action**: This newly labeled item becomes part of the reference set for future uploads!
+
+---
+
+## Option B: Separate Approach
+
+For more control, keep reference data separate from production data:
+
+- **Reference bucket/collection**: Curated, high-quality labeled examples
+- **Production bucket/collection**: All data with auto-labels
+
+**When to use:**
+- Need strict quality control on reference set
+- Want to prevent noisy auto-labels from affecting matching
+- Prefer to manually review before promoting items to reference
+
+### Step 1: Create Reference Bucket and Collection
+
+```bash
+# Reference bucket
+POST /v1/buckets
+{
+  "bucket_name": "product_reference",
+  "schema": {
+    "properties": {
+      "product_label": { "type": "text" },
+      "image_url": { "type": "text" }
+    }
+  }
+}
+
+# Reference collection (no taxonomy needed)
+POST /v1/collections
+{
+  "collection_name": "product_reference",
+  "source": {
+    "type": "bucket",
+    "bucket_id": "bkt_product_reference"
+  },
+  "feature_extractor": {
+    "feature_extractor_name": "image_extractor",
+    "version": "v1",
+    "input_mappings": { "image": "image_url" },
+    "field_passthrough": ["product_label"]
+  }
+}
+
+# Create taxonomy retriever
+POST /v1/retrievers
+{
+  "retriever_name": "product_classifier",
+  "collection_identifiers": ["product_reference"],
+  "stages": [
+    {
+      "stage_type": "filter",
+      "filters": {
+        "must": [
+          {
+            "key": "product_label",
+            "match": { "operator": "ne", "value": null }
+          }
+        ]
+      }
+    },
+    {
+      "stage_type": "feature_search",
+      "feature_extractor": {
+        "feature_extractor_name": "image_extractor",
+        "version": "v1",
+        "input_mappings": { "image": "query_image" }
+      },
+      "top_k": 1,
+      "score_threshold": 0.30
+    }
+  ]
+}
+```
+
+### Step 2: Upload and Label Reference Set
+
+Upload 50-100 curated images to the reference bucket and manually label them:
+
+```bash
+# Upload to reference
+POST /v1/buckets/bkt_product_reference/objects
+{
+  "metadata": { "product_label": null },
+  "blobs": [{ "property": "image_url", "type": "image", "data": { "url": "..." } }]
+}
+
+# Label them
+PATCH /v1/buckets/bkt_product_reference/objects/{object_id}
+{
+  "metadata": { "product_label": "Red Running Shoes" }
+}
+```
+
+### Step 3: Create Production Bucket and Collection
+
+```bash
+# Production bucket
+POST /v1/buckets
+{
+  "bucket_name": "product_catalog",
+  "schema": {
+    "properties": {
+      "product_label": { "type": "text" },
+      "image_url": { "type": "text" }
+    }
+  }
+}
+
+# Production collection with taxonomy
+POST /v1/collections
+{
+  "collection_name": "product_catalog",
+  "source": {
+    "type": "bucket",
+    "bucket_id": "bkt_product_catalog"
+  },
+  "feature_extractor": {
+    "feature_extractor_name": "image_extractor",
+    "version": "v1",
+    "input_mappings": { "image": "image_url" },
+    "field_passthrough": ["product_label"]
+  },
+  "taxonomy": {
+    "retriever_id": "ret_product_classifier",
+    "field_to_enrich": "product_label",
+    "confidence_threshold": 0.30
+  }
+}
+```
+
+### Step 4: Upload Production Data
+
+New uploads auto-label based on the reference set:
+
+```bash
+POST /v1/buckets/bkt_product_catalog/objects
+{
+  "blobs": [{ "property": "image_url", "type": "image", "data": { "url": "..." } }]
+}
+```
+
+### Step 5: Promote High-Confidence Items to Reference
+
+Periodically review production data and promote high-confidence matches:
+
+```bash
+# Find high-confidence items
+GET /v1/collections/product_catalog/documents?filters={
+  "must": [
+    {
+      "key": "taxonomy_match.confidence",
+      "match": { "operator": "gte", "value": 0.85 }
+    }
+  ]
+}
+
+# Copy to reference bucket
+POST /v1/buckets/bkt_product_reference/objects
+{
+  "metadata": { "product_label": "..." },
+  "blobs": [{ ... }]
+}
+```
+
+---
+
+## Real-World Examples
+
+### Example 1: Face Recognition System
+
+```bash
+# Create bucket for employee photos
+POST /v1/buckets
+{
+  "bucket_name": "employee_photos",
+  "schema": {
+    "properties": {
+      "person_name": { "type": "text" },
+      "employee_id": { "type": "text" },
+      "photo_url": { "type": "text" }
+    }
+  }
+}
+
+# Bootstrap collection with face extraction
+POST /v1/collections
+{
+  "collection_name": "employee_faces",
+  "source": {
+    "type": "bucket",
+    "bucket_id": "bkt_employee_photos"
+  },
+  "feature_extractor": {
+    "feature_extractor_name": "face_identity_extractor",
+    "version": "v1",
+    "input_mappings": { "image": "photo_url" },
+    "field_passthrough": ["person_name", "employee_id"]
+  }
+}
+
+# Upload 50 employee photos → manually label with names
+# Create taxonomy retriever
+# Security camera footage auto-identifies employees
+```
+
+### Example 2: Document Classification
+
+```bash
+# Create bucket for documents
+POST /v1/buckets
+{
+  "bucket_name": "company_documents",
+  "schema": {
+    "properties": {
+      "document_type": { "type": "text" },
+      "content": { "type": "text" }
+    }
+  }
+}
+
+# Bootstrap collection with text extraction
+POST /v1/collections
+{
+  "collection_name": "document_types",
+  "source": {
+    "type": "bucket",
+    "bucket_id": "bkt_company_documents"
+  },
+  "feature_extractor": {
+    "feature_extractor_name": "text_extractor",
+    "version": "v1",
+    "input_mappings": { "text": "content" },
+    "field_passthrough": ["document_type"]
+  },
+  "taxonomy": {
+    "field_to_enrich": "document_type",
+    "confidence_threshold": 0.35
+  }
+}
+
+# Label 20 invoices, 20 contracts, 20 receipts
+# New documents auto-classify by type
+```
+
+---
+
+## Advanced Configuration
+
+### Tuning Confidence Thresholds
+
+The `confidence_threshold` determines how conservative auto-labeling is:
+
+| Threshold | Behavior | Use Case |
+|-----------|----------|----------|
+| `0.20-0.25` | Aggressive | High recall, more false positives |
+| `0.30-0.35` | Balanced | Good starting point |
+| `0.40-0.50` | Conservative | High precision, fewer auto-labels |
+| `0.60+` | Very strict | Only exact matches |
+
+**Finding the right threshold:**
+
+1. Start with `0.30`
+2. Monitor false positive rate (wrong auto-labels)
+3. Check coverage (% of items auto-labeled)
+4. Adjust based on cost of errors:
+   - **High cost of errors** (e.g., medical imaging) → Higher threshold
+   - **Low cost of errors** (e.g., photo organization) → Lower threshold
+
+### Monitoring & Analytics
+
+Track performance with these queries:
+
+```bash
+# Get distribution of labels
+GET /v1/collections/{collection_id}/analytics/field-distribution?field=product_label
+
+# Check match confidence distribution
+GET /v1/collections/{collection_id}/documents?sort_by=taxonomy_match.confidence&limit=100
+
+# Find low-confidence matches for review
+GET /v1/collections/{collection_id}/documents?filters={
+  "must": [
+    {
+      "key": "taxonomy_match.matched",
+      "match": { "operator": "eq", "value": true }
+    },
+    {
+      "key": "taxonomy_match.confidence",
+      "match": { "operator": "lt", "value": 0.40 }
+    }
+  ]
+}
+```
+
+**Key metrics:**
+- **Auto-label coverage**: % of new items auto-labeled
+- **Manual review queue**: # of items with `label: null`
+- **Confidence distribution**: Are matches clustered around threshold?
+- **False positive rate**: Sample and manually verify auto-labels
+
+### Best Practices
+
+**Reference set quality:**
+- Include diverse examples (angles, lighting, backgrounds)
+- Use consistent naming conventions
+- Aim for balanced distribution across categories
+- Maintain high-quality, unambiguous images
+
+**Labeling guidelines:**
+- Create a labeling style guide
+- Consider hierarchical labels: `"Shoes > Running > Red"`
+- Define rules for edge cases
+- Version your taxonomy as it evolves
+
+**Continuous improvement:**
+- Review unknowns regularly
+- Audit auto-labels periodically
+- Add corrected examples when system makes mistakes
+- Expand categories as needed
+
+**Production deployment:**
+- Start with conservative threshold (0.40+)
+- Implement human-in-the-loop for critical applications
+- Enable feedback mechanism for corrections
+- A/B test threshold changes
+
+---
+
+## Troubleshooting
+
+### Too many unlabeled items
+
+**Causes**: Threshold too high, insufficient reference examples, new categories
+
+**Solutions**:
+- Lower `confidence_threshold` to 0.25-0.30
+- Add 20+ examples per category to reference set
+- Review and label new categories
+
+### False positives (wrong labels)
+
+**Causes**: Threshold too low, similar categories, poor quality references
+
+**Solutions**:
+- Raise `confidence_threshold` to 0.40+
+- Add diverse examples to distinguish categories
+- Clean up reference set
+
+### System not self-improving
+
+**Causes**: Labels not syncing, configuration issues
+
+**Solutions**:
+- Verify `field_passthrough` includes label field
+- Check retriever filters for non-null labels
+- Confirm bucket-to-collection sync is working
+
+---
+
+## Summary
+
+**Workflow:**
+1. Create bucket and collection with feature extraction
+2. Upload unlabeled data (50-100 items)
+3. Manually label reference set (10-20 per category)
+4. Create taxonomy retriever pointing to labeled items
+5. New uploads auto-label based on similarity
+6. Review and label unknowns to improve system
+
+**Key benefits:**
+- Start with zero labels, build incrementally
+- Automate repetitive labeling
+- Self-improving with each manual correction
+- Scales from dozens to millions
+
+**Next steps:**
+- Choose unified (simpler) or separate (more control) approach
+- Start with 50-100 reference items
+- Test different confidence thresholds (start at 0.30)
+- Monitor auto-label quality and adjust

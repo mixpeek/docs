@@ -79,10 +79,6 @@
     {
       "name": "Integrations",
       "url": "integrations"
-    },
-    {
-      "name": "Studio",
-      "url": "studio"
     }
   ],
   "navigation": [
@@ -101,6 +97,7 @@
       "group": "Tutorials",
       "pages": [
         "tutorials/reverse-search",
+        "tutorials/bootstrap-labeled-dataset",
         "tutorials/video-understanding",
         "tutorials/semantic-search",
         "tutorials/document-intelligence"
