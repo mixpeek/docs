@@ -39,70 +39,20 @@ The Mixpeek MCP server provides **43 comprehensive tools** covering all Mixpeek 
 
 ## Quick Start
 
-### Local Development (Stdio Transport)
+Connect to the Mixpeek MCP server using your existing API key. No infrastructure to manage!
 
-Perfect for using with Claude Code or Claude Desktop:
+### Claude Desktop Setup
 
-```bash
-# Run the MCP server
-cd /path/to/mixpeek/server
-python -m mixpeek_mcp.main --transport stdio
-```
+Add this to your Claude Desktop config:
 
-**Claude Code Configuration:**
-
-Add to your Claude Code MCP settings:
+**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json
 {
   "mcpServers": {
     "mixpeek": {
-      "command": "python",
-      "args": ["-m", "mixpeek_mcp.main", "--transport", "stdio"],
-      "cwd": "/path/to/mixpeek/server",
-      "env": {
-        "MIXPEEK_API_KEY": "your-api-key",
-        "MONGO_URI": "mongodb://localhost:27017",
-        "REDIS_URL": "redis://localhost:6379",
-        "QDRANT_URL": "http://localhost:6334"
-      }
-    }
-  }
-}
-```
-
-**Claude Desktop Configuration:**
-
-On macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-
-```json
-{
-  "mcpServers": {
-    "mixpeek": {
-      "command": "python",
-      "args": ["-m", "mixpeek_mcp.main", "--transport", "stdio"],
-      "cwd": "/path/to/mixpeek/server"
-    }
-  }
-}
-```
-
-### Production Deployment (HTTP Transport)
-
-Deploy as a standalone HTTP service:
-
-```bash
-# Start HTTP server
-python -m mixpeek_mcp.main --transport http --host 0.0.0.0 --port 8080
-```
-
-**Client Configuration:**
-
-```json
-{
-  "mcpServers": {
-    "mixpeek": {
-      "url": "https://mcp.yourdomain.com",
+      "url": "https://mcp.mixpeek.com",
       "headers": {
         "Authorization": "Bearer YOUR_MIXPEEK_API_KEY"
       }
@@ -110,6 +60,29 @@ python -m mixpeek_mcp.main --transport http --host 0.0.0.0 --port 8080
   }
 }
 ```
+
+### Claude Code Setup
+
+Add to your Claude Code MCP settings:
+
+```json
+{
+  "mcpServers": {
+    "mixpeek": {
+      "url": "https://mcp.mixpeek.com",
+      "headers": {
+        "Authorization": "Bearer YOUR_MIXPEEK_API_KEY"
+      }
+    }
+  }
+}
+```
+
+That's it! Replace `YOUR_MIXPEEK_API_KEY` with your API key from the [Mixpeek dashboard](https://mixpeek.com/dashboard).
+
+<Note>
+**Need an API key?** Sign up at [mixpeek.com](https://mixpeek.com) to get your free API key.
+</Note>
 
 ## Available Tools
 
@@ -330,98 +303,21 @@ Claude uses `execute_retriever`:
 }
 ```
 
-## Docker Deployment
+## Authentication
 
-```dockerfile
-FROM python:3.11-slim
+The MCP server uses your existing Mixpeek API key for authentication. Each tool call is authenticated using the same permission system as the REST API.
 
-WORKDIR /app
+**Security Features:**
 
-# Install dependencies
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+- ✅ All requests authenticated via API key
+- ✅ Same RBAC permissions as REST API
+- ✅ Automatic rate limiting per organization
+- ✅ Audit logging for all operations
+- ✅ TLS encryption for all connections
 
-# Copy application
-COPY . .
-
-# Run MCP server
-CMD ["python", "-m", "mixpeek_mcp.main", "--transport", "http", "--host", "0.0.0.0", "--port", "8080"]
-```
-
-**Docker Compose:**
-
-```yaml
-version: '3.8'
-
-services:
-  mixpeek-mcp:
-    build: .
-    ports:
-      - "8080:8080"
-    environment:
-      - MIXPEEK_API_KEY=${MIXPEEK_API_KEY}
-      - MONGO_URI=mongodb://mongo:27017
-      - REDIS_URL=redis://redis:6379
-      - QDRANT_URL=http://qdrant:6334
-      - MCP_TRANSPORT=http
-      - MCP_HTTP_HOST=0.0.0.0
-      - MCP_HTTP_PORT=8080
-    depends_on:
-      - mongo
-      - redis
-      - qdrant
-
-  mongo:
-    image: mongo:7
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-
-  qdrant:
-    image: qdrant/qdrant:latest
-    ports:
-      - "6334:6334"
-    volumes:
-      - qdrant_data:/qdrant/storage
-
-volumes:
-  mongo_data:
-  qdrant_data:
-```
-
-## Configuration
-
-### Environment Variables
-
-```bash
-# Transport
-MCP_TRANSPORT=stdio              # stdio or http
-MCP_HTTP_HOST=0.0.0.0
-MCP_HTTP_PORT=8080
-
-# Timeouts
-MCP_TOOL_TIMEOUT=300             # 5 minutes
-MCP_STREAM_TIMEOUT=600           # 10 minutes
-
-# Rate limiting
-MCP_RATE_LIMIT_PER_MINUTE=60
-
-# Caching
-MCP_ENABLE_RESPONSE_CACHE=false
-MCP_CACHE_TTL=60
-
-# Mixpeek Services (required)
-MONGO_URI=mongodb://localhost:27017
-REDIS_URL=redis://localhost:6379
-QDRANT_URL=http://localhost:6334
-AWS_BUCKET=your-s3-bucket
-```
+<Warning>
+**Keep your API key secure!** Never commit API keys to version control or share them publicly.
+</Warning>
 
 ## Architecture
 
