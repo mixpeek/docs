@@ -13,6 +13,24 @@ The text extractor generates dense vector embeddings from text using the E5-Larg
   View extractor details at [api.mixpeek.com/v1/collections/features/extractors/text_extractor_v1](https://api.mixpeek.com/v1/collections/features/extractors/text_extractor_v1) or fetch programmatically with `GET /v1/collections/features/extractors/{feature_extractor_id}`.
 </Note>
 
+## Pipeline Steps
+
+1. **Filter Dataset** (if collection_id provided)
+   - Filter to specified collection
+2. **Apply Input Mappings**
+   - Resolve text field from source (e.g., `transcription`, `content`, `data`)
+3. **Text Chunking** (conditional: if `split_by != "none"`)
+   - Split by: characters, words, sentences, paragraphs, or pages
+   - Configure `chunk_size` and `chunk_overlap`
+   - Each chunk becomes a separate document
+4. **E5 Text Embedding Generation**
+   - Multilingual E5-Large model (1024D)
+   - L2 normalized vectors
+   - Batch size: 4,096 texts
+5. **Output**
+   - Text documents with embeddings
+   - One document per input (or per chunk if chunking enabled)
+
 ## When to Use
 
 | Use Case | Description |

@@ -7,11 +7,38 @@ description: "Unified embeddings for video, image, text, and GIF via Google Vert
   <img src="/assets/extractors/multimodal.svg" alt="Multimodal extractor pipeline showing video splitting, parallel processing with Whisper and Vertex AI, and output features" />
 </Frame>
 
-The multimodal extractor processes **video, image, text, and GIF content** using unified Vertex embeddings (1408D). Videos and GIFs are decomposed into segments with transcription (Whisper), visual embeddings, OCR, and descriptions. Images and text are embedded directly without decomposition.
+The multimodal extractor processes **video, audio, image, text, and GIF content** using unified Vertex embeddings (1408D). Videos/audio are decomposed into segments with transcription (Whisper), visual embeddings, OCR, and descriptions. Images and text are embedded directly without decomposition.
 
 <Note>
   View extractor details at [api.mixpeek.com/v1/collections/features/extractors/multimodal_extractor_v1](https://api.mixpeek.com/v1/collections/features/extractors/multimodal_extractor_v1) or fetch programmatically with `GET /v1/collections/features/extractors/{feature_extractor_id}`.
 </Note>
+
+## Pipeline Steps
+
+1. **Filter Dataset** (if collection_id provided)
+   - Filter to specified collection
+2. **Apply Input Mappings**
+3. **Detect Content Types** (sample 100 rows)
+   - Identify: video, audio, image, text, or mixed
+4. **Content Routing**
+   - **Video:** FFmpeg chunking (time/scene/silence) → Steps 5-10
+   - **Audio:** FFmpeg audio chunking (time/silence) → Steps 5-8
+   - **Image:** Skip to Step 8
+   - **Text:** Skip to Step 8
+   - **Mixed:** Branch by type, process separately, union results
+5. **Transcription** (conditional: if `run_transcription=true`, video/audio only)
+   - Whisper API or Local GPU speech-to-text
+6. **Transcription Embeddings** (conditional: if `run_transcription_embedding=true`)
+   - E5-Large text embeddings (1024D) from transcribed audio
+7. **Multimodal Embeddings** (conditional: if `run_multimodal_embedding=true`)
+   - Vertex AI embeddings (1408D) for all content types
+   - Unified embedding space enables cross-modal search
+8. **Thumbnail Generation** (conditional: if `enable_thumbnails=true`, visual content only)
+   - 640px width at 85% quality, S3 upload with optional CDN
+9. **Visual Analysis** (conditional: if `run_video_description` OR `run_ocr=true`, visual content only)
+   - Gemini-based descriptions and/or OCR text extraction
+10. **Output**
+    - Segment/document records with embeddings, transcriptions, descriptions, OCR, thumbnails
 
 ## When to Use
 

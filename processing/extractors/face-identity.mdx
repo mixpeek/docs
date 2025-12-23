@@ -13,6 +13,37 @@ The face identity extractor provides production-grade face recognition using sta
   View extractor details at [api.mixpeek.com/v1/collections/features/extractors/face_identity_extractor_v1](https://api.mixpeek.com/v1/collections/features/extractors/face_identity_extractor_v1) or fetch programmatically with `GET /v1/collections/features/extractors/{feature_extractor_id}`.
 </Note>
 
+## Pipeline Steps
+
+1. **Filter Dataset** (if collection_id provided)
+   - Filter to specified collection
+2. **Content Type Routing**
+   - **Images:** Direct to Step 3
+   - **Videos:** Frame extraction (sampling at `video_sampling_fps`) → Step 3
+   - **PDFs:** Page rendering → Step 3
+   - **Mixed:** Branch by type, process separately, union results
+3. **Face Detection** (SCRFD)
+   - Detect all faces per image/frame/page
+   - Extract 5-point facial landmarks (eyes, nose, mouth)
+   - Filter by `min_face_size` and `detection_threshold`
+4. **5-Point Affine Face Alignment**
+   - Warp face to canonical 112×112 template
+   - Ensures consistent embeddings
+5. **ArcFace Embedding Generation**
+   - arcface_r100 model
+   - 512D L2-normalized embeddings
+   - Cosine similarity for matching
+6. **Quality Scoring** (conditional: if `enable_quality_scoring=true`)
+   - Assess blur, size, landmark confidence
+   - Filter by `quality_threshold` if specified
+7. **Video Deduplication** (conditional: if `video_deduplication=true` AND video content)
+   - Remove duplicate faces across frames
+   - Threshold-based similarity matching
+   - Track face timelines in video
+8. **Output Validation**
+9. **Output**
+   - Per-face documents with embeddings, bbox, landmarks, quality scores
+
 ## When to Use
 
 | Use Case | Description |

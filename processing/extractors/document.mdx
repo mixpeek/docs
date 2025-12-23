@@ -1,0 +1,342 @@
+---
+title: "Document Graph Extractor"
+description: "Spatial block extraction from PDFs with layout classification, confidence scoring, and optional VLM correction"
+---
+
+<Frame>
+  <img src="/assets/extractors/document.svg" alt="Document graph extractor pipeline showing PDF parsing, layout detection, and block extraction" />
+</Frame>
+
+The document graph extractor processes PDFs by extracting spatial blocks with layout classification (paragraphs, tables, forms, lists, headers, footers, figures, handwriting). Includes confidence scoring and optional VLM correction for low-confidence blocks. Best for archival documents, scanned files, and documents requiring spatial understanding.
+
+<Note>
+  View extractor details at [api.mixpeek.com/v1/collections/features/extractors/document_graph_extractor_v1](https://api.mixpeek.com/v1/collections/features/extractors/document_graph_extractor_v1) or fetch programmatically with `GET /v1/collections/features/extractors/{feature_extractor_id}`.
+</Note>
+
+## Pipeline Steps
+
+1. **Filter Dataset** (if collection_id provided)
+   - Filter to specified collection
+2. **PDF URL Resolution**
+   - Find PDF URL from row data (data, pdf_url, document_url, file_url, etc.)
+   - Convert S3 keys to full S3 URLs if needed
+3. **Layout Detection Mode Fork**
+   - **If `use_layout_detection=true` (NEW - ML-based):**
+     a. PaddleOCR layout detection (finds ALL elements: text, images, tables)
+     b. Skip to Step 4 (object_type already set by detector)
+   - **If `use_layout_detection=false` (LEGACY - Text-only):**
+     a. PyMuPDF span extraction (text with bounding boxes)
+     b. Spatial clustering (group nearby spans into logical blocks)
+     c. Layout classification (rule-based: paragraph, table, form, etc.)
+4. **Confidence Scoring**
+   - Score extraction quality with A/B/C/D tags
+   - Based on OCR quality, spatial coherence, text patterns
+5. **Text Cleaning**
+   - Remove OCR artifacts
+   - Normalize whitespace
+6. **Page Rendering** (conditional: if `generate_thumbnails=true` OR `use_vlm_correction=true`)
+   - Full page thumbnails at configured DPI
+   - Segment-level thumbnails for each block
+7. **VLM Correction** (conditional: if `use_vlm_correction=true` AND NOT `fast_mode` AND confidence C/D)
+   - Gemini/OpenAI/Anthropic vision models correct low-confidence text
+   - Only applied to blocks with poor extraction quality
+8. **Text Embedding** (conditional: if `run_text_embedding=true`)
+   - E5-Large embeddings (1024D) for semantic search
+9. **Output**
+   - Block-level documents with text, layout type, bbox, confidence, embeddings
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Archival documents** | Extract structured data from scanned historical documents |
+| **Scanned PDFs** | Process documents with mixed text quality |
+| **Forms processing** | Identify and extract form fields, tables, and structured data |
+| **Document understanding** | Analyze document layout and structure |
+| **Spatial search** | Find specific sections or blocks within documents |
+| **Multi-layout documents** | Process documents with complex layouts (reports, contracts, etc.) |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Simple text extraction | `text_extractor` |
+| Images only | `image_extractor` |
+| Video/audio content | `multimodal_extractor` |
+| Born-digital PDFs with perfect text | `text_extractor` (faster, simpler) |
+
+## Input Schema
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `pdf` | string | **Yes** | URL or S3 path to PDF file. Supports multi-page PDFs. |
+
+```json
+{
+  "pdf": "s3://my-bucket/documents/invoice-2024.pdf"
+}
+```
+
+**Input Examples:**
+
+| Type | Example |
+|------|---------|
+| Invoice | `s3://documents/invoices/inv-001.pdf` |
+| Contract | `https://cdn.example.com/contracts/lease.pdf` |
+| Scanned document | `s3://archive/scanned/1985-report.pdf` |
+| Form | `s3://forms/application-form.pdf` |
+
+**Supported Formats**: PDF only
+**Recommended**: 150-300 DPI for scanned documents
+**Max File Size**: 100MB per PDF
+
+## Output Schema
+
+Each spatial block produces one document with the following fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `text` | string | Extracted text content (raw or VLM-corrected) |
+| `object_type` | string | Layout type: paragraph, table, form, list, header, footer, figure, handwritten |
+| `bbox` | object | Bounding box `{x, y, width, height}` in PDF coordinates |
+| `page_number` | integer | Page number (0-indexed) |
+| `confidence_tag` | string | Confidence grade: A (high), B (good), C (fair), D (poor) |
+| `confidence_score` | number | Confidence score (0.0-1.0) |
+| `document_graph_extractor_v1_text_embedding` | float[1024] | E5-Large text embedding (if enabled) |
+| `page_image_url` | string | Full page thumbnail URL (if generated) |
+| `segment_thumbnail_url` | string | Block-specific thumbnail URL (if generated) |
+| `thumbnail_url` | string | Page thumbnail URL (if generated) |
+
+```json
+{
+  "text": "INVOICE #12345\nDate: January 15, 2024\nAmount Due: $1,250.00",
+  "object_type": "header",
+  "bbox": {"x": 50, "y": 720, "width": 500, "height": 80},
+  "page_number": 0,
+  "confidence_tag": "A",
+  "confidence_score": 0.95,
+  "document_graph_extractor_v1_text_embedding": [0.023, -0.041, ...],
+  "page_image_url": "s3://mixpeek/thumbnails/page_0.jpg",
+  "segment_thumbnail_url": "s3://mixpeek/thumbnails/seg_0_header.jpg"
+}
+```
+
+## Parameters
+
+### Layout Detection Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `use_layout_detection` | boolean | `false` | Use ML-based PaddleOCR layout detection (finds images + tables + text) vs legacy text-only extraction |
+| `render_dpi` | integer | `150` | DPI for PDF page rendering (72-300). Higher = better quality, slower processing |
+
+### VLM Correction Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `use_vlm_correction` | boolean | `false` | Enable VLM correction for low-confidence blocks (C/D tags) |
+| `min_confidence_for_vlm` | string | `"C"` | Minimum confidence tag to trigger VLM correction: A, B, C, or D |
+| `vlm_provider` | string | `"google"` | VLM provider: `google`, `openai`, `anthropic` |
+| `vlm_model` | string | `"gemini-2.0-flash"` | Specific VLM model for correction |
+| `fast_mode` | boolean | `false` | Skip VLM correction even if enabled (for faster processing) |
+
+### Clustering Parameters (Legacy mode only)
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `vertical_threshold` | number | `10.0` | Vertical distance threshold for grouping text spans |
+| `horizontal_threshold` | number | `5.0` | Horizontal distance threshold for grouping text spans |
+| `min_text_length` | integer | `1` | Minimum text length to include in blocks |
+
+### Confidence & Embedding Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `base_confidence` | number | `0.8` | Base confidence score for extracted blocks |
+| `run_text_embedding` | boolean | `true` | Generate E5-Large embeddings for semantic search |
+
+### Thumbnail Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `generate_thumbnails` | boolean | `true` | Generate page and segment thumbnails |
+| `thumbnail_dpi` | integer | `72` | DPI for thumbnail generation |
+| `thumbnail_mode` | string | `"fit"` | Thumbnail resize mode: `fit`, `fill`, `crop` |
+
+## Configuration Examples
+
+<CodeGroup>
+```json ML-Based Layout Detection (Recommended)
+{
+  "feature_extractor": {
+    "feature_extractor_name": "document_graph_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "pdf": "payload.document_url"
+    },
+    "field_passthrough": [
+      { "source_path": "metadata.invoice_id" },
+      { "source_path": "metadata.vendor" }
+    ],
+    "parameters": {
+      "use_layout_detection": true,
+      "render_dpi": 150,
+      "generate_thumbnails": true,
+      "run_text_embedding": true
+    }
+  }
+}
+```
+
+```json Legacy Text-Only Extraction
+{
+  "feature_extractor": {
+    "feature_extractor_name": "document_graph_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "pdf": "payload.pdf_url"
+    },
+    "parameters": {
+      "use_layout_detection": false,
+      "vertical_threshold": 10.0,
+      "horizontal_threshold": 5.0,
+      "run_text_embedding": true
+    }
+  }
+}
+```
+
+```json With VLM Correction (High Quality)
+{
+  "feature_extractor": {
+    "feature_extractor_name": "document_graph_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "pdf": "payload.scanned_doc"
+    },
+    "parameters": {
+      "use_layout_detection": true,
+      "use_vlm_correction": true,
+      "min_confidence_for_vlm": "C",
+      "vlm_provider": "google",
+      "vlm_model": "gemini-2.0-flash",
+      "generate_thumbnails": true,
+      "run_text_embedding": true
+    }
+  }
+}
+```
+
+```json Fast Mode (No VLM, No Thumbnails)
+{
+  "feature_extractor": {
+    "feature_extractor_name": "document_graph_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "pdf": "payload.pdf"
+    },
+    "parameters": {
+      "use_layout_detection": true,
+      "fast_mode": true,
+      "generate_thumbnails": false,
+      "run_text_embedding": true
+    }
+  }
+}
+```
+
+```json Archival Documents (High DPI + VLM)
+{
+  "feature_extractor": {
+    "feature_extractor_name": "document_graph_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "pdf": "payload.archive_pdf"
+    },
+    "parameters": {
+      "use_layout_detection": true,
+      "render_dpi": 300,
+      "use_vlm_correction": true,
+      "min_confidence_for_vlm": "B",
+      "vlm_provider": "anthropic",
+      "vlm_model": "claude-3-5-sonnet-20241022",
+      "generate_thumbnails": true,
+      "run_text_embedding": true
+    }
+  }
+}
+```
+</CodeGroup>
+
+## Performance & Costs
+
+| Metric | Value |
+|--------|-------|
+| **Processing speed** | ~1-5 pages/sec (depends on DPI and features enabled) |
+| **Layout detection** | ~500ms per page (PaddleOCR) |
+| **VLM correction** | ~2s per low-confidence block |
+| **Embedding generation** | ~5ms per block |
+| **Cost (minimal)** | ~$0.001/page (text extraction only) |
+| **Cost (with VLM)** | ~$0.01-$0.05/page (depends on # of low-confidence blocks) |
+
+## Vector Index
+
+| Property | Value |
+|----------|-------|
+| **Index name** | `document_graph_extractor_v1_text_embedding` |
+| **Dimensions** | 1024 |
+| **Type** | Dense |
+| **Distance metric** | Cosine |
+| **Datatype** | float32 |
+| **Inference model** | `multilingual_e5_large_instruct_v1` |
+
+## Layout Types
+
+The extractor classifies blocks into these layout types:
+
+| Type | Description | Example Use Case |
+|------|-------------|------------------|
+| `paragraph` | Body text blocks | Article content, descriptions |
+| `table` | Tabular data | Financial tables, data grids |
+| `form` | Form fields and labels | Application forms, surveys |
+| `list` | Bulleted or numbered lists | Requirements, instructions |
+| `header` | Page headers | Document titles, section headers |
+| `footer` | Page footers | Page numbers, disclaimers |
+| `figure` | Images and captions | Charts, diagrams, photos |
+| `handwritten` | Handwritten text | Signatures, annotations |
+
+## Confidence Tags
+
+Extraction quality is graded with confidence tags:
+
+| Tag | Confidence | Description | Action |
+|-----|------------|-------------|--------|
+| **A** | 0.9-1.0 | Excellent | No correction needed |
+| **B** | 0.7-0.9 | Good | Minor issues, usually acceptable |
+| **C** | 0.5-0.7 | Fair | VLM correction recommended |
+| **D** | 0.0-0.5 | Poor | VLM correction strongly recommended |
+
+## Comparison: ML Layout Detection vs Legacy
+
+| Feature | ML Layout Detection | Legacy Text-Only |
+|---------|-------------------|------------------|
+| **Finds images** | ✅ Yes | ❌ No |
+| **Finds tables** | ✅ Yes (better accuracy) | ⚠️ Basic heuristics |
+| **Processing speed** | Slower (~500ms/page) | Faster (~100ms/page) |
+| **Best for** | Complex layouts, scanned docs | Simple text-only PDFs |
+| **Model** | PaddleOCR | PyMuPDF + heuristics |
+
+## Limitations
+
+- **PDF only**: Does not process images, Word docs, or other formats
+- **Memory intensive**: Large PDFs (100+ pages) may require increased memory
+- **VLM costs**: VLM correction adds significant cost for low-confidence documents
+- **Language support**: OCR works best with Latin scripts; non-Latin may have reduced accuracy
+- **Handwriting**: Handwritten text detection is experimental and less reliable
+
+## Related
+
+- [Feature Extractors Overview](/processing/feature-extractors)
+- [Text Extractor](/processing/extractors/text)
+- [Image Extractor](/processing/extractors/image)
+- [Multimodal Extractor](/processing/extractors/multimodal)

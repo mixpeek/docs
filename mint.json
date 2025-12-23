@@ -94,13 +94,12 @@
       ]
     },
     {
-      "group": "Tutorials",
+      "group": "Best Practices",
       "pages": [
-        "tutorials/reverse-search",
-        "tutorials/bootstrap-labeled-dataset",
-        "tutorials/video-understanding",
-        "tutorials/semantic-search",
-        "tutorials/document-intelligence"
+        "best-practices/schema-design",
+        "best-practices/feature-selection",
+        "best-practices/caching-strategies",
+        "best-practices/cost-optimization"
       ]
     },
     {
@@ -123,10 +122,13 @@
           "pages": [
             "processing/extractors/multimodal",
             "processing/extractors/image",
-            "processing/extractors/face",
-            "processing/extractors/text"
+            "processing/extractors/text",
+            "processing/extractors/face-identity",
+            "processing/extractors/document",
+            "processing/extractors/passthrough"
           ]
         },
+        "processing/model-registry",
         "processing/batching",
         "processing/tasks",
         "processing/pipelines"
@@ -139,33 +141,72 @@
         {
           "group": "Retriever Stages",
           "pages": [
-            "retrieval/stages/feature-search",
-            "retrieval/stages/attribute-filter",
-            "retrieval/stages/query-expand",
-            "retrieval/stages/llm-filter",
-            "retrieval/stages/rerank",
-            "retrieval/stages/sort-attribute",
-            "retrieval/stages/sort-relevance",
-            "retrieval/stages/mmr",
-            "retrieval/stages/summarize",
-            "retrieval/stages/aggregate",
-            "retrieval/stages/cluster",
-            "retrieval/stages/group-by",
-            "retrieval/stages/sample",
-            "retrieval/stages/api-call",
-            "retrieval/stages/sql-lookup",
-            "retrieval/stages/document-enrich",
-            "retrieval/stages/taxonomy-enrich",
-            "retrieval/stages/llm-enrich",
-            "retrieval/stages/json-transform",
-            "retrieval/stages/rag-prepare",
-            "retrieval/stages/code-execution",
-            "retrieval/stages/external-web-search",
-            "retrieval/stages/web-scrape"
+            "retrieval/stages/overview",
+            {
+              "group": "Search & Retrieval",
+              "pages": [
+                "retrieval/stages/feature-search",
+                "retrieval/stages/hybrid-search",
+                "retrieval/stages/semantic-search"
+              ]
+            },
+            {
+              "group": "Filtering & Ranking",
+              "pages": [
+                "retrieval/stages/attribute-filter",
+                "retrieval/stages/llm-filter",
+                "retrieval/stages/rerank",
+                "retrieval/stages/mmr"
+              ]
+            },
+            {
+              "group": "Enrichment",
+              "pages": [
+                "retrieval/stages/document-enrich",
+                "retrieval/stages/taxonomy-enrich",
+                "retrieval/stages/llm-enrich"
+              ]
+            },
+            {
+              "group": "Transformation",
+              "pages": [
+                "retrieval/stages/aggregate",
+                "retrieval/stages/group-by",
+                "retrieval/stages/json-transform",
+                "retrieval/stages/summarize"
+              ]
+            },
+            {
+              "group": "External Operations",
+              "pages": [
+                "retrieval/stages/api-call",
+                "retrieval/stages/external-web-search",
+                "retrieval/stages/web-scrape",
+                "retrieval/stages/sql-lookup",
+                "retrieval/stages/code-execution"
+              ]
+            },
+            {
+              "group": "Sorting & Sampling",
+              "pages": [
+                "retrieval/stages/sort-attribute",
+                "retrieval/stages/sort-relevance",
+                "retrieval/stages/sample",
+                "retrieval/stages/cluster"
+              ]
+            },
+            {
+              "group": "Preparation",
+              "pages": [
+                "retrieval/stages/query-expand",
+                "retrieval/stages/rag-prepare"
+              ]
+            }
           ]
         },
         "retrieval/filters",
-        "retrieval/interactions"
+        "retrieval/interactions",
+        "retrieval/research"
       ]
     },
     {
@@ -213,7 +254,7 @@
       ]
     },
     {
-      "group": "Pages",
+      "group": "Studio",
       "pages": [
         "studio/quickstart",
         "studio/namespaces",

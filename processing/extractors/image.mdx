@@ -13,6 +13,26 @@ The image extractor generates dense vector embeddings from images using Google's
   View extractor details at [api.mixpeek.com/v1/collections/features/extractors/image_extractor_v1](https://api.mixpeek.com/v1/collections/features/extractors/image_extractor_v1) or fetch programmatically with `GET /v1/collections/features/extractors/{feature_extractor_id}`.
 </Note>
 
+## Pipeline Steps
+
+1. **Filter Dataset** (if collection_id provided)
+   - Filter to specified collection
+2. **Detect Content Types**
+   - Sample 100 rows to identify images vs PDFs
+3. **PDF Page Expansion** (conditional: if PDF content detected)
+   - Render each PDF page at 72 DPI using PyMuPDF
+   - Create separate image for each page
+4. **SigLIP Image Embedding Generation**
+   - Resize to 224×224 internally
+   - GPU-accelerated inference
+   - Generate 768D visual embeddings
+5. **Thumbnail Generation** (conditional: if `enable_thumbnails=true`)
+   - Resize to 640px width at 85% quality
+   - Upload to S3 with optional CDN
+6. **Output**
+   - Image/page documents with embeddings
+   - Optional thumbnail URLs
+
 ## When to Use
 
 | Use Case | Description |
