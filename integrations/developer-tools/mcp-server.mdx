@@ -319,38 +319,48 @@ The MCP server uses your existing Mixpeek API key for authentication. Each tool 
 **Keep your API key secure!** Never commit API keys to version control or share them publicly.
 </Warning>
 
-## Architecture
+## How It Works
 
-The MCP server architecture:
+The Mixpeek MCP server is a hosted service that provides a Model Context Protocol interface to all Mixpeek operations.
+
+**Architecture:**
 
 ```
-mixpeek_mcp/
-├── server.py                   # Main MCP server (43 tools)
-├── main.py                     # CLI entrypoint
-├── config.py                   # Configuration settings
-├── tools/
-│   ├── namespaces.py           # 5 namespace tools
-│   ├── buckets.py              # 6 bucket tools
-│   ├── collections.py          # 7 collection tools
-│   ├── documents.py            # 5 document tools
-│   ├── retrievers.py           # 7 retriever tools
-│   ├── taxonomies.py           # 5 taxonomy tools
-│   ├── clusters.py             # 4 cluster tools
-│   ├── agents.py               # 3 agent tools
-│   └── search.py               # 1 search tool
-├── transports/
-│   ├── stdio.py                # Stdio transport (local)
-│   └── http_sse.py             # HTTP/SSE transport (deployed)
-└── auth/
-    └── middleware.py           # API key authentication
+┌─────────────────┐
+│  Claude Desktop │
+│  or Claude Code │
+└────────┬────────┘
+         │ HTTP/SSE + API Key
+         │
+         ▼
+┌─────────────────────────┐
+│   MCP Server (Hosted)   │
+│  https://mcp.mixpeek.com │
+├─────────────────────────┤
+│  • 43 MCP Tools         │
+│  • API Key Auth         │
+│  • SSE Streaming        │
+│  • Rate Limiting        │
+└────────┬────────────────┘
+         │ Direct Service Calls
+         │
+         ▼
+┌─────────────────────────┐
+│   Mixpeek Services      │
+├─────────────────────────┤
+│  • MongoDB (metadata)   │
+│  • Redis (cache)        │
+│  • Qdrant (vectors)     │
+│  • S3 (storage)         │
+└─────────────────────────┘
 ```
 
-**Key Design Decisions:**
+**Key Features:**
 
-- **Direct Service Import**: Reuses existing Mixpeek services, shares database connections
-- **Authentication**: Uses existing Mixpeek API key system
-- **Streaming**: Supports SSE for real-time retriever and agent responses
-- **Error Handling**: Converts Mixpeek errors to MCP-friendly JSON responses
+- **Fully Managed**: No infrastructure to deploy or maintain
+- **Shared Resources**: Uses the same databases as the REST API
+- **Real-time Streaming**: SSE support for retriever and agent responses
+- **Secure**: TLS encryption, API key authentication, rate limiting
 
 ## Testing
 
