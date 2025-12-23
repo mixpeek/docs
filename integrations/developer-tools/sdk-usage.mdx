@@ -1,0 +1,219 @@
+---
+title: "SDK Usage"
+description: "Using Mixpeek with Python, JavaScript, and other SDKs"
+---
+
+<Info>
+This section is coming soon. For now, all API operations are available via the REST API.
+</Info>
+
+## Python SDK (Coming Soon)
+
+A native Python SDK for Mixpeek is in development. For now, you can use the REST API with standard HTTP libraries:
+
+```python
+import requests
+
+# Create a namespace
+response = requests.post(
+    "https://api.mixpeek.com/v1/namespaces",
+    headers={
+        "Authorization": "Bearer YOUR_API_KEY",
+        "Content-Type": "application/json"
+    },
+    json={
+        "namespace_name": "my-workspace",
+        "description": "Production workspace"
+    }
+)
+
+namespace = response.json()
+print(f"Created namespace: {namespace['namespace_id']}")
+```
+
+## JavaScript/TypeScript SDK (Coming Soon)
+
+A JavaScript/TypeScript SDK is planned for browser and Node.js environments.
+
+## Current Approach: Direct API Usage
+
+For now, use the Mixpeek REST API directly:
+
+<CardGroup cols={2}>
+  <Card title="API Reference" icon="code" href="/api-reference">
+    Complete API documentation with all endpoints
+  </Card>
+  <Card title="OpenAPI Spec" icon="file-code" href="https://api.mixpeek.com/docs/openapi.json">
+    Download the OpenAPI specification
+  </Card>
+</CardGroup>
+
+## Example: Using the API with Python
+
+```python
+import requests
+from typing import Optional
+
+class MixpeekClient:
+    def __init__(self, api_key: str, base_url: str = "https://api.mixpeek.com"):
+        self.api_key = api_key
+        self.base_url = base_url
+        self.headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+
+    def create_collection(
+        self,
+        namespace_id: str,
+        collection_name: str,
+        feature_extractors: list
+    ) -> dict:
+        """Create a new collection with feature extractors."""
+        response = requests.post(
+            f"{self.base_url}/v1/collections",
+            headers={**self.headers, "X-Namespace-Id": namespace_id},
+            json={
+                "collection_name": collection_name,
+                "feature_extractors": feature_extractors
+            }
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def execute_retriever(
+        self,
+        namespace_id: str,
+        retriever_id: str,
+        inputs: dict,
+        limit: Optional[int] = None
+    ) -> dict:
+        """Execute a retriever to search documents."""
+        params = {"limit": limit} if limit else {}
+        response = requests.post(
+            f"{self.base_url}/v1/retrievers/{retriever_id}/execute",
+            headers={**self.headers, "X-Namespace-Id": namespace_id},
+            json={"inputs": inputs},
+            params=params
+        )
+        response.raise_for_status()
+        return response.json()
+
+# Usage
+client = MixpeekClient(api_key="sk_...")
+
+# Create a collection
+collection = client.create_collection(
+    namespace_id="ns_abc123",
+    collection_name="videos",
+    feature_extractors=[{
+        "feature_extractor_name": "multimodal_extractor",
+        "version": "v1"
+    }]
+)
+
+# Execute a search
+results = client.execute_retriever(
+    namespace_id="ns_abc123",
+    retriever_id="ret_xyz789",
+    inputs={"query": "machine learning"},
+    limit=10
+)
+```
+
+## Example: Using the API with JavaScript
+
+```javascript
+class MixpeekClient {
+  constructor(apiKey, baseUrl = "https://api.mixpeek.com") {
+    this.apiKey = apiKey;
+    this.baseUrl = baseUrl;
+    this.headers = {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json"
+    };
+  }
+
+  async createCollection(namespaceId, collectionName, featureExtractors) {
+    const response = await fetch(`${this.baseUrl}/v1/collections`, {
+      method: "POST",
+      headers: {
+        ...this.headers,
+        "X-Namespace-Id": namespaceId
+      },
+      body: JSON.stringify({
+        collection_name: collectionName,
+        feature_extractors: featureExtractors
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`API error: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  async executeRetriever(namespaceId, retrieverId, inputs, limit = null) {
+    const url = new URL(`${this.baseUrl}/v1/retrievers/${retrieverId}/execute`);
+    if (limit) url.searchParams.set("limit", limit);
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        ...this.headers,
+        "X-Namespace-Id": namespaceId
+      },
+      body: JSON.stringify({ inputs })
+    });
+
+    if (!response.ok) {
+      throw new Error(`API error: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+}
+
+// Usage
+const client = new MixpeekClient("sk_...");
+
+// Create a collection
+const collection = await client.createCollection(
+  "ns_abc123",
+  "videos",
+  [{
+    feature_extractor_name: "multimodal_extractor",
+    version: "v1"
+  }]
+);
+
+// Execute a search
+const results = await client.executeRetriever(
+  "ns_abc123",
+  "ret_xyz789",
+  { query: "machine learning" },
+  10
+);
+```
+
+## Alternative: Use the MCP Server
+
+For AI-powered workflows, use the [MCP Server](/integrations/developer-tools/mcp-server) which provides a natural language interface to all Mixpeek operations through Claude and other AI applications.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="API Reference" icon="code" href="/api-reference">
+    Explore all API endpoints
+  </Card>
+  <Card title="MCP Server" icon="robot" href="/integrations/developer-tools/mcp-server">
+    Use Mixpeek with AI assistants
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/overview/quickstart">
+    Get started with Mixpeek
+  </Card>
+  <Card title="Examples" icon="book-open" href="https://mixpeek.com/recipes">
+    View example implementations
+  </Card>
+</CardGroup>

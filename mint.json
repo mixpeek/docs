@@ -250,6 +250,13 @@
             "integrations/object-storage/wasabi",
             "integrations/object-storage/tigris"
           ]
+        },
+        {
+          "group": "Developer Tools",
+          "pages": [
+            "integrations/developer-tools/mcp-server",
+            "integrations/developer-tools/sdk-usage"
+          ]
         }
       ]
     },

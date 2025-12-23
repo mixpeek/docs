@@ -1,0 +1,569 @@
+---
+title: "MCP Server"
+description: "Model Context Protocol server for Claude and AI applications"
+---
+
+The Mixpeek MCP (Model Context Protocol) server exposes all Mixpeek operations as tools that can be used by Claude, Claude Code, and other AI applications that support MCP.
+
+<Info>
+**What is MCP?** The Model Context Protocol is an open protocol developed by Anthropic that standardizes how AI applications connect to external data sources and tools. [Learn more about MCP](https://modelcontextprotocol.io)
+</Info>
+
+## Overview
+
+The Mixpeek MCP server provides **43 comprehensive tools** covering all Mixpeek operations, allowing AI assistants to:
+
+- Create and manage namespaces, buckets, and collections
+- Upload and process files with feature extractors
+- Build multi-stage search pipelines
+- Execute semantic searches and retrievals
+- Manage taxonomies and clusters
+- Start conversational AI agent sessions
+
+## Features
+
+<CardGroup cols={2}>
+  <Card title="Complete API Coverage" icon="layer-group">
+    All 43 Mixpeek operations exposed as MCP tools
+  </Card>
+  <Card title="Dual Transport" icon="network-wired">
+    Stdio for local development, HTTP/SSE for production
+  </Card>
+  <Card title="Native Integration" icon="plug">
+    Shares database connections, no extra infrastructure
+  </Card>
+  <Card title="Streaming Support" icon="stream">
+    Real-time responses for retrievers and agents
+  </Card>
+</CardGroup>
+
+## Quick Start
+
+### Local Development (Stdio Transport)
+
+Perfect for using with Claude Code or Claude Desktop:
+
+```bash
+# Run the MCP server
+cd /path/to/mixpeek/server
+python -m mixpeek_mcp.main --transport stdio
+```
+
+**Claude Code Configuration:**
+
+Add to your Claude Code MCP settings:
+
+```json
+{
+  "mcpServers": {
+    "mixpeek": {
+      "command": "python",
+      "args": ["-m", "mixpeek_mcp.main", "--transport", "stdio"],
+      "cwd": "/path/to/mixpeek/server",
+      "env": {
+        "MIXPEEK_API_KEY": "your-api-key",
+        "MONGO_URI": "mongodb://localhost:27017",
+        "REDIS_URL": "redis://localhost:6379",
+        "QDRANT_URL": "http://localhost:6334"
+      }
+    }
+  }
+}
+```
+
+**Claude Desktop Configuration:**
+
+On macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "mixpeek": {
+      "command": "python",
+      "args": ["-m", "mixpeek_mcp.main", "--transport", "stdio"],
+      "cwd": "/path/to/mixpeek/server"
+    }
+  }
+}
+```
+
+### Production Deployment (HTTP Transport)
+
+Deploy as a standalone HTTP service:
+
+```bash
+# Start HTTP server
+python -m mixpeek_mcp.main --transport http --host 0.0.0.0 --port 8080
+```
+
+**Client Configuration:**
+
+```json
+{
+  "mcpServers": {
+    "mixpeek": {
+      "url": "https://mcp.yourdomain.com",
+      "headers": {
+        "Authorization": "Bearer YOUR_MIXPEEK_API_KEY"
+      }
+    }
+  }
+}
+```
+
+## Available Tools
+
+The MCP server exposes 43 tools across 9 categories:
+
+### Namespace Management (5 tools)
+
+Manage isolated workspaces for multi-tenant applications.
+
+| Tool | Description |
+|------|-------------|
+| `create_namespace` | Create a new workspace |
+| `list_namespaces` | List all namespaces |
+| `get_namespace` | Get namespace details |
+| `update_namespace` | Update namespace configuration |
+| `delete_namespace` | Delete namespace |
+
+### Bucket Management (6 tools)
+
+File storage and object management.
+
+| Tool | Description |
+|------|-------------|
+| `create_bucket` | Create file storage bucket |
+| `list_buckets` | List all buckets |
+| `get_bucket` | Get bucket details |
+| `update_bucket` | Update bucket configuration |
+| `delete_bucket` | Delete bucket |
+| `upload_object` | Upload file from URL or local path |
+
+### Collection Management (7 tools)
+
+Document collections with feature extraction.
+
+| Tool | Description |
+|------|-------------|
+| `create_collection` | Create collection with feature extractors |
+| `list_collections` | List all collections |
+| `get_collection` | Get collection details |
+| `update_collection` | Update collection configuration |
+| `clone_collection` | Clone existing collection |
+| `trigger_collection` | Trigger processing pipeline |
+| `delete_collection` | Delete collection |
+
+### Document Management (5 tools)
+
+CRUD operations on documents.
+
+| Tool | Description |
+|------|-------------|
+| `create_document` | Add document to collection |
+| `list_documents` | Query documents with filters |
+| `get_document` | Get document by ID |
+| `update_document` | Update document data |
+| `delete_document` | Delete document |
+
+### Retriever Management (7 tools)
+
+Multi-stage search pipelines with 23 retriever stages.
+
+| Tool | Description |
+|------|-------------|
+| `create_retriever` | Create multi-stage search pipeline |
+| `list_retrievers` | List all retrievers |
+| `get_retriever` | Get retriever configuration |
+| `update_retriever` | Update retriever metadata |
+| `clone_retriever` | Clone existing retriever |
+| `execute_retriever` | Execute search pipeline |
+| `delete_retriever` | Delete retriever |
+
+**Supported Retriever Stages (23 total):**
+
+- **Search**: `feature_search`, `hybrid_search`, `semantic_search`
+- **Filter**: `attribute_filter`, `llm_filter`, `query_expand`
+- **Rank**: `sort_relevance`, `sort_attribute`, `rerank`, `mmr`
+- **Transform**: `group_by`, `aggregate`, `cluster`, `sample`, `summarize`, `json_transform`
+- **Enrich**: `document_enrich`, `taxonomy_enrich`, `llm_enrich`
+- **External**: `api_call`, `external_web_search`, `web_scrape`, `sql_lookup`, `code_execution`, `rag_prepare`
+
+### Taxonomy Management (5 tools)
+
+Hierarchical classification systems.
+
+| Tool | Description |
+|------|-------------|
+| `create_taxonomy` | Create classification hierarchy |
+| `list_taxonomies` | List all taxonomies |
+| `get_taxonomy` | Get taxonomy details |
+| `execute_taxonomy` | Apply taxonomy classification |
+| `delete_taxonomy` | Delete taxonomy |
+
+### Cluster Management (4 tools)
+
+Document clustering and discovery.
+
+| Tool | Description |
+|------|-------------|
+| `create_cluster` | Create clustering configuration |
+| `list_clusters` | List all clusters |
+| `execute_cluster` | Run clustering algorithm |
+| `delete_cluster` | Delete cluster |
+
+### Agent Management (3 tools)
+
+Conversational AI sessions.
+
+| Tool | Description |
+|------|-------------|
+| `create_agent_session` | Start conversational AI session |
+| `send_agent_message` | Send message to agent |
+| `get_agent_history` | Get conversation history |
+
+### Search (1 tool)
+
+Global namespace search.
+
+| Tool | Description |
+|------|-------------|
+| `search_namespace` | Search across all resources |
+
+## Usage Examples
+
+### Example 1: Create Collection with Feature Extractor
+
+Ask Claude in natural language:
+
+```
+"Create a collection called 'videos' in my namespace with the multimodal
+extractor to process video files with scene detection"
+```
+
+Claude will use the `create_collection` tool:
+
+```json
+{
+  "namespace_id": "ns_abc123",
+  "collection_name": "videos",
+  "feature_extractors": [
+    {
+      "feature_extractor_name": "multimodal_extractor",
+      "version": "v1",
+      "parameters": {
+        "split_method": "scene",
+        "scene_detection_threshold": 0.3,
+        "run_transcription": true,
+        "run_video_description": true
+      }
+    }
+  ]
+}
+```
+
+### Example 2: Build Multi-Stage Retriever
+
+Ask Claude:
+
+```
+"Create a retriever that searches my videos collection, reranks the top 50
+results with Cohere to get the best 10, and adds GPT-4 summaries"
+```
+
+Claude uses `create_retriever`:
+
+```json
+{
+  "namespace_id": "ns_abc123",
+  "retriever_name": "video-search",
+  "collection_identifiers": ["videos"],
+  "stages": [
+    {
+      "stage_name": "feature_search",
+      "parameters": {
+        "features": ["multimodal"],
+        "top_k": 50,
+        "min_score": 0.7
+      }
+    },
+    {
+      "stage_name": "rerank",
+      "parameters": {
+        "inference_name": "cohere-rerank",
+        "top_k": 10
+      }
+    },
+    {
+      "stage_name": "llm_enrich",
+      "parameters": {
+        "inference_name": "gpt-4",
+        "fields_to_generate": [
+          {
+            "name": "summary",
+            "prompt": "Summarize this video segment in 2 sentences"
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+### Example 3: Execute Search
+
+Ask Claude:
+
+```
+"Search for videos about machine learning tutorials using the video-search retriever"
+```
+
+Claude uses `execute_retriever`:
+
+```json
+{
+  "namespace_id": "ns_abc123",
+  "retriever_id": "ret_xyz789",
+  "inputs": {
+    "query": "machine learning tutorial"
+  }
+}
+```
+
+## Docker Deployment
+
+```dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install dependencies
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+# Copy application
+COPY . .
+
+# Run MCP server
+CMD ["python", "-m", "mixpeek_mcp.main", "--transport", "http", "--host", "0.0.0.0", "--port", "8080"]
+```
+
+**Docker Compose:**
+
+```yaml
+version: '3.8'
+
+services:
+  mixpeek-mcp:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - MIXPEEK_API_KEY=${MIXPEEK_API_KEY}
+      - MONGO_URI=mongodb://mongo:27017
+      - REDIS_URL=redis://redis:6379
+      - QDRANT_URL=http://qdrant:6334
+      - MCP_TRANSPORT=http
+      - MCP_HTTP_HOST=0.0.0.0
+      - MCP_HTTP_PORT=8080
+    depends_on:
+      - mongo
+      - redis
+      - qdrant
+
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+volumes:
+  mongo_data:
+  qdrant_data:
+```
+
+## Configuration
+
+### Environment Variables
+
+```bash
+# Transport
+MCP_TRANSPORT=stdio              # stdio or http
+MCP_HTTP_HOST=0.0.0.0
+MCP_HTTP_PORT=8080
+
+# Timeouts
+MCP_TOOL_TIMEOUT=300             # 5 minutes
+MCP_STREAM_TIMEOUT=600           # 10 minutes
+
+# Rate limiting
+MCP_RATE_LIMIT_PER_MINUTE=60
+
+# Caching
+MCP_ENABLE_RESPONSE_CACHE=false
+MCP_CACHE_TTL=60
+
+# Mixpeek Services (required)
+MONGO_URI=mongodb://localhost:27017
+REDIS_URL=redis://localhost:6379
+QDRANT_URL=http://localhost:6334
+AWS_BUCKET=your-s3-bucket
+```
+
+## Architecture
+
+The MCP server architecture:
+
+```
+mixpeek_mcp/
+├── server.py                   # Main MCP server (43 tools)
+├── main.py                     # CLI entrypoint
+├── config.py                   # Configuration settings
+├── tools/
+│   ├── namespaces.py           # 5 namespace tools
+│   ├── buckets.py              # 6 bucket tools
+│   ├── collections.py          # 7 collection tools
+│   ├── documents.py            # 5 document tools
+│   ├── retrievers.py           # 7 retriever tools
+│   ├── taxonomies.py           # 5 taxonomy tools
+│   ├── clusters.py             # 4 cluster tools
+│   ├── agents.py               # 3 agent tools
+│   └── search.py               # 1 search tool
+├── transports/
+│   ├── stdio.py                # Stdio transport (local)
+│   └── http_sse.py             # HTTP/SSE transport (deployed)
+└── auth/
+    └── middleware.py           # API key authentication
+```
+
+**Key Design Decisions:**
+
+- **Direct Service Import**: Reuses existing Mixpeek services, shares database connections
+- **Authentication**: Uses existing Mixpeek API key system
+- **Streaming**: Supports SSE for real-time retriever and agent responses
+- **Error Handling**: Converts Mixpeek errors to MCP-friendly JSON responses
+
+## Testing
+
+The MCP server includes comprehensive tests:
+
+```bash
+# Run all tests
+pytest mixpeek_mcp/tests/ -v
+
+# Run specific test modules
+pytest mixpeek_mcp/tests/test_auth.py -v
+pytest mixpeek_mcp/tests/test_tools.py -v
+pytest mixpeek_mcp/tests/test_server.py -v
+
+# Run with coverage
+pytest mixpeek_mcp/tests/ --cov=mixpeek_mcp --cov-report=html
+```
+
+## Use Cases
+
+<AccordionGroup>
+  <Accordion title="AI-Powered Content Search" icon="magnifying-glass">
+    Use Claude to build and execute complex search pipelines across your multimodal content:
+
+    - "Find all video segments mentioning product demos in Q4"
+    - "Show me documents about pricing that were uploaded last month"
+    - "Search for images with people smiling in outdoor settings"
+  </Accordion>
+
+  <Accordion title="Automated Pipeline Creation" icon="robot">
+    Let Claude configure your entire data processing pipeline:
+
+    - "Set up a collection to process PDFs with OCR and extract tables"
+    - "Create a retriever that searches videos by transcript and visual similarity"
+    - "Build a taxonomy to classify customer support tickets"
+  </Accordion>
+
+  <Accordion title="Data Exploration & Analysis" icon="chart-line">
+    Explore your data conversationally:
+
+    - "What collections do I have and how many documents are in each?"
+    - "Show me the most recent uploads to my images bucket"
+    - "Find clusters of similar documents in my research collection"
+  </Accordion>
+
+  <Accordion title="RAG Application Development" icon="layer-group">
+    Build RAG applications using natural language:
+
+    - "Create a retriever that searches my knowledge base and prepares results for GPT-4"
+    - "Add a reranking stage to improve relevance"
+    - "Enrich results with summaries and key points"
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+### MCP Server Not Connecting
+
+**Issue**: Claude Code can't connect to the MCP server
+
+**Solutions**:
+- Verify the `cwd` path is correct in your MCP configuration
+- Check that all environment variables are set (MONGO_URI, REDIS_URL, etc.)
+- Run the server manually to see error messages: `python -m mixpeek_mcp.main --transport stdio`
+- Check Claude Code logs for connection errors
+
+### Tool Execution Fails
+
+**Issue**: Tools return errors when executed
+
+**Solutions**:
+- Verify your Mixpeek API key is valid
+- Ensure the namespace exists before creating resources in it
+- Check that required services (MongoDB, Redis, Qdrant) are running
+- Review tool parameters match the expected schema
+
+### Slow Response Times
+
+**Issue**: MCP tools are slow to respond
+
+**Solutions**:
+- For local development, use stdio transport (faster than HTTP)
+- Increase timeout settings if processing large files
+- Check database connection pool settings
+- Monitor Redis and Qdrant performance
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Core Concepts" icon="book" href="/overview/concepts">
+    Learn about Mixpeek's data model
+  </Card>
+  <Card title="Feature Extractors" icon="microchip" href="/processing/feature-extractors">
+    Explore available feature extractors
+  </Card>
+  <Card title="Retriever Stages" icon="filter" href="/retrieval/stages/overview">
+    Learn about retriever stages
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference">
+    View complete API documentation
+  </Card>
+</CardGroup>
+
+## Additional Resources
+
+- [Model Context Protocol Documentation](https://modelcontextprotocol.io)
+- [Claude Code MCP Guide](https://docs.anthropic.com/claude/docs/mcp)
+- [Mixpeek GitHub Repository](https://github.com/mixpeek)
+
+---
+
+**Questions or issues?** File an issue on [GitHub](https://github.com/mixpeek) or contact Mixpeek support.
