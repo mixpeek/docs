@@ -26,14 +26,14 @@ The Mixpeek MCP server provides **43 comprehensive tools** covering all Mixpeek 
   <Card title="Complete API Coverage" icon="layer-group">
     All 43 Mixpeek operations exposed as MCP tools
   </Card>
-  <Card title="Dual Transport" icon="network-wired">
-    Stdio for local development, HTTP/SSE for production
+  <Card title="Fully Managed" icon="cloud">
+    Hosted service - no infrastructure to deploy or maintain
   </Card>
-  <Card title="Native Integration" icon="plug">
-    Shares database connections, no extra infrastructure
+  <Card title="Simple Authentication" icon="key">
+    Use your existing Mixpeek API key - no additional setup
   </Card>
   <Card title="Streaming Support" icon="stream">
-    Real-time responses for retrievers and agents
+    Real-time responses for retrievers and agents via SSE
   </Card>
 </CardGroup>
 
@@ -362,23 +362,6 @@ The Mixpeek MCP server is a hosted service that provides a Model Context Protoco
 - **Real-time Streaming**: SSE support for retriever and agent responses
 - **Secure**: TLS encryption, API key authentication, rate limiting
 
-## Testing
-
-The MCP server includes comprehensive tests:
-
-```bash
-# Run all tests
-pytest mixpeek_mcp/tests/ -v
-
-# Run specific test modules
-pytest mixpeek_mcp/tests/test_auth.py -v
-pytest mixpeek_mcp/tests/test_tools.py -v
-pytest mixpeek_mcp/tests/test_server.py -v
-
-# Run with coverage
-pytest mixpeek_mcp/tests/ --cov=mixpeek_mcp --cov-report=html
-```
-
 ## Use Cases
 
 <AccordionGroup>
@@ -417,35 +400,45 @@ pytest mixpeek_mcp/tests/ --cov=mixpeek_mcp --cov-report=html
 
 ## Troubleshooting
 
-### MCP Server Not Connecting
+### Connection Issues
 
-**Issue**: Claude Code can't connect to the MCP server
+**Issue**: Claude can't connect to the MCP server
 
 **Solutions**:
-- Verify the `cwd` path is correct in your MCP configuration
-- Check that all environment variables are set (MONGO_URI, REDIS_URL, etc.)
-- Run the server manually to see error messages: `python -m mixpeek_mcp.main --transport stdio`
-- Check Claude Code logs for connection errors
+- Verify the URL is `https://mcp.mixpeek.com`
+- Check that your API key is correct and starts with `sk_`
+- Ensure the Authorization header format is `Bearer YOUR_API_KEY`
+- Restart Claude Desktop/Code after updating configuration
 
-### Tool Execution Fails
+### Authentication Errors
+
+**Issue**: Tools return "Unauthorized" or "Invalid API key"
+
+**Solutions**:
+- Verify your API key is valid at [mixpeek.com/dashboard](https://mixpeek.com/dashboard)
+- Check that your API key has the required permissions
+- Ensure you're not using an expired or revoked key
+- Make sure there are no extra spaces in the API key
+
+### Tool Execution Errors
 
 **Issue**: Tools return errors when executed
 
 **Solutions**:
-- Verify your Mixpeek API key is valid
 - Ensure the namespace exists before creating resources in it
-- Check that required services (MongoDB, Redis, Qdrant) are running
-- Review tool parameters match the expected schema
+- Check that required parameters are provided and correctly formatted
+- Verify resource IDs (namespace_id, collection_id, etc.) are valid
+- Review tool parameter schemas in the documentation above
 
 ### Slow Response Times
 
-**Issue**: MCP tools are slow to respond
+**Issue**: MCP tools take a long time to respond
 
 **Solutions**:
-- For local development, use stdio transport (faster than HTTP)
-- Increase timeout settings if processing large files
-- Check database connection pool settings
-- Monitor Redis and Qdrant performance
+- Large file uploads may take time depending on file size
+- Processing pipelines with multiple stages can be compute-intensive
+- Check [status.mixpeek.com](https://status.mixpeek.com) for any service issues
+- For large batch operations, consider using the REST API directly
 
 ## Next Steps
 
@@ -467,9 +460,10 @@ pytest mixpeek_mcp/tests/ --cov=mixpeek_mcp --cov-report=html
 ## Additional Resources
 
 - [Model Context Protocol Documentation](https://modelcontextprotocol.io)
-- [Claude Code MCP Guide](https://docs.anthropic.com/claude/docs/mcp)
-- [Mixpeek GitHub Repository](https://github.com/mixpeek)
+- [Claude Desktop MCP Guide](https://docs.anthropic.com/claude/docs/mcp)
+- [Mixpeek API Documentation](/api-reference)
+- [Get Your API Key](https://mixpeek.com/dashboard)
 
 ---
 
-**Questions or issues?** File an issue on [GitHub](https://github.com/mixpeek) or contact Mixpeek support.
+**Questions or issues?** Contact support at [support@mixpeek.com](mailto:support@mixpeek.com) or visit [mixpeek.com/support](https://mixpeek.com/support).

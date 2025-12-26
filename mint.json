@@ -274,94 +274,6 @@
       ]
     },
     {
-      "group": "Health",
-      "pages": [
-        "api-reference/health/healthcheck"
-      ]
-    },
-    {
-      "group": "Organizations",
-      "pages": [
-        "api-reference/organizations/get-organization",
-        "api-reference/organizations/update-organization",
-        "api-reference/organizations/add-credits",
-        {
-          "group": "Users",
-          "pages": [
-            "api-reference/organization-users/list-users",
-            "api-reference/organization-users/create-user",
-            "api-reference/organization-users/get-user",
-            "api-reference/organization-users/update-user",
-            "api-reference/organization-users/delete-user"
-          ]
-        },
-        {
-          "group": "API Keys",
-          "pages": [
-            "api-reference/organization-api-keys/list-api-keys",
-            "api-reference/organization-api-keys/create-api-key",
-            "api-reference/organization-api-keys/update-api-key",
-            "api-reference/organization-api-keys/rotate-api-key",
-            "api-reference/organization-api-keys/delete-api-key"
-          ]
-        },
-        {
-          "group": "Connections",
-          "pages": [
-            "api-reference/organization-connections/list-storage-connections",
-            "api-reference/organization-connections/create-storage-connection",
-            "api-reference/organization-connections/get-storage-connection",
-            "api-reference/organization-connections/update-storage-connection",
-            "api-reference/organization-connections/test-storage-connection",
-            "api-reference/organization-connections/list-google-drive-folders",
-            "api-reference/organization-connections/list-google-drive-files",
-            "api-reference/organization-connections/delete-storage-connection"
-          ]
-        },
-        {
-          "group": "Usage",
-          "pages": [
-            "api-reference/organization-usage/get-org-usage",
-            "api-reference/organization-usage/get-api-key-usage",
-            "api-reference/organization-usage/get-api-key-endpoint-breakdown"
-          ]
-        },
-        {
-          "group": "Audit",
-          "pages": [
-            "api-reference/organization-audit/list-audit-logs",
-            "api-reference/organization-audit/get-audit-log",
-            "api-reference/organization-audit/get-audit-settings",
-            "api-reference/organization-audit/update-audit-settings"
-          ]
-        },
-        {
-          "group": "Secrets",
-          "pages": [
-            "api-reference/organization-secrets/list-secrets",
-            "api-reference/organization-secrets/create-secret",
-            "api-reference/organization-secrets/update-secret",
-            "api-reference/organization-secrets/delete-secret"
-          ]
-        },
-        {
-          "group": "Billing",
-          "pages": [
-            "api-reference/organization-billing/setup-payment-method",
-            "api-reference/organization-billing/confirm-payment-method",
-            "api-reference/organization-billing/get-payment-method",
-            "api-reference/organization-billing/enable-auto-billing",
-            "api-reference/organization-billing/disable-auto-billing",
-            "api-reference/organization-billing/get-current-usage",
-            "api-reference/organization-billing/get-usage-breakdown",
-            "api-reference/organization-billing/list-invoices",
-            "api-reference/organization-billing/get-spending-caps",
-            "api-reference/organization-billing/update-spending-caps"
-          ]
-        }
-      ]
-    },
-    {
       "group": "Namespaces",
       "pages": [
         "api-reference/namespaces/create-namespace",
@@ -554,29 +466,6 @@
             "api-reference/adhoc-retrievers/list-adhoc-executions",
             "api-reference/adhoc-retrievers/get-adhoc-execution"
           ]
-        },
-        {
-          "group": "Published",
-          "pages": [
-            "api-reference/published-retrievers/list-published-retrievers",
-            "api-reference/published-retrievers/get-organization-publish-stats",
-            "api-reference/published-retrievers/get-published-retriever",
-            "api-reference/published-retrievers/publish-retriever",
-            "api-reference/published-retrievers/unpublish-retriever",
-            "api-reference/published-retrievers/update-published-retriever",
-            "api-reference/published-retrievers/check-name-availability"
-          ]
-        },
-        {
-          "group": "Public API",
-          "pages": [
-            "api-reference/public-retriever-api/list-public-retrievers",
-            "api-reference/public-retriever-api/execute-public-retriever",
-            "api-reference/public-retriever-api/get-public-retriever-config",
-            "api-reference/public-retriever-api/track-interaction",
-            "api-reference/public-retriever-api/track-interaction-batch",
-            "api-reference/public-retriever-api/get-public-retriever-template"
-          ]
         }
       ]
     },
@@ -591,15 +480,7 @@
         "api-reference/taxonomies/list-taxonomy-versions",
         "api-reference/taxonomies/create-taxonomy-version",
         "api-reference/taxonomies/clone-taxonomy",
-        "api-reference/taxonomies/delete-taxonomy",
-        {
-          "group": "Analytics",
-          "pages": [
-            "api-reference/taxonomy-analytics/compute-step-transition-analytics",
-            "api-reference/taxonomy-analytics/analyze-multi-step-transition-paths",
-            "api-reference/taxonomy-analytics/get-available-steps"
-          ]
-        }
+        "api-reference/taxonomies/delete-taxonomy"
       ]
     },
     {
@@ -694,15 +575,6 @@
             "api-reference/templates/create-taxonomy-template",
             "api-reference/templates/instantiate-taxonomy-template"
           ]
-        },
-        {
-          "group": "Public",
-          "pages": [
-            "api-reference/public-templates-api/list-public-namespace-templates",
-            "api-reference/public-templates-api/get-public-namespace-template",
-            "api-reference/public-templates-api/list-public-retriever-templates",
-            "api-reference/public-templates-api/get-public-retriever-template"
-          ]
         }
       ]
     },
@@ -716,86 +588,6 @@
       ]
     },
     {
-      "group": "Analytics",
-      "pages": [
-        {
-          "group": "Retriever",
-          "pages": [
-            "api-reference/analytics/get-retriever-performance",
-            "api-reference/analytics/get-stage-breakdown",
-            "api-reference/analytics/get-retriever-signals",
-            "api-reference/analytics/get-cache-performance",
-            "api-reference/analytics/analyze-for-tuning",
-            "api-reference/analytics/get-slowest-queries"
-          ]
-        },
-        {
-          "group": "Engine",
-          "pages": [
-            "api-reference/analytics/get-engine-performance",
-            "api-reference/analytics/get-engine-stage-breakdown",
-            "api-reference/analytics/get-extractor-breakdown",
-            "api-reference/analytics/get-batch-diagnostics",
-            "api-reference/analytics/analyze-bottlenecks",
-            "api-reference/analytics/get-slowest-operations"
-          ]
-        },
-        {
-          "group": "Usage",
-          "pages": [
-            "api-reference/analytics/get-usage-summary",
-            "api-reference/analytics/get-extractor-performance",
-            "api-reference/analytics/get-inference-performance"
-          ]
-        },
-        {
-          "group": "Namespace",
-          "pages": [
-            "api-reference/analytics/get-most-queried-fields",
-            "api-reference/analytics/get-slow-queries",
-            "api-reference/analytics/get-field-performance",
-            "api-reference/analytics/get-compound-index-patterns",
-            "api-reference/analytics/get-index-recommendations",
-            "api-reference/analytics/get-namespace-summary",
-            "api-reference/analytics/get-index-suggestions",
-            "api-reference/analytics/get-field-usage"
-          ]
-        },
-        {
-          "group": "Bucket",
-          "pages": [
-            "api-reference/analytics/get-bucket-storage",
-            "api-reference/analytics/get-upload-performance",
-            "api-reference/analytics/get-sync-performance",
-            "api-reference/analytics/get-bucket-health",
-            "api-reference/analytics/get-bucket-usage",
-            "api-reference/analytics/get-sync-comparison"
-          ]
-        },
-        {
-          "group": "Collection",
-          "pages": [
-            "api-reference/analytics/get-collection-overview",
-            "api-reference/analytics/get-document-growth",
-            "api-reference/analytics/get-extractor-performance-1",
-            "api-reference/analytics/get-latency-metrics",
-            "api-reference/analytics/get-failure-analysis",
-            "api-reference/analytics/get-execution-history"
-          ]
-        },
-        {
-          "group": "Cluster",
-          "pages": [
-            "api-reference/analytics/get-failure-analysis-1",
-            "api-reference/analytics/get-assignment-metrics",
-            "api-reference/analytics/get-confidence-distribution",
-            "api-reference/analytics/get-label-distribution",
-            "api-reference/analytics/get-enrichment-history"
-          ]
-        }
-      ]
-    },
-    {
       "group": "Resource Search",
       "pages": [
         "api-reference/resource-search/search-resources"
@@ -805,19 +597,6 @@
       "group": "Inference",
       "pages": [
         "api-reference/inference/execute-raw-inference"
-      ]
-    },
-    {
-      "group": "Agent Sessions",
-      "pages": [
-        "api-reference/agent-sessions/create-session",
-        "api-reference/agent-sessions/list-sessions",
-        "api-reference/agent-sessions/get-session",
-        "api-reference/agent-sessions/terminate-session",
-        "api-reference/agent-sessions/patch-session",
-        "api-reference/agent-sessions/send-message",
-        "api-reference/agent-sessions/get-history",
-        "api-reference/agent-sessions/submit-feedback"
       ]
     },
     {
@@ -836,33 +615,6 @@
         "api-reference/webhooks/get-webhook",
         "api-reference/webhooks/update-webhook",
         "api-reference/webhooks/delete-webhook"
-      ]
-    },
-    {
-      "group": "Notifications",
-      "pages": [
-        "api-reference/notifications/list-notifications",
-        "api-reference/notifications/get-notification",
-        "api-reference/notifications/delete-notification",
-        "api-reference/notifications/mark-as-read",
-        "api-reference/notifications/mark-all-as-read",
-        "api-reference/notifications/get-preferences",
-        "api-reference/notifications/update-preferences",
-        "api-reference/notifications/get-unread-count"
-      ]
-    },
-    {
-      "group": "Triggers",
-      "pages": [
-        "api-reference/triggers/create-trigger",
-        "api-reference/triggers/list-triggers",
-        "api-reference/triggers/get-trigger",
-        "api-reference/triggers/update-trigger",
-        "api-reference/triggers/pause-trigger",
-        "api-reference/triggers/resume-trigger",
-        "api-reference/triggers/execute-trigger-now",
-        "api-reference/triggers/get-trigger-execution-history",
-        "api-reference/triggers/delete-trigger"
       ]
     }
   ],
