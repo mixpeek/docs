@@ -89,8 +89,7 @@
         "overview/quickstart",
         "overview/concepts",
         "overview/architecture",
-        "overview/data-model",
-        "overview/caching"
+        "overview/data-model"
       ]
     },
     {
