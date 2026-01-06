@@ -77,6 +77,10 @@
       "url": "tutorials"
     },
     {
+      "name": "Studio",
+      "url": "studio"
+    },
+    {
       "name": "Integrations",
       "url": "integrations"
     }
@@ -90,15 +94,6 @@
         "overview/concepts",
         "overview/architecture",
         "overview/data-model"
-      ]
-    },
-    {
-      "group": "Best Practices",
-      "pages": [
-        "best-practices/schema-design",
-        "best-practices/feature-selection",
-        "best-practices/caching-strategies",
-        "best-practices/cost-optimization"
       ]
     },
     {
@@ -127,9 +122,7 @@
             "processing/extractors/passthrough"
           ]
         },
-        "processing/model-registry",
         "processing/batching",
-        "processing/tasks",
         "processing/pipelines"
       ]
     },
@@ -204,8 +197,7 @@
           ]
         },
         "retrieval/filters",
-        "retrieval/interactions",
-        "retrieval/research"
+        "retrieval/interactions"
       ]
     },
     {
@@ -219,11 +211,17 @@
       "group": "Operate in Production",
       "pages": [
         "operations/security",
-        "operations/observability",
         "operations/webhooks",
-        "operations/manifests",
-        "operations/analytics-overview",
-        "operations/rate-limits-quotas"
+        "operations/manifests"
+      ]
+    },
+    {
+      "group": "Best Practices",
+      "pages": [
+        "best-practices/schema-design",
+        "best-practices/feature-selection",
+        "best-practices/caching-strategies",
+        "best-practices/cost-optimization"
       ]
     },
     {
