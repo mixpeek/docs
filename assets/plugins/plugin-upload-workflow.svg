@@ -1,0 +1,173 @@
+<svg viewBox="0 0 1100 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="clientGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4f46e5;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="apiGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ea580c;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="s3Grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="validateGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="deployGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ec4899;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#db2777;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#10b981"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1100" height="500" fill="#f8fafc"/>
+
+  <!-- Title -->
+  <text x="550" y="35" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="600" fill="#0f172a" text-anchor="middle">Plugin Upload Workflow</text>
+  <text x="550" y="55" font-family="system-ui, sans-serif" font-size="12" fill="#64748b" text-anchor="middle">Presigned URL upload flow for custom extractors</text>
+
+  <!-- Actors Row -->
+  <g transform="translate(0, 80)">
+    <!-- Client/CLI -->
+    <g filter="url(#shadow)">
+      <rect x="50" y="0" width="120" height="50" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+      <rect x="50" y="0" width="120" height="50" rx="10" fill="url(#clientGrad)"/>
+      <text x="110" y="30" font-family="system-ui, sans-serif" font-size="13" font-weight="600" fill="white" text-anchor="middle">CLI / Client</text>
+    </g>
+
+    <!-- Mixpeek API -->
+    <g filter="url(#shadow)">
+      <rect x="490" y="0" width="120" height="50" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+      <rect x="490" y="0" width="120" height="50" rx="10" fill="url(#apiGrad)"/>
+      <text x="550" y="30" font-family="system-ui, sans-serif" font-size="13" font-weight="600" fill="white" text-anchor="middle">Mixpeek API</text>
+    </g>
+
+    <!-- S3 -->
+    <g filter="url(#shadow)">
+      <rect x="930" y="0" width="120" height="50" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+      <rect x="930" y="0" width="120" height="50" rx="10" fill="url(#s3Grad)"/>
+      <text x="990" y="30" font-family="system-ui, sans-serif" font-size="13" font-weight="600" fill="white" text-anchor="middle">S3 Storage</text>
+    </g>
+
+    <!-- Vertical lines -->
+    <line x1="110" y1="50" x2="110" y2="370" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="5,5"/>
+    <line x1="550" y1="50" x2="550" y2="370" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="5,5"/>
+    <line x1="990" y1="50" x2="990" y2="370" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="5,5"/>
+  </g>
+
+  <!-- Step 1: Create Plugin -->
+  <g transform="translate(0, 160)">
+    <text x="30" y="10" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#6366f1">1</text>
+    <rect x="50" y="-5" width="120" height="35" rx="6" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+    <text x="110" y="10" font-family="system-ui, sans-serif" font-size="10" font-weight="500" fill="#4f46e5" text-anchor="middle">mixpeek plugin init</text>
+    <text x="110" y="22" font-family="monospace" font-size="8" fill="#64748b" text-anchor="middle">my_extractor</text>
+  </g>
+
+  <!-- Step 2: Create Archive -->
+  <g transform="translate(0, 210)">
+    <text x="30" y="10" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#6366f1">2</text>
+    <rect x="50" y="-5" width="120" height="35" rx="6" fill="#eef2ff" stroke="#c7d2fe" stroke-width="1"/>
+    <text x="110" y="10" font-family="system-ui, sans-serif" font-size="10" font-weight="500" fill="#4f46e5" text-anchor="middle">Create .tar.gz</text>
+    <text x="110" y="22" font-family="monospace" font-size="8" fill="#64748b" text-anchor="middle">archive</text>
+  </g>
+
+  <!-- Step 3: Request Presigned URL -->
+  <g transform="translate(0, 260)">
+    <text x="30" y="10" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#6366f1">3</text>
+
+    <!-- Arrow from Client to API -->
+    <line x1="170" y1="10" x2="480" y2="10" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrowGray)"/>
+    <rect x="240" y="-8" width="160" height="36" rx="4" fill="white" stroke="#fed7aa" stroke-width="1"/>
+    <text x="320" y="6" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#ea580c" text-anchor="middle">POST /plugins/uploads</text>
+    <text x="320" y="18" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">{name, version, size}</text>
+
+    <!-- Arrow back from API to Client -->
+    <line x1="480" y1="50" x2="170" y2="50" stroke="#10b981" stroke-width="2" marker-end="url(#arrowGreen)"/>
+    <rect x="240" y="35" width="160" height="30" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+    <text x="320" y="50" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#059669" text-anchor="middle">presigned_url + upload_id</text>
+    <text x="320" y="60" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">expires_at: 1 hour</text>
+  </g>
+
+  <!-- Step 4: Upload to S3 -->
+  <g transform="translate(0, 350)">
+    <text x="30" y="10" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#10b981">4</text>
+
+    <!-- Arrow from Client to S3 -->
+    <path d="M 170 10 L 350 10 Q 450 10 450 -30 L 450 -60 Q 450 -80 550 -80 L 980 -80"
+          stroke="#10b981" stroke-width="2" fill="none" marker-end="url(#arrowGreen)"/>
+    <rect x="550" y="-95" width="140" height="30" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+    <text x="620" y="-80" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#059669" text-anchor="middle">PUT presigned_url</text>
+    <text x="620" y="-70" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">Content-Type: application/gzip</text>
+
+    <!-- Small annotation -->
+    <text x="110" y="10" font-family="system-ui, sans-serif" font-size="9" fill="#059669" text-anchor="middle">Direct to S3</text>
+    <text x="110" y="22" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">(bypasses API)</text>
+
+    <!-- S3 stores -->
+    <rect x="930" y="-95" width="120" height="30" rx="4" fill="#ccfbf1"/>
+    <text x="990" y="-76" font-family="system-ui, sans-serif" font-size="9" fill="#0d9488" text-anchor="middle">Archive stored</text>
+
+    <!-- ETag response -->
+    <path d="M 980 -55 L 700 -55 Q 600 -55 600 -30 L 600 10 Q 600 30 500 30 L 170 30"
+          stroke="#94a3b8" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#arrowGray)"/>
+    <text x="650" y="-40" font-family="monospace" font-size="8" fill="#64748b">ETag: "abc123..."</text>
+  </g>
+
+  <!-- Step 5: Confirm Upload -->
+  <g transform="translate(0, 410)">
+    <text x="30" y="10" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#8b5cf6">5</text>
+
+    <!-- Arrow from Client to API -->
+    <line x1="170" y1="10" x2="480" y2="10" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrowGray)"/>
+    <rect x="220" y="-8" width="180" height="36" rx="4" fill="white" stroke="#c4b5fd" stroke-width="1"/>
+    <text x="310" y="6" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#7c3aed" text-anchor="middle">POST /uploads/{id}/confirm</text>
+    <text x="310" y="18" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">{etag, file_size_bytes}</text>
+
+    <!-- API validates -->
+    <g filter="url(#shadow)">
+      <rect x="500" y="-12" width="100" height="44" rx="6" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+      <text x="550" y="6" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#7c3aed" text-anchor="middle">Validate</text>
+      <text x="550" y="18" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">+ Security Scan</text>
+      <text x="550" y="28" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">+ Create Plugin</text>
+    </g>
+
+    <!-- API downloads from S3 -->
+    <line x1="610" y1="10" x2="920" y2="10" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <text x="765" y="0" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Download &amp; Validate</text>
+
+    <!-- Response back -->
+    <line x1="480" y1="50" x2="170" y2="50" stroke="#10b981" stroke-width="2" marker-end="url(#arrowGreen)"/>
+    <rect x="220" y="38" width="180" height="24" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+    <text x="310" y="54" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#059669" text-anchor="middle">plugin_id, feature_uri</text>
+  </g>
+
+  <!-- Legend -->
+  <g transform="translate(50, 475)">
+    <rect width="12" height="12" rx="2" fill="url(#clientGrad)"/>
+    <text x="18" y="10" font-family="system-ui, sans-serif" font-size="10" fill="#475569">CLI/Client</text>
+
+    <rect x="95" width="12" height="12" rx="2" fill="url(#apiGrad)"/>
+    <text x="113" y="10" font-family="system-ui, sans-serif" font-size="10" fill="#475569">Mixpeek API</text>
+
+    <rect x="200" width="12" height="12" rx="2" fill="url(#s3Grad)"/>
+    <text x="218" y="10" font-family="system-ui, sans-serif" font-size="10" fill="#475569">S3 Storage</text>
+
+    <line x1="295" y1="6" x2="320" y2="6" stroke="#10b981" stroke-width="2"/>
+    <text x="328" y="10" font-family="system-ui, sans-serif" font-size="10" fill="#475569">Direct Upload</text>
+
+    <line x1="420" y1="6" x2="445" y2="6" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <text x="453" y="10" font-family="system-ui, sans-serif" font-size="10" fill="#475569">Internal/Async</text>
+  </g>
+</svg>

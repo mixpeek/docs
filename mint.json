@@ -122,6 +122,7 @@
             "processing/extractors/passthrough"
           ]
         },
+        "processing/plugins",
         "processing/batching",
         "processing/pipelines"
       ]

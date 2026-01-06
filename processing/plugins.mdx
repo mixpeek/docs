@@ -1,0 +1,460 @@
+---
+title: "Custom Plugins"
+description: "Build, test, and deploy custom feature extractors using the Mixpeek plugin system"
+---
+
+<Info>
+Custom plugins are an **Enterprise feature** that requires dedicated infrastructure. [Contact us](https://mixpeek.com/contact) to enable custom plugins for your namespace.
+</Info>
+
+## Overview
+
+The Mixpeek plugin system allows you to create custom feature extractors that run alongside the built-in extractors. Custom plugins give you complete control over how your data is processed, allowing you to:
+
+- Implement proprietary ML models and algorithms
+- Create domain-specific extraction logic
+- Integrate with external services during processing
+- Build custom embedding pipelines
+
+## Quick Start
+
+The fastest way to get started is using the Mixpeek CLI:
+
+```bash
+# Install the SDK
+pip install mixpeek
+
+# Create a new plugin
+mixpeek plugin init my_extractor --category text
+
+# Navigate to plugin directory
+cd my_extractor
+
+# Test locally
+mixpeek plugin test
+
+# Publish to your namespace (requires Enterprise tier)
+mixpeek plugin publish --namespace ns_your_namespace
+```
+
+## Plugin Architecture
+
+Every plugin consists of three main components:
+
+<AccordionGroup>
+  <Accordion title="manifest.py - Metadata and Schemas" icon="file-code">
+    Defines the plugin's metadata, input/output schemas, and configuration options.
+
+    ```python
+    from pydantic import BaseModel, Field
+
+    class SentimentInput(BaseModel):
+        """What your extractor accepts."""
+        text: str = Field(..., description="Input text to analyze")
+
+    class SentimentOutput(BaseModel):
+        """What your extractor produces."""
+        sentiment: str = Field(..., description="Detected sentiment")
+        confidence: float = Field(..., ge=0.0, le=1.0)
+
+    class SentimentParams(BaseModel):
+        """User-configurable parameters."""
+        threshold: float = Field(default=0.5, ge=0.0, le=1.0)
+
+    metadata = {
+        "name": "sentiment_analyzer",
+        "version": "v1",
+        "description": "Analyzes text sentiment",
+        "category": "text",
+        "author": "Your Name",
+    }
+
+    input_schema = SentimentInput
+    output_schema = SentimentOutput
+    parameter_schema = SentimentParams
+    supported_input_types = ["text"]
+    ```
+  </Accordion>
+
+  <Accordion title="pipeline.py - Processing Logic" icon="diagram-project">
+    Implements the `build_steps()` function that returns the processing pipeline.
+
+    ```python
+    import pandas as pd
+    from typing import Any, Dict, Optional
+
+    def build_steps(
+        extractor_request: Any,
+        container: Optional[Any] = None,
+        base_steps: Optional[list] = None,
+        **kwargs
+    ) -> Dict[str, Any]:
+        """Build the extraction pipeline."""
+        params = extractor_request.extractor_config.parameters or {}
+        threshold = params.get("threshold", 0.5)
+
+        def process_batch(batch: pd.DataFrame) -> pd.DataFrame:
+            """Process a batch of inputs."""
+            results = []
+            for _, row in batch.iterrows():
+                text = row.get("text", "")
+                sentiment, confidence = analyze_sentiment(text)
+                results.append({"sentiment": sentiment, "confidence": confidence})
+
+            batch["sentiment"] = [r["sentiment"] for r in results]
+            batch["confidence"] = [r["confidence"] for r in results]
+            return batch
+
+        steps = base_steps or []
+        steps.append(process_batch)
+
+        return {
+            "steps": steps,
+            "prepare": lambda ds: ds,
+        }
+    ```
+  </Accordion>
+
+  <Accordion title="processors/ - Custom Processors" icon="gears">
+    Optional directory for complex processing logic organized into separate modules.
+
+    ```python
+    # processors/core.py
+    from dataclasses import dataclass
+    import pandas as pd
+
+    @dataclass
+    class SentimentConfig:
+        threshold: float = 0.5
+        model_name: str = "default"
+
+    class SentimentProcessor:
+        def __init__(self, config: SentimentConfig, progress_actor=None):
+            self.config = config
+            self.progress_actor = progress_actor
+
+        def __call__(self, batch: pd.DataFrame) -> pd.DataFrame:
+            """Process a batch of data."""
+            # Your processing logic here
+            return batch
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## CLI Commands
+
+### Create a Plugin
+
+```bash
+mixpeek plugin init <name> [OPTIONS]
+```
+
+| Option | Description |
+|--------|-------------|
+| `--category`, `-c` | Category: text, image, video, audio, document, multimodal |
+| `--description`, `-d` | Plugin description |
+| `--author`, `-a` | Author name (defaults to git user.name) |
+| `--output`, `-o` | Output directory |
+
+<CodeGroup>
+```bash Text Extractor
+mixpeek plugin init sentiment_analyzer \
+  --category text \
+  --description "Custom sentiment analysis" \
+  --author "Your Name"
+```
+
+```bash Image Extractor
+mixpeek plugin init object_detector \
+  --category image \
+  --description "Custom object detection"
+```
+
+```bash Multimodal Extractor
+mixpeek plugin init custom_embedder \
+  --category multimodal \
+  --description "Custom embedding model"
+```
+</CodeGroup>
+
+### Test a Plugin
+
+```bash
+mixpeek plugin test [OPTIONS]
+```
+
+| Option | Description |
+|--------|-------------|
+| `--path`, `-p` | Plugin directory path |
+| `--sample-data`, `-s` | JSON/CSV file with test data |
+| `--verbose`, `-v` | Show detailed output |
+
+**What it validates:**
+1. Required files exist (`manifest.py`, `pipeline.py`)
+2. Schemas are valid Pydantic models
+3. Pipeline builds successfully
+4. Unit tests pass (pytest)
+5. Sample data processes correctly (if provided)
+
+```bash
+# Test with sample data
+mixpeek plugin test --sample-data test_data.json --verbose
+```
+
+### Validate a Plugin
+
+Quick validation without running tests:
+
+```bash
+mixpeek plugin validate --path ./my_extractor
+```
+
+### Publish a Plugin
+
+```bash
+mixpeek plugin publish [OPTIONS]
+```
+
+| Option | Description |
+|--------|-------------|
+| `--path`, `-p` | Plugin directory path |
+| `--namespace`, `-n` | Target namespace ID |
+| `--dry-run` | Validate without publishing |
+
+```bash
+# Using environment variables
+export MIXPEEK_API_KEY=sk_your_key
+export MIXPEEK_NAMESPACE=ns_abc123
+mixpeek plugin publish
+
+# Or with explicit options
+mixpeek plugin publish \
+  --namespace ns_abc123 \
+  --api-key sk_your_key
+```
+
+### List Plugins
+
+```bash
+mixpeek plugin list [OPTIONS]
+```
+
+| Option | Description |
+|--------|-------------|
+| `--namespace`, `-n` | Namespace ID |
+| `--source`, `-s` | Filter: all, builtin, custom, community |
+
+```bash
+# List all extractors
+mixpeek plugin list
+
+# List only custom plugins
+mixpeek plugin list --source custom
+```
+
+## Upload Workflow
+
+The plugin upload uses presigned URLs for efficient direct-to-S3 uploads:
+
+<Frame>
+  <img src="/assets/plugins/plugin-upload-workflow.svg" alt="Plugin Upload Workflow" />
+</Frame>
+
+<Steps>
+  <Step title="Generate Upload URL">
+    ```bash
+    POST /v1/namespaces/{namespace_id}/plugins/uploads
+    ```
+
+    Request:
+    ```json
+    {
+      "name": "my_extractor",
+      "version": "1.0.0",
+      "description": "My custom extractor",
+      "file_size_bytes": 102400
+    }
+    ```
+
+    Response:
+    ```json
+    {
+      "upload_id": "plu_abc123xyz789",
+      "presigned_url": "https://s3.amazonaws.com/...",
+      "expires_at": "2024-01-15T11:30:00Z"
+    }
+    ```
+  </Step>
+
+  <Step title="Upload to S3">
+    Upload your `.tar.gz` archive directly to the presigned URL:
+
+    ```bash
+    curl -X PUT "${presigned_url}" \
+      -H "Content-Type: application/gzip" \
+      --data-binary @my_extractor.tar.gz
+    ```
+  </Step>
+
+  <Step title="Confirm Upload">
+    ```bash
+    POST /v1/namespaces/{namespace_id}/plugins/uploads/{upload_id}/confirm
+    ```
+
+    Request:
+    ```json
+    {
+      "etag": "abc123...",
+      "file_size_bytes": 102400
+    }
+    ```
+
+    Response:
+    ```json
+    {
+      "success": true,
+      "plugin_id": "my_extractor_1_0_0",
+      "validation_status": "passed",
+      "feature_uri": "mixpeek://my_extractor@1.0.0"
+    }
+    ```
+  </Step>
+</Steps>
+
+## Using Custom Plugins
+
+Once published, use your custom plugin in collections just like built-in extractors:
+
+<CodeGroup>
+```python Python SDK
+from mixpeek import Mixpeek
+
+client = Mixpeek(api_key="sk_your_key")
+
+# Create collection with custom extractor
+collection = client.collections.create(
+    collection_name="my_collection",
+    source={
+        "type": "bucket",
+        "bucket_ids": ["bkt_abc123"]
+    },
+    feature_extractor={
+        "feature_extractor_name": "my_extractor",
+        "version": "v1",
+        "parameters": {
+            "threshold": 0.7
+        }
+    }
+)
+```
+
+```bash cURL
+curl -X POST https://api.mixpeek.com/v1/collections \
+  -H "Authorization: Bearer sk_your_key" \
+  -H "X-Namespace: ns_abc123" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "collection_name": "my_collection",
+    "source": {
+      "type": "bucket",
+      "bucket_ids": ["bkt_abc123"]
+    },
+    "feature_extractor": {
+      "feature_extractor_name": "my_extractor",
+      "version": "v1",
+      "parameters": {
+        "threshold": 0.7
+      }
+    }
+  }'
+```
+</CodeGroup>
+
+## Plugin Directory Structure
+
+```
+my_extractor/
+├── __init__.py          # Package exports
+├── manifest.py          # Metadata, input/output schemas
+├── pipeline.py          # build_steps() implementation
+├── processors/          # Custom processing logic
+│   ├── __init__.py
+│   └── core.py
+├── tests/               # Unit tests (pytest)
+│   ├── __init__.py
+│   └── test_plugin.py
+├── README.md            # Documentation
+└── pyproject.toml       # Package configuration
+```
+
+## Security Scanning
+
+All plugins undergo automatic security scanning before deployment. The scanner checks for:
+
+<Warning>
+The following are **not allowed** in custom plugins:
+- System calls (`subprocess`, `os.system`, `os.popen`)
+- Dynamic code execution (`eval`, `exec`, `compile`)
+- Network operations (`socket`, direct HTTP calls)
+- File system access outside sandbox
+- Dangerous imports (`ctypes`, `multiprocessing`)
+</Warning>
+
+**Allowed:**
+- Standard Python operations
+- NumPy, Pandas, PyTorch, TensorFlow
+- Pydantic models
+- Ray-compatible batch processing
+- Logging and error handling
+
+## Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `MIXPEEK_API_KEY` | Your API key |
+| `MIXPEEK_NAMESPACE` | Default namespace ID |
+| `MIXPEEK_BASE_URL` | API base URL (default: https://api.mixpeek.com) |
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Plugin validation failed">
+    Check that your plugin has the required files:
+    - `manifest.py` with `metadata`, `input_schema`, `output_schema`
+    - `pipeline.py` with `build_steps()` function
+
+    Run `mixpeek plugin validate --verbose` for detailed errors.
+  </Accordion>
+
+  <Accordion title="Security scan failed">
+    Review the error messages to identify forbidden operations. Common issues:
+    - Using `open()` for file I/O (use provided sandbox methods)
+    - Importing `subprocess` or `socket`
+    - Using `eval()` or `exec()`
+  </Accordion>
+
+  <Accordion title="Upload timeout">
+    For large plugins (>10MB), increase the timeout:
+    ```bash
+    export MIXPEEK_TIMEOUT=120
+    mixpeek plugin publish
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Feature Extractors" icon="microchip" href="/processing/feature-extractors">
+    Learn about built-in extractors
+  </Card>
+  <Card title="Batching" icon="layer-group" href="/processing/batching">
+    Process data in batches
+  </Card>
+  <Card title="Pipelines" icon="diagram-project" href="/processing/pipelines">
+    Build multi-stage pipelines
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/feature-extractors/list-feature-extractors">
+    View the API documentation
+  </Card>
+</CardGroup>
