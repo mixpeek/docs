@@ -31,6 +31,10 @@ mixpeek plugin publish --namespace ns_your_namespace
 Plugins must be published to your namespace before they can be used in collections.
 </Warning>
 
+<Tip>
+For comprehensive CLI documentation including all commands, options, and examples, see the [Mixpeek CLI Reference](/integrations/developer-tools/mixpeek-cli).
+</Tip>
+
 ## Plugin Structure
 
 Every plugin has 4 files:
@@ -290,6 +294,8 @@ collection = client.collections.create(
 | `mixpeek plugin publish` | Upload to namespace |
 | `mixpeek plugin list` | List available plugins |
 
+See the [Mixpeek CLI Reference](/integrations/developer-tools/mixpeek-cli) for detailed command options, environment variables, and troubleshooting.
+
 ## Security
 
 Plugins are scanned before deployment. The following are **not allowed**:
@@ -302,10 +308,16 @@ Plugins are scanned before deployment. The following are **not allowed**:
 ## Next Steps
 
 <CardGroup cols={2}>
+  <Card title="Mixpeek CLI" icon="terminal" href="/integrations/developer-tools/mixpeek-cli">
+    Full CLI reference and examples
+  </Card>
   <Card title="Feature Extractors" icon="microchip" href="/processing/feature-extractors">
     See built-in extractors
   </Card>
   <Card title="Pipelines" icon="diagram-project" href="/processing/pipelines">
     Build multi-stage pipelines
+  </Card>
+  <Card title="SDK Usage" icon="code" href="/integrations/developer-tools/sdk-usage">
+    Python SDK documentation
   </Card>
 </CardGroup>
