@@ -9,16 +9,9 @@ Custom plugins are an **Enterprise feature** that requires dedicated infrastruct
 
 ## Overview
 
-The Mixpeek plugin system allows you to create custom feature extractors that run alongside the built-in extractors. Custom plugins give you complete control over how your data is processed, allowing you to:
-
-- Implement proprietary ML models and algorithms
-- Create domain-specific extraction logic
-- Integrate with external services during processing
-- Build custom embedding pipelines
+Custom plugins let you create your own feature extractors that run on Mixpeek's infrastructure. The framework handles all the complexity - batching, concurrency, GPU allocation, scaling - you just write your processing logic.
 
 ## Quick Start
-
-The fastest way to get started is using the Mixpeek CLI:
 
 ```bash
 # Install the SDK
@@ -27,851 +20,292 @@ pip install mixpeek
 # Create a new plugin
 mixpeek plugin init my_extractor --category text
 
-# Navigate to plugin directory
-cd my_extractor
-
 # Test locally
-mixpeek plugin test
+cd my_extractor && mixpeek plugin test
 
-# Publish to your namespace (requires Enterprise tier)
+# Publish to your namespace
 mixpeek plugin publish --namespace ns_your_namespace
 ```
 
-## Plugin Architecture
+<Warning>
+Plugins must be published to your namespace before they can be used in collections.
+</Warning>
 
-Every plugin consists of four main components (2 required, 2 optional):
+## Plugin Structure
 
-### manifest.py (Required)
+Every plugin has 4 files:
 
-Defines the plugin's metadata and re-exports schemas from shared models.
+```
+my_extractor/
+├── manifest.py      # Schemas and metadata
+├── pipeline.py      # Processing pipeline (declarative)
+├── realtime.py      # HTTP endpoint (optional)
+└── processors/
+    └── core.py      # Your processing logic
+```
+
+### 1. manifest.py - Define Your Schemas
 
 ```python
-from shared.collection.features.extractors.my_extractor.v1.models import (
-    MyExtractorInput,
-    MyExtractorOutput,
-    MyExtractorParams,
-    definition,
-)
+from pydantic import BaseModel, Field
 
-# Plugin metadata (for plugin loader discovery)
+class MyExtractorInput(BaseModel):
+    text: str = Field(..., description="Input text")
+
+class MyExtractorOutput(BaseModel):
+    result: str
+    confidence: float = Field(..., ge=0.0, le=1.0)
+
+class MyExtractorParams(BaseModel):
+    """Parameters users can configure when creating a collection."""
+    threshold: float = Field(default=0.5, ge=0.0, le=1.0)
+    text_column: str = Field(default="text")
+
 metadata = {
     "name": "my_extractor",
     "version": "v1",
-    "description": definition.description,
-    "category": "text",  # text, image, video, audio, document, multimodal
-    "icon": definition.icon,
+    "description": "My custom extractor",
+    "category": "text",
 }
 
-__all__ = [
-    "definition",
-    "metadata",
-    "MyExtractorInput",
-    "MyExtractorOutput",
-    "MyExtractorParams",
-]
+input_schema = MyExtractorInput
+output_schema = MyExtractorOutput
+parameter_schema = MyExtractorParams
 ```
 
-### pipeline.py (Required)
+### 2. processors/core.py - Write Your Logic
 
-Implements the `build_steps()` function that returns the processing pipeline. This is the core of your plugin.
+```python
+from dataclasses import dataclass
+from typing import Tuple
+import pandas as pd
+
+@dataclass
+class MyExtractorConfig:
+    threshold: float = 0.5
+    text_column: str = "text"
+
+class MyExtractorProcessor:
+    """Called repeatedly with batches of data."""
+
+    def __init__(self, config: MyExtractorConfig, progress_actor=None):
+        self.config = config
+        self._model = None  # Lazy load
+
+    def _load_model(self):
+        if self._model is None:
+            # Load your model here (e.g., transformers, torch, etc.)
+            self._model = "loaded"
+
+    def __call__(self, batch: pd.DataFrame) -> pd.DataFrame:
+        """Process a batch. Framework handles batch sizing."""
+        self._load_model()
+
+        results = []
+        for text in batch[self.config.text_column].fillna(""):
+            result, confidence = self._process_single(text)
+            results.append({"result": result, "confidence": confidence})
+
+        batch["output"] = results
+        return batch
+
+    def _process_single(self, text: str) -> Tuple[str, float]:
+        # Your processing logic here
+        return f"Processed: {text[:50]}", 0.95
+```
+
+### 3. pipeline.py - Wire It Together
 
 ```python
 from typing import Any, Dict, Optional
-
-from engine.pipelines.models import ExtractorRequest, PipelineStepsAndPrepare
-from engine.plugins.extractors.builder import (
-    BaseExtractorBuilder,
-    DatasetPreparationBuilder,
-    InputFieldType,
-)
 from engine.plugins.extractors.pipeline import (
-    PipelineDefinition,
-    ResourceType,
-    RowCondition,
-    StepDefinition,
-    build_pipeline_steps,
+    PipelineDefinition, ResourceType, RowCondition, StepDefinition, build_pipeline_steps,
 )
-from engine.services.batch import BaseBatchInferenceService
 from shared.collection.features.extractors.models import ExtractorDefinition
-from shared.utilities.content.enums import ContentCategory
-
-# Import your processor and models
-from .processors.core import MyProcessor, MyProcessorConfig
-from shared.collection.features.extractors.my_extractor.v1.models import (
-    MyExtractorInput,
-    MyExtractorParams,
-)
-
+from .manifest import MyExtractorParams, metadata
+from .processors.core import MyExtractorConfig, MyExtractorProcessor
 
 def build_steps(
-    extractor_request: ExtractorRequest,
+    extractor_request: Any,
     container: Optional[Any] = None,
     base_steps: Optional[list] = None,
     dataset_size: Optional[int] = None,
     content_flags: Optional[dict] = None,
 ) -> Dict[str, Any]:
-    """Build the extraction pipeline.
 
-    Args:
-        extractor_request: Extractor configuration and context.
-        container: Service container (optional).
-        base_steps: Optional preprocessing steps.
-        dataset_size: Optional dataset size for scaling.
-        content_flags: Optional content type flags.
+    # Get user-configured parameters
+    params = MyExtractorParams(**(extractor_request.extractor_config.parameters or {}))
 
-    Returns:
-        Dict with 'steps' list and 'prepare' function.
-    """
-    # Initialize builder with validated params
-    builder = BaseExtractorBuilder(
-        extractor_request=extractor_request,
-        extractor_name="MyExtractor",
-        inputs_model=MyExtractorInput,
-        params_model=MyExtractorParams,
-    )
-    params = builder.params
-
-    # Configure your processor
-    processor_config = MyProcessorConfig(
-        model_name=params.model_name,
-        batch_size=params.batch_size,
-    )
-
-    # Define pipeline steps declaratively
+    # Define your pipeline - framework handles batching, concurrency, scaling
     steps = [
         StepDefinition(
-            service_class=MyProcessor,
-            resource_type=ResourceType.CPU,  # CPU, GPU, or API
-            config=processor_config,
-            condition=RowCondition.IS_TEXT,  # Optional: filter rows
+            service_class=MyExtractorProcessor,
+            resource_type=ResourceType.CPU,  # or GPU, API
+            config=MyExtractorConfig(threshold=params.threshold, text_column=params.text_column),
+            condition=RowCondition.IS_TEXT,  # Only process text rows
         ),
     ]
 
-    # Build pipeline definition
-    pipeline = PipelineDefinition(
-        name="my_extractor",
-        version="v1",
-        steps=steps,
-    )
-
-    # Convert to executable steps
+    pipeline = PipelineDefinition(name="my_extractor", version="v1", steps=steps)
     pipeline_steps = build_pipeline_steps(pipeline, dataset_size=dataset_size)
 
-    # Build dataset preparation function
-    prep_builder = DatasetPreparationBuilder(
-        extractor_request=extractor_request,
-        extractor_name="MyExtractor",
-        supported_content_types=[ContentCategory.TEXT],
-        input_field_mapping=InputFieldType.TEXT,
-    )
-    prepare_fn = prep_builder.build_prepare_function()
-
-    # Build complete pipeline
-    result = builder.build_pipeline(
-        pipeline_steps=pipeline_steps,
-        prepare_function=prepare_fn,
-        base_steps=base_steps,
-        content_flags=content_flags,
-    )
-
     return {
-        "steps": result.steps,
-        "prepare": result.prepare,
+        "steps": (base_steps or []) + pipeline_steps,
+        "prepare": lambda ds: ds,
     }
 
-
-def extract(
-    extractor_request: ExtractorRequest,
-    base_steps: Optional[list] = None,
-    dataset_size: Optional[int] = None,
-    content_flags: Optional[dict] = None,
-) -> PipelineStepsAndPrepare:
-    """Entry point for orchestrator."""
-    result = build_steps(
-        extractor_request=extractor_request,
-        base_steps=base_steps,
-        dataset_size=dataset_size,
-        content_flags=content_flags,
-    )
-    return PipelineStepsAndPrepare(steps=result["steps"], prepare=result["prepare"])
-
-
-# Export definition for engine discovery
 extractor_definition = ExtractorDefinition(
-    name="my_extractor",
-    version="v1",
-    extractor_function_path=extract,
+    name=metadata["name"],
+    version=metadata["version"],
+    extractor_function_path=build_steps,
     requires_file_resolution=False,
 )
 ```
 
-### processors/ (Required for custom logic)
-
-Custom processor classes that implement the batch processing logic. Processors must be callable and accept a pandas DataFrame.
+### 4. realtime.py - HTTP Endpoint (Optional)
 
 ```python
-# processors/core.py
-from dataclasses import dataclass
-from typing import Optional
-
-import pandas as pd
-
-from shared.loggers.services import get_logger
-
-logger = get_logger(__name__)
-
-
-@dataclass
-class MyProcessorConfig:
-    """Configuration for the processor."""
-    model_name: str = "default-model"
-    batch_size: int = 32
-    text_column: str = "text"
-
-
-class MyProcessor:
-    """Custom batch processor.
-
-    Processors are instantiated once per Ray actor and called repeatedly
-    with batches of data. Use __init__ for expensive setup (loading models)
-    and __call__ for batch processing.
-    """
-
-    def __init__(self, config: MyProcessorConfig, progress_actor=None):
-        """Initialize the processor.
-
-        Args:
-            config: Processor configuration.
-            progress_actor: Optional Ray actor for progress tracking.
-        """
-        self.config = config
-        self.progress_actor = progress_actor
-        self._model = None  # Lazy load
-        logger.info(f"[MyProcessor] Initialized with model: {config.model_name}")
-
-    def _load_model(self):
-        """Lazy load the model on first use."""
-        if self._model is None:
-            # Load your model here
-            self._model = ...
-            logger.info("[MyProcessor] Model loaded")
-
-    def __call__(self, batch: pd.DataFrame) -> pd.DataFrame:
-        """Process a batch of data.
-
-        Args:
-            batch: Input DataFrame with data to process.
-
-        Returns:
-            DataFrame with added output columns.
-        """
-        self._load_model()
-
-        text_col = self.config.text_column
-        if text_col not in batch.columns:
-            logger.warning(f"[MyProcessor] Column '{text_col}' not found")
-            batch["output"] = None
-            return batch
-
-        # Process each row
-        results = []
-        for text in batch[text_col].fillna("").tolist():
-            result = self._process_single(text)
-            results.append(result)
-
-        # Add results to DataFrame
-        batch["output"] = results
-
-        logger.info(f"[MyProcessor] Processed {len(batch)} rows")
-        return batch
-
-    def _process_single(self, text: str) -> dict:
-        """Process a single input."""
-        # Your processing logic here
-        return {"score": 0.5}
-```
-
-### realtime.py (Optional)
-
-Defines Ray Serve deployments for real-time API inference. Use this when your plugin needs to expose a real-time HTTP endpoint in addition to batch processing.
-
-```python
-"""Real-time inference services for Ray Serve deployment.
-
-For BUILTIN plugins:
-    Re-export shared services from engine/inference/ to avoid duplication.
-    Multiple extractors can share the same Ray Serve deployment.
-
-For CUSTOM plugins:
-    Define your own Ray Serve deployment class.
-"""
-
 from typing import Any, Dict
-from ray import serve
+from shared.plugins.inference.serve import BaseInferenceService, ServeDeploymentConfig
+from .processors.core import MyExtractorConfig, MyExtractorProcessor
 
-from engine.services.batch import BaseInferenceService
-from shared.loggers.services import get_logger
-
-logger = get_logger(__name__)
-
-
-class MyRealtimeService(BaseInferenceService):
-    """Real-time inference service for HTTP endpoints.
-
-    This service is deployed as a Ray Serve deployment and handles
-    individual inference requests via HTTP.
-    """
+class MyExtractorRealtimeService(BaseInferenceService):
+    serve_config = ServeDeploymentConfig(enabled=True, num_replicas=1)
 
     def __init__(self):
         super().__init__()
-        self._model = None
+        self._processor = None
 
-    def _load_model(self):
-        """Lazy load model on first request."""
-        if self._model is None:
-            # Load your model
-            self._model = ...
-            self.logger.info("[MyRealtimeService] Model loaded")
+    async def _process_single(self, inputs: Dict[str, Any], parameters: Dict[str, Any]) -> Dict[str, Any]:
+        if self._processor is None:
+            self._processor = MyExtractorProcessor(MyExtractorConfig())
 
-    async def _process_single(self, inputs: dict, parameters: dict) -> dict:
-        """Process a single inference request.
-
-        Args:
-            inputs: Input data (e.g., {"text": "..."})
-            parameters: Optional parameters
-
-        Returns:
-            Inference result dict
-        """
-        self._load_model()
         text = inputs.get("text", "")
-        # Your inference logic
-        return {"result": "..."}
+        result, confidence = self._processor._process_single(text)
+        return {"result": result, "confidence": confidence}
 
-
-# Export for Ray Serve deployment
-__all__ = ["MyRealtimeService"]
+__all__ = ["MyExtractorRealtimeService"]
 ```
 
-## Built-in Inference Services
+## Resource Types
 
-Plugins can import and compose existing built-in inference services. This allows you to build custom pipelines using battle-tested components.
+Tell the framework what resources your processor needs:
 
-### Available Services
+| ResourceType | Use For | Example |
+|-------------|---------|---------|
+| `CPU` | Embeddings, classification, text processing | E5, MiniLM, sentiment |
+| `GPU` | Local models requiring GPU | Whisper local, CLIP |
+| `API` | External API calls | OpenAI, Vertex AI |
 
-**Text & Embeddings:**
+The framework automatically configures actors, batch sizes, and concurrency based on your choice.
+
+## Row Conditions
+
+Filter which rows your processor handles:
+
 ```python
-# E5 Multilingual Embeddings (1024-dim)
-from engine.inference.intfloat.multilingual_e5_large_instruct.services import (
-    E5TextEmbeddingBatch,      # Batch processing
-    InferenceService as E5TextEmbeddingService,  # Realtime
-)
-
-# MiniLM Embeddings (384-dim, lightweight)
-from engine.inference.sentence_transformers.minilm.services import (
-    InferenceService as MiniLMEmbeddingService,
-)
-
-# BGE Reranker
-from engine.inference.baai.bge_reranker_v2_m3.services import (
-    InferenceService as BGERerankerService,
-)
+RowCondition.IS_TEXT       # Text content only
+RowCondition.IS_IMAGE      # Image content only
+RowCondition.IS_VIDEO      # Video content only
+RowCondition.IS_AUDIO      # Audio content only
+RowCondition.IS_PDF        # PDF documents
+RowCondition.IS_VIDEO_OR_AUDIO  # Video or audio
+RowCondition.ALWAYS        # All rows (default)
 ```
 
-**Audio & Transcription:**
-```python
-# Whisper API (OpenAI hosted, no GPU required)
-from engine.inference.openai.whisper_api.services import (
-    WhisperTranscriptionBatch,  # Batch processing
-    InferenceService as WhisperAPIService,  # Realtime
-)
+## Using Built-in Services
 
-# Whisper Large v3 Turbo (self-hosted, GPU)
-from engine.inference.openai.whisper_large_v3_turbo.services import (
-    WhisperTranscriptionBatch as WhisperLocalBatch,
-)
-```
-
-**Video & Image:**
-```python
-# FFmpeg video chunking
-from engine.inference.ffmpeg.services import (
-    FFmpegParallelChunking,    # Video splitting
-    ThumbnailGenerator,        # Thumbnail extraction
-)
-
-# CLIP embeddings (image + text)
-from engine.inference.laion.clip_vit_l_14.services import (
-    InferenceService as CLIPService,
-)
-
-# SigLIP embeddings (Google)
-from engine.inference.google.siglip.services import (
-    InferenceService as SigLIPService,
-)
-```
-
-**Face Detection & Recognition:**
-```python
-# InsightFace services
-from engine.inference.insightface.scrfd.services import (
-    FaceDetectionBatch,
-)
-from engine.inference.insightface.arcface.services import (
-    FaceEmbeddingBatch,
-)
-from engine.inference.insightface.alignment.services import (
-    FaceAlignmentBatch,
-)
-```
-
-**External APIs:**
-```python
-# Google Vertex AI
-from engine.inference.google.vertex.services import (
-    VertexAIBatch,
-)
-```
-
-### Example: Composing Services
-
-Here's how to build a plugin that uses multiple built-in services:
+Compose existing services into your pipeline instead of writing from scratch:
 
 ```python
-# pipeline.py
 from engine.inference.openai.whisper_api.services import WhisperTranscriptionBatch
 from engine.inference.intfloat.multilingual_e5_large_instruct.services import E5TextEmbeddingBatch
-from engine.plugins.extractors.pipeline import (
-    PipelineDefinition,
-    ResourceType,
-    RowCondition,
-    StepDefinition,
-    build_pipeline_steps,
-)
 from shared.inference.openai.whisper_api.models import InferenceConfigs as WhisperConfig
 from shared.inference.intfloat.multilingual_e5_large_instruct.models import InferenceConfigs as E5Config
 
-
 def build_steps(extractor_request, **kwargs):
-    # Step 1: Transcribe audio with Whisper
-    whisper_config = WhisperConfig(
-        model="whisper-1",
-        bytes_column="audio_bytes",
-        output_column_name="transcription",
-    )
-
-    # Step 2: Embed transcription with E5
-    e5_config = E5Config(
-        text_column="transcription",
-        output_column_name="embedding",
-    )
-
     steps = [
+        # Step 1: Transcribe with Whisper
         StepDefinition(
             service_class=WhisperTranscriptionBatch,
-            resource_type=ResourceType.API,  # Uses OpenAI API
-            config=whisper_config,
+            resource_type=ResourceType.API,
+            config=WhisperConfig(bytes_column="audio_bytes", output_column_name="transcription"),
             condition=RowCondition.IS_VIDEO_OR_AUDIO,
         ),
+        # Step 2: Embed with E5
         StepDefinition(
             service_class=E5TextEmbeddingBatch,
-            resource_type=ResourceType.CPU,  # E5 runs on CPU
-            config=e5_config,
+            resource_type=ResourceType.CPU,
+            config=E5Config(text_column="transcription", output_column_name="embedding"),
         ),
     ]
-
     pipeline = PipelineDefinition(name="transcribe_and_embed", version="v1", steps=steps)
     return {"steps": build_pipeline_steps(pipeline), "prepare": lambda ds: ds}
 ```
 
-### Realtime Service Re-exports
+### Available Services
 
-For `realtime.py`, builtin plugins typically re-export shared services:
+| Category | Service | Import |
+|----------|---------|--------|
+| **Embeddings** | E5 (1024-dim) | `engine.inference.intfloat.multilingual_e5_large_instruct.services.E5TextEmbeddingBatch` |
+| **Embeddings** | MiniLM (384-dim) | `engine.inference.sentence_transformers.minilm.services` |
+| **Embeddings** | CLIP | `engine.inference.laion.clip_vit_l_14.services` |
+| **Embeddings** | SigLIP | `engine.inference.google.siglip.services` |
+| **Transcription** | Whisper API | `engine.inference.openai.whisper_api.services.WhisperTranscriptionBatch` |
+| **Transcription** | Whisper Local | `engine.inference.openai.whisper_large_v3_turbo.services` |
+| **Video** | FFmpeg Chunking | `engine.inference.ffmpeg.services.FFmpegParallelChunking` |
+| **Face** | Detection | `engine.inference.insightface.scrfd.services.FaceDetectionBatch` |
+| **Face** | Embeddings | `engine.inference.insightface.arcface.services.FaceEmbeddingBatch` |
+| **Reranking** | BGE Reranker | `engine.inference.baai.bge_reranker_v2_m3.services` |
+| **LLM** | Vertex AI | `engine.inference.google.vertex.services.VertexAIBatch` |
 
-```python
-# realtime.py - Re-export for Ray Serve deployment
-from engine.inference.intfloat.multilingual_e5_large_instruct.services import (
-    InferenceService as E5TextEmbeddingService,
-)
+## Using Your Plugin
 
-__all__ = ["E5TextEmbeddingService"]
-```
-
-## Service Base Classes
-
-When building processors, you can extend these base classes from `engine/services/batch.py`:
-
-```python
-from engine.services.batch import BaseBatchInferenceService, BaseInferenceService
-
-# For batch processing (most common)
-class MyBatchProcessor(BaseBatchInferenceService):
-    """Extends BaseBatchInferenceService for automatic logging and index normalization."""
-
-    def _process_batch(self, data: pd.DataFrame) -> pd.DataFrame:
-        """Implement this instead of __call__ for automatic batch logging."""
-        # Your processing logic
-        return data
-
-# For real-time serving
-class MyRealtimeService(BaseInferenceService):
-    """Extends BaseInferenceService for Ray Serve deployments."""
-
-    async def _process_single(self, inputs: dict, parameters: dict) -> dict:
-        """Process a single inference request."""
-        return {"result": "..."}
-```
-
-## Pipeline Building Blocks
-
-### ResourceType
-
-Specifies compute resources for a pipeline step:
-
-```python
-from engine.plugins.extractors.pipeline import ResourceType
-
-ResourceType.CPU  # CPU-bound processing (embeddings, classification)
-ResourceType.GPU  # GPU-bound processing (local Whisper, vision models)
-ResourceType.API  # External API calls (OpenAI, Vertex AI)
-```
-
-### RowCondition
-
-Filter rows for conditional processing:
-
-```python
-from engine.plugins.extractors.pipeline import RowCondition
-
-RowCondition.IS_VIDEO      # Process video content
-RowCondition.IS_IMAGE      # Process image content
-RowCondition.IS_TEXT       # Process text content
-RowCondition.IS_AUDIO      # Process audio content
-RowCondition.IS_PDF        # Process PDF documents
-RowCondition.IS_VISUAL     # Process video OR image
-RowCondition.IS_VIDEO_OR_AUDIO  # Process video OR audio
-RowCondition.ALWAYS        # Process all rows (default)
-```
-
-### StepDefinition
-
-Declaratively define a pipeline step:
-
-```python
-from engine.plugins.extractors.pipeline import StepDefinition, ResourceType, RowCondition
-
-StepDefinition(
-    service_class=MyProcessor,      # Your processor class
-    resource_type=ResourceType.CPU, # Compute resource type
-    config=my_config,               # Processor configuration
-    condition=RowCondition.IS_TEXT, # Optional row filter
-    enabled=True,                   # Set False to skip
-    concurrency=4,                  # Override concurrency (optional)
-    batch_size=32,                  # Override batch size (optional)
-)
-```
-
-## CLI Commands
-
-### Create a Plugin
-
-```bash
-mixpeek plugin init <name> [OPTIONS]
-```
-
-| Option | Description |
-|--------|-------------|
-| `--category`, `-c` | Category: text, image, video, audio, document, multimodal |
-| `--description`, `-d` | Plugin description |
-| `--author`, `-a` | Author name (defaults to git user.name) |
-| `--output`, `-o` | Output directory |
-
-```bash
-# Text extractor
-mixpeek plugin init sentiment_analyzer --category text --description "Custom sentiment analysis"
-
-# Image extractor
-mixpeek plugin init object_detector --category image
-
-# Multimodal extractor
-mixpeek plugin init custom_embedder --category multimodal
-```
-
-### Test a Plugin
-
-```bash
-mixpeek plugin test [OPTIONS]
-```
-
-| Option | Description |
-|--------|-------------|
-| `--path`, `-p` | Plugin directory path |
-| `--sample-data`, `-s` | JSON/CSV file with test data |
-| `--verbose`, `-v` | Show detailed output |
-
-**What it validates:**
-1. Required files exist (`manifest.py`, `pipeline.py`)
-2. Schemas are valid Pydantic models
-3. Pipeline builds successfully
-4. Unit tests pass (pytest)
-5. Sample data processes correctly (if provided)
-
-```bash
-# Test with sample data
-mixpeek plugin test --sample-data test_data.json --verbose
-```
-
-### Validate a Plugin
-
-Quick validation without running tests:
-
-```bash
-mixpeek plugin validate --path ./my_extractor
-```
-
-### Publish a Plugin
-
-```bash
-mixpeek plugin publish [OPTIONS]
-```
-
-| Option | Description |
-|--------|-------------|
-| `--path`, `-p` | Plugin directory path |
-| `--namespace`, `-n` | Target namespace ID |
-| `--dry-run` | Validate without publishing |
-
-```bash
-# Using environment variables
-export MIXPEEK_API_KEY=sk_your_key
-export MIXPEEK_NAMESPACE=ns_abc123
-mixpeek plugin publish
-
-# Or with explicit options
-mixpeek plugin publish \
-  --namespace ns_abc123 \
-  --api-key sk_your_key
-```
-
-### List Plugins
-
-```bash
-mixpeek plugin list [OPTIONS]
-```
-
-| Option | Description |
-|--------|-------------|
-| `--namespace`, `-n` | Namespace ID |
-| `--source`, `-s` | Filter: all, builtin, custom, community |
-
-```bash
-# List all extractors
-mixpeek plugin list
-
-# List only custom plugins
-mixpeek plugin list --source custom
-```
-
-## Upload Workflow
-
-The plugin upload uses presigned URLs for efficient direct-to-S3 uploads:
-
-<Frame>
-  <img src="/assets/plugins/plugin-upload-workflow.svg" alt="Plugin Upload Workflow" />
-</Frame>
-
-<Steps>
-  <Step title="Generate Upload URL">
-    ```bash
-    POST /v1/namespaces/{namespace_id}/plugins/uploads
-    ```
-
-    Request:
-    ```json
-    {
-      "name": "my_extractor",
-      "version": "1.0.0",
-      "description": "My custom extractor",
-      "file_size_bytes": 102400
-    }
-    ```
-
-    Response:
-    ```json
-    {
-      "upload_id": "plu_abc123xyz789",
-      "presigned_url": "https://s3.amazonaws.com/...",
-      "expires_at": "2024-01-15T11:30:00Z"
-    }
-    ```
-  </Step>
-
-  <Step title="Upload to S3">
-    Upload your `.tar.gz` archive directly to the presigned URL:
-
-    ```bash
-    curl -X PUT "${presigned_url}" \
-      -H "Content-Type: application/gzip" \
-      --data-binary @my_extractor.tar.gz
-    ```
-  </Step>
-
-  <Step title="Confirm Upload">
-    ```bash
-    POST /v1/namespaces/{namespace_id}/plugins/uploads/{upload_id}/confirm
-    ```
-
-    Request:
-    ```json
-    {
-      "etag": "abc123...",
-      "file_size_bytes": 102400
-    }
-    ```
-
-    Response:
-    ```json
-    {
-      "success": true,
-      "plugin_id": "my_extractor_1_0_0",
-      "validation_status": "passed",
-      "feature_uri": "mixpeek://my_extractor@1.0.0"
-    }
-    ```
-  </Step>
-</Steps>
-
-## Using Custom Plugins
-
-Once published, use your custom plugin in collections just like built-in extractors:
+After publishing, use your plugin in collections:
 
 ```python
 from mixpeek import Mixpeek
 
-client = Mixpeek(api_key="sk_your_key")
+client = Mixpeek(api_key="sk_...")
 
-# Create collection with custom extractor
 collection = client.collections.create(
     collection_name="my_collection",
-    source={
-        "type": "bucket",
-        "bucket_ids": ["bkt_abc123"]
-    },
+    source={"type": "bucket", "bucket_ids": ["bkt_..."]},
     feature_extractor={
-        "feature_extractor_name": "my_extractor",
+        "feature_extractor_name": "my_extractor",  # Your plugin name
         "version": "v1",
         "parameters": {
-            "threshold": 0.7
+            "threshold": 0.7  # Your custom parameters
         }
     }
 )
 ```
 
-```bash
-curl -X POST https://api.mixpeek.com/v1/collections \
-  -H "Authorization: Bearer sk_your_key" \
-  -H "X-Namespace: ns_abc123" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "collection_name": "my_collection",
-    "source": {
-      "type": "bucket",
-      "bucket_ids": ["bkt_abc123"]
-    },
-    "feature_extractor": {
-      "feature_extractor_name": "my_extractor",
-      "version": "v1",
-      "parameters": {
-        "threshold": 0.7
-      }
-    }
-  }'
-```
+## CLI Commands
 
-## Plugin Directory Structure
+| Command | Description |
+|---------|-------------|
+| `mixpeek plugin init <name>` | Create new plugin |
+| `mixpeek plugin test` | Validate and test locally |
+| `mixpeek plugin publish` | Upload to namespace |
+| `mixpeek plugin list` | List available plugins |
 
-```
-my_extractor/
-├── __init__.py          # Package exports
-├── manifest.py          # Metadata, schema re-exports (required)
-├── pipeline.py          # build_steps() implementation (required)
-├── realtime.py          # Ray Serve deployments (optional)
-├── processors/          # Custom processing logic
-│   ├── __init__.py
-│   └── core.py          # Processor classes
-├── tests/               # Unit tests (pytest)
-│   ├── __init__.py
-│   └── test_plugin.py
-├── README.md            # Documentation
-└── pyproject.toml       # Package configuration
-```
+## Security
 
-## Security Scanning
+Plugins are scanned before deployment. The following are **not allowed**:
 
-All plugins undergo automatic security scanning before deployment. The scanner checks for:
-
-<Warning>
-The following are **not allowed** in custom plugins:
-- System calls (`subprocess`, `os.system`, `os.popen`)
-- Dynamic code execution (`eval`, `exec`, `compile`)
-- Network operations (`socket`, direct HTTP calls)
-- File system access outside sandbox
-- Dangerous imports (`ctypes`, `multiprocessing`)
-</Warning>
-
-**Allowed:**
-- Standard Python operations
-- NumPy, Pandas, PyTorch, TensorFlow
-- Pydantic models
-- Ray-compatible batch processing
-- Logging and error handling
-
-## Environment Variables
-
-| Variable | Description |
-|----------|-------------|
-| `MIXPEEK_API_KEY` | Your API key |
-| `MIXPEEK_NAMESPACE` | Default namespace ID |
-| `MIXPEEK_BASE_URL` | API base URL (default: https://api.mixpeek.com) |
-
-## Troubleshooting
-
-**Plugin validation failed**
-
-Check that your plugin has the required files:
-- `manifest.py` with `metadata` dict and schema exports
-- `pipeline.py` with `build_steps()` function and `extractor_definition` export
-
-Run `mixpeek plugin validate --verbose` for detailed errors.
-
-**Security scan failed**
-
-Review the error messages to identify forbidden operations. Common issues:
-- Using `open()` for file I/O (use provided sandbox methods)
-- Importing `subprocess` or `socket`
-- Using `eval()` or `exec()`
-
-**Upload timeout**
-
-For large plugins (>10MB), increase the timeout:
-```bash
-export MIXPEEK_TIMEOUT=120
-mixpeek plugin publish
-```
+- `subprocess`, `os.system` - System calls
+- `eval`, `exec` - Dynamic code execution
+- `socket` - Direct network access
+- `ctypes` - Low-level memory access
 
 ## Next Steps
 
 <CardGroup cols={2}>
   <Card title="Feature Extractors" icon="microchip" href="/processing/feature-extractors">
-    Learn about built-in extractors
-  </Card>
-  <Card title="Batching" icon="layer-group" href="/processing/batching">
-    Process data in batches
+    See built-in extractors
   </Card>
   <Card title="Pipelines" icon="diagram-project" href="/processing/pipelines">
     Build multi-stage pipelines
-  </Card>
-  <Card title="API Reference" icon="code" href="/api-reference/feature-extractors/list-feature-extractors">
-    View the API documentation
   </Card>
 </CardGroup>
