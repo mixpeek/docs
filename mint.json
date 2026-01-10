@@ -123,6 +123,7 @@
           ]
         },
         "processing/plugins",
+        "processing/model-registry",
         "processing/batching",
         "processing/pipelines"
       ]

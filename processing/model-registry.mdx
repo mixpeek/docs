@@ -1,111 +1,336 @@
 ---
 title: "Model Registry"
-description: "Select, version, and optimize inference models"
+description: "Use built-in models or bring your own custom weights"
 ---
 
-Mixpeek ships with a curated model registry operated on Ray Serve. Rather than fine-tuning models inside the platform, you configure which model to use per extractor or retriever stage, monitor performance, and roll out upgrades safely. This page explains how to select models, manage versions, and optimize latency and cost.
+Mixpeek provides two ways to run inference: **built-in models** served on Ray Serve, and **custom models** that you upload and deploy yourself. This page covers both approaches, with a focus on the custom model workflow for Enterprise users.
 
-## Model Categories
+## Built-in Models
 
-| Category | Examples | Served From | Primary Use |
-|----------|----------|-------------|-------------|
-| Embeddings | `multilingual-e5-large-instruct`, `gte-modernbert-base`, OpenAI `text-embedding-3-*`, `clip_vit_l_14` | Ray Serve (GPU) or external API | Semantic search, multimodal similarity |
-| Sparse | `splade_v1` | Ray Serve (CPU) | Hybrid and lexical search |
-| Multi-Vector | `colbertv2` | Ray Serve (GPU) | Late interaction retrieval |
-| Rerankers | `bge-reranker-v2-m3`, `cross-encoder` | Ray Serve (GPU/CPU) | Reordering search results |
-| Generation | `gpt-4`, `gpt-4-turbo`, `claude-3-opus`, `gemini-pro` | External APIs | Summaries, transformations |
-| Audio | `whisper_large_v3_turbo`, `pyannote-segmentation` | Ray Serve (GPU) | Transcription, diarization |
+Mixpeek ships with a curated set of models optimized for common tasks:
 
-Call `/v1/feature-extractors` and `/v1/retrievers/stages` to discover supported models and parameters programmatically.
+| Category | Examples | Primary Use |
+|----------|----------|-------------|
+| Embeddings | `multilingual-e5-large-instruct`, `gte-modernbert-base`, `clip_vit_l_14` | Semantic search, multimodal similarity |
+| Sparse | `splade_v1` | Hybrid and lexical search |
+| Multi-Vector | `colbertv2` | Late interaction retrieval |
+| Rerankers | `bge-reranker-v2-m3`, `cross-encoder` | Reordering search results |
+| Generation | `gpt-4`, `claude-3-opus`, `gemini-pro` | Summaries, transformations |
+| Audio | `whisper_large_v3_turbo`, `pyannote-segmentation` | Transcription, diarization |
 
-## Choosing a Model
+Call `/v1/feature-extractors` and `/v1/retrievers/stages` to discover supported models programmatically.
 
-### Feature Extractors
+---
+
+## Custom Models (Enterprise)
+
+<Note>
+Custom models require an **Enterprise** tier subscription. Contact sales to upgrade.
+</Note>
+
+Custom models let you bring your own trained weights—fine-tuned embeddings, domain-specific classifiers, or proprietary architectures—and run them on Mixpeek's infrastructure with zero-copy sharing across workers.
+
+### How It Works
+
+1. **Upload** your model archive (`.tar.gz`) containing weights
+2. **Deploy** to the Ray object store for fast access
+3. **Use** in custom plugins via the model loader API
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   Upload    │────▶│   Deploy    │────▶│    Use      │
+│  (S3 store) │     │ (Ray cache) │     │ (Inference) │
+└─────────────┘     └─────────────┘     └─────────────┘
+```
+
+### Supported Formats
+
+| Format | Extension | Description |
+|--------|-----------|-------------|
+| `pytorch` | `.pt`, `.pth` | PyTorch state_dict or TorchScript |
+| `safetensors` | `.safetensors` | SafeTensors format (recommended) |
+| `onnx` | `.onnx` | ONNX Runtime format |
+| `huggingface` | directory | HuggingFace model directory |
+
+---
+
+## Quickstart
+
+### 1. Create a Model Archive
+
+Package your model weights into a `.tar.gz` archive:
+
+```python
+import torch
+import tarfile
+import io
+
+# Train or load your model
+model = torch.nn.Linear(768, 256)
+
+# Save weights
+buffer = io.BytesIO()
+torch.save(model.state_dict(), buffer)
+buffer.seek(0)
+
+# Create archive
+with tarfile.open("my_model.tar.gz", "w:gz") as tar:
+    info = tarfile.TarInfo(name="model.pt")
+    info.size = len(buffer.getvalue())
+    tar.addfile(info, buffer)
+```
+
+### 2. Upload the Model
+
+```bash
+curl -X POST "$MIXPEEK_API_URL/v1/namespaces/$NAMESPACE_ID/models" \
+  -H "Authorization: Bearer $MIXPEEK_API_KEY" \
+  -F "file=@my_model.tar.gz" \
+  -F "name=my-embedding-model" \
+  -F "version=1.0.0" \
+  -F "model_format=pytorch" \
+  -F "framework=pytorch" \
+  -F "task_type=embedding" \
+  -F "num_gpus=0" \
+  -F "memory_gb=4.0"
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "model_id": "my-embedding-model_1_0_0",
+  "deployment_status": "pending",
+  "endpoint": "/models/ns_abc123/my-embedding-model_1_0_0",
+  "model_archive_url": "s3://mixpeek/..."
+}
+```
+
+### 3. Deploy to Ray Object Store
+
+Pre-load your model into the distributed cache for fast inference:
+
+```bash
+curl -X POST "$MIXPEEK_API_URL/v1/namespaces/$NAMESPACE_ID/models/my-embedding-model_1_0_0/deploy" \
+  -H "Authorization: Bearer $MIXPEEK_API_KEY"
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "model_id": "my-embedding-model_1_0_0",
+  "namespace_id": "ns_abc123",
+  "deployment_status": "deployed",
+  "cached": true,
+  "message": "Model my-embedding-model_1_0_0 loaded into Ray object store"
+}
+```
+
+### 4. Use in Custom Plugins
+
+Load your model in a custom plugin with zero-copy access:
+
+```python
+from engine.models.loader import load_namespace_model
+import torch
+
+class MyCustomProcessor:
+    def __init__(self):
+        # Load pre-uploaded weights (cached in Ray object store)
+        weights = load_namespace_model("my-embedding-model_1_0_0")
+
+        # Initialize model architecture
+        self.model = torch.nn.Linear(768, 256)
+        self.model.load_state_dict(weights)
+        self.model.eval()
+
+    def process(self, text_embedding):
+        with torch.no_grad():
+            return self.model(text_embedding)
+```
+
+---
+
+## Examples
+
+### Upload a HuggingFace Model
+
+```bash
+# Package a HuggingFace model directory
+tar -czvf my-bert.tar.gz ./my-bert-model/
+
+# Upload
+curl -X POST "$MIXPEEK_API_URL/v1/namespaces/$NAMESPACE_ID/models" \
+  -H "Authorization: Bearer $MIXPEEK_API_KEY" \
+  -F "file=@my-bert.tar.gz" \
+  -F "name=my-fine-tuned-bert" \
+  -F "version=2.0.0" \
+  -F "model_format=huggingface" \
+  -F "framework=sentence-transformers" \
+  -F "task_type=embedding" \
+  -F "num_gpus=1" \
+  -F "memory_gb=8.0"
+```
+
+### Upload an ONNX Model
+
+```bash
+curl -X POST "$MIXPEEK_API_URL/v1/namespaces/$NAMESPACE_ID/models" \
+  -H "Authorization: Bearer $MIXPEEK_API_KEY" \
+  -F "file=@classifier.tar.gz" \
+  -F "name=product-classifier" \
+  -F "version=1.0.0" \
+  -F "model_format=onnx" \
+  -F "task_type=classification" \
+  -F "num_gpus=0" \
+  -F "memory_gb=2.0"
+```
+
+### List All Models
+
+```bash
+curl "$MIXPEEK_API_URL/v1/namespaces/$NAMESPACE_ID/models" \
+  -H "Authorization: Bearer $MIXPEEK_API_KEY"
+```
 
 ```json
 {
-  "feature_extractor": {
-    "feature_extractor_name": "text_extractor",
-    "version": "v1",
-    "parameters": {
-      "model": "multilingual-e5-large-instruct",
-      "normalize": true
+  "success": true,
+  "models": [
+    {
+      "model_id": "my-embedding-model_1_0_0",
+      "name": "my-embedding-model",
+      "version": "1.0.0",
+      "model_format": "pytorch",
+      "deployed": true,
+      "created_at": "2025-01-10T12:00:00Z"
     }
-  }
+  ],
+  "total": 1
 }
 ```
 
-- `parameters.model` selects the embedding model.
-- Collections compute an `output_schema` reflecting the chosen model’s vector dimensions.
-- Vector field names include the extractor version (e.g., `text_extractor_v1_embedding`).
+### Python SDK Example
 
-### Retriever Stages
+```python
+from mixpeek import Mixpeek
 
-```json
-{
-  "stage_name": "rerank",
-  "version": "v1",
-  "parameters": {
-    "strategy": "cross_encoder",
-    "model": "bge-reranker-v2-m3",
-    "top_k": 20
-  }
-}
+client = Mixpeek(api_key="sk_...")
+
+# Upload model
+with open("my_model.tar.gz", "rb") as f:
+    result = client.models.upload(
+        namespace_id="ns_abc123",
+        file=f,
+        name="my-reranker",
+        version="1.0.0",
+        model_format="pytorch",
+        task_type="reranking",
+    )
+
+# Deploy model
+client.models.deploy(
+    namespace_id="ns_abc123",
+    model_id=result.model_id,
+)
+
+# List models
+models = client.models.list(namespace_id="ns_abc123")
 ```
 
-- Most stages expose a `model` parameter or use the feature URI to infer the model.
-- Stage-level caching (`cache_stage_names`) combined with inference caching shortens repeated requests.
+---
 
-## Versioning Strategy
+## Model Versioning
 
-Models are versioned independently of extractors:
+Models are versioned independently, allowing safe rollouts:
 
 ```
-multilingual_e5_large_instruct_v1
-multilingual_e5_large_instruct_v2
-multilingual_e5_large_instruct_v3
+my-embedding-model_1_0_0  (production)
+my-embedding-model_1_1_0  (staging)
+my-embedding-model_2_0_0  (development)
 ```
 
-Recommended rollout:
+**Recommended rollout process:**
 
-1. Deploy new model version alongside the old one.
-2. Update a staging collection or retriever to reference the new model.
-3. Use Analytics (`/v1/analytics/retrievers/...`) to compare latency and relevance.
-4. Shift traffic gradually (e.g., update a percentage of retrievers).
-5. Deprecate the previous version once validated.
+1. Upload new version alongside existing
+2. Deploy to Ray object store
+3. Update staging plugins to use new version
+4. Monitor performance via Analytics API
+5. Gradually shift production traffic
+6. Delete old versions when validated
 
-Because feature URIs include extractor version, upgrading an extractor typically requires reprocessing documents or creating a new collection.
+---
 
-## Performance & Scaling
+## Resource Requirements
 
-- Ray Serve deployments define autoscaling policies (`min_replicas`, `max_replicas`, target concurrency).
-- GPU workers host embedding and reranking models; CPU workers can serve lighter workloads.
-- Inference caching hashes `(model_name, inputs, parameters)` to skip repeated calls.
-- Stage telemetry (`stage_statistics`) exposes per-stage latency, cache hits, and token usage.
+When uploading, specify resource requirements for optimal scheduling:
 
-## Cost Controls
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `num_cpus` | CPU cores required | 1.0 |
+| `num_gpus` | GPU devices required | 0 |
+| `memory_gb` | Memory allocation in GB | 4.0 |
 
-- Use sparse or hybrid strategies when domain-specific vocabulary matters—dense-only pipelines can miss rare terms.
-- Cache responses for high-volume retrievers to minimize repeated inference.
-- For LLM-based stages, set budget limits via retriever `budget_limits` to cap token spend and execution time.
-- Monitor cache hit rates with `GET /v1/analytics/retrievers/{id}/cache-performance`.
+```bash
+# GPU model with high memory
+-F "num_gpus=1" \
+-F "memory_gb=16.0"
 
-## When You Need Fine-Tuning
+# CPU-only lightweight model
+-F "num_cpus=0.5" \
+-F "num_gpus=0" \
+-F "memory_gb=2.0"
+```
 
-Mixpeek does not yet offer in-platform fine-tuning. If you need domain-specific embeddings or rerankers:
+---
 
-1. Train or fine-tune externally (e.g., Hugging Face, OpenAI, Vertex AI).
-2. Deploy the model to Ray Serve using a custom provider or call the external API directly from stages.
-3. Register the new model name/version in your extractor or retriever configuration.
+## Limits & Quotas
 
-Contact support for professional services if you require managed fine-tuning or custom deployments.
+| Limit | Value |
+|-------|-------|
+| Max models per namespace | 50 |
+| Max archive size | 10 GB |
+| Supported formats | pytorch, safetensors, onnx, huggingface |
+| Required tier | Enterprise |
 
-## Checklist Before Switching Models
+---
 
-1. **Update lower environments** (dev/staging) first; ensure collections reprocess with the new model.
-2. **Validate vector dimensions** match expectations—retrievers must reference the correct feature URI.
-3. **Monitor latency and cache metrics** after rollout.
-4. **Communicate index signature changes** to teams relying on cached responses.
-5. **Plan reindex time** for large collections if the model upgrade changes vector dimensionality.
+## Related APIs
 
-Mixpeek’s model registry lets you evolve retrieval quality continuously without pausing ingestion or rewriting pipelines. Pick the right model for the job, monitor real-time telemetry, and roll out upgrades confidently.
+- [List Models](/api-reference/custom-models/list-models-in-namespace)
+- [Upload Model](/api-reference/custom-models/upload-a-custom-model)
+- [Get Model Details](/api-reference/custom-models/get-model-details)
+- [Deploy Model](/api-reference/custom-models/deploy-model-to-ray-object-store)
+- [Delete Model](/api-reference/custom-models/delete-a-model)
+
+---
+
+## Troubleshooting
+
+### "Custom models require Enterprise tier"
+
+Your organization must be on the Enterprise plan to use custom models. Contact sales to upgrade.
+
+### Model deployment fails
+
+1. Verify the archive format is valid `.tar.gz`
+2. Check that weights match the declared `model_format`
+3. Ensure sufficient memory is allocated
+4. Check engine health via `/v1/health`
+
+### Model not found in plugin
+
+1. Verify the model was deployed (not just uploaded)
+2. Check `deployed: true` in model details
+3. Ensure `namespace_id` matches in plugin configuration
+
+### Slow inference
+
+1. Pre-deploy models before inference to warm the cache
+2. Check `cached: true` in deployment response
+3. Consider increasing `num_gpus` for large models
+
+---
+
+Custom models unlock the full power of Mixpeek's distributed inference infrastructure with your own trained weights. Upload once, deploy to the Ray object store, and access with zero-copy sharing across all your custom plugins.
