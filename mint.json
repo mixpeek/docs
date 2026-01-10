@@ -298,6 +298,18 @@
             "api-reference/namespace-migrations/cancel-migration",
             "api-reference/namespace-migrations/validate-migration"
           ]
+        },
+        {
+          "group": "Plugins",
+          "pages": [
+            "api-reference/custom-plugins-namespace/list-plugins-in-namespace",
+            "api-reference/custom-plugins-namespace/upload-a-custom-plugin",
+            "api-reference/custom-plugins-namespace/get-plugin-details",
+            "api-reference/custom-plugins-namespace/deploy-or-redeploy-a-plugin",
+            "api-reference/custom-plugins-namespace/get-plugin-deployment-status",
+            "api-reference/custom-plugins-namespace/undeploy-a-plugin",
+            "api-reference/custom-plugins-namespace/delete-a-plugin"
+          ]
         }
       ]
     },
