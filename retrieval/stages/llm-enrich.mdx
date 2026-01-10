@@ -333,6 +333,112 @@ Define structured output using JSON Schema:
   Be specific about what to extract and in what format. When using `output_schema`, the LLM will conform to the structure.
 </Tip>
 
+## Bring Your Own Key (BYOK)
+
+Use your own LLM API keys instead of Mixpeek's default keys. This gives you control over costs, rate limits, and API usage.
+
+### Why Use BYOK?
+
+| Benefit | Description |
+|---------|-------------|
+| **Cost Control** | Use your own API credits and billing |
+| **Rate Limits** | Use your own rate limits instead of shared |
+| **Compliance** | Keep API calls under your own account |
+| **Key Rotation** | Rotate keys without changing retrievers |
+
+### Setup
+
+<Steps>
+  <Step title="Store your API key as a secret">
+    Store your LLM provider API key in the organization secrets vault:
+
+    ```bash
+    curl -X POST "https://api.mixpeek.com/v1/organizations/secrets" \
+      -H "Authorization: Bearer YOUR_MIXPEEK_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "secret_name": "openai_api_key",
+        "secret_value": "sk-proj-abc123..."
+      }'
+    ```
+  </Step>
+
+  <Step title="Reference the secret in your stage">
+    Use the `api_key` parameter with template syntax:
+
+    ```json
+    {
+      "stage_type": "apply",
+      "stage_id": "llm_enrich",
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "prompt": "Extract key entities from this document.",
+        "output_field": "entities",
+        "api_key": "{{secrets.openai_api_key}}"
+      }
+    }
+    ```
+  </Step>
+</Steps>
+
+### BYOK Configuration Example
+
+<CodeGroup>
+```json OpenAI BYOK
+{
+  "stage_type": "apply",
+  "stage_id": "llm_enrich",
+  "parameters": {
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "prompt": "Summarize this document in 2-3 sentences.",
+    "output_field": "summary",
+    "api_key": "{{secrets.openai_api_key}}"
+  }
+}
+```
+
+```json Anthropic BYOK
+{
+  "stage_type": "apply",
+  "stage_id": "llm_enrich",
+  "parameters": {
+    "provider": "anthropic",
+    "model": "claude-3-haiku-20240307",
+    "prompt": "Extract the main topics from this content.",
+    "output_field": "topics",
+    "api_key": "{{secrets.anthropic_api_key}}"
+  }
+}
+```
+
+```json Google BYOK
+{
+  "stage_type": "apply",
+  "stage_id": "llm_enrich",
+  "parameters": {
+    "provider": "google",
+    "model": "gemini-2.0-flash",
+    "prompt": "Classify the sentiment of this text.",
+    "output_field": "sentiment",
+    "api_key": "{{secrets.google_api_key}}"
+  }
+}
+```
+</CodeGroup>
+
+### Supported Providers
+
+| Provider | Secret Name Example | Models |
+|----------|---------------------|--------|
+| OpenAI | `openai_api_key` | gpt-4o, gpt-4o-mini |
+| Anthropic | `anthropic_api_key` | claude-3-haiku, claude-3-sonnet, claude-3-opus |
+| Google | `google_api_key` | gemini-2.0-flash, gemini-1.5-pro |
+
+<Note>
+  When `api_key` is not specified, the stage uses Mixpeek's default API keys and usage is charged to your Mixpeek account.
+</Note>
+
 ## Error Handling
 
 | Error | Behavior |
@@ -341,6 +447,7 @@ Define structured output using JSON Schema:
 | Schema validation fail | Raw text in output_field |
 | Rate limit | Automatic backoff |
 | Empty content | Skip enrichment |
+| Invalid API key | Error returned with auth failure |
 
 ## Related
 

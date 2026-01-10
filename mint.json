@@ -310,6 +310,16 @@
             "api-reference/custom-plugins-namespace/undeploy-a-plugin",
             "api-reference/custom-plugins-namespace/delete-a-plugin"
           ]
+        },
+        {
+          "group": "Models",
+          "pages": [
+            "api-reference/custom-models/list-models-in-namespace",
+            "api-reference/custom-models/upload-a-custom-model",
+            "api-reference/custom-models/get-model-details",
+            "api-reference/custom-models/delete-a-model",
+            "api-reference/custom-models/deploy-model-to-ray-object-store"
+          ]
         }
       ]
     },

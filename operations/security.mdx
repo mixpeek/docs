@@ -36,9 +36,97 @@ Keep `internal_id` secret; it is intentionally absent from public APIs.
 
 ## Secrets & Credentials
 
-- Store credentials (MongoDB, Qdrant, Redis, S3, LLM providers) in a managed secret store.
-- Rotate API keys and datastore credentials regularly; audit access logs.
-- Use IAM roles or service accounts for S3/GCS access; avoid hardcoding long-lived keys.
+Mixpeek provides an encrypted secrets vault for storing sensitive credentials like API keys. Secrets are encrypted at rest using Fernet symmetric encryption and are never exposed in API responses.
+
+### Organization Secrets Vault
+
+Store and manage secrets via the API:
+
+<CodeGroup>
+```bash Create a Secret
+curl -X POST "https://api.mixpeek.com/v1/organizations/secrets" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "secret_name": "openai_api_key",
+    "secret_value": "sk-proj-abc123..."
+  }'
+```
+
+```bash List Secrets
+# Returns secret names only - values are never exposed
+curl "https://api.mixpeek.com/v1/organizations/secrets" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+```bash Update a Secret
+curl -X PUT "https://api.mixpeek.com/v1/organizations/secrets/openai_api_key" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "secret_value": "sk-proj-new-key..."
+  }'
+```
+
+```bash Delete a Secret
+curl -X DELETE "https://api.mixpeek.com/v1/organizations/secrets/openai_api_key" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+</CodeGroup>
+
+### Bring Your Own Key (BYOK)
+
+Use your own LLM API keys in retriever stages instead of Mixpeek's default keys. This gives you:
+
+| Benefit | Description |
+|---------|-------------|
+| **Cost Control** | Use your own API credits and billing |
+| **Rate Limits** | Use your own rate limits instead of shared |
+| **Compliance** | Keep API calls under your own account |
+| **Key Rotation** | Rotate keys without modifying retrievers |
+
+#### Supported Providers
+
+| Provider | Secret Name Example | Models |
+|----------|---------------------|--------|
+| OpenAI | `openai_api_key` | gpt-4o, gpt-4o-mini |
+| Anthropic | `anthropic_api_key` | claude-3-haiku, claude-3-sonnet, claude-3-opus |
+| Google | `google_api_key` | gemini-2.0-flash, gemini-1.5-pro |
+
+#### Using BYOK in Retrievers
+
+Reference secrets in LLM stages using template syntax:
+
+```json
+{
+  "stages": [
+    {
+      "stage_type": "apply",
+      "stage_id": "llm_enrich",
+      "parameters": {
+        "provider": "openai",
+        "model": "gpt-4o-mini",
+        "prompt": "Summarize this document.",
+        "output_field": "summary",
+        "api_key": "{{secrets.openai_api_key}}"
+      }
+    }
+  ]
+}
+```
+
+The `{{secrets.secret_name}}` syntax automatically resolves the secret from your organization's vault at runtime.
+
+<Note>
+  When `api_key` is omitted, stages use Mixpeek's default API keys and usage is charged to your Mixpeek account.
+</Note>
+
+### Security Best Practices
+
+- **Rotate credentials regularly** – Update secrets via the API without changing retriever configurations
+- **Use IAM roles** – For S3/GCS access, prefer IAM roles over long-lived access keys
+- **Audit access logs** – Monitor secret access patterns for anomalies
+- **Scope API keys** – Issue environment-specific Mixpeek API keys (dev, staging, prod)
 
 ## Data Protection
 
