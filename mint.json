@@ -199,7 +199,8 @@
           ]
         },
         "retrieval/filters",
-        "retrieval/interactions"
+        "retrieval/interactions",
+        "retrieval/benchmarks"
       ]
     },
     {

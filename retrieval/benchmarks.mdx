@@ -1,0 +1,102 @@
+---
+title: "Benchmarks"
+description: "Compare retriever performance by replaying historical search sessions"
+---
+
+Benchmarks replay real user sessions against multiple retriever configurations to measure how changes affect search quality before deploying to production.
+
+## Create a Benchmark
+
+```bash
+curl -X POST "$MP_API_URL/v1/retrievers/benchmarks" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
+  -d '{
+    "benchmark_name": "semantic_vs_hybrid",
+    "baseline_retriever_id": "ret_semantic_v1",
+    "candidate_retriever_ids": ["ret_hybrid_v1"],
+    "session_filter": {
+      "created_after": "2025-01-01T00:00:00Z",
+      "min_interactions": 1
+    },
+    "session_count": 100
+  }'
+```
+
+| Parameter | Description |
+|-----------|-------------|
+| `baseline_retriever_id` | Your current production retriever |
+| `candidate_retriever_ids` | Configurations to test against baseline |
+| `session_filter` | Which historical sessions to replay |
+| `session_count` | Number of sessions to include |
+
+## Execute Benchmark
+
+```bash
+curl -X POST "$MP_API_URL/v1/retrievers/benchmarks/{benchmark_id}/execute" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE"
+```
+
+Execution progresses through: `PENDING` → `BUILDING_SESSIONS` → `REPLAYING` → `COMPUTING_METRICS` → `COMPLETED`
+
+## Get Results
+
+```bash
+curl "$MP_API_URL/v1/retrievers/benchmarks/{benchmark_id}" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE"
+```
+
+```json
+{
+  "benchmark_id": "bench_abc123",
+  "status": "COMPLETED",
+  "comparison": {
+    "baseline": {
+      "retriever_id": "ret_semantic_v1",
+      "precision_at_10": 0.72,
+      "mrr": 0.81,
+      "avg_latency_ms": 145
+    },
+    "candidates": [
+      {
+        "retriever_id": "ret_hybrid_v1",
+        "precision_at_10": 0.78,
+        "mrr": 0.85,
+        "avg_latency_ms": 168,
+        "delta": { "precision_at_10": "+8.3%", "mrr": "+4.9%" }
+      }
+    ]
+  }
+}
+```
+
+## Metrics
+
+| Metric | Description |
+|--------|-------------|
+| `precision_at_k` | Fraction of top-K results that were relevant |
+| `recall_at_k` | Fraction of relevant items found in top-K |
+| `mrr` | Mean Reciprocal Rank - position of first relevant result |
+| `ndcg_at_k` | Normalized Discounted Cumulative Gain |
+| `avg_latency_ms` | Average execution time |
+
+## Session Filters
+
+| Filter | Description |
+|--------|-------------|
+| `created_after` / `created_before` | Time range for sessions |
+| `retriever_ids` | Only sessions from specific retrievers |
+| `min_interactions` | Minimum user interactions (clicks, feedback) |
+| `has_positive_feedback` | Sessions with positive signals only |
+
+<Note>
+Sessions with [interactions](/retrieval/interactions) provide ground truth for relevance. Use `min_interactions: 1` to ensure meaningful comparison data.
+</Note>
+
+## Limitations
+
+- Replays the query, not real-time user context
+- Relevance inferred from historical interactions
+- Results may vary if collection data changed since original sessions
