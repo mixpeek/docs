@@ -650,6 +650,10 @@
     {
       "source": "/ingestion/entities/taxonomies",
       "destination": "/entities/taxonomies"
+    },
+    {
+      "source": "/api-documentation/inference/embed",
+      "destination": "/processing/extractors/multimodal"
     }
   ]
 }

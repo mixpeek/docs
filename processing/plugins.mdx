@@ -5,28 +5,47 @@ description: "Build and deploy custom feature extractors on Mixpeek infrastructu
 
 ## Overview
 
-Custom plugins let you run your own feature extraction logic on Mixpeek's infrastructure. The framework handles batching, scaling, and GPU allocation - you write the processing code.
+Custom plugins let you run your own feature extraction logic on Mixpeek's infrastructure. You write the processing code - we handle batching, scaling, and GPU allocation.
 
 **Two deployment modes:**
 - **Batch processing** (all accounts): Process files in collections
 - **Realtime inference** (Enterprise): HTTP endpoint for live requests
 
+---
+
 ## Quick Start
 
-```bash
-# 1. Create plugin
-mixpeek plugin init my_extractor --category text
+### 1. Create Your Plugin
 
-# 2. Edit processors/core.py with your logic
-
-# 3. Test locally
-cd my_extractor && mixpeek plugin test
-
-# 4. Upload to namespace
-mixpeek plugin publish --namespace ns_xxx
+```
+my_extractor/
+├── manifest.py      # Schemas + metadata
+├── pipeline.py      # Batch processing
+├── realtime.py      # HTTP endpoint (optional, Enterprise)
+└── processors/
+    └── core.py      # Your logic
 ```
 
-After upload, use in collections:
+### 2. Upload to Mixpeek
+
+```bash
+# Step 1: Get presigned URL
+curl -X POST "https://api.mixpeek.com/v1/namespaces/{namespace_id}/plugins/uploads" \
+  -H "Authorization: Bearer $API_KEY" \
+  -d '{"name": "my_extractor", "version": "1.0.0"}'
+
+# Step 2: Upload your zip
+curl -X PUT "$PRESIGNED_URL" \
+  -H "Content-Type: application/zip" \
+  --data-binary @my_extractor.zip
+
+# Step 3: Confirm upload
+curl -X POST "https://api.mixpeek.com/v1/namespaces/{namespace_id}/plugins/uploads/{upload_id}/confirm" \
+  -H "Authorization: Bearer $API_KEY"
+```
+
+### 3. Use in Collections
+
 ```python
 client.collections.create(
     collection_name="my_collection",
@@ -39,20 +58,13 @@ client.collections.create(
 )
 ```
 
-## Plugin Structure
+---
 
-```
-my_extractor/
-├── manifest.py      # Schemas + metadata
-├── pipeline.py      # Batch processing pipeline
-├── realtime.py      # HTTP endpoint (optional, Enterprise)
-└── processors/
-    └── core.py      # Your logic
-```
+## Plugin Files
 
 ### manifest.py
 
-Defines what your plugin accepts and produces:
+Defines inputs, outputs, and parameters:
 
 ```python
 from pydantic import BaseModel, Field
@@ -66,7 +78,6 @@ class MyOutput(BaseModel):
     label: str
 
 class MyParams(BaseModel):
-    """User-configurable parameters for collections."""
     threshold: float = Field(default=0.5, ge=0, le=1)
 
 metadata = {
@@ -81,10 +92,9 @@ output_schema = MyOutput
 parameter_schema = MyParams
 supported_input_types = ["text"]
 
-# Define output features for vector indexing
 features = [
     {
-        "feature_name": "my_extractor_embedding",
+        "feature_name": "my_embedding",
         "feature_type": "embedding",
         "embedding_dim": 384,
         "distance_metric": "cosine",
@@ -111,307 +121,293 @@ class MyProcessor:
 
     def _load_model(self):
         if self._model is None:
-            # Load once, reuse for all batches
             from sentence_transformers import SentenceTransformer
             self._model = SentenceTransformer("all-MiniLM-L6-v2")
 
     def __call__(self, batch: pd.DataFrame) -> pd.DataFrame:
-        """Process batch. Framework handles batch sizing."""
         self._load_model()
-
         texts = batch["text"].fillna("").tolist()
         embeddings = self._model.encode(texts).tolist()
-
-        batch["my_extractor_embedding"] = embeddings
-        batch["label"] = ["positive" if e[0] > self.config.threshold else "negative" for e in embeddings]
+        batch["my_embedding"] = embeddings
         return batch
 ```
 
 ### pipeline.py
 
-Wire processor into the pipeline:
+Wire your processor into the pipeline:
 
 ```python
-from typing import Any, Dict, Optional
 from engine.plugins.extractors.pipeline import (
     PipelineDefinition, ResourceType, RowCondition, StepDefinition, build_pipeline_steps
 )
 from .manifest import MyParams, metadata
 from .processors.core import MyConfig, MyProcessor
 
-def build_steps(
-    extractor_request: Any,
-    container: Optional[Any] = None,
-    base_steps: Optional[list] = None,
-    **kwargs
-) -> Dict[str, Any]:
+def build_steps(extractor_request, **kwargs):
     params = MyParams(**(extractor_request.extractor_config.parameters or {}))
 
     steps = [
         StepDefinition(
             service_class=MyProcessor,
-            resource_type=ResourceType.CPU,  # or GPU, API
+            resource_type=ResourceType.CPU,
             config=MyConfig(threshold=params.threshold),
             condition=RowCondition.IS_TEXT,
         ),
     ]
 
-    pipeline = PipelineDefinition(name=metadata["feature_extractor_name"], version=metadata["version"], steps=steps)
-    return {"steps": (base_steps or []) + build_pipeline_steps(pipeline), "prepare": lambda ds: ds}
+    pipeline = PipelineDefinition(
+        name=metadata["feature_extractor_name"],
+        version=metadata["version"],
+        steps=steps
+    )
+    return {"steps": build_pipeline_steps(pipeline)}
 ```
 
-### realtime.py (Enterprise)
+### realtime.py (Enterprise Only)
 
 For HTTP inference endpoint:
 
 ```python
-from typing import Any, Dict
-
 class RealtimeHandler:
     def __init__(self):
         self._model = None
 
-    def predict(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    def predict(self, request: dict) -> dict:
         if self._model is None:
             from sentence_transformers import SentenceTransformer
             self._model = SentenceTransformer("all-MiniLM-L6-v2")
 
         text = request.get("text", "")
         embedding = self._model.encode([text])[0].tolist()
-        return {"embedding": embedding, "label": "positive" if embedding[0] > 0.5 else "negative"}
+        return {"embedding": embedding}
 ```
 
-## API Reference
+---
 
-### Upload Plugin (Presigned URL)
+## Using Built-in Models
 
-**Step 1: Get upload URL**
+Compose existing Mixpeek services instead of writing from scratch:
+
+```python
+# Option 1: Direct import
+from engine.inference.intfloat.multilingual_e5_large_instruct.services import E5TextEmbeddingBatch
+
+# Option 2: Unified registry (recommended)
+from shared.inference.registry import get_batch_service
+E5Batch = get_batch_service("intfloat/multilingual-e5-large-instruct")
+```
+
+**Example: Audio transcription + embedding pipeline**
+
+```python
+from shared.inference.registry import get_batch_service
+
+WhisperBatch = get_batch_service("openai/whisper-large-v3-turbo")
+E5Batch = get_batch_service("intfloat/multilingual-e5-large-instruct")
+
+def build_steps(extractor_request, **kwargs):
+    steps = [
+        StepDefinition(
+            service_class=WhisperBatch,
+            resource_type=ResourceType.API,
+            config=WhisperConfig(output_column_name="transcription"),
+            condition=RowCondition.IS_AUDIO,
+        ),
+        StepDefinition(
+            service_class=E5Batch,
+            resource_type=ResourceType.CPU,
+            config=E5Config(text_column="transcription"),
+        ),
+    ]
+    return {"steps": build_pipeline_steps(PipelineDefinition(name="transcribe", version="v1", steps=steps))}
+```
+
+**Available services:**
+
+| Service ID | Category | Use Case |
+|------------|----------|----------|
+| `intfloat/multilingual-e5-large-instruct` | Embedding | Text embeddings (1024 dims) |
+| `google/siglip-base-patch16-224` | Embedding | Image embeddings |
+| `openai/whisper-large-v3-turbo` | Transcription | Audio to text |
+| `BAAI/bge-reranker-v2-m3` | Reranking | Result reordering |
+| `jinaai/jina-embeddings-v2-base-code` | Embedding | Code embeddings |
+
+---
+
+## Deployment Lifecycle
+
+### Deploy (Enterprise)
+
 ```bash
-curl -X POST "https://api.mixpeek.com/v1/namespaces/ns_xxx/plugins/uploads" \
-  -H "Authorization: Bearer $API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"name": "my_extractor", "version": "1.0.0"}'
-```
-
-Response:
-```json
-{
-  "upload_id": "plu_abc123",
-  "presigned_url": "https://s3.amazonaws.com/...",
-  "expires_at": "2024-01-15T12:00:00Z"
-}
-```
-
-**Step 2: Upload archive**
-```bash
-curl -X PUT "$PRESIGNED_URL" \
-  -H "Content-Type: application/zip" \
-  --data-binary @my_extractor.zip
-```
-
-**Step 3: Confirm upload**
-```bash
-curl -X POST "https://api.mixpeek.com/v1/namespaces/ns_xxx/plugins/uploads/plu_abc123/confirm" \
+curl -X POST "https://api.mixpeek.com/v1/namespaces/{namespace_id}/plugins/{plugin_id}/deploy" \
   -H "Authorization: Bearer $API_KEY"
-```
-
-Response:
-```json
-{
-  "success": true,
-  "plugin_id": "my_extractor_1_0_0",
-  "validation_status": "passed",
-  "feature_uri": "mixpeek://my_extractor@1.0.0"
-}
-```
-
-### Deploy Plugin (Enterprise)
-
-```bash
-curl -X POST "https://api.mixpeek.com/v1/namespaces/ns_xxx/plugins/my_extractor_1_0_0/deploy" \
-  -H "Authorization: Bearer $API_KEY"
-```
-
-Response:
-```json
-{
-  "status": "queued",
-  "message": "Plugin queued for deployment. Will start within 30 seconds.",
-  "route_prefix": "/inference/custom_plugin_ns_xxx_my_extractor_1_0_0",
-  "estimated_completion_seconds": 210
-}
 ```
 
 ### Check Status
 
 ```bash
-curl "https://api.mixpeek.com/v1/namespaces/ns_xxx/plugins/my_extractor_1_0_0/status" \
+curl "https://api.mixpeek.com/v1/namespaces/{namespace_id}/plugins/{plugin_id}/status" \
   -H "Authorization: Bearer $API_KEY"
 ```
 
 **Status values:**
-| Status | Meaning |
-|--------|---------|
-| `QUEUED` | Waiting in deployment queue (max 30s) |
-| `PENDING` | Deployment triggered, waiting for Anyscale |
-| `IN_PROGRESS` | Blue-green rollout happening |
-| `DEPLOYED` | Ready for realtime inference |
-| `FAILED` | Check `error` field |
-| `NOT_DEPLOYED` | Batch-only, no realtime endpoint |
 
-### Delete Plugin
+| Status | Description |
+|--------|-------------|
+| `QUEUED` | Waiting in deployment queue (~30s) |
+| `PENDING` | Deployment triggered |
+| `IN_PROGRESS` | Blue-green rollout in progress |
+| `DEPLOYED` | Ready for realtime inference |
+| `FAILED` | Check `error` field for details |
+| `NOT_DEPLOYED` | Batch-only mode (no realtime endpoint) |
+
+### Undeploy
+
+Stops the realtime endpoint but keeps the plugin:
 
 ```bash
-curl -X DELETE "https://api.mixpeek.com/v1/namespaces/ns_xxx/plugins/my_extractor_1_0_0" \
+curl -X POST "https://api.mixpeek.com/v1/namespaces/{namespace_id}/plugins/{plugin_id}/undeploy" \
   -H "Authorization: Bearer $API_KEY"
 ```
 
-Response includes `deployment_removed: true` if Ray Serve endpoint was queued for removal.
+### Delete
+
+Removes the plugin entirely:
+
+```bash
+curl -X DELETE "https://api.mixpeek.com/v1/namespaces/{namespace_id}/plugins/{plugin_id}" \
+  -H "Authorization: Bearer $API_KEY"
+```
+
+Response includes `deployment_removed: true` if realtime endpoint was removed.
+
+---
 
 ## Resource Types
 
 | Type | Use For | Auto-config |
 |------|---------|-------------|
-| `ResourceType.CPU` | Text embeddings, classification | Batch size ~64 |
-| `ResourceType.GPU` | Local models (Whisper, CLIP) | Batch size ~8, GPU allocation |
+| `ResourceType.CPU` | Text embeddings, classification | Batch ~64 |
+| `ResourceType.GPU` | Local models (Whisper, CLIP) | Batch ~8, GPU allocation |
 | `ResourceType.API` | External APIs (OpenAI, Vertex) | Concurrent requests |
 
 ## Row Conditions
 
 Filter which rows your processor handles:
 
-```python
-RowCondition.IS_TEXT       # text/* MIME types
-RowCondition.IS_IMAGE      # image/* MIME types
-RowCondition.IS_VIDEO      # video/* MIME types
-RowCondition.IS_AUDIO      # audio/* MIME types
-RowCondition.IS_PDF        # application/pdf
-RowCondition.ALWAYS        # All rows (default)
-```
+| Condition | Matches |
+|-----------|---------|
+| `RowCondition.IS_TEXT` | text/* MIME types |
+| `RowCondition.IS_IMAGE` | image/* MIME types |
+| `RowCondition.IS_VIDEO` | video/* MIME types |
+| `RowCondition.IS_AUDIO` | audio/* MIME types |
+| `RowCondition.IS_PDF` | application/pdf |
+| `RowCondition.ALWAYS` | All rows (default) |
 
-## Using Built-in Services
-
-Compose existing services instead of writing from scratch:
-
-```python
-from engine.inference.openai.whisper_api.services import WhisperTranscriptionBatch
-from engine.inference.intfloat.multilingual_e5_large_instruct.services import E5TextEmbeddingBatch
-
-def build_steps(extractor_request, **kwargs):
-    steps = [
-        StepDefinition(
-            service_class=WhisperTranscriptionBatch,
-            resource_type=ResourceType.API,
-            config=WhisperConfig(output_column_name="transcription"),
-            condition=RowCondition.IS_AUDIO,
-        ),
-        StepDefinition(
-            service_class=E5TextEmbeddingBatch,
-            resource_type=ResourceType.CPU,
-            config=E5Config(text_column="transcription", output_column_name="embedding"),
-        ),
-    ]
-    return {"steps": build_pipeline_steps(PipelineDefinition(name="transcribe_embed", version="v1", steps=steps))}
-```
+---
 
 ## Security Requirements
 
-Plugins are scanned using AST analysis before upload confirmation. Code that violates these rules will be rejected.
+Plugins are scanned before upload confirmation. Code violating these rules is rejected.
 
 ### Allowed Imports
 
-These libraries are safe to use in your plugins:
-
 | Category | Libraries |
 |----------|-----------|
-| **Data Processing** | `numpy`, `pandas`, `polars`, `pyarrow` |
-| **ML/AI** | `torch`, `transformers`, `sentence_transformers`, `onnxruntime`, `safetensors` |
-| **Image Processing** | `PIL`/`pillow`, `cv2`/`opencv-python`, `imageio` |
-| **Audio/Video** | `librosa`, `soundfile`, `ffmpeg-python` |
-| **HTTP Clients** | `requests`, `httpx`, `aiohttp` |
-| **Utilities** | `json`, `re`, `typing`, `dataclasses`, `pydantic`, `logging` |
-| **Mixpeek SDK** | `shared.models.loader.load_namespace_model` |
+| Data | `numpy`, `pandas`, `polars`, `pyarrow` |
+| ML/AI | `torch`, `transformers`, `sentence_transformers`, `onnxruntime` |
+| Image | `PIL`, `cv2`, `imageio` |
+| Audio | `librosa`, `soundfile`, `ffmpeg-python` |
+| HTTP | `requests`, `httpx`, `aiohttp` |
+| Utils | `json`, `re`, `typing`, `dataclasses`, `pydantic`, `logging` |
 
-### Forbidden Imports
-
-These imports are blocked for security reasons:
+### Forbidden (Security)
 
 | Category | Blocked | Reason |
 |----------|---------|--------|
-| **Process Execution** | `subprocess`, `os.system`, `os.popen`, `os.spawn*`, `os.exec*` | Shell execution |
-| **Low-level Access** | `ctypes`, `pty`, `fcntl`, `resource` | Memory/system access |
-| **Concurrency** | `multiprocessing`, `threading` | Use Ray instead |
-| **Network** | `socket` | Use `requests`/`httpx` instead |
-| **Legacy** | `commands`, `popen2` | Deprecated Python 2 modules |
+| Execution | `subprocess`, `os.system`, `eval`, `exec` | Shell/code execution |
+| System | `ctypes`, `socket`, `multiprocessing` | Low-level access |
+| Builtins | `open`, `setattr`, `getattr`, `__import__` | File/attribute manipulation |
 
-### Forbidden Builtins
+<Accordion title="Full list of forbidden patterns">
 
-These built-in functions cannot be used:
+**Forbidden imports:**
+- `subprocess`, `os.system`, `os.popen`, `os.spawn*`, `os.exec*`
+- `ctypes`, `pty`, `fcntl`, `resource`
+- `multiprocessing`, `threading`, `socket`
+- `commands`, `popen2`
 
-| Function | Reason |
-|----------|--------|
-| `eval()`, `exec()`, `compile()` | Dynamic code execution |
-| `open()` | Direct file access (use provided APIs) |
-| `__import__()` | Dynamic imports |
-| `globals()`, `locals()`, `vars()` | Namespace manipulation |
-| `getattr()`, `setattr()`, `delattr()`, `hasattr()` | Attribute manipulation |
+**Forbidden builtins:**
+- `eval()`, `exec()`, `compile()`
+- `open()`
+- `__import__()`
+- `globals()`, `locals()`, `vars()`
+- `getattr()`, `setattr()`, `delattr()`, `hasattr()`
 
-### Forbidden Module Functions
+**Forbidden module functions:**
+- `os.system`, `os.popen`, `os.spawn`, `os.exec`, `os.fork`, `os.kill`
+- `importlib.import_module`
+- `pickle.loads`, `pickle.load`
+- `marshal.loads`, `marshal.load`
 
-| Module | Blocked Functions |
-|--------|-------------------|
-| `os` | `system`, `popen`, `spawn`, `exec`, `fork`, `kill`, `killpg` |
-| `importlib` | `import_module`, `__import__` |
-| `pickle` | `loads`, `load` (arbitrary code execution risk) |
-| `marshal` | `loads`, `load` |
+</Accordion>
 
-### Warning Patterns
+### Validation Error Example
 
-These patterns generate warnings and may fail in strict mode:
-- `pickle`, `marshal`, `shelve` usage
-- Dunder attribute access: `__builtins__`, `__class__`, `__bases__`, `__subclasses__`, `__mro__`, `__code__`, `__globals__`
-
-### Validation Errors
-
-If your plugin fails validation, the API returns:
 ```json
 {
-  "detail": "Security scan failed",
-  "violations": [
+  "success": false,
+  "validation_errors": [
     {
       "file": "processors/core.py",
       "line": 15,
-      "column": 0,
-      "message": "Forbidden import: subprocess",
-      "severity": "error"
+      "message": "Forbidden import: subprocess"
     }
   ]
 }
 ```
 
+---
+
 ## Feature URI
 
-After deployment, reference your plugin with:
+After upload, reference your plugin with:
+
 ```
-mixpeek://my_extractor@1.0.0
+mixpeek://my_extractor@1.0.0/my_embedding
 ```
 
 This URI is **organization-scoped** - two orgs can have the same plugin name without collision.
 
+---
+
 ## Namespace Isolation
 
 Plugins are isolated per namespace:
-- **MongoDB**: `internal_id` scoping ensures org isolation
-- **S3**: Archives stored at `org_id/ns_id/plugin_custom/...`
-- **Ray Serve**: Deployment names include namespace prefix to prevent collisions
 
-## CLI Commands
+| Layer | Isolation |
+|-------|-----------|
+| MongoDB | `internal_id` scoping |
+| S3 | `org_id/ns_id/plugin_custom/...` |
+| Ray Serve | Namespace prefix in deployment names |
 
-| Command | Description |
-|---------|-------------|
-| `mixpeek plugin init <name>` | Create plugin from template |
-| `mixpeek plugin test` | Validate and test locally |
-| `mixpeek plugin publish` | Upload to namespace |
-| `mixpeek plugin list` | List plugins in namespace |
+---
 
-See [Mixpeek CLI](/integrations/developer-tools/mixpeek-cli) for full reference.
+## Troubleshooting
+
+### Plugin validation failed
+
+Check the `validation_errors` array in the confirm response. Common issues:
+- Using `setattr()` or `getattr()` - use class attributes instead
+- Importing `subprocess` - use `requests` or `httpx` for HTTP calls
+- Using `open()` - use provided data loading APIs
+
+### Deployment stuck in QUEUED
+
+Deployments are batched every 30 seconds. Wait up to 3-4 minutes for the blue-green rollout to complete.
+
+### Plugin not found in collection
+
+1. Verify upload was confirmed successfully
+2. Check plugin is in the correct namespace
+3. Ensure `feature_extractor_name` and `version` match exactly
