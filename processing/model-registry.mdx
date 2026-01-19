@@ -1,13 +1,21 @@
 ---
 title: "Model Registry"
-description: "Use built-in models or bring your own custom weights"
+description: "Use built-in models, HuggingFace models with cluster caching, or bring your own custom weights"
 ---
 
-Mixpeek provides two ways to run inference: **built-in models** served on Ray Serve, and **custom models** that you upload and deploy yourself. This page covers both approaches, with a focus on the custom model workflow for Enterprise users.
+Mixpeek provides multiple ways to run inference with ML models:
+
+1. **Built-in Models** - Pre-configured models served on Ray Serve
+2. **HuggingFace Models** - Any HF model with automatic cluster-wide caching
+3. **Custom Models (Enterprise)** - Your own uploaded weights via S3
+
+This page covers all approaches, including the **LazyModelMixin** for efficient model loading in plugins.
+
+---
 
 ## Built-in Models
 
-Mixpeek ships with a curated set of models optimized for common tasks:
+Mixpeek ships with curated models optimized for common tasks:
 
 | Category | Examples | Primary Use |
 |----------|----------|-------------|
@@ -22,19 +30,263 @@ Call `/v1/feature-extractors` and `/v1/retrievers/stages` to discover supported 
 
 ---
 
+## HuggingFace Models with Cluster Caching
+
+Load any HuggingFace model with automatic cluster-wide caching. The ModelRegistry downloads the model once and shares it across all actors via Ray's object store.
+
+### Direct Loading
+
+```python
+from engine.models.loader import load_hf_model
+
+class MyProcessor:
+    def __init__(self, config, **kwargs):
+        self._model = None
+        self._tokenizer = None
+        self.config = config
+
+    def _ensure_model_loaded(self):
+        if self._model is not None:
+            return
+
+        # Loads from HF (first time) or Ray cache (subsequent calls)
+        cached = load_hf_model(
+            hf_model_id="intfloat/multilingual-e5-large-instruct",
+            model_class="AutoModel",
+            tokenizer_class="AutoTokenizer",
+            torch_dtype="float16",
+        )
+
+        # Instantiate from cached state dict
+        from transformers import AutoModel, AutoConfig, AutoTokenizer
+
+        config = AutoConfig.from_dict(cached["config"])
+        self._model = AutoModel.from_config(config)
+        self._model.load_state_dict(cached["state_dict"])
+        self._model.to("cuda")
+        self._model.eval()
+
+        # Load tokenizer
+        self._tokenizer = AutoTokenizer.from_pretrained(
+            cached["tokenizer_config"]["tokenizer_dir"]
+        )
+
+    def __call__(self, batch):
+        self._ensure_model_loaded()
+        # Use self._model and self._tokenizer...
+```
+
+### Return Value
+
+`load_hf_model()` returns a dictionary containing:
+
+```python
+{
+    "state_dict": dict,          # Model weights (load with model.load_state_dict())
+    "config": dict,              # Model config (use with AutoConfig.from_dict())
+    "tokenizer_config": {        # Tokenizer info (if tokenizer_class provided)
+        "tokenizer_dir": str,    # Path to tokenizer files
+        "class": str,            # Tokenizer class name
+    },
+    "model_class": str,          # The model class used
+    "hf_model_id": str,          # The HuggingFace model ID
+}
+```
+
+### Async Loading for Parallel Models
+
+Load multiple models in parallel with the async API:
+
+```python
+from engine.models.loader import load_hf_model_async
+import ray
+
+# Start loading both models in parallel
+refs = [
+    load_hf_model_async("intfloat/multilingual-e5-large-instruct"),
+    load_hf_model_async("openai/clip-vit-large-patch14"),
+]
+
+# Wait for both to complete
+e5_data, clip_data = ray.get(refs)
+```
+
+### Check Cache Status
+
+```python
+from engine.models.loader import is_hf_model_cached
+
+if is_hf_model_cached("intfloat/multilingual-e5-large-instruct"):
+    print("Model already cached in cluster")
+```
+
+---
+
+## LazyModelMixin (Recommended)
+
+The `LazyModelMixin` provides automatic lazy loading with cluster-wide caching. Models only load when first needed, not at actor creation time.
+
+### Benefits
+
+- **Resource Efficiency**: Models load on first batch, not at actor creation
+- **Cluster Caching**: One download shared across all actors
+- **Zero-Copy Sharing**: Ray object store provides zero-copy access
+- **Automatic Device Detection**: Finds CUDA, MPS, or CPU automatically
+
+### Usage
+
+```python
+from engine.models.lazy import LazyModelMixin
+from engine.inference.services import BaseBatchInferenceService
+
+class MyEmbeddingProcessor(LazyModelMixin, BaseBatchInferenceService):
+    # Configure model via class attributes
+    model_id = "intfloat/multilingual-e5-large-instruct"
+    model_class = "AutoModel"
+    tokenizer_class = "AutoTokenizer"
+    torch_dtype = "float16"
+    model_source = "huggingface"  # or "namespace" for S3 models
+
+    def __init__(self, config, **kwargs):
+        super().__init__(**kwargs)
+        self.config = config
+        # Don't load model here - LazyModelMixin handles it
+
+    def _process_batch(self, batch):
+        # Model is automatically loaded on first call
+        model, tokenizer = self.get_model()
+
+        # Process batch
+        inputs = tokenizer(
+            batch["text"].tolist(),
+            padding=True,
+            truncation=True,
+            return_tensors="pt",
+        )
+
+        with torch.no_grad():
+            outputs = model(**inputs)
+
+        batch["embedding"] = outputs.last_hidden_state.mean(dim=1).tolist()
+        return batch
+```
+
+### Class Attributes
+
+| Attribute | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `model_id` | str | `""` | HuggingFace model ID or namespace model ID |
+| `model_class` | str | `"AutoModel"` | Transformers model class name |
+| `tokenizer_class` | str \| None | `"AutoTokenizer"` | Tokenizer class, or None to skip |
+| `torch_dtype` | str | `"float32"` | Torch dtype: "float16", "float32", "bfloat16" |
+| `model_source` | str | `"huggingface"` | "huggingface" or "namespace" |
+
+### Methods
+
+| Method | Description |
+|--------|-------------|
+| `get_model()` | Returns `(model, tokenizer)` tuple, loading if needed |
+| `ensure_model_loaded()` | Explicitly trigger model loading |
+| `model` | Property access to model |
+| `tokenizer` | Property access to tokenizer |
+
+### Custom Model Instantiation
+
+Override `_instantiate_model()` for custom loading logic:
+
+```python
+class MyCustomProcessor(LazyModelMixin, BaseBatchInferenceService):
+    model_id = "my-custom-model"
+    model_source = "namespace"  # Load from S3
+
+    def _instantiate_model(self, cached_data):
+        """Custom instantiation for non-standard models."""
+        import torch
+
+        # Create your model architecture
+        model = torch.nn.Sequential(
+            torch.nn.Linear(768, 512),
+            torch.nn.ReLU(),
+            torch.nn.Linear(512, 256),
+        )
+
+        # Load weights from cached data
+        model.load_state_dict(cached_data)
+        model.to(self._detect_device())
+        model.eval()
+
+        return model, None  # No tokenizer
+```
+
+---
+
+## @lazy_model Decorator
+
+For simpler cases, use the `@lazy_model` decorator instead of the mixin:
+
+```python
+from engine.models.lazy import lazy_model
+
+class MyProcessor:
+    def __init__(self, config, **kwargs):
+        self.config = config
+        self._model = None
+        self._tokenizer = None
+
+    @lazy_model(
+        model_id="intfloat/multilingual-e5-large-instruct",
+        model_class="AutoModel",
+        tokenizer_class="AutoTokenizer",
+        torch_dtype="float16",
+    )
+    def __call__(self, batch):
+        # self._model and self._tokenizer are automatically available
+        inputs = self._tokenizer(
+            batch["text"].tolist(),
+            return_tensors="pt",
+            padding=True,
+        )
+
+        with torch.no_grad():
+            outputs = self._model(**inputs)
+
+        batch["embedding"] = outputs.last_hidden_state.mean(dim=1).tolist()
+        return batch
+```
+
+### Decorator Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `model_id` | str | required | HuggingFace or namespace model ID |
+| `model_class` | str | `"AutoModel"` | Transformers model class |
+| `tokenizer_class` | str \| None | `"AutoTokenizer"` | Tokenizer class |
+| `torch_dtype` | str | `"float32"` | Torch dtype |
+| `model_source` | str | `"huggingface"` | "huggingface" or "namespace" |
+
+### Available Attributes After Decoration
+
+The decorator sets these attributes on `self`:
+
+- `self._model` - The loaded model
+- `self._tokenizer` - The loaded tokenizer (or None)
+- `self._device` - The device the model is on ("cuda", "mps", or "cpu")
+
+---
+
 ## Custom Models (Enterprise)
 
 <Note>
 Custom models require an **Enterprise** tier subscription. Contact sales to upgrade.
 </Note>
 
-Custom models let you bring your own trained weights—fine-tuned embeddings, domain-specific classifiers, or proprietary architectures—and run them on Mixpeek's infrastructure with zero-copy sharing across workers.
+Upload your own trained weights—fine-tuned embeddings, domain-specific classifiers, or proprietary architectures—and run them on Mixpeek's infrastructure.
 
 ### How It Works
 
 1. **Upload** your model archive (`.tar.gz`) containing weights
 2. **Deploy** to the Ray object store for fast access
-3. **Use** in custom plugins via the model loader API
+3. **Use** in custom plugins via `load_namespace_model()`
 
 ```
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
@@ -52,37 +304,13 @@ Custom models let you bring your own trained weights—fine-tuned embeddings, do
 | `onnx` | `.onnx` | ONNX Runtime format |
 | `huggingface` | directory | HuggingFace model directory |
 
----
-
-## Quickstart
-
-### 1. Create a Model Archive
-
-Package your model weights into a `.tar.gz` archive:
-
-```python
-import torch
-import tarfile
-import io
-
-# Train or load your model
-model = torch.nn.Linear(768, 256)
-
-# Save weights
-buffer = io.BytesIO()
-torch.save(model.state_dict(), buffer)
-buffer.seek(0)
-
-# Create archive
-with tarfile.open("my_model.tar.gz", "w:gz") as tar:
-    info = tarfile.TarInfo(name="model.pt")
-    info.size = len(buffer.getvalue())
-    tar.addfile(info, buffer)
-```
-
-### 2. Upload the Model
+### Upload a Custom Model
 
 ```bash
+# Create archive
+tar -czvf my_model.tar.gz ./model_weights/
+
+# Upload
 curl -X POST "$MIXPEEK_API_URL/v1/namespaces/$NAMESPACE_ID/models" \
   -H "Authorization: Bearer $MIXPEEK_API_KEY" \
   -F "file=@my_model.tar.gz" \
@@ -95,123 +323,135 @@ curl -X POST "$MIXPEEK_API_URL/v1/namespaces/$NAMESPACE_ID/models" \
   -F "memory_gb=4.0"
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "model_id": "my-embedding-model_1_0_0",
-  "deployment_status": "pending",
-  "endpoint": "/models/ns_abc123/my-embedding-model_1_0_0",
-  "model_archive_url": "s3://mixpeek/..."
-}
-```
-
-### 3. Deploy to Ray Object Store
-
-Pre-load your model into the distributed cache for fast inference:
+### Deploy to Ray Object Store
 
 ```bash
 curl -X POST "$MIXPEEK_API_URL/v1/namespaces/$NAMESPACE_ID/models/my-embedding-model_1_0_0/deploy" \
   -H "Authorization: Bearer $MIXPEEK_API_KEY"
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "model_id": "my-embedding-model_1_0_0",
-  "namespace_id": "ns_abc123",
-  "deployment_status": "deployed",
-  "cached": true,
-  "message": "Model my-embedding-model_1_0_0 loaded into Ray object store"
-}
+### Use in Plugins
+
+#### With LazyModelMixin
+
+```python
+from engine.models.lazy import LazyModelMixin
+
+class MyCustomProcessor(LazyModelMixin, BaseBatchInferenceService):
+    model_id = "my-embedding-model_1_0_0"
+    model_source = "namespace"  # Load from S3
+
+    def _instantiate_model(self, weights):
+        """Custom instantiation for S3 models."""
+        import torch
+
+        model = torch.nn.Linear(768, 256)
+        model.load_state_dict(weights)
+        model.to(self._detect_device())
+        model.eval()
+        return model, None
+
+    def _process_batch(self, batch):
+        model, _ = self.get_model()
+        # Use model...
 ```
 
-### 4. Use in Custom Plugins
-
-Load your model in a custom plugin with zero-copy access:
+#### With Direct Loading
 
 ```python
 from engine.models.loader import load_namespace_model
-import torch
 
 class MyCustomProcessor:
-    def __init__(self):
-        # Load pre-uploaded weights (cached in Ray object store)
+    def __init__(self, config):
+        self._model = None
+
+    def _ensure_model_loaded(self):
+        if self._model is not None:
+            return
+
+        # Load from S3 (cached in Ray object store)
         weights = load_namespace_model("my-embedding-model_1_0_0")
 
-        # Initialize model architecture
-        self.model = torch.nn.Linear(768, 256)
-        self.model.load_state_dict(weights)
-        self.model.eval()
+        self._model = torch.nn.Linear(768, 256)
+        self._model.load_state_dict(weights)
+        self._model.eval()
 
-    def process(self, text_embedding):
-        with torch.no_grad():
-            return self.model(text_embedding)
+    def __call__(self, batch):
+        self._ensure_model_loaded()
+        # Use self._model...
 ```
 
 ---
 
-## Examples
+## Choosing the Right Approach
 
-### Upload a HuggingFace Model
+| Approach | Use Case | Caching |
+|----------|----------|---------|
+| **Built-in Models** | Common tasks, no custom training | Pre-deployed |
+| **HuggingFace + LazyModelMixin** | Standard HF models, easy setup | Cluster-wide |
+| **HuggingFace + load_hf_model()** | Custom instantiation logic needed | Cluster-wide |
+| **Namespace Models** | Fine-tuned or proprietary weights | Cluster-wide |
+
+### Decision Tree
+
+```
+Need a model?
+├── Is it a common task (embeddings, transcription, etc.)?
+│   └── Use built-in models
+├── Is it a standard HuggingFace model?
+│   ├── Simple usage → LazyModelMixin or @lazy_model
+│   └── Custom logic → load_hf_model() + manual instantiation
+└── Is it custom/fine-tuned weights?
+    └── Upload to namespace → LazyModelMixin with model_source="namespace"
+```
+
+---
+
+## Model Versioning
+
+Models are versioned independently for safe rollouts:
+
+```
+my-embedding-model_1_0_0  (production)
+my-embedding-model_1_1_0  (staging)
+my-embedding-model_2_0_0  (development)
+```
+
+**Recommended rollout process:**
+
+1. Upload new version alongside existing
+2. Deploy to Ray object store
+3. Update staging plugins to use new version
+4. Monitor performance via Analytics API
+5. Gradually shift production traffic
+6. Delete old versions when validated
+
+---
+
+## Resource Requirements
+
+When uploading custom models, specify resource requirements:
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `num_cpus` | CPU cores required | 1.0 |
+| `num_gpus` | GPU devices required | 0 |
+| `memory_gb` | Memory allocation in GB | 4.0 |
 
 ```bash
-# Package a HuggingFace model directory
-tar -czvf my-bert.tar.gz ./my-bert-model/
+# GPU model with high memory
+-F "num_gpus=1" \
+-F "memory_gb=16.0"
 
-# Upload
-curl -X POST "$MIXPEEK_API_URL/v1/namespaces/$NAMESPACE_ID/models" \
-  -H "Authorization: Bearer $MIXPEEK_API_KEY" \
-  -F "file=@my-bert.tar.gz" \
-  -F "name=my-fine-tuned-bert" \
-  -F "version=2.0.0" \
-  -F "model_format=huggingface" \
-  -F "framework=sentence-transformers" \
-  -F "task_type=embedding" \
-  -F "num_gpus=1" \
-  -F "memory_gb=8.0"
+# CPU-only lightweight model
+-F "num_cpus=0.5" \
+-F "num_gpus=0" \
+-F "memory_gb=2.0"
 ```
 
-### Upload an ONNX Model
+---
 
-```bash
-curl -X POST "$MIXPEEK_API_URL/v1/namespaces/$NAMESPACE_ID/models" \
-  -H "Authorization: Bearer $MIXPEEK_API_KEY" \
-  -F "file=@classifier.tar.gz" \
-  -F "name=product-classifier" \
-  -F "version=1.0.0" \
-  -F "model_format=onnx" \
-  -F "task_type=classification" \
-  -F "num_gpus=0" \
-  -F "memory_gb=2.0"
-```
-
-### List All Models
-
-```bash
-curl "$MIXPEEK_API_URL/v1/namespaces/$NAMESPACE_ID/models" \
-  -H "Authorization: Bearer $MIXPEEK_API_KEY"
-```
-
-```json
-{
-  "success": true,
-  "models": [
-    {
-      "model_id": "my-embedding-model_1_0_0",
-      "name": "my-embedding-model",
-      "version": "1.0.0",
-      "model_format": "pytorch",
-      "deployed": true,
-      "created_at": "2025-01-10T12:00:00Z"
-    }
-  ],
-  "total": 1
-}
-```
-
-### Python SDK Example
+## Python SDK
 
 ```python
 from mixpeek import Mixpeek
@@ -241,50 +481,6 @@ models = client.models.list(namespace_id="ns_abc123")
 
 ---
 
-## Model Versioning
-
-Models are versioned independently, allowing safe rollouts:
-
-```
-my-embedding-model_1_0_0  (production)
-my-embedding-model_1_1_0  (staging)
-my-embedding-model_2_0_0  (development)
-```
-
-**Recommended rollout process:**
-
-1. Upload new version alongside existing
-2. Deploy to Ray object store
-3. Update staging plugins to use new version
-4. Monitor performance via Analytics API
-5. Gradually shift production traffic
-6. Delete old versions when validated
-
----
-
-## Resource Requirements
-
-When uploading, specify resource requirements for optimal scheduling:
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `num_cpus` | CPU cores required | 1.0 |
-| `num_gpus` | GPU devices required | 0 |
-| `memory_gb` | Memory allocation in GB | 4.0 |
-
-```bash
-# GPU model with high memory
--F "num_gpus=1" \
--F "memory_gb=16.0"
-
-# CPU-only lightweight model
--F "num_cpus=0.5" \
--F "num_gpus=0" \
--F "memory_gb=2.0"
-```
-
----
-
 ## Limits & Quotas
 
 | Limit | Value |
@@ -292,7 +488,7 @@ When uploading, specify resource requirements for optimal scheduling:
 | Max models per namespace | 50 |
 | Max archive size | 10 GB |
 | Supported formats | pytorch, safetensors, onnx, huggingface |
-| Required tier | Enterprise |
+| Custom models tier | Enterprise |
 
 ---
 
@@ -307,6 +503,19 @@ When uploading, specify resource requirements for optimal scheduling:
 ---
 
 ## Troubleshooting
+
+### "Model not loading on first batch"
+
+Ensure you're using lazy loading correctly:
+```python
+# Wrong - loads at __init__
+def __init__(self):
+    self._model = load_hf_model(...)  # Don't do this
+
+# Right - loads on first use
+def _process_batch(self, batch):
+    self._ensure_model_loaded()  # Loads here
+```
 
 ### "Custom models require Enterprise tier"
 
@@ -330,7 +539,10 @@ Your organization must be on the Enterprise plan to use custom models. Contact s
 1. Pre-deploy models before inference to warm the cache
 2. Check `cached: true` in deployment response
 3. Consider increasing `num_gpus` for large models
+4. Use `load_hf_model_async()` to parallelize model loading
 
----
+### HuggingFace model not caching
 
-Custom models unlock the full power of Mixpeek's distributed inference infrastructure with your own trained weights. Upload once, deploy to the Ray object store, and access with zero-copy sharing across all your custom plugins.
+1. Ensure you're using `load_hf_model()` not direct HF loading
+2. Check that ModelRegistry actor is running
+3. Verify cluster connectivity between workers

@@ -1,89 +1,90 @@
 ---
-title: "Custom Plugins"
-description: "Build and deploy custom feature extractors on Mixpeek infrastructure"
+title: "Plugins"
+description: "Build custom feature extractors using service containers, real-time inference, and batch processing"
 ---
 
 ## Overview
 
-Custom plugins let you run your own feature extraction logic on Mixpeek's infrastructure. You write the processing code - we handle batching, scaling, and GPU allocation.
+Plugins are the core processing units in Mixpeek. They define how your data is transformed, embedded, and indexed. Mixpeek provides two types of plugins:
 
-**Two deployment modes:**
-- **Batch processing** (all accounts): Process files in collections
-- **Realtime inference** (Enterprise): HTTP endpoint for live requests
+- **Builtin plugins**: Pre-built extractors maintained by Mixpeek (text, image, video, document, etc.)
+- **Custom plugins**: Your own extraction logic running on Mixpeek infrastructure
+
+**Deployment modes:**
+
+| Mode | Description | Use Case |
+|------|-------------|----------|
+| **Batch processing** | High-throughput Ray Data pipelines | Processing collections, indexing documents |
+| **Real-time inference** | Ray Serve HTTP endpoints | Live API requests, synchronous embedding |
 
 ---
 
-## Quick Start
+## Architecture
 
-### 1. Create Your Plugin
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Plugin System                            │
+├──────────────────────────┬──────────────────────────────────────┤
+│   Builtin Plugins        │   Custom Plugins                     │
+│   (engine/plugins/)      │   (S3 uploaded archives)             │
+├──────────────────────────┴──────────────────────────────────────┤
+│                     Pipeline Builder                            │
+│   - Declarative step definitions                                │
+│   - Resource allocation (CPU/GPU/API)                           │
+│   - Content-type filtering                                      │
+├─────────────────────────────────────────────────────────────────┤
+│              Ray Data (Batch)    │    Ray Serve (Real-time)     │
+│   - map_batches() processing     │    - HTTP deployment         │
+│   - DataFrame input/output       │    - Auto-scaling            │
+│   - Parallel execution           │    - Load balancing          │
+├─────────────────────────────────────────────────────────────────┤
+│                      Model Registry                             │
+│   - HuggingFace models (cluster-cached)                         │
+│   - Custom S3 models (namespace-scoped)                         │
+│   - Lazy loading (on-demand)                                    │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Quick Start: Custom Plugin
+
+### 1. Create Plugin Structure
 
 ```
 my_extractor/
 ├── manifest.py      # Schemas + metadata
-├── pipeline.py      # Batch processing
+├── pipeline.py      # Batch processing pipeline
 ├── realtime.py      # HTTP endpoint (optional, Enterprise)
 └── processors/
-    └── core.py      # Your logic
+    └── core.py      # Your processing logic
 ```
 
-### 2. Upload to Mixpeek
-
-```bash
-# Step 1: Get presigned URL
-curl -X POST "https://api.mixpeek.com/v1/namespaces/{namespace_id}/plugins/uploads" \
-  -H "Authorization: Bearer $API_KEY" \
-  -d '{"name": "my_extractor", "version": "1.0.0"}'
-
-# Step 2: Upload your zip
-curl -X PUT "$PRESIGNED_URL" \
-  -H "Content-Type: application/zip" \
-  --data-binary @my_extractor.zip
-
-# Step 3: Confirm upload
-curl -X POST "https://api.mixpeek.com/v1/namespaces/{namespace_id}/plugins/uploads/{upload_id}/confirm" \
-  -H "Authorization: Bearer $API_KEY"
-```
-
-### 3. Use in Collections
-
-```python
-client.collections.create(
-    collection_name="my_collection",
-    source={"type": "bucket", "bucket_ids": ["bkt_..."]},
-    feature_extractor={
-        "feature_extractor_name": "my_extractor",
-        "version": "1.0.0",
-        "parameters": {"threshold": 0.7}
-    }
-)
-```
-
----
-
-## Plugin Files
-
-### manifest.py
-
-Defines inputs, outputs, and parameters:
+### 2. Define Your Plugin (manifest.py)
 
 ```python
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Optional
 
+# Input schema - what your plugin accepts
 class MyInput(BaseModel):
-    text: str = Field(..., description="Input text")
+    text: str = Field(..., description="Input text to process")
 
+# Output schema - what your plugin produces
 class MyOutput(BaseModel):
-    embedding: List[float] = Field(..., description="384-dim embedding")
-    label: str
+    embedding: List[float] = Field(..., description="384-dim embedding vector")
+    sentiment: str = Field(..., description="positive/negative/neutral")
 
+# Parameters - user-configurable options
 class MyParams(BaseModel):
-    threshold: float = Field(default=0.5, ge=0, le=1)
+    threshold: float = Field(default=0.5, ge=0, le=1, description="Confidence threshold")
+    model_size: str = Field(default="base", description="Model size: base or large")
 
+# Plugin metadata
 metadata = {
     "feature_extractor_name": "my_extractor",
     "version": "1.0.0",
-    "description": "My custom extractor",
+    "description": "Custom text embedding with sentiment analysis",
     "category": "text",
 }
 
@@ -92,6 +93,7 @@ output_schema = MyOutput
 parameter_schema = MyParams
 supported_input_types = ["text"]
 
+# Vector index definitions for Qdrant
 features = [
     {
         "feature_name": "my_embedding",
@@ -102,9 +104,7 @@ features = [
 ]
 ```
 
-### processors/core.py
-
-Your processing logic:
+### 3. Implement Batch Processing (processors/core.py)
 
 ```python
 from dataclasses import dataclass
@@ -113,187 +113,349 @@ import pandas as pd
 @dataclass
 class MyConfig:
     threshold: float = 0.5
+    model_size: str = "base"
 
 class MyProcessor:
+    """Batch processor for Ray Data pipelines."""
+
     def __init__(self, config: MyConfig, progress_actor=None):
         self.config = config
-        self._model = None
+        self._model = None  # Lazy loading
 
-    def _load_model(self):
+    def _ensure_model_loaded(self):
+        """Load model on first batch (lazy loading)."""
         if self._model is None:
             from sentence_transformers import SentenceTransformer
-            self._model = SentenceTransformer("all-MiniLM-L6-v2")
+            model_name = "all-MiniLM-L6-v2" if self.config.model_size == "base" else "all-mpnet-base-v2"
+            self._model = SentenceTransformer(model_name)
 
     def __call__(self, batch: pd.DataFrame) -> pd.DataFrame:
-        self._load_model()
+        """Process a batch of rows."""
+        self._ensure_model_loaded()
+
+        # Get text from batch
         texts = batch["text"].fillna("").tolist()
+
+        # Generate embeddings
         embeddings = self._model.encode(texts).tolist()
         batch["my_embedding"] = embeddings
+
+        # Simple sentiment (replace with your logic)
+        batch["sentiment"] = ["positive" if len(t) > 50 else "neutral" for t in texts]
+
         return batch
 ```
 
-### pipeline.py
-
-Wire your processor into the pipeline:
+### 4. Wire Into Pipeline (pipeline.py)
 
 ```python
 from engine.plugins.extractors.pipeline import (
-    PipelineDefinition, ResourceType, RowCondition, StepDefinition, build_pipeline_steps
+    PipelineDefinition,
+    ResourceType,
+    StepDefinition,
+    build_pipeline_steps
 )
 from .manifest import MyParams, metadata
 from .processors.core import MyConfig, MyProcessor
 
-def build_steps(extractor_request, **kwargs):
+def build_steps(extractor_request, container=None, base_steps=None, **kwargs):
+    """Build the extraction pipeline."""
+
+    # Parse parameters from request
     params = MyParams(**(extractor_request.extractor_config.parameters or {}))
 
-    steps = [
-        StepDefinition(
-            service_class=MyProcessor,
-            resource_type=ResourceType.CPU,
-            config=MyConfig(threshold=params.threshold),
-            condition=RowCondition.IS_TEXT,
-        ),
-    ]
+    # Create processor config
+    config = MyConfig(
+        threshold=params.threshold,
+        model_size=params.model_size,
+    )
 
+    # Define pipeline steps
     pipeline = PipelineDefinition(
         name=metadata["feature_extractor_name"],
         version=metadata["version"],
-        steps=steps
+        steps=[
+            StepDefinition(
+                service_class=MyProcessor,
+                resource_type=ResourceType.CPU,  # or GPU, API
+                config=config,
+            ),
+        ]
     )
-    return {"steps": build_pipeline_steps(pipeline)}
+
+    # Build Ray Data steps
+    steps = build_pipeline_steps(pipeline)
+
+    return {"steps": steps}
 ```
 
-### realtime.py (Enterprise Only)
-
-For HTTP inference endpoint:
+### 5. Add Real-time Endpoint (realtime.py) - Enterprise Only
 
 ```python
-class RealtimeHandler:
+from shared.plugins.inference.serve import BaseInferenceService
+
+class InferenceService(BaseInferenceService):
+    """Real-time HTTP inference endpoint."""
+
     def __init__(self):
+        super().__init__()
         self._model = None
 
-    def predict(self, request: dict) -> dict:
+    async def __call__(self, inputs: dict, parameters: dict) -> dict:
+        """Handle inference request."""
+        # Lazy load model
         if self._model is None:
             from sentence_transformers import SentenceTransformer
             self._model = SentenceTransformer("all-MiniLM-L6-v2")
 
-        text = request.get("text", "")
+        text = inputs.get("text", "")
         embedding = self._model.encode([text])[0].tolist()
-        return {"embedding": embedding}
+
+        return {
+            "embedding": embedding,
+            "sentiment": "positive" if len(text) > 50 else "neutral"
+        }
+```
+
+### 6. Upload and Deploy
+
+```bash
+# Package your plugin
+zip -r my_extractor.zip my_extractor/
+
+# Get upload URL
+curl -X POST "https://api.mixpeek.com/v1/namespaces/$NS_ID/plugins/uploads" \
+  -H "Authorization: Bearer $API_KEY" \
+  -d '{"name": "my_extractor", "version": "1.0.0"}'
+
+# Upload
+curl -X PUT "$PRESIGNED_URL" --data-binary @my_extractor.zip
+
+# Confirm
+curl -X POST "https://api.mixpeek.com/v1/namespaces/$NS_ID/plugins/uploads/$UPLOAD_ID/confirm" \
+  -H "Authorization: Bearer $API_KEY"
+
+# Deploy real-time endpoint (Enterprise)
+curl -X POST "https://api.mixpeek.com/v1/namespaces/$NS_ID/plugins/$PLUGIN_ID/deploy" \
+  -H "Authorization: Bearer $API_KEY"
 ```
 
 ---
 
-## Using Built-in Models
+## Using Built-in Services
 
-Compose existing Mixpeek services instead of writing from scratch:
+Instead of implementing models from scratch, compose existing Mixpeek services:
+
+### Option 1: Import Batch Services Directly
 
 ```python
-# Option 1: Direct import
-from engine.inference.intfloat.multilingual_e5_large_instruct.services import E5TextEmbeddingBatch
-
-# Option 2: Unified registry (recommended)
 from shared.inference.registry import get_batch_service
+
+# Get the service class
 E5Batch = get_batch_service("intfloat/multilingual-e5-large-instruct")
-```
-
-**Example: Audio transcription + embedding pipeline**
-
-```python
-from shared.inference.registry import get_batch_service
-
+SigLIPBatch = get_batch_service("google/siglip-base-patch16-224")
 WhisperBatch = get_batch_service("openai/whisper-large-v3-turbo")
-E5Batch = get_batch_service("intfloat/multilingual-e5-large-instruct")
 
+# Use in your pipeline
 def build_steps(extractor_request, **kwargs):
-    steps = [
-        StepDefinition(
-            service_class=WhisperBatch,
-            resource_type=ResourceType.API,
-            config=WhisperConfig(output_column_name="transcription"),
-            condition=RowCondition.IS_AUDIO,
-        ),
-        StepDefinition(
-            service_class=E5Batch,
-            resource_type=ResourceType.CPU,
-            config=E5Config(text_column="transcription"),
-        ),
-    ]
-    return {"steps": build_pipeline_steps(PipelineDefinition(name="transcribe", version="v1", steps=steps))}
+    from shared.inference.intfloat.multilingual_e5_large_instruct.models import InferenceConfigs
+
+    config = InferenceConfigs(
+        text_column="text",
+        output_column_name="embedding",
+    )
+
+    pipeline = PipelineDefinition(
+        name="my_extractor",
+        version="v1",
+        steps=[
+            StepDefinition(
+                service_class=E5Batch,
+                resource_type=ResourceType.CPU,
+                config=config,
+            ),
+        ]
+    )
+    return {"steps": build_pipeline_steps(pipeline)}
 ```
 
-**Available services:**
+### Option 2: Call Real-time Services via HTTP
 
-| Service ID | Category | Use Case |
-|------------|----------|----------|
-| `intfloat/multilingual-e5-large-instruct` | Embedding | Text embeddings (1024 dims) |
-| `google/siglip-base-patch16-224` | Embedding | Image embeddings |
-| `openai/whisper-large-v3-turbo` | Transcription | Audio to text |
-| `BAAI/bge-reranker-v2-m3` | Reranking | Result reordering |
-| `jinaai/jina-embeddings-v2-base-code` | Embedding | Code embeddings |
+```python
+import httpx
+
+async def embed_text(text: str) -> list[float]:
+    """Call the E5 embedding service."""
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "http://localhost:8001/multilingual_e5_large_instruct/v1",
+            json={"inputs": {"texts": [text]}, "parameters": {}}
+        )
+        return response.json()["embeddings"][0]
+```
+
+### Available Services
+
+| Service ID | Type | Dimensions | Use Case |
+|------------|------|------------|----------|
+| `intfloat/multilingual-e5-large-instruct` | Embedding | 1024 | Multilingual text embeddings |
+| `google/siglip-base-patch16-224` | Embedding | 512 | Image embeddings |
+| `jinaai/jina-embeddings-v2-base-code` | Embedding | 768 | Code embeddings |
+| `BAAI/bge-reranker-v2-m3` | Reranker | - | Search result reordering |
+| `openai/whisper-large-v3-turbo` | Transcription | - | Audio to text |
 
 ---
 
-## Deployment Lifecycle
+## Loading Models
 
-### Deploy (Enterprise)
+Mixpeek provides three ways to load models in your plugins:
 
-```bash
-curl -X POST "https://api.mixpeek.com/v1/namespaces/{namespace_id}/plugins/{plugin_id}/deploy" \
-  -H "Authorization: Bearer $API_KEY"
+### 1. HuggingFace Models (Cluster-Cached)
+
+Models are downloaded once and cached across all workers:
+
+```python
+from engine.models import load_hf_model
+from transformers import AutoConfig
+
+class MyProcessor:
+    def __init__(self, config):
+        self.config = config
+        self._model = None
+
+    def _ensure_model_loaded(self):
+        if self._model is None:
+            # Load from cluster cache (zero-copy sharing)
+            cached = load_hf_model(
+                hf_model_id="intfloat/multilingual-e5-large-instruct",
+                model_class="AutoModel",
+                tokenizer_class="AutoTokenizer",
+                torch_dtype="float16",
+            )
+
+            # Instantiate model from cached state_dict
+            from transformers import AutoModel, AutoTokenizer
+            config = AutoConfig.from_dict(cached["config"])
+            self._model = AutoModel(config)
+            self._model.load_state_dict(cached["state_dict"])
+            self._tokenizer = AutoTokenizer.from_pretrained(
+                cached["tokenizer_config"]["tokenizer_dir"]
+            )
 ```
 
-### Check Status
+### 2. Custom S3 Models (Namespace-Scoped)
 
-```bash
-curl "https://api.mixpeek.com/v1/namespaces/{namespace_id}/plugins/{plugin_id}/status" \
-  -H "Authorization: Bearer $API_KEY"
+Use your own uploaded model weights:
+
+```python
+from engine.models import load_namespace_model
+import torch
+
+class MyProcessor:
+    def __init__(self, config):
+        self._model = None
+
+    def _ensure_model_loaded(self):
+        if self._model is None:
+            # Load pre-uploaded weights from S3
+            weights = load_namespace_model("my-fine-tuned-bert_1_0_0")
+
+            # Initialize your model architecture
+            self._model = torch.nn.Sequential(
+                torch.nn.Linear(768, 256),
+                torch.nn.ReLU(),
+                torch.nn.Linear(256, 128),
+            )
+            self._model.load_state_dict(weights)
+            self._model.eval()
 ```
 
-**Status values:**
+### 3. LazyModelMixin (Recommended for New Plugins)
 
-| Status | Description |
-|--------|-------------|
-| `QUEUED` | Waiting in deployment queue (~30s) |
-| `PENDING` | Deployment triggered |
-| `IN_PROGRESS` | Blue-green rollout in progress |
-| `DEPLOYED` | Ready for realtime inference |
-| `FAILED` | Check `error` field for details |
-| `NOT_DEPLOYED` | Batch-only mode (no realtime endpoint) |
+Automatic lazy loading with cluster-wide caching:
 
-### Undeploy
+```python
+from engine.models import LazyModelMixin
+from shared.plugins.inference.batch import BaseBatchInferenceService
 
-Stops the realtime endpoint but keeps the plugin:
+class MyEmbedder(LazyModelMixin, BaseBatchInferenceService):
+    """Batch embedder with automatic lazy loading."""
 
-```bash
-curl -X POST "https://api.mixpeek.com/v1/namespaces/{namespace_id}/plugins/{plugin_id}/undeploy" \
-  -H "Authorization: Bearer $API_KEY"
+    # Configure model (class attributes)
+    model_id = "intfloat/multilingual-e5-large-instruct"
+    model_class = "AutoModel"
+    tokenizer_class = "AutoTokenizer"
+    torch_dtype = "float16"
+
+    def __init__(self, config, **kwargs):
+        super().__init__(**kwargs)
+        self.config = config
+        # Model NOT loaded here - loaded on first batch
+
+    def _process_batch(self, batch):
+        # Model automatically loaded on first call
+        model, tokenizer = self.get_model()
+
+        texts = batch["text"].tolist()
+        inputs = tokenizer(texts, return_tensors="pt", padding=True, truncation=True)
+        outputs = model(**inputs)
+
+        batch["embedding"] = outputs.last_hidden_state.mean(dim=1).tolist()
+        return batch
 ```
 
-### Delete
+### 4. @lazy_model Decorator (Quick Pattern)
 
-Removes the plugin entirely:
+For simpler cases:
 
-```bash
-curl -X DELETE "https://api.mixpeek.com/v1/namespaces/{namespace_id}/plugins/{plugin_id}" \
-  -H "Authorization: Bearer $API_KEY"
+```python
+from engine.models import lazy_model
+
+class MyProcessor:
+    def __init__(self, config):
+        self.config = config
+        self._model = None
+        self._tokenizer = None
+
+    @lazy_model(
+        model_id="intfloat/multilingual-e5-large-instruct",
+        model_class="AutoModel",
+        tokenizer_class="AutoTokenizer",
+    )
+    def __call__(self, batch):
+        # self._model and self._tokenizer are automatically available
+        texts = batch["text"].tolist()
+        inputs = self._tokenizer(texts, return_tensors="pt", padding=True)
+        outputs = self._model(**inputs)
+        batch["embedding"] = outputs.last_hidden_state.mean(dim=1).tolist()
+        return batch
 ```
-
-Response includes `deployment_removed: true` if realtime endpoint was removed.
 
 ---
 
-## Resource Types
+## Pipeline Step Configuration
 
-| Type | Use For | Auto-config |
-|------|---------|-------------|
-| `ResourceType.CPU` | Text embeddings, classification | Batch ~64 |
-| `ResourceType.GPU` | Local models (Whisper, CLIP) | Batch ~8, GPU allocation |
-| `ResourceType.API` | External APIs (OpenAI, Vertex) | Concurrent requests |
+### Resource Types
 
-## Row Conditions
+| Type | Description | Use Case |
+|------|-------------|----------|
+| `ResourceType.CPU` | CPU-only workers | Text processing, lightweight models |
+| `ResourceType.GPU` | GPU-allocated workers | Large models, image/video |
+| `ResourceType.API` | External API calls | OpenAI, Vertex AI, Anthropic |
 
-Filter which rows your processor handles:
+### Row Conditions
+
+Filter which rows your step processes:
+
+```python
+from engine.plugins.extractors.pipeline import RowCondition
+
+StepDefinition(
+    service_class=ImageProcessor,
+    resource_type=ResourceType.GPU,
+    condition=RowCondition.IS_IMAGE,  # Only process images
+)
+```
 
 | Condition | Matches |
 |-----------|---------|
@@ -304,13 +466,173 @@ Filter which rows your processor handles:
 | `RowCondition.IS_PDF` | application/pdf |
 | `RowCondition.ALWAYS` | All rows (default) |
 
+### Conditional Steps
+
+Enable/disable steps based on parameters:
+
+```python
+pipeline = PipelineDefinition(
+    name="my_extractor",
+    version="v1",
+    steps=[
+        StepDefinition(
+            service_class=TextChunker,
+            resource_type=ResourceType.CPU,
+            enabled=params.enable_chunking,  # Conditional
+            config=chunker_config,
+        ),
+        StepDefinition(
+            service_class=E5Batch,
+            resource_type=ResourceType.CPU,
+            config=embedding_config,
+        ),
+    ]
+)
+```
+
+---
+
+## Builtin Plugin Development
+
+<Note>
+This section is for Mixpeek internal developers creating new builtin plugins.
+</Note>
+
+### Directory Structure
+
+```
+engine/plugins/builtin/my_extractor/v1/
+├── __init__.py
+├── definition.py     # Single source of truth
+├── pipeline.py       # Batch processing pipeline
+├── realtime.py       # Optional: Ray Serve endpoint
+└── processors/
+    ├── __init__.py
+    └── core.py       # Processing logic
+```
+
+### definition.py (Single Source of Truth)
+
+```python
+"""My extractor plugin definition."""
+
+from enum import IntEnum
+from typing import List, Literal
+from pydantic import BaseModel, Field
+
+from shared.billing.models import CostRate, CostUnit
+from shared.collection.features.extractors.models import (
+    CostsInfo,
+    FeatureExtractorModel,
+)
+from shared.collection.features.vectors.models import (
+    VectorIndex,
+    VectorIndexDefinition,
+    VectorType,
+)
+
+# =============================================================================
+# COST CONFIGURATION
+# =============================================================================
+
+class MyExtractorCosts(IntEnum):
+    PER_1K_TOKENS = 1
+
+TIER = 1
+TIER_LABEL = "SIMPLE"
+
+RATES: List[CostRate] = [
+    CostRate(
+        unit=CostUnit.TOKENS_1K,
+        credits_per_unit=MyExtractorCosts.PER_1K_TOKENS,
+        description="Per 1K tokens processed",
+    ),
+]
+
+# =============================================================================
+# PARAMETER SCHEMA
+# =============================================================================
+
+class MyExtractorParams(BaseModel):
+    extractor_type: Literal["my_extractor"] = "my_extractor"
+    threshold: float = Field(default=0.5, ge=0, le=1)
+    enable_feature_x: bool = Field(default=True)
+
+# =============================================================================
+# INPUT/OUTPUT SCHEMAS
+# =============================================================================
+
+class MyExtractorInput(BaseModel):
+    text: str = Field(..., min_length=1)
+
+class MyExtractorOutput(BaseModel):
+    embedding: List[float] = Field(..., min_length=1024, max_length=1024)
+
+# =============================================================================
+# VECTOR INDEX CONFIGURATION
+# =============================================================================
+
+VECTOR_INDEXES = [
+    VectorIndexDefinition(
+        name="my_embedding",
+        description="Dense embedding vector",
+        type="single",
+        index=VectorIndex(
+            name="my_extractor_v1_embedding",
+            description="Dense vector embedding",
+            dimensions=1024,
+            type=VectorType.DENSE,
+            distance="Cosine",
+            inference_service_id="intfloat/multilingual-e5-large-instruct",
+        ),
+    ),
+]
+
+# =============================================================================
+# PLUGIN DEFINITION
+# =============================================================================
+
+definition = FeatureExtractorModel(
+    feature_extractor_name="my_extractor",
+    version="v1",
+    description="My custom extractor for specialized processing",
+    icon="wand-2",
+    input_schema=MyExtractorInput,
+    output_schema=MyExtractorOutput,
+    parameter_schema=MyExtractorParams,
+    required_vector_indexes=VECTOR_INDEXES,
+    costs=CostsInfo(tier=TIER, tier_label=TIER_LABEL, rates=RATES),
+)
+
+metadata = {
+    "name": "my_extractor",
+    "version": "v1",
+    "description": definition.description,
+}
+```
+
+### Register in Plugin Registry
+
+Add to `engine/plugins/registry.py`:
+
+```python
+BUILTIN_PLUGINS = {
+    # ... existing plugins
+    "my_extractor_v1": {
+        "name": "my_extractor",
+        "version": "v1",
+        "module_path": "engine.plugins.builtin.my_extractor.v1",
+    },
+}
+```
+
 ---
 
 ## Security Requirements
 
-Plugins are scanned before upload confirmation. Code violating these rules is rejected.
+Custom plugins are scanned before deployment. Code violating these rules is rejected.
 
-### Allowed Imports
+### Allowed
 
 | Category | Libraries |
 |----------|-----------|
@@ -321,7 +643,7 @@ Plugins are scanned before upload confirmation. Code violating these rules is re
 | HTTP | `requests`, `httpx`, `aiohttp` |
 | Utils | `json`, `re`, `typing`, `dataclasses`, `pydantic`, `logging` |
 
-### Forbidden (Security)
+### Forbidden
 
 | Category | Blocked | Reason |
 |----------|---------|--------|
@@ -329,67 +651,93 @@ Plugins are scanned before upload confirmation. Code violating these rules is re
 | System | `ctypes`, `socket`, `multiprocessing` | Low-level access |
 | Builtins | `open`, `setattr`, `getattr`, `__import__` | File/attribute manipulation |
 
-<Accordion title="Full list of forbidden patterns">
+---
 
-**Forbidden imports:**
-- `subprocess`, `os.system`, `os.popen`, `os.spawn*`, `os.exec*`
-- `ctypes`, `pty`, `fcntl`, `resource`
-- `multiprocessing`, `threading`, `socket`
-- `commands`, `popen2`
+## Deployment Lifecycle
 
-**Forbidden builtins:**
-- `eval()`, `exec()`, `compile()`
-- `open()`
-- `__import__()`
-- `globals()`, `locals()`, `vars()`
-- `getattr()`, `setattr()`, `delattr()`, `hasattr()`
+### Deploy Real-time Endpoint
 
-**Forbidden module functions:**
-- `os.system`, `os.popen`, `os.spawn`, `os.exec`, `os.fork`, `os.kill`
-- `importlib.import_module`
-- `pickle.loads`, `pickle.load`
-- `marshal.loads`, `marshal.load`
+```bash
+curl -X POST "https://api.mixpeek.com/v1/namespaces/$NS_ID/plugins/$PLUGIN_ID/deploy" \
+  -H "Authorization: Bearer $API_KEY"
+```
 
-</Accordion>
+### Check Status
 
-### Validation Error Example
+```bash
+curl "https://api.mixpeek.com/v1/namespaces/$NS_ID/plugins/$PLUGIN_ID/status"
+```
 
-```json
-{
-  "success": false,
-  "validation_errors": [
-    {
-      "file": "processors/core.py",
-      "line": 15,
-      "message": "Forbidden import: subprocess"
-    }
-  ]
-}
+| Status | Description |
+|--------|-------------|
+| `QUEUED` | Waiting in deployment queue |
+| `PENDING` | Deployment triggered |
+| `IN_PROGRESS` | Blue-green rollout in progress |
+| `DEPLOYED` | Ready for real-time inference |
+| `FAILED` | Check `error` field |
+| `NOT_DEPLOYED` | Batch-only mode |
+
+### Undeploy
+
+```bash
+curl -X POST "https://api.mixpeek.com/v1/namespaces/$NS_ID/plugins/$PLUGIN_ID/undeploy"
+```
+
+### Delete
+
+```bash
+curl -X DELETE "https://api.mixpeek.com/v1/namespaces/$NS_ID/plugins/$PLUGIN_ID"
 ```
 
 ---
 
-## Feature URI
+## Example: Multi-Stage Pipeline
 
-After upload, reference your plugin with:
+Here's a complete example combining transcription and embedding:
 
+```python
+# pipeline.py
+from shared.inference.registry import get_batch_service
+from engine.plugins.extractors.pipeline import (
+    PipelineDefinition,
+    ResourceType,
+    RowCondition,
+    StepDefinition,
+    build_pipeline_steps,
+)
+
+def build_steps(extractor_request, **kwargs):
+    params = MyParams(**(extractor_request.extractor_config.parameters or {}))
+
+    # Get built-in services
+    WhisperBatch = get_batch_service("openai/whisper-large-v3-turbo")
+    E5Batch = get_batch_service("intfloat/multilingual-e5-large-instruct")
+
+    pipeline = PipelineDefinition(
+        name="audio_to_embedding",
+        version="v1",
+        steps=[
+            # Step 1: Transcribe audio
+            StepDefinition(
+                service_class=WhisperBatch,
+                resource_type=ResourceType.API,
+                condition=RowCondition.IS_AUDIO,
+                config=WhisperConfig(output_column="transcription"),
+            ),
+            # Step 2: Embed transcription
+            StepDefinition(
+                service_class=E5Batch,
+                resource_type=ResourceType.CPU,
+                config=E5Config(
+                    text_column="transcription",
+                    output_column_name="embedding",
+                ),
+            ),
+        ]
+    )
+
+    return {"steps": build_pipeline_steps(pipeline)}
 ```
-mixpeek://my_extractor@1.0.0/my_embedding
-```
-
-This URI is **organization-scoped** - two orgs can have the same plugin name without collision.
-
----
-
-## Namespace Isolation
-
-Plugins are isolated per namespace:
-
-| Layer | Isolation |
-|-------|-----------|
-| MongoDB | `internal_id` scoping |
-| S3 | `org_id/ns_id/plugin_custom/...` |
-| Ray Serve | Namespace prefix in deployment names |
 
 ---
 
@@ -397,17 +745,25 @@ Plugins are isolated per namespace:
 
 ### Plugin validation failed
 
-Check the `validation_errors` array in the confirm response. Common issues:
+Check the `validation_errors` array. Common issues:
 - Using `setattr()` or `getattr()` - use class attributes instead
-- Importing `subprocess` - use `requests` or `httpx` for HTTP calls
+- Importing `subprocess` - use `requests` or `httpx` for HTTP
 - Using `open()` - use provided data loading APIs
 
-### Deployment stuck in QUEUED
+### Model loading is slow
 
-Deployments are batched every 30 seconds. Wait up to 3-4 minutes for the blue-green rollout to complete.
+- Use `LazyModelMixin` for automatic cluster caching
+- Pre-deploy models via the Model Registry API
+- Check `cached: true` in deployment response
 
-### Plugin not found in collection
+### Batch processing fails
 
-1. Verify upload was confirmed successfully
-2. Check plugin is in the correct namespace
-3. Ensure `feature_extractor_name` and `version` match exactly
+1. Ensure `_process_batch()` returns a DataFrame
+2. Reset DataFrame index: `batch = batch.reset_index(drop=True)`
+3. Handle None/empty values: `batch["col"].fillna("")`
+
+### Real-time endpoint not responding
+
+1. Check deployment status via `/status` endpoint
+2. Verify plugin is `DEPLOYED` not `NOT_DEPLOYED`
+3. Check Ray Serve logs for errors
