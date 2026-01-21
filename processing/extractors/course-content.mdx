@@ -1,0 +1,394 @@
+---
+title: "Course Content Extractor"
+description: "Decompose educational content into atomic learning units with text, code, and visual embeddings"
+---
+
+<Frame>
+  <img src="/assets/extractors/course-content.svg" alt="Course content extractor pipeline showing video segmentation, PDF extraction, code decomposition, and multimodal embeddings" />
+</Frame>
+
+The course content extractor decomposes educational content into atomic learning units optimized for semantic retrieval. Processes video lectures with automatic transcription, PDF slides with layout awareness, and code archives with function-level granularity. Each unit receives E5-Large text embeddings (1024D), Jina Code embeddings (768D) for code snippets, and optional SigLIP visual embeddings (768D) for figures and screenshots.
+
+<Note>
+  View extractor details at [api.mixpeek.com/v1/collections/features/extractors/course_content_extractor_v1](https://api.mixpeek.com/v1/collections/features/extractors/course_content_extractor_v1) or fetch programmatically with `GET /v1/collections/features/extractors/{feature_extractor_id}`.
+</Note>
+
+## Pipeline Steps
+
+1. **Filter Dataset** (if collection_id provided)
+   - Filter to specified collection
+2. **Content Detection & Routing**
+   - Auto-detect content type: video, PDF, or code archive
+   - Route to appropriate processor
+3. **Video Segmentation** (if video input)
+   - Scene-based segmentation or SRT subtitle-based segmentation
+   - Extract transcripts via Whisper ASR (or use provided SRT)
+   - OCR video frames for screen text detection
+4. **PDF Decomposition** (if PDF input)
+   - Layout detection: paragraphs, headers, tables, lists, figures, code blocks
+   - Layout-aware extraction per element or per page
+   - Extract images and figures with bounding boxes
+5. **Code Archive Processing** (if code input)
+   - Extract source files from ZIP archive
+   - Segment code into individual functions/classes
+   - Auto-detect programming language
+6. **Multi-Modal Embedding Generation**
+   - E5-Large (1024D) for transcripts, PDF text, and captions
+   - Jina Code v2 (768D) for code snippets and functions
+   - SigLIP (768D) for figures, screenshots, diagrams (optional)
+7. **LLM Enrichment** (optional: if `enrich_with_llm=true`)
+   - Generate summaries using Gemini
+   - Add semantic context and key concepts
+8. **Output**
+   - Learning units with text_content, code_content, screen_text
+   - Layout types, timing info, language tags
+   - Multiple embeddings per unit for diverse search scenarios
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Online courses** | Extract lectures, slides, and code into searchable learning units |
+| **Technical documentation** | Decompose guides with code examples into semantic chunks |
+| **Code tutorials** | Segment video + PDF + code into aligned learning units |
+| **Educational archives** | Index historical lecture materials with multiple content types |
+| **Multilingual learning** | Process educational content across 100+ languages |
+| **API documentation** | Extract text, code examples, and diagrams with visual search |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Simple text documents only | `text_extractor` (faster, simpler) |
+| Images and photos only | `image_extractor` |
+| Single PDF documents | `document_graph_extractor` (better OCR, confidence scoring) |
+| Pre-transcribed videos | `text_extractor` (use transcripts directly) |
+
+## Input Schema
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `video` | string | (one of three) | URL or S3 path to video file (MP4, WebM, MOV). Maximum: 4 hours. Auto-detect format. |
+| `srt` | string | optional (with video) | URL or S3 path to SRT subtitle file. Used if present; otherwise Whisper ASR generates transcripts. |
+| `pdf` | string | (one of three) | URL or S3 path to PDF document. Multi-page supported. Maximum: 500 pages. |
+| `code_archive` | string | (one of three) | URL or S3 path to ZIP archive containing source code. Maximum: 100MB. |
+
+**Exactly one of `video`, `pdf`, or `code_archive` must be provided.**
+
+```json
+{
+  "video": "s3://my-bucket/lectures/intro-to-ml.mp4",
+  "srt": "s3://my-bucket/lectures/intro-to-ml.srt"
+}
+```
+
+**Input Examples:**
+
+| Type | Example |
+|------|---------|
+| Video with subtitles | `{"video": "https://cdn.example.com/lecture.mp4", "srt": "https://cdn.example.com/lecture.srt"}` |
+| PDF slides | `{"pdf": "s3://courses/machine-learning/slides-week-1.pdf"}` |
+| Code archive | `{"code_archive": "s3://tutorials/python-algorithms.zip"}` |
+
+## Output Schema
+
+Each learning unit produces one or more documents depending on content type and `expand_to_granular_docs` setting:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `unit_type` | string | Type of unit: `video_segment`, `pdf_element`, `code_function`, `screen_text`, `figure` |
+| `doc_type` | string | Granular type: `transcript`, `code`, `screen_text`, `visual`, `paragraph`, `table`, `list`, `header`, `figure` |
+| `text_content` | string | Extracted text content |
+| `code_content` | string | Source code (if applicable) |
+| `code_language` | string | Programming language (Python, JavaScript, Java, etc.) |
+| `screen_text` | string | OCR text from video frames or PDF screenshots |
+| `title` | string | Unit title (lecture title, function name, figure caption) |
+| `start_time` | number | Video start time in seconds (video units only) |
+| `end_time` | number | Video end time in seconds (video units only) |
+| `page_number` | integer | PDF page number (0-indexed, PDF units only) |
+| `element_index` | integer | Element position within page (PDF units only) |
+| `start_line` | integer | Start line number (code units only) |
+| `end_line` | integer | End line number (code units only) |
+| `segment_index` | integer | Segment position within source (video units only) |
+| `element_type` | string | PDF layout type: `paragraph`, `header`, `list`, `table`, `figure`, `code`, `footer` |
+| `bbox` | object | Bounding box `{x, y, width, height}` (PDF elements with visual positioning) |
+| `thumbnail_url` | string | S3 URL of thumbnail image (video frames, figure screenshots) |
+| `intfloat__multilingual_e5_large_instruct` | float[1024] | E5-Large text embedding, L2 normalized |
+| `jinaai__jina_embeddings_v2_base_code` | float[768] | Jina Code embedding (code units only) |
+| `google__siglip_base_patch16_224` | float[768] | SigLIP visual embedding (if `run_visual_embedding=true`) |
+| `llm_summary` | string | LLM-generated summary (if `enrich_with_llm=true`) |
+
+```json
+{
+  "unit_type": "video_segment",
+  "doc_type": "transcript",
+  "text_content": "In this section, we explore supervised learning algorithms...",
+  "screen_text": "SUPERVISED LEARNING\n- Regression\n- Classification",
+  "title": "Intro to ML: Supervised Learning",
+  "start_time": 120.5,
+  "end_time": 245.3,
+  "segment_index": 3,
+  "thumbnail_url": "s3://mixpeek/ns_123/thumbnails/seg_3.jpg",
+  "intfloat__multilingual_e5_large_instruct": [0.023, -0.041, 0.018, ...],
+  "llm_summary": "Introduction to supervised learning covering regression and classification techniques"
+}
+```
+
+## Parameters
+
+### Video Segmentation Parameters
+
+| Parameter | Type | Default | Range | Description |
+|-----------|------|---------|-------|-------------|
+| `target_segment_duration_ms` | integer | 120000 | 30000-600000 | Target duration for each video segment (30 sec - 10 min) |
+| `min_segment_duration_ms` | integer | 30000 | 10000+ | Minimum segment duration to create |
+| `segmentation_method` | string | `"scene"` | scene, srt, time | Segmentation strategy: scene detection, SRT markers, or fixed time intervals |
+| `scene_detection_threshold` | float | 0.3 | 0.1-0.9 | Scene change sensitivity (lower = more scenes detected) |
+| `use_whisper_asr` | boolean | true | - | Use Whisper ASR for transcription if SRT not provided |
+| `expand_to_granular_docs` | boolean | true | - | Create separate documents for transcript, screen_text, and visual (one per granularity type) |
+| `ocr_frames_per_segment` | integer | 3 | 1-10 | Number of frames to OCR per segment |
+
+#### Segmentation Methods
+
+| Method | Description | Best For |
+|--------|-------------|----------|
+| `scene` | ML-based scene detection (PySceneDetect) | Lectures with natural topic breaks |
+| `srt` | Use SRT subtitle markers as boundaries | Prepared materials with timing metadata |
+| `time` | Fixed time intervals | Uniform segment length regardless of content |
+
+### PDF Extraction Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `pdf_extraction_mode` | string | `"per_element"` | `per_page` (one doc per page) or `per_element` (one doc per detected element) |
+| `pdf_render_dpi` | integer | 150 | DPI for rendering PDF pages (72-300). Higher = better OCR quality, slower |
+| `detect_code_in_pdf` | boolean | true | Automatically detect and tag code blocks in PDF text |
+
+### Code Extraction Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `segment_functions` | boolean | true | Segment code files into individual functions/classes |
+| `supported_languages` | array | `["python", "javascript", "java", "go", "rust", "c", "cpp"]` | Programming languages to extract and embed |
+
+### Feature Extraction Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `run_text_embedding` | boolean | true | Generate E5-Large text embeddings for transcripts and text content |
+| `run_code_embedding` | boolean | true | Generate Jina Code embeddings for code snippets |
+| `run_visual_embedding` | boolean | false | Generate SigLIP visual embeddings for figures and screenshots |
+| `visual_embedding_use_case` | string | `"lecture"` | Context for visual embedding: `lecture`, `code_demo`, `tutorial`, `presentation`, `dynamic` |
+| `extract_screen_text` | boolean | true | Run OCR on video frames to extract on-screen text |
+| `generate_thumbnails` | boolean | true | Generate and store thumbnail images |
+| `use_cdn` | boolean | false | Use CDN for thumbnail delivery (if available) |
+
+### LLM Enrichment Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `enrich_with_llm` | boolean | false | Enable LLM-generated summaries and key concept extraction |
+| `llm_prompt` | string | `"Summarize this educational content, highlighting key concepts, learning objectives, and main takeaways"` | Custom prompt for LLM enrichment |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Video with Scene Detection
+{
+  "feature_extractor": {
+    "feature_extractor_name": "course_content_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "video": "payload.lecture_url",
+      "srt": "payload.subtitle_url"
+    },
+    "field_passthrough": [
+      { "source_path": "metadata.course_id" },
+      { "source_path": "metadata.lesson_number" }
+    ],
+    "parameters": {
+      "target_segment_duration_ms": 120000,
+      "segmentation_method": "scene",
+      "scene_detection_threshold": 0.3,
+      "use_whisper_asr": true,
+      "expand_to_granular_docs": true,
+      "ocr_frames_per_segment": 3,
+      "run_text_embedding": true,
+      "run_code_embedding": true,
+      "run_visual_embedding": false,
+      "generate_thumbnails": true
+    }
+  }
+}
+```
+
+```json PDF Slides with Code Detection
+{
+  "feature_extractor": {
+    "feature_extractor_name": "course_content_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "pdf": "payload.slides_url"
+    },
+    "field_passthrough": [
+      { "source_path": "metadata.course_id" },
+      { "source_path": "metadata.instructor" }
+    ],
+    "parameters": {
+      "pdf_extraction_mode": "per_element",
+      "pdf_render_dpi": 150,
+      "detect_code_in_pdf": true,
+      "run_text_embedding": true,
+      "run_code_embedding": true,
+      "run_visual_embedding": false,
+      "generate_thumbnails": true
+    }
+  }
+}
+```
+
+```json Code Archive with All Embeddings
+{
+  "feature_extractor": {
+    "feature_extractor_name": "course_content_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "code_archive": "payload.source_code_url"
+    },
+    "field_passthrough": [
+      { "source_path": "metadata.tutorial_name" },
+      { "source_path": "metadata.difficulty_level" }
+    ],
+    "parameters": {
+      "segment_functions": true,
+      "supported_languages": ["python", "javascript", "java", "go", "rust"],
+      "run_text_embedding": true,
+      "run_code_embedding": true,
+      "run_visual_embedding": false
+    }
+  }
+}
+```
+
+```json Video with Full Enrichment
+{
+  "feature_extractor": {
+    "feature_extractor_name": "course_content_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "video": "payload.video_url",
+      "srt": "payload.srt_url"
+    },
+    "parameters": {
+      "target_segment_duration_ms": 180000,
+      "segmentation_method": "srt",
+      "use_whisper_asr": false,
+      "expand_to_granular_docs": true,
+      "ocr_frames_per_segment": 5,
+      "run_text_embedding": true,
+      "run_code_embedding": true,
+      "run_visual_embedding": true,
+      "visual_embedding_use_case": "lecture",
+      "extract_screen_text": true,
+      "generate_thumbnails": true,
+      "enrich_with_llm": true,
+      "llm_prompt": "Extract learning objectives, key concepts, and prerequisites from this lecture segment"
+    }
+  }
+}
+```
+
+```json PDF with LLM Summaries
+{
+  "feature_extractor": {
+    "feature_extractor_name": "course_content_extractor",
+    "version": "v1",
+    "input_mappings": {
+      "pdf": "payload.textbook_chapter"
+    },
+    "parameters": {
+      "pdf_extraction_mode": "per_element",
+      "pdf_render_dpi": 200,
+      "detect_code_in_pdf": true,
+      "run_text_embedding": true,
+      "run_code_embedding": true,
+      "generate_thumbnails": true,
+      "enrich_with_llm": true,
+      "llm_prompt": "Generate a concise summary focusing on practical applications and code examples"
+    }
+  }
+}
+```
+</CodeGroup>
+
+## Performance & Costs
+
+| Metric | Value |
+|--------|-------|
+| **Video processing** | ~1 minute per 10 minutes of video (depends on segmentation) |
+| **PDF processing** | ~2-5 seconds per page (depends on DPI and layout complexity) |
+| **Code processing** | ~50-100ms per 1KB of code |
+| **Embedding latency** | ~5ms per text unit (E5), ~10ms per code unit (Jina), ~50ms per visual unit (SigLIP) |
+| **Cost (Tier 2)** | 20 credits per video minute, 5 credits per PDF page, 2 credits per 1K code tokens |
+| **GPU acceleration** | Recommended for 10+ videos; 2-3x speedup |
+
+## Vector Indexes
+
+All three embeddings are stored as Qdrant named vectors for hybrid search:
+
+| Property | Value |
+|----------|-------|
+| **Index 1 name** | `intfloat__multilingual_e5_large_instruct` |
+| **Dimensions** | 1024 |
+| **Type** | Dense |
+| **Distance metric** | Cosine |
+| **Datatype** | float32 |
+| **Normalization** | L2 normalized |
+
+| Property | Value |
+|----------|-------|
+| **Index 2 name** | `jinaai__jina_embeddings_v2_base_code` |
+| **Dimensions** | 768 |
+| **Type** | Dense |
+| **Distance metric** | Cosine |
+| **Datatype** | float32 |
+| **Normalization** | L2 normalized |
+
+| Property | Value |
+|----------|-------|
+| **Index 3 name** | `google__siglip_base_patch16_224` |
+| **Dimensions** | 768 |
+| **Type** | Dense |
+| **Distance metric** | Cosine |
+| **Datatype** | float32 |
+| **Inference model** | `google_siglip_base_v1` |
+| **Status** | Optional (if `run_visual_embedding=true`) |
+
+## Comparison with Other Extractors
+
+| Feature | course_content_extractor | text_extractor | multimodal_extractor | document_graph_extractor |
+|---------|-------------------------|-----------------|----------------------|--------------------------|
+| **Input types** | Video, PDF, Code | Text only | Video, Image, Text | PDF only |
+| **Segmentation** | Scene/SRT/time | Word/sentence/paragraph | N/A | Layout-based |
+| **Text embeddings** | E5-Large (1024D) | E5-Large (1024D) | Vertex AI (1408D) | E5-Large (1024D) |
+| **Code embeddings** | Jina Code (768D) | ✗ | ✗ | ✗ |
+| **Visual embeddings** | SigLIP (768D) optional | ✗ | Vertex AI (1408D) | ✗ |
+| **Best for** | Educational content | Text search | Unified multimodal | Complex PDF layouts |
+| **Cost per unit** | Medium (5-50 credits) | Low (free) | High (10-50 credits) | Medium (5-50 credits) |
+
+## Limitations
+
+- **Video length**: Optimized for videos up to 4 hours. Longer videos may require segmentation.
+- **Transcription quality**: Whisper ASR works best with clear audio; noisy lectures may have reduced accuracy.
+- **Code extraction**: Requires valid ZIP archives; loose files not supported.
+- **Language support**: Code embedding works with common languages; domain-specific DSLs have reduced accuracy.
+- **PDF complexity**: Complex layouts with nested tables may have reduced extraction quality.
+- **Visual embeddings**: Optional and add significant processing cost.
+
+## Related
+
+- [Feature Extractors Overview](/processing/feature-extractors)
+- [Text Extractor](/processing/extractors/text)
+- [Image Extractor](/processing/extractors/image)
+- [Document Graph Extractor](/processing/extractors/document)
+- [Multimodal Extractor](/processing/extractors/multimodal)

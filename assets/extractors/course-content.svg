@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1200 520" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="objectGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ea580c;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="modelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="featureGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="processGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="codeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#06b6d4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0891b2;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="520" fill="#f8fafc"/>
+
+  <!-- Title -->
+  <text x="600" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">Course Content Extractor: Multimodal Learning Unit Decomposition</text>
+  <text x="600" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">Video, PDF, and code content decomposition with text, code, and visual embeddings</text>
+
+  <!-- Input Options -->
+  <g filter="url(#shadow)">
+    <rect x="30" y="80" width="140" height="130" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="30" y="80" width="140" height="28" rx="10" fill="url(#objectGrad)"/>
+    <rect x="30" y="98" width="140" height="10" fill="url(#objectGrad)"/>
+    <text x="100" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Content Inputs</text>
+  </g>
+  <g transform="translate(40, 120)">
+    <rect x="0" y="0" width="120" height="80" rx="4" fill="#fff7ed"/>
+    <text x="60" y="16" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#c2410c" text-anchor="middle">Select One:</text>
+    <text x="60" y="32" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">• Video (+ SRT)</text>
+    <text x="60" y="48" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">• PDF slides</text>
+    <text x="60" y="64" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">• Code archive</text>
+  </g>
+
+  <!-- Arrow to Content Detection -->
+  <path d="M 170 145 L 210 145" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Content Detection Stage -->
+  <g filter="url(#shadow)">
+    <rect x="220" y="70" width="180" height="150" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="220" y="70" width="180" height="28" rx="10" fill="url(#processGrad)"/>
+    <rect x="220" y="88" width="180" height="10" fill="url(#processGrad)"/>
+    <text x="310" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Content Detection</text>
+  </g>
+  <g transform="translate(230, 115)">
+    <rect x="0" y="0" width="160" height="95" rx="4" fill="#dbeafe"/>
+    <text x="80" y="14" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#1d4ed8" text-anchor="middle">Route by Type:</text>
+
+    <rect x="0" y="22" width="50" height="18" rx="3" fill="#93c5fd"/>
+    <text x="25" y="35" font-family="monospace" font-size="7" fill="#0c4a6e" text-anchor="middle">Video</text>
+
+    <rect x="55" y="22" width="50" height="18" rx="3" fill="#93c5fd"/>
+    <text x="80" y="35" font-family="monospace" font-size="7" fill="#0c4a6e" text-anchor="middle">PDF</text>
+
+    <rect x="110" y="22" width="50" height="18" rx="3" fill="#93c5fd"/>
+    <text x="135" y="35" font-family="monospace" font-size="7" fill="#0c4a6e" text-anchor="middle">Code</text>
+
+    <text x="80" y="58" font-family="system-ui, sans-serif" font-size="7" fill="#1d4ed8" text-anchor="middle">Extract subtitles/transcripts</text>
+    <text x="80" y="71" font-family="system-ui, sans-serif" font-size="7" fill="#1d4ed8" text-anchor="middle">Apply OCR for screen text</text>
+    <text x="80" y="84" font-family="system-ui, sans-serif" font-size="7" fill="#1d4ed8" text-anchor="middle">Parse code structure</text>
+  </g>
+
+  <!-- Arrow to Segmentation -->
+  <path d="M 400 145 L 440 145" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Segmentation Stage -->
+  <g filter="url(#shadow)">
+    <rect x="450" y="70" width="180" height="150" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="450" y="70" width="180" height="28" rx="10" fill="url(#processGrad)"/>
+    <rect x="450" y="88" width="180" height="10" fill="url(#processGrad)"/>
+    <text x="540" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Segmentation</text>
+  </g>
+  <g transform="translate(460, 115)">
+    <rect x="0" y="0" width="160" height="95" rx="4" fill="#dbeafe"/>
+    <text x="80" y="14" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#1d4ed8" text-anchor="middle">Break Into Units:</text>
+
+    <rect x="0" y="22" width="50" height="18" rx="3" fill="#93c5fd"/>
+    <text x="25" y="35" font-family="monospace" font-size="7" fill="#0c4a6e" text-anchor="middle">Segments</text>
+
+    <rect x="55" y="22" width="50" height="18" rx="3" fill="#93c5fd"/>
+    <text x="80" y="35" font-family="monospace" font-size="7" fill="#0c4a6e" text-anchor="middle">Elements</text>
+
+    <rect x="110" y="22" width="50" height="18" rx="3" fill="#93c5fd"/>
+    <text x="135" y="35" font-family="monospace" font-size="7" fill="#0c4a6e" text-anchor="middle">Functions</text>
+
+    <text x="80" y="58" font-family="system-ui, sans-serif" font-size="7" fill="#1d4ed8" text-anchor="middle">Scene-based or SRT-based</text>
+    <text x="80" y="71" font-family="system-ui, sans-serif" font-size="7" fill="#1d4ed8" text-anchor="middle">Layout-aware extraction</text>
+    <text x="80" y="84" font-family="system-ui, sans-serif" font-size="7" fill="#1d4ed8" text-anchor="middle">Function-level decomposition</text>
+  </g>
+
+  <!-- Arrow to Embeddings -->
+  <path d="M 630 145 L 670 145" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Embeddings Stage -->
+  <g filter="url(#shadow)">
+    <rect x="680" y="50" width="220" height="190" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="680" y="50" width="220" height="28" rx="10" fill="url(#modelGrad)"/>
+    <rect x="680" y="68" width="220" height="10" fill="url(#modelGrad)"/>
+    <text x="790" y="70" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Multi-Modal Embeddings</text>
+  </g>
+  <g transform="translate(690, 90)">
+    <rect x="0" y="0" width="200" height="50" rx="4" fill="#f3e8ff"/>
+    <text x="100" y="14" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#7c3aed" text-anchor="middle">E5-Large (Text)</text>
+    <text x="100" y="30" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">1024D | Transcripts &amp; PDF text</text>
+    <text x="100" y="42" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">Semantic search on learning units</text>
+
+    <rect x="0" y="56" width="200" height="50" rx="4" fill="#f0f9ff"/>
+    <text x="100" y="70" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#1d4ed8" text-anchor="middle">Jina Code (Code)</text>
+    <text x="100" y="86" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">768D | Code snippets</text>
+    <text x="100" y="98" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">Find similar implementations</text>
+
+    <rect x="0" y="112" width="200" height="50" rx="4" fill="#f0fdf4"/>
+    <text x="100" y="126" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#15803d" text-anchor="middle">SigLIP (Visual)</text>
+    <text x="100" y="142" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">768D | Screenshots &amp; diagrams</text>
+    <text x="100" y="154" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">Optional: visual similarity search</text>
+  </g>
+
+  <!-- Arrow to Output -->
+  <path d="M 900 145 L 940 145" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Output -->
+  <g filter="url(#shadow)">
+    <rect x="950" y="80" width="210" height="130" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="950" y="80" width="210" height="28" rx="10" fill="url(#featureGrad)"/>
+    <rect x="950" y="98" width="210" height="10" fill="url(#featureGrad)"/>
+    <text x="1055" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Learning Units</text>
+  </g>
+  <g transform="translate(960, 115)">
+    <rect x="0" y="0" width="190" height="85" rx="4" fill="#ccfbf1"/>
+    <text x="95" y="14" font-family="monospace" font-size="8" fill="#0d9488" font-weight="600" text-anchor="middle">unit_type + doc_type</text>
+    <text x="95" y="28" font-family="monospace" font-size="7" fill="#0d9488" text-anchor="middle">text_content, code_content,</text>
+    <text x="95" y="40" font-family="monospace" font-size="7" fill="#0d9488" text-anchor="middle">screen_text, page_number</text>
+    <text x="95" y="52" font-family="monospace" font-size="7" fill="#0d9488" text-anchor="middle">start_time, code_language</text>
+    <text x="95" y="64" font-family="monospace" font-size="7" fill="#0d9488" text-anchor="middle">3x embeddings per unit</text>
+    <text x="95" y="78" font-family="system-ui, sans-serif" font-size="7" fill="#0d9488" text-anchor="middle">+ optional LLM summary</text>
+  </g>
+
+  <!-- Parameters Section -->
+  <text x="70" y="270" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#475569">Key Parameters</text>
+
+  <g filter="url(#shadow)">
+    <rect x="30" y="285" width="290" height="210" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <text x="175" y="310" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#475569" text-anchor="middle">Video Segmentation</text>
+    <rect x="45" y="320" width="260" height="90" rx="4" fill="#f1f5f9"/>
+    <text x="55" y="335" font-family="monospace" font-size="7" fill="#475569">target_segment_duration_ms: 120000</text>
+    <text x="55" y="347" font-family="monospace" font-size="7" fill="#475569">segmentation_method: scene | srt | time</text>
+    <text x="55" y="359" font-family="monospace" font-size="7" fill="#475569">use_whisper_asr: true (if no SRT)</text>
+    <text x="55" y="371" font-family="monospace" font-size="7" fill="#475569">scene_detection_threshold: 0.3</text>
+    <text x="55" y="383" font-family="monospace" font-size="7" fill="#475569">ocr_frames_per_segment: 3</text>
+    <text x="55" y="395" font-family="monospace" font-size="7" fill="#475569">expand_to_granular_docs: true</text>
+
+    <text x="175" y="422" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#475569" text-anchor="middle">PDF &amp; Code Options</text>
+    <rect x="45" y="432" width="260" height="50" rx="4" fill="#f1f5f9"/>
+    <text x="55" y="447" font-family="monospace" font-size="7" fill="#475569">pdf_extraction_mode: per_element | per_page</text>
+    <text x="55" y="459" font-family="monospace" font-size="7" fill="#475569">segment_functions: true | detect_code_in_pdf: true</text>
+    <text x="55" y="471" font-family="monospace" font-size="7" fill="#475569">supported_languages: [python, js, java, go, ...]</text>
+  </g>
+
+  <!-- Feature Toggles -->
+  <g filter="url(#shadow)">
+    <rect x="340" y="285" width="290" height="210" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <text x="485" y="310" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#475569" text-anchor="middle">Embeddings &amp; Features</text>
+    <rect x="355" y="320" width="260" height="90" rx="4" fill="#f1f5f9"/>
+    <text x="365" y="335" font-family="monospace" font-size="7" fill="#475569">run_text_embedding: true</text>
+    <text x="365" y="347" font-family="monospace" font-size="7" fill="#475569">run_code_embedding: true</text>
+    <text x="365" y="359" font-family="monospace" font-size="7" fill="#475569">run_visual_embedding: false</text>
+    <text x="365" y="371" font-family="monospace" font-size="7" fill="#475569">visual_embedding_use_case: lecture</text>
+    <text x="365" y="383" font-family="monospace" font-size="7" fill="#475569">extract_screen_text: true</text>
+    <text x="365" y="395" font-family="monospace" font-size="7" fill="#475569">generate_thumbnails: true</text>
+
+    <text x="485" y="422" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#475569" text-anchor="middle">LLM Enrichment (Optional)</text>
+    <rect x="355" y="432" width="260" height="50" rx="4" fill="#f1f5f9"/>
+    <text x="365" y="447" font-family="monospace" font-size="7" fill="#475569">enrich_with_llm: false (Gemini for summaries)</text>
+    <text x="365" y="459" font-family="monospace" font-size="7" fill="#475569">llm_prompt: "Summarize this educational..."</text>
+    <text x="365" y="471" font-family="monospace" font-size="7" fill="#475569">Output: llm_summary field per unit</text>
+  </g>
+
+  <!-- Vector Indexes -->
+  <g filter="url(#shadow)">
+    <rect x="650" y="285" width="510" height="210" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <text x="905" y="310" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#475569" text-anchor="middle">Required Vector Indexes (Qdrant Named Vectors)</text>
+
+    <rect x="665" y="325" width="480" height="65" rx="4" fill="#fce7f3"/>
+    <text x="905" y="342" font-family="monospace" font-size="8" fill="#db2777" font-weight="600" text-anchor="middle">intfloat__multilingual_e5_large_instruct</text>
+    <text x="905" y="356" font-family="system-ui, sans-serif" font-size="7" fill="#be185d" text-anchor="middle">1024D text embeddings (transcripts, PDF text, captions)</text>
+    <text x="905" y="367" font-family="system-ui, sans-serif" font-size="7" fill="#be185d" text-anchor="middle">Semantic search across learning units</text>
+    <text x="905" y="378" font-family="system-ui, sans-serif" font-size="7" fill="#be185d" text-anchor="middle">Stored as: intfloat__multilingual_e5_large_instruct</text>
+
+    <rect x="665" y="400" width="480" height="60" rx="4" fill="#f0f9ff"/>
+    <text x="905" y="417" font-family="monospace" font-size="8" fill="#0c4a6e" font-weight="600" text-anchor="middle">jinaai__jina_embeddings_v2_base_code</text>
+    <text x="905" y="431" font-family="system-ui, sans-serif" font-size="7" fill="#075985" text-anchor="middle">768D code embeddings (code snippets, functions)</text>
+    <text x="905" y="442" font-family="system-ui, sans-serif" font-size="7" fill="#075985" text-anchor="middle">Stored as: jinaai__jina_embeddings_v2_base_code</text>
+
+    <rect x="665" y="468" width="480" height="20" rx="4" fill="#f0fdf4"/>
+    <text x="905" y="482" font-family="monospace" font-size="8" fill="#15803d" font-weight="600" text-anchor="middle">google__siglip_base_patch16_224 – 768D visual embeddings (optional, for thumbnails)</text>
+  </g>
+</svg>

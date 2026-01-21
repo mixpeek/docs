@@ -1,0 +1,539 @@
+---
+title: "Web Scraper Extractor"
+description: "Recursive website crawling with multimodal content extraction and semantic embeddings"
+---
+
+<Frame>
+  <img src="/assets/extractors/web-scraper.svg" alt="Web scraper extractor pipeline showing crawling, content extraction, chunking, and multimodal embeddings" />
+</Frame>
+
+The web scraper extractor recursively crawls websites to extract multimodal content with semantic embeddings. Automatically discovers and extracts text, code blocks, images, and asset links from web pages. Each extracted document receives E5-Large text embeddings (1024D) for semantic search, Jina Code embeddings (768D) for code snippets, and optional SigLIP visual embeddings (768D) for images. Supports JavaScript-rendered SPAs, includes resilience features like retry logic, proxy rotation, and captcha detection.
+
+<Note>
+  View extractor details at [api.mixpeek.com/v1/collections/features/extractors/web_scraper_v1](https://api.mixpeek.com/v1/collections/features/extractors/web_scraper_v1) or fetch programmatically with `GET /v1/collections/features/extractors/{feature_extractor_id}`.
+</Note>
+
+## Pipeline Steps
+
+1. **Filter Dataset** (if collection_id provided)
+   - Filter to specified collection
+2. **Crawl Configuration & Setup**
+   - Parse seed URL and configure crawl parameters
+   - Set up URL filtering rules, rendering strategy, resilience options
+3. **Recursive Web Crawling**
+   - BFS-based link traversal with depth limit
+   - JavaScript rendering support (auto-detect or explicit)
+   - URL filtering (include/exclude patterns)
+   - Resilience: retry logic, proxy rotation, captcha detection
+4. **Content Extraction Per Page**
+   - Extract text content, title, metadata
+   - Identify and extract code blocks with language detection
+   - Discover images with alt text, dimensions
+   - Find asset links (PDFs, documents, archives)
+   - Optional: Structured extraction via LLM (`response_shape`)
+5. **Content Chunking** (optional)
+   - Split page content by strategy: sentences, paragraphs, words, characters
+   - Configurable chunk size and overlap
+   - Track chunk metadata for joined results
+6. **Document Expansion**
+   - Create separate documents for page content, each code block, each image
+   - Preserve parent URL and crawl depth metadata
+7. **Multi-Modal Embedding Generation**
+   - E5-Large (1024D) for page text content
+   - Jina Code (768D) for code blocks
+   - SigLIP (768D) for images (if `generate_image_embeddings=true`)
+8. **Output**
+   - Documents with text content, code blocks, images
+   - Asset links discovered but not crawled
+   - Multiple embeddings per document for hybrid search
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **API documentation** | Index technical documentation with code examples and diagrams |
+| **Knowledge base crawling** | Extract FAQs, guides, and tutorials from support sites |
+| **Job board scraping** | Find job listings with parsed content and structured fields |
+| **News aggregation** | Collect and index articles with multimodal content |
+| **Competitive analysis** | Monitor competitor websites for content changes |
+| **Open source docs** | Index project documentation from GitHub Pages, ReadTheDocs |
+| **Product research** | Gather product information from multiple websites |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Protected/authenticated content | Configure via `custom_headers` with auth tokens |
+| PDF-only extraction | `document_graph_extractor` (better OCR, layout detection) |
+| Social media scraping | Use platform-specific APIs (Twitter API, Instagram Graph API) |
+| E-commerce product catalogs | Use platform APIs when available (better data structure) |
+| Very large sites (10K+ pages) | Increase `max_pages`, implement crawl goal filtering |
+
+## Input Schema
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `url` | string | **Yes** | Seed URL to start crawling from. Example: `https://docs.example.com/api/` |
+
+```json
+{
+  "url": "https://docs.example.com/getting-started"
+}
+```
+
+**Input Examples:**
+
+| Type | Example |
+|------|---------|
+| API documentation | `https://docs.openai.com/api/` |
+| Knowledge base | `https://help.example.com/` |
+| Blog | `https://blog.example.com/` |
+| Job board | `https://jobs.example.com/listings` |
+
+## Output Schema
+
+Each crawled page produces one or more documents depending on content extraction and expansion settings:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `content` | string | Extracted text content from page |
+| `title` | string | Page title (from `<title>` tag or heading) |
+| `page_url` | string | Full URL of crawled page |
+| `code_blocks` | array | Code blocks found on page (structure: `[{language, code, line_start, line_end}]`) |
+| `images` | array | Images found on page (structure: `[{src, alt, title, width, height}]`) |
+| `asset_links` | array | Downloadable assets discovered (structure: `[{url, file_type, link_text, file_extension}]`) |
+| `chunk_index` | integer | Position within page chunks (if chunking enabled) |
+| `total_chunks` | integer | Total chunks from this page (if chunking enabled) |
+| `crawl_depth` | integer | Depth from seed URL (0 = seed, 1 = links from seed, etc.) |
+| `parent_url` | string | Referrer URL (previous page in crawl path) |
+| `intfloat__multilingual_e5_large_instruct` | float[1024] | E5-Large text embedding, L2 normalized |
+| `jinaai__jina_embeddings_v2_base_code` | float[768] | Jina Code embedding (if code blocks extracted) |
+| `google__siglip_base_patch16_224` | float[768] | SigLIP visual embedding (if `generate_image_embeddings=true`) |
+
+```json
+{
+  "content": "The REST API provides endpoints for creating, reading, updating, and deleting resources...",
+  "title": "REST API Overview - Example Docs",
+  "page_url": "https://docs.example.com/api/overview",
+  "code_blocks": [
+    {
+      "language": "python",
+      "code": "import requests\nresponse = requests.get('https://api.example.com/users')",
+      "line_start": 1,
+      "line_end": 2
+    }
+  ],
+  "images": [
+    {
+      "src": "https://docs.example.com/images/api-flow.png",
+      "alt": "API request flow diagram",
+      "width": 800,
+      "height": 600
+    }
+  ],
+  "asset_links": [
+    {
+      "url": "https://docs.example.com/downloads/openapi.yaml",
+      "file_type": "openapi",
+      "link_text": "Download OpenAPI Spec",
+      "file_extension": "yaml"
+    }
+  ],
+  "crawl_depth": 2,
+  "parent_url": "https://docs.example.com/api/",
+  "intfloat__multilingual_e5_large_instruct": [0.023, -0.041, 0.018, ...],
+  "jinaai__jina_embeddings_v2_base_code": [0.045, -0.023, ...],
+  "google__siglip_base_patch16_224": [0.078, -0.091, ...]
+}
+```
+
+## Parameters
+
+### Crawl Configuration Parameters
+
+| Parameter | Type | Default | Range | Description |
+|-----------|------|---------|-------|-------------|
+| `max_depth` | integer | 2 | 0-1000 | Maximum link depth from seed (0 = seed URL only, higher = deeper crawl) |
+| `max_pages` | integer | 50 | 1-1000000 | Maximum pages to crawl in single run |
+| `crawl_timeout` | integer | 300 | 10-3600 | Maximum time for crawl in seconds (10s - 1h) |
+| `crawl_mode` | enum | `"deterministic"` | deterministic, semantic | BFS deterministic or LLM-guided semantic crawling |
+| `crawl_goal` | string | null | - | Goal for semantic crawling (e.g., "find all API endpoints"). Used with `crawl_mode: semantic` |
+
+### Rendering Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `render_strategy` | enum | `"auto"` | Rendering method: `static` (HTML only), `javascript` (Puppeteer), `auto` (auto-detect) |
+
+### URL Filtering Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `include_patterns` | array | null | Regex patterns for URLs to include (whitelist). Example: `["/docs/.*", "/api/.*"]` |
+| `exclude_patterns` | array | null | Regex patterns for URLs to exclude (blacklist). Example: `["/admin/.*", ".*logout.*"]` |
+
+### Content Chunking Parameters
+
+| Parameter | Type | Default | Range | Description |
+|-----------|------|---------|-------|-------------|
+| `chunk_strategy` | enum | `"none"` | none, sentences, paragraphs, words, characters | How to split page content |
+| `chunk_size` | integer | 500 | 1-10000 | Target size per chunk (units depend on strategy) |
+| `chunk_overlap` | integer | 50 | 0-5000 | Overlap between consecutive chunks |
+
+### Document Identity Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `document_id_strategy` | enum | `"url"` | How to generate document IDs: `url` (unique per page), `position` (sequential), `content` (hash-based) |
+
+### Embedding Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `generate_text_embeddings` | boolean | true | Generate E5-Large text embeddings for page content |
+| `generate_code_embeddings` | boolean | true | Generate Jina Code embeddings for code blocks |
+| `generate_image_embeddings` | boolean | true | Generate SigLIP embeddings for discovered images |
+
+### LLM Structured Extraction Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `response_shape` | string or object | null | Define structured extraction: natural language description or JSON schema |
+| `llm_provider` | string | null | LLM provider: `openai`, `google`, `anthropic` (required if using `response_shape`) |
+| `llm_model` | string | null | Specific LLM model (e.g., `gpt-4o-mini`, `gemini-2.5-flash`) |
+| `llm_api_key` | string | null | API key (supports secret vault references like `${vault:openai-key}`) |
+
+### Resilience: Retry Parameters
+
+| Parameter | Type | Default | Range | Description |
+|-----------|------|---------|-------|-------------|
+| `max_retries` | integer | 3 | 0-10 | Maximum retry attempts on request failure |
+| `retry_base_delay` | number | 1.0 | 0.1-30.0 | Base delay for exponential backoff (seconds) |
+| `retry_max_delay` | number | 30.0 | 1.0-300.0 | Maximum delay between retries (seconds) |
+| `respect_retry_after` | boolean | true | - | Respect `Retry-After` header from server |
+
+### Resilience: Proxy Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `proxies` | array | null | Proxy URLs for rotation. Example: `["http://proxy1:8080", "http://proxy2:8080"]` |
+| `rotate_proxy_on_error` | boolean | true | Rotate proxy when request fails |
+| `rotate_proxy_every_n_requests` | integer | 0 | Rotate proxy every N requests (0 = no periodic rotation) |
+
+### Resilience: Captcha Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `captcha_service_provider` | string | null | Captcha solving service: `2captcha`, `anti-captcha`, `capsolver` |
+| `captcha_service_api_key` | string | null | API key for captcha service (supports secret vault references) |
+| `detect_captcha` | boolean | true | Auto-detect captcha challenges and attempt to solve |
+
+### Resilience: Session Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `persist_cookies` | boolean | true | Persist cookies across requests within single crawl |
+| `custom_headers` | object | null | Custom HTTP headers. Example: `{"Authorization": "Bearer token", "User-Agent": "Custom"}` |
+
+### Politeness Parameters
+
+| Parameter | Type | Default | Range | Description |
+|-----------|------|---------|-------|-------------|
+| `delay_between_requests` | number | 0.0 | 0.0-60.0 | Delay between consecutive requests (seconds) |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Basic Documentation Crawl
+{
+  "feature_extractor": {
+    "feature_extractor_name": "web_scraper",
+    "version": "v1",
+    "input_mappings": {
+      "url": "payload.docs_url"
+    },
+    "field_passthrough": [
+      { "source_path": "metadata.vendor" },
+      { "source_path": "metadata.product" }
+    ],
+    "parameters": {
+      "max_depth": 2,
+      "max_pages": 50,
+      "crawl_timeout": 300,
+      "render_strategy": "auto",
+      "generate_text_embeddings": true,
+      "generate_code_embeddings": true,
+      "generate_image_embeddings": false,
+      "delay_between_requests": 0.5
+    }
+  }
+}
+```
+
+```json API Docs with Structured Extraction
+{
+  "feature_extractor": {
+    "feature_extractor_name": "web_scraper",
+    "version": "v1",
+    "input_mappings": {
+      "url": "payload.api_docs_url"
+    },
+    "parameters": {
+      "max_depth": 3,
+      "max_pages": 100,
+      "include_patterns": ["/api/.*", "/reference/.*"],
+      "exclude_patterns": ["/changelog/.*", "/deprecated/.*"],
+      "render_strategy": "javascript",
+      "response_shape": {
+        "type": "object",
+        "properties": {
+          "endpoints": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "method": { "type": "string" },
+                "path": { "type": "string" },
+                "description": { "type": "string" },
+                "parameters": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          },
+          "authentication": { "type": "string" },
+          "rate_limits": { "type": "string" }
+        }
+      },
+      "llm_provider": "openai",
+      "llm_model": "gpt-4o-mini",
+      "generate_text_embeddings": true,
+      "generate_code_embeddings": true,
+      "generate_image_embeddings": true
+    }
+  }
+}
+```
+
+```json Knowledge Base with Semantic Crawling
+{
+  "feature_extractor": {
+    "feature_extractor_name": "web_scraper",
+    "version": "v1",
+    "input_mappings": {
+      "url": "payload.kb_url"
+    },
+    "parameters": {
+      "max_depth": 4,
+      "max_pages": 200,
+      "crawl_mode": "semantic",
+      "crawl_goal": "Find all articles related to troubleshooting and error resolution",
+      "chunk_strategy": "paragraphs",
+      "chunk_size": 1000,
+      "chunk_overlap": 100,
+      "generate_text_embeddings": true,
+      "generate_code_embeddings": false,
+      "generate_image_embeddings": false
+    }
+  }
+}
+```
+
+```json Job Board with Resilience
+{
+  "feature_extractor": {
+    "feature_extractor_name": "web_scraper",
+    "version": "v1",
+    "input_mappings": {
+      "url": "payload.job_board_url"
+    },
+    "parameters": {
+      "max_depth": 2,
+      "max_pages": 500,
+      "render_strategy": "javascript",
+      "max_retries": 5,
+      "retry_base_delay": 2.0,
+      "retry_max_delay": 60.0,
+      "proxies": ["http://proxy1:8080", "http://proxy2:8080"],
+      "rotate_proxy_on_error": true,
+      "rotate_proxy_every_n_requests": 10,
+      "persist_cookies": true,
+      "delay_between_requests": 1.0,
+      "captcha_service_provider": "2captcha",
+      "captcha_service_api_key": "${vault:captcha-api-key}",
+      "generate_text_embeddings": true,
+      "generate_code_embeddings": false
+    }
+  }
+}
+```
+
+```json High-Volume Crawl with Filtering
+{
+  "feature_extractor": {
+    "feature_extractor_name": "web_scraper",
+    "version": "v1",
+    "input_mappings": {
+      "url": "payload.website_url"
+    },
+    "parameters": {
+      "max_depth": 5,
+      "max_pages": 1000,
+      "crawl_timeout": 3600,
+      "include_patterns": ["^https://example\\.com/.*"],
+      "exclude_patterns": [".*login.*", ".*admin.*", ".*/search\\?.*"],
+      "chunk_strategy": "sentences",
+      "chunk_size": 500,
+      "chunk_overlap": 50,
+      "document_id_strategy": "url",
+      "generate_text_embeddings": true,
+      "generate_code_embeddings": true,
+      "generate_image_embeddings": false,
+      "max_retries": 3,
+      "delay_between_requests": 0.2
+    }
+  }
+}
+```
+
+```json Premium: Full Featured
+{
+  "feature_extractor": {
+    "feature_extractor_name": "web_scraper",
+    "version": "v1",
+    "input_mappings": {
+      "url": "payload.target_url"
+    },
+    "parameters": {
+      "max_depth": 3,
+      "max_pages": 250,
+      "crawl_timeout": 1800,
+      "crawl_mode": "semantic",
+      "crawl_goal": "Find all technical content, code examples, and API documentation",
+      "render_strategy": "javascript",
+      "include_patterns": ["/docs/.*", "/api/.*", "/guide/.*"],
+      "exclude_patterns": ["/legacy/.*"],
+      "chunk_strategy": "paragraphs",
+      "chunk_size": 1000,
+      "chunk_overlap": 100,
+      "response_shape": "Extract key topics, code language, and frameworks mentioned",
+      "llm_provider": "anthropic",
+      "llm_model": "claude-3-5-haiku-20241022",
+      "generate_text_embeddings": true,
+      "generate_code_embeddings": true,
+      "generate_image_embeddings": true,
+      "max_retries": 5,
+      "retry_base_delay": 1.5,
+      "proxies": ["http://proxy1:8080"],
+      "rotate_proxy_every_n_requests": 5,
+      "persist_cookies": true,
+      "custom_headers": {
+        "User-Agent": "Mozilla/5.0 (compatible; MixpeekBot/1.0)"
+      },
+      "delay_between_requests": 0.5
+    }
+  }
+}
+```
+</CodeGroup>
+
+## Performance & Costs
+
+| Metric | Value |
+|--------|-------|
+| **Average page load** | 2-5 seconds (depends on page complexity and rendering) |
+| **Pages per minute** | 12-30 pages (with delays and retries) |
+| **Code block extraction** | ~10ms per 1KB of code |
+| **Image extraction** | ~50ms per 10 images |
+| **Embedding latency** | ~5ms per text page (E5), ~10ms per code block (Jina), ~50ms per image (SigLIP) |
+| **Cost (Tier 3)** | 5 credits per page crawled, 1 credit per code block, 2 credits per image |
+| **Memory usage** | ~100MB base + ~1MB per 100 pages in crawl queue |
+
+## Vector Indexes
+
+All three embeddings are stored as Qdrant named vectors for hybrid search:
+
+| Property | Value |
+|----------|-------|
+| **Index 1 name** | `intfloat__multilingual_e5_large_instruct` |
+| **Dimensions** | 1024 |
+| **Type** | Dense |
+| **Distance metric** | Cosine |
+| **Datatype** | float32 |
+| **Normalization** | L2 normalized |
+
+| Property | Value |
+|----------|-------|
+| **Index 2 name** | `jinaai__jina_embeddings_v2_base_code` |
+| **Dimensions** | 768 |
+| **Type** | Dense |
+| **Distance metric** | Cosine |
+| **Datatype** | float32 |
+| **Normalization** | L2 normalized |
+
+| Property | Value |
+|----------|-------|
+| **Index 3 name** | `google__siglip_base_patch16_224` |
+| **Dimensions** | 768 |
+| **Type** | Dense |
+| **Distance metric** | Cosine |
+| **Datatype** | float32 |
+| **Status** | Optional (if `generate_image_embeddings=true`) |
+
+## Comparison with Other Extractors
+
+| Feature | web_scraper | text_extractor | multimodal_extractor | document_graph_extractor |
+|---------|------------|-----------------|----------------------|--------------------------|
+| **Input types** | URLs (crawling) | Text only | Video, Image, Text | PDF only |
+| **Recursive crawling** | ✅ Yes | ✗ | ✗ | ✗ |
+| **Code extraction** | ✅ Yes | ✗ | ✗ | ✗ |
+| **Image extraction** | ✅ Yes | ✗ | ✅ Yes | ✗ |
+| **Multimodal embeddings** | ✅ Yes | Text only | ✅ Yes | Text only |
+| **LLM extraction** | ✅ Yes | ✅ Yes | ✗ | ✗ |
+| **Resilience features** | ✅ Yes | ✗ | ✗ | ✗ |
+| **Best for** | Web crawling | Text search | Video/image/text | PDF analysis |
+| **Cost per page** | 5-15 credits | Free (text) | 10-50 credits | 5-50 credits |
+
+## Resilience & Robustness
+
+The web scraper includes enterprise-grade resilience features:
+
+### Retry Strategy
+- Exponential backoff with configurable base and max delays
+- Respects server `Retry-After` headers
+- Retries on network errors, timeouts, and temporary failures (5xx)
+
+### Proxy Rotation
+- Support for multiple proxies with automatic rotation
+- Rotate on error or periodic rotation every N requests
+- Helps avoid rate limiting and IP bans
+
+### Captcha Detection & Solving
+- Auto-detect common captcha types (reCAPTCHA, hCaptcha)
+- Integration with 2captcha, Anti-Captcha, CapSolver services
+- Fallback to manual review if solving fails
+
+### Session Management
+- Persistent cookies across requests within a single crawl
+- Custom HTTP headers for authentication
+- Support for API key and bearer token injection
+
+### URL Filtering
+- Include patterns (whitelist): Only crawl matching URLs
+- Exclude patterns (blacklist): Skip URLs matching patterns
+- Prevent crawling auth/admin pages, search results, etc.
+
+## Limitations
+
+- **Content-only crawling**: Does not execute custom JavaScript actions (clicking, form submission, scrolling)
+- **Authentication**: Limited to HTTP headers (Bearer tokens, API keys). No interactive login flows.
+- **Dynamic content**: JavaScript-rendering adds 2-3x latency per page
+- **Large sites**: 10K+ page sites may require high `max_pages` and long timeouts
+- **Robots.txt**: Does not parse `robots.txt`; respect via `delay_between_requests` and `max_pages`
+- **Rate limiting**: May be blocked by aggressive rate limiting; use proxies and delays
+
+## Related
+
+- [Feature Extractors Overview](/processing/feature-extractors)
+- [Text Extractor](/processing/extractors/text)
+- [Document Graph Extractor](/processing/extractors/document)
+- [Image Extractor](/processing/extractors/image)
+- [Multimodal Extractor](/processing/extractors/multimodal)
