@@ -119,6 +119,8 @@
             "processing/extractors/text",
             "processing/extractors/face-identity",
             "processing/extractors/document",
+            "processing/extractors/web-scraper",
+            "processing/extractors/course-content",
             "processing/extractors/passthrough"
           ]
         },
