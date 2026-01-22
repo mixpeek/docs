@@ -1,15 +1,87 @@
 ---
-title: "SDK Usage"
-description: "Using Mixpeek with Python, JavaScript, and other SDKs"
+title: "SDK Overview"
+description: "Official SDKs for Python, JavaScript/TypeScript, and more"
 ---
 
-<Info>
-This section is coming soon. For now, all API operations are available via the REST API.
-</Info>
+<Note>
+Mixpeek provides auto-generated SDKs that are always in sync with our latest API features.
+</Note>
 
-## Python SDK (Coming Soon)
+## Official SDKs
 
-A native Python SDK for Mixpeek is in development. For now, you can use the REST API with standard HTTP libraries:
+Choose the SDK that matches your development environment:
+
+<CardGroup cols={2}>
+  <Card title="Python SDK" icon="python" href="/integrations/developer-tools/python-sdk">
+    Full-featured Python SDK with type hints and comprehensive error handling
+  </Card>
+  <Card title="JavaScript SDK" icon="js" href="/integrations/developer-tools/javascript-sdk">
+    TypeScript-first SDK for Node.js and browser environments
+  </Card>
+</CardGroup>
+
+## Quick Comparison
+
+| Feature | Python SDK | JavaScript SDK |
+|---------|------------|----------------|
+| Package Manager | pip | npm/yarn/pnpm |
+| Type Safety | Type hints | Full TypeScript |
+| Async Support | ✅ | ✅ (Promise-based) |
+| Auto-generated | ✅ | ✅ |
+| Runtime Validation | ✅ | ✅ (Zod schemas) |
+
+## Installation
+
+<CodeGroup>
+
+```bash Python
+pip install mixpeek
+```
+
+```bash JavaScript
+npm install mixpeek
+```
+
+</CodeGroup>
+
+## Quick Start Examples
+
+### Python
+
+```python
+import mixpeek
+from mixpeek.rest import ApiException
+
+configuration = mixpeek.Configuration(host="https://api.mixpeek.com")
+
+with mixpeek.ApiClient(configuration) as api_client:
+    collections_api = mixpeek.CollectionsApi(api_client)
+    collections = collections_api.list_collections(
+        authorization="Bearer sk_xxxxxxxxxxxxx",
+        x_namespace="ns_xxxxxxxxxxxxx"
+    )
+```
+
+[View full Python SDK documentation →](/integrations/developer-tools/python-sdk)
+
+### JavaScript/TypeScript
+
+```typescript
+import { Mixpeek } from 'mixpeek';
+
+const client = new Mixpeek({
+  apiKey: process.env.MIXPEEK_API_KEY,
+  namespace: 'my-namespace'
+});
+
+const collections = await client.collections.listCollections();
+```
+
+[View full JavaScript SDK documentation →](/integrations/developer-tools/javascript-sdk)
+
+## Using the REST API Directly
+
+If you prefer to use the REST API without an SDK, you can make direct HTTP requests:
 
 ```python
 import requests
@@ -31,24 +103,7 @@ namespace = response.json()
 print(f"Created namespace: {namespace['namespace_id']}")
 ```
 
-## JavaScript/TypeScript SDK (Coming Soon)
-
-A JavaScript/TypeScript SDK is planned for browser and Node.js environments.
-
-## Current Approach: Direct API Usage
-
-For now, use the Mixpeek REST API directly:
-
-<CardGroup cols={2}>
-  <Card title="API Reference" icon="code" href="/api-reference">
-    Complete API documentation with all endpoints
-  </Card>
-  <Card title="OpenAPI Spec" icon="file-code" href="https://api.mixpeek.com/docs/openapi.json">
-    Download the OpenAPI specification
-  </Card>
-</CardGroup>
-
-## Example: Using the API with Python
+### Example: Direct API with Python
 
 ```python
 import requests
@@ -121,7 +176,7 @@ results = client.execute_retriever(
 )
 ```
 
-## Example: Using the API with JavaScript
+### Example: Direct API with JavaScript
 
 ```javascript
 class MixpeekClient {
@@ -197,13 +252,15 @@ const results = await client.executeRetriever(
 );
 ```
 
-## Alternative: Use the MCP Server
-
-For AI-powered workflows, use the [MCP Server](/integrations/developer-tools/mcp-server) which provides a natural language interface to all Mixpeek operations through Claude and other AI applications.
-
 ## Next Steps
 
 <CardGroup cols={2}>
+  <Card title="Python SDK" icon="python" href="/integrations/developer-tools/python-sdk">
+    Full Python SDK documentation
+  </Card>
+  <Card title="JavaScript SDK" icon="js" href="/integrations/developer-tools/javascript-sdk">
+    Full JavaScript SDK documentation
+  </Card>
   <Card title="API Reference" icon="code" href="/api-reference">
     Explore all API endpoints
   </Card>

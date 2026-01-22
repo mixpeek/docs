@@ -256,9 +256,11 @@
         {
           "group": "Developer Tools",
           "pages": [
+            "integrations/developer-tools/sdk-usage",
+            "integrations/developer-tools/python-sdk",
+            "integrations/developer-tools/javascript-sdk",
             "integrations/developer-tools/mixpeek-cli",
-            "integrations/developer-tools/mcp-server",
-            "integrations/developer-tools/sdk-usage"
+            "integrations/developer-tools/mcp-server"
           ]
         }
       ]
