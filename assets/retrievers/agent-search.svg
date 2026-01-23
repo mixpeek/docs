@@ -1,0 +1,161 @@
+<svg viewBox="0 0 1000 420" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="inputGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="agentGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#d97706;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="toolGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="outputGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
+    </marker>
+    <marker id="arrowAmber" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#d97706"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="420" fill="#f8fafc"/>
+
+  <text x="500" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">Agent Search: LLM-Driven Multi-Step Retrieval</text>
+  <text x="500" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">Iterative reasoning loop that invokes retriever stages as tools</text>
+
+  <!-- Input -->
+  <g filter="url(#shadow)">
+    <rect x="20" y="75" width="150" height="150" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="20" y="75" width="150" height="28" rx="10" fill="url(#inputGrad)"/>
+    <rect x="20" y="93" width="150" height="10" fill="url(#inputGrad)"/>
+    <text x="95" y="95" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Input</text>
+  </g>
+  <g transform="translate(30, 115)">
+    <text x="65" y="12" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#2563eb" text-anchor="middle">Query + Context</text>
+    <rect x="0" y="22" width="130" height="24" rx="3" fill="#dbeafe"/>
+    <text x="65" y="38" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">query: "Find senior..."</text>
+    <rect x="0" y="52" width="130" height="24" rx="3" fill="#dbeafe"/>
+    <text x="65" y="68" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">strategy: iterative</text>
+    <rect x="0" y="82" width="130" height="24" rx="3" fill="#dbeafe"/>
+    <text x="65" y="98" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">max_iterations: 5</text>
+  </g>
+
+  <path d="M 170 150 L 210 150" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Agent Reasoning Loop -->
+  <g filter="url(#shadow)">
+    <rect x="220" y="65" width="400" height="230" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="220" y="65" width="400" height="28" rx="10" fill="url(#agentGrad)"/>
+    <rect x="220" y="83" width="400" height="10" fill="url(#agentGrad)"/>
+    <text x="420" y="85" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">LLM Reasoning Loop</text>
+  </g>
+
+  <!-- Iteration indicator -->
+  <path d="M 580 100 C 610 100, 610 140, 580 140" stroke="#d97706" stroke-width="1.5" fill="none" stroke-dasharray="3,2" marker-end="url(#arrowAmber)"/>
+  <text x="618" y="124" font-family="system-ui, sans-serif" font-size="7" fill="#d97706">iterate</text>
+
+  <!-- LLM Decision -->
+  <g transform="translate(235, 105)">
+    <rect x="0" y="0" width="175" height="55" rx="6" fill="#fffbeb" stroke="#fbbf24" stroke-width="1"/>
+    <text x="88" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#d97706" text-anchor="middle">LLM Decides Next Action</text>
+    <text x="88" y="34" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Analyzes query + prior results</text>
+    <text x="88" y="48" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Selects tool + arguments</text>
+  </g>
+
+  <!-- Arrow from LLM to tools -->
+  <path d="M 420 165 L 420 180" stroke="#94a3b8" stroke-width="1.5" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Tools (Sub-Stages) -->
+  <g transform="translate(235, 185)">
+    <rect x="0" y="0" width="370" height="95" rx="6" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1"/>
+    <text x="185" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#7c3aed" text-anchor="middle">Available Tools (Retriever Stages)</text>
+
+    <rect x="10" y="28" width="80" height="28" rx="4" fill="url(#toolGrad)"/>
+    <text x="50" y="46" font-family="system-ui, sans-serif" font-size="7" font-weight="500" fill="white" text-anchor="middle">feature_search</text>
+
+    <rect x="100" y="28" width="80" height="28" rx="4" fill="url(#toolGrad)"/>
+    <text x="140" y="46" font-family="system-ui, sans-serif" font-size="7" font-weight="500" fill="white" text-anchor="middle">attribute_filter</text>
+
+    <rect x="190" y="28" width="65" height="28" rx="4" fill="url(#toolGrad)"/>
+    <text x="222" y="46" font-family="system-ui, sans-serif" font-size="7" font-weight="500" fill="white" text-anchor="middle">llm_filter</text>
+
+    <rect x="265" y="28" width="55" height="28" rx="4" fill="url(#toolGrad)"/>
+    <text x="292" y="46" font-family="system-ui, sans-serif" font-size="7" font-weight="500" fill="white" text-anchor="middle">rerank</text>
+
+    <rect x="10" y="62" width="70" height="28" rx="4" fill="url(#toolGrad)"/>
+    <text x="45" y="80" font-family="system-ui, sans-serif" font-size="7" font-weight="500" fill="white" text-anchor="middle">llm_enrich</text>
+
+    <rect x="90" y="62" width="90" height="28" rx="4" fill="url(#toolGrad)"/>
+    <text x="135" y="80" font-family="system-ui, sans-serif" font-size="7" font-weight="500" fill="white" text-anchor="middle">taxonomy_enrich</text>
+
+    <text x="280" y="80" font-family="system-ui, sans-serif" font-size="8" fill="#7c3aed" text-anchor="middle">+ any registered stage</text>
+  </g>
+
+  <path d="M 620 185 L 660 185" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Output -->
+  <g filter="url(#shadow)">
+    <rect x="670" y="75" width="150" height="150" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="670" y="75" width="150" height="28" rx="10" fill="url(#outputGrad)"/>
+    <rect x="670" y="93" width="150" height="10" fill="url(#outputGrad)"/>
+    <text x="745" y="95" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Output</text>
+  </g>
+  <g transform="translate(680, 115)">
+    <text x="65" y="12" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#0d9488" text-anchor="middle">Refined Documents</text>
+    <rect x="0" y="22" width="130" height="24" rx="3" fill="#a7f3d0"/>
+    <text x="65" y="38" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">Doc A (score: 0.95)</text>
+    <rect x="0" y="52" width="130" height="24" rx="3" fill="#a7f3d0"/>
+    <text x="65" y="68" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">Doc B (score: 0.89)</text>
+    <rect x="0" y="82" width="130" height="24" rx="3" fill="#a7f3d0"/>
+    <text x="65" y="98" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">Doc C (score: 0.82)</text>
+  </g>
+
+  <!-- Metadata badge -->
+  <g transform="translate(840, 90)">
+    <rect x="0" y="0" width="135" height="135" rx="6" fill="#fffbeb" stroke="#fbbf24" stroke-width="1"/>
+    <text x="68" y="20" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#d97706" text-anchor="middle">Adaptive</text>
+    <text x="68" y="42" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">+ Multi-hop reasoning</text>
+    <text x="68" y="58" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">+ Iterative refinement</text>
+    <text x="68" y="74" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">+ Tool orchestration</text>
+    <text x="68" y="90" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">+ Strategy-driven</text>
+    <text x="68" y="112" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">LLM decides what</text>
+    <text x="68" y="126" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">to search and when</text>
+  </g>
+
+  <!-- Strategies -->
+  <g transform="translate(20, 310)">
+    <text x="0" y="0" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#475569">Strategies:</text>
+
+    <rect x="0" y="15" width="220" height="50" rx="4" fill="#fffbeb"/>
+    <text x="110" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#d97706" text-anchor="middle">Iterative Refinement</text>
+    <text x="110" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Broad search, then narrow down</text>
+
+    <rect x="240" y="15" width="220" height="50" rx="4" fill="#f5f3ff"/>
+    <text x="350" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#7c3aed" text-anchor="middle">Multi-Hop</text>
+    <text x="350" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Follow references across documents</text>
+
+    <rect x="480" y="15" width="220" height="50" rx="4" fill="#eff6ff"/>
+    <text x="590" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#2563eb" text-anchor="middle">Tree Navigation</text>
+    <text x="590" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Navigate hierarchical indexes</text>
+
+    <rect x="720" y="15" width="220" height="50" rx="4" fill="#ccfbf1"/>
+    <text x="830" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#0d9488" text-anchor="middle">Custom</text>
+    <text x="830" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">User-defined tools + prompts</text>
+  </g>
+
+  <!-- Flow example -->
+  <g transform="translate(20, 380)">
+    <text x="0" y="0" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#475569">Example Flow:</text>
+    <rect x="0" y="10" width="940" height="25" rx="4" fill="#f1f5f9"/>
+    <text x="470" y="27" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">Query "senior engineers" → LLM calls feature_search("engineers") → sees 50 results → calls attribute_filter(level="senior") → returns 8 refined docs</text>
+  </g>
+</svg>

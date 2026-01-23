@@ -1,0 +1,200 @@
+---
+title: "Deduplicate"
+description: "Remove duplicate documents by field match or content similarity"
+---
+
+<Frame>
+  <img src="/assets/retrievers/deduplicate.svg" alt="Deduplicate stage showing removal of duplicate documents" />
+</Frame>
+
+The Deduplicate stage removes duplicate documents from the result set based on exact field matching or content similarity. This is analogous to SQL's `DISTINCT`, MongoDB's `$group` with `$first`, and Elasticsearch's field collapsing.
+
+<Note>
+  **Stage Category**: REDUCE (Removes duplicates)
+
+  **Transformation**: N documents → M documents (M ≤ N, duplicates removed)
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **URL deduplication** | One result per source URL after web enrichment |
+| **Author collapse** | Keep one result per author |
+| **Content dedup** | Remove near-identical text chunks |
+| **Multi-source merge** | Remove overlapping results from multiple searches |
+| **Query expansion cleanup** | Remove duplicates from expanded query results |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Grouping with aggregation | `group_by` stage |
+| Sampling unique categories | `sample` with stratified |
+| Limiting result count | `limit` stage |
+| Filtering by criteria | `attribute_filter` |
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `strategy` | string | `field` | Dedup method: `field` (exact match) or `content` (similarity) |
+| `fields` | list[string] | *required for field* | Field paths to compare for deduplication |
+| `content_field` | string | `content` | Text field for content-based dedup |
+| `similarity_threshold` | float | `0.95` | Similarity threshold for content dedup (0.0-1.0) |
+| `keep` | string | `first` | Which duplicate to keep: `first` or `last` |
+| `case_sensitive` | boolean | `true` | Whether string comparisons are case-sensitive |
+
+## Deduplication Strategies
+
+| Strategy | Performance | Best For |
+|----------|-------------|----------|
+| `field` | O(N) hash-based | Exact field matching (URL, ID, title) |
+| `content` | O(N²) pairwise | Near-duplicate text detection |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Deduplicate by URL
+{
+  "stage_type": "reduce",
+  "stage_id": "deduplicate",
+  "parameters": {
+    "strategy": "field",
+    "fields": ["metadata.source_url"],
+    "keep": "first"
+  }
+}
+```
+
+```json Case-Insensitive Author Dedup
+{
+  "stage_type": "reduce",
+  "stage_id": "deduplicate",
+  "parameters": {
+    "strategy": "field",
+    "fields": ["metadata.author"],
+    "case_sensitive": false
+  }
+}
+```
+
+```json Multi-Field Dedup
+{
+  "stage_type": "reduce",
+  "stage_id": "deduplicate",
+  "parameters": {
+    "strategy": "field",
+    "fields": ["metadata.author", "metadata.title"]
+  }
+}
+```
+
+```json Content Similarity Dedup
+{
+  "stage_type": "reduce",
+  "stage_id": "deduplicate",
+  "parameters": {
+    "strategy": "content",
+    "content_field": "content",
+    "similarity_threshold": 0.9,
+    "keep": "first"
+  }
+}
+```
+</CodeGroup>
+
+<Tip>
+  For best results, place deduplicate after sorting/reranking so that `keep: "first"` retains the highest-scored duplicate. This ensures you keep the most relevant version of each document.
+</Tip>
+
+## Performance
+
+| Metric | Value |
+|--------|-------|
+| **Latency** | < 5ms (field) / 10-100ms (content) |
+| **Memory** | O(N) hash set (field) / O(N) content cache (content) |
+| **Cost** | Free |
+| **Complexity** | O(N) field / O(N²) content |
+
+## Common Pipeline Patterns
+
+### Web Search Deduplication
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "feature_search",
+    "parameters": {
+      "feature_uris": [{"input": {"text": "{{INPUT.query}}"}, "uri": "mixpeek://text_extractor@v1/embedding"}],
+      "limit": 50
+    }
+  },
+  {
+    "stage_type": "apply",
+    "stage_id": "external_web_search",
+    "parameters": {
+      "query": "{{INPUT.query}}",
+      "num_results": 10
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "deduplicate",
+    "parameters": {
+      "strategy": "field",
+      "fields": ["metadata.source_url"]
+    }
+  }
+]
+```
+
+### Cross-Collection Dedup
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "feature_search",
+    "parameters": {
+      "feature_uris": [{"input": {"text": "{{INPUT.query}}"}, "uri": "mixpeek://text_extractor@v1/embedding"}],
+      "limit": 100
+    }
+  },
+  {
+    "stage_type": "sort",
+    "stage_id": "rerank",
+    "parameters": {
+      "inference_name": "baai_bge_reranker_v2_m3",
+      "query": "{{INPUT.query}}",
+      "document_field": "content"
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "deduplicate",
+    "parameters": {
+      "strategy": "content",
+      "content_field": "content",
+      "similarity_threshold": 0.85
+    }
+  }
+]
+```
+
+## Error Handling
+
+| Error | Behavior |
+|-------|----------|
+| Field doesn't exist | Documents with missing fields have `None` as key value |
+| All unique documents | Returns all documents unchanged |
+| Empty input | Returns empty result set |
+| Single document | Returned as-is (no duplicates possible) |
+
+## Related
+
+- [Group By](/retrieval/stages/group-by) - Group documents with aggregation
+- [Limit](/retrieval/stages/limit) - Truncate results after deduplication
+- [Sample](/retrieval/stages/sample) - Random sampling (different from dedup)
+- [Unwind](/retrieval/stages/unwind) - Inverse: expand grouped items

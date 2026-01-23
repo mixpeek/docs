@@ -1,0 +1,181 @@
+---
+title: "Limit"
+description: "Truncate results to a maximum count with optional offset for pagination"
+---
+
+<Frame>
+  <img src="/assets/retrievers/limit.svg" alt="Limit stage showing result truncation to top-N documents" />
+</Frame>
+
+The Limit stage truncates the document set to a maximum number of results, optionally with an offset for pagination-style behavior. This is the retriever pipeline equivalent of SQL's `LIMIT/OFFSET` clause.
+
+<Note>
+  **Stage Category**: REDUCE (Truncates documents)
+
+  **Transformation**: N documents → min(N, limit) documents
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Top-K results** | Return only the best N results after reranking |
+| **Pagination** | Implement page-based result access with offset |
+| **Cost control** | Cap document count before expensive LLM stages |
+| **Fixed output** | Guarantee exactly N results for downstream consumers |
+| **Mid-pipeline trim** | Reduce candidates between expensive stages |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Random sampling | `sample` stage |
+| Filtering by criteria | `attribute_filter` or `llm_filter` |
+| Initial retrieval limit | Set `limit` in `feature_search` directly |
+| Statistical reduction | `aggregate` stage |
+| Grouping results | `group_by` stage |
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `limit` | integer | `10` | Maximum number of documents to return (1-10000) |
+| `offset` | integer | `0` | Number of documents to skip from the beginning (0-10000) |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Top 10 Results
+{
+  "stage_type": "reduce",
+  "stage_id": "limit",
+  "parameters": {
+    "limit": 10
+  }
+}
+```
+
+```json Pagination (Page 3)
+{
+  "stage_type": "reduce",
+  "stage_id": "limit",
+  "parameters": {
+    "limit": 10,
+    "offset": 20
+  }
+}
+```
+
+```json Single Best Result
+{
+  "stage_type": "reduce",
+  "stage_id": "limit",
+  "parameters": {
+    "limit": 1
+  }
+}
+```
+
+```json Cap Before LLM Processing
+{
+  "stage_type": "reduce",
+  "stage_id": "limit",
+  "parameters": {
+    "limit": 25
+  }
+}
+```
+</CodeGroup>
+
+<Tip>
+  Place the limit stage after sorting/reranking to ensure you're keeping the highest-quality results. Limiting before reranking loses potentially relevant documents.
+</Tip>
+
+## Performance
+
+| Metric | Value |
+|--------|-------|
+| **Latency** | < 1ms |
+| **Memory** | O(1) |
+| **Cost** | Free |
+| **Complexity** | O(1) list slicing |
+
+## Common Pipeline Patterns
+
+### Rerank Then Limit
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "feature_search",
+    "parameters": {
+      "feature_uris": [{"input": {"text": "{{INPUT.query}}"}, "uri": "mixpeek://text_extractor@v1/embedding"}],
+      "limit": 100
+    }
+  },
+  {
+    "stage_type": "sort",
+    "stage_id": "rerank",
+    "parameters": {
+      "inference_name": "baai_bge_reranker_v2_m3",
+      "query": "{{INPUT.query}}",
+      "document_field": "content"
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "limit",
+    "parameters": {
+      "limit": 10
+    }
+  }
+]
+```
+
+### Cost-Controlled LLM Pipeline
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "feature_search",
+    "parameters": {
+      "feature_uris": [{"input": {"text": "{{INPUT.query}}"}, "uri": "mixpeek://text_extractor@v1/embedding"}],
+      "limit": 200
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "limit",
+    "parameters": {
+      "limit": 20
+    }
+  },
+  {
+    "stage_type": "apply",
+    "stage_id": "llm_enrich",
+    "parameters": {
+      "provider": "openai",
+      "model_name": "gpt-4o-mini",
+      "prompt": "Summarize: {{DOC.content}}",
+      "output_field": "summary"
+    }
+  }
+]
+```
+
+## Error Handling
+
+| Error | Behavior |
+|-------|----------|
+| Limit > input count | Returns all available documents |
+| Offset > input count | Returns empty result set |
+| Empty input | Returns empty result set |
+| Offset + Limit > count | Returns documents from offset to end |
+
+## Related
+
+- [Sample](/retrieval/stages/sample) - Random or stratified sampling
+- [Deduplicate](/retrieval/stages/deduplicate) - Remove duplicates before limiting
+- [Rerank](/retrieval/stages/rerank) - Re-score before limiting to ensure best results

@@ -1,0 +1,198 @@
+---
+title: "Score Normalize"
+description: "Rescale document scores to a common range for consistent comparison"
+---
+
+<Frame>
+  <img src="/assets/retrievers/score-normalize.svg" alt="Score normalize stage showing score rescaling from raw to normalized range" />
+</Frame>
+
+The Score Normalize stage rescales document scores using statistical normalization methods, enabling meaningful comparison across different scoring sources and consistent downstream thresholding.
+
+<Note>
+  **Stage Category**: SORT (Rescales scores)
+
+  **Transformation**: N documents → N documents (same order, normalized scores)
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Hybrid search fusion** | Normalize text and vector scores before combining |
+| **Score thresholding** | Set consistent cutoffs across different retrievers |
+| **Cross-model comparison** | Make scores from different models comparable |
+| **Probability ranking** | Convert scores to probability distribution |
+| **Multi-stage pipelines** | Normalize between reranking stages |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Reordering by relevance | `sort_relevance` |
+| Reranking with cross-encoders | `rerank` |
+| Filtering by score threshold | `attribute_filter` on score field |
+| Single scoring source | Scores are already comparable |
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `method` | string | `min_max` | Normalization method: `min_max`, `z_score`, `softmax`, `l2` |
+| `score_field` | string | `score` | Field containing the score to normalize |
+| `output_field` | string | `null` | Write normalized score to this field (preserves original) |
+| `min_value` | float | `null` | Custom minimum for min_max (uses actual min if null) |
+| `max_value` | float | `null` | Custom maximum for min_max (uses actual max if null) |
+
+## Normalization Methods
+
+| Method | Formula | Output Range | Best For |
+|--------|---------|--------------|----------|
+| `min_max` | (x - min) / (max - min) | [0, 1] | Bounded comparison |
+| `z_score` | (x - mean) / std | (-∞, +∞) | Statistical thresholding |
+| `softmax` | exp(x) / Σexp | (0, 1), sum=1 | Probability distribution |
+| `l2` | x / ‖x‖₂ | [-1, 1] | Geometric comparison |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Min-Max to [0,1]
+{
+  "stage_type": "sort",
+  "stage_id": "score_normalize",
+  "parameters": {
+    "method": "min_max",
+    "score_field": "score"
+  }
+}
+```
+
+```json Z-Score with Separate Output
+{
+  "stage_type": "sort",
+  "stage_id": "score_normalize",
+  "parameters": {
+    "method": "z_score",
+    "score_field": "score",
+    "output_field": "z_score"
+  }
+}
+```
+
+```json Softmax Probability
+{
+  "stage_type": "sort",
+  "stage_id": "score_normalize",
+  "parameters": {
+    "method": "softmax",
+    "score_field": "score",
+    "output_field": "probability"
+  }
+}
+```
+
+```json Custom Range Bounds
+{
+  "stage_type": "sort",
+  "stage_id": "score_normalize",
+  "parameters": {
+    "method": "min_max",
+    "min_value": 0.0,
+    "max_value": 1.0
+  }
+}
+```
+</CodeGroup>
+
+<Tip>
+  Use `output_field` to preserve the original score alongside the normalized value. This is useful for debugging or when you need both raw and normalized scores downstream.
+</Tip>
+
+## Performance
+
+| Metric | Value |
+|--------|-------|
+| **Latency** | < 1ms |
+| **Memory** | O(N) for score array |
+| **Cost** | Free |
+| **Complexity** | O(N) (two passes: stats + normalize) |
+
+## Common Pipeline Patterns
+
+### Hybrid Search Fusion
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "feature_search",
+    "parameters": {
+      "feature_uris": [{"input": {"text": "{{INPUT.query}}"}, "uri": "mixpeek://text_extractor@v1/embedding"}],
+      "limit": 50
+    }
+  },
+  {
+    "stage_type": "sort",
+    "stage_id": "score_normalize",
+    "parameters": {
+      "method": "min_max",
+      "score_field": "score"
+    }
+  },
+  {
+    "stage_type": "sort",
+    "stage_id": "rerank",
+    "parameters": {
+      "inference_name": "baai_bge_reranker_v2_m3",
+      "query": "{{INPUT.query}}",
+      "document_field": "content"
+    }
+  }
+]
+```
+
+### Score Thresholding After Normalization
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "feature_search",
+    "parameters": {
+      "feature_uris": [{"input": {"text": "{{INPUT.query}}"}, "uri": "mixpeek://text_extractor@v1/embedding"}],
+      "limit": 100
+    }
+  },
+  {
+    "stage_type": "sort",
+    "stage_id": "score_normalize",
+    "parameters": {
+      "method": "min_max"
+    }
+  },
+  {
+    "stage_type": "filter",
+    "stage_id": "attribute_filter",
+    "parameters": {
+      "AND": [
+        {"field": "score", "operator": "gte", "value": 0.5}
+      ]
+    }
+  }
+]
+```
+
+## Error Handling
+
+| Error | Behavior |
+|-------|----------|
+| Single document | min_max returns 1.0; z_score returns 0.0 |
+| All same scores | min_max returns 1.0 for all; z_score returns 0.0 for all |
+| Score field missing | Treated as 0.0 |
+| Non-numeric score | Treated as 0.0 |
+
+## Related
+
+- [Sort Relevance](/retrieval/stages/sort-relevance) - Reorder by relevance scores
+- [Rerank](/retrieval/stages/rerank) - Re-score with cross-encoder models
+- [Sort Attribute](/retrieval/stages/sort-attribute) - Sort by any metadata field

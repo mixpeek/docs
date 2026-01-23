@@ -144,6 +144,7 @@
                 "retrieval/stages/feature-search",
                 "retrieval/stages/attribute-filter",
                 "retrieval/stages/llm-filter",
+                "retrieval/stages/agent-search",
                 "retrieval/stages/query-expand"
               ]
             },
@@ -153,7 +154,8 @@
                 "retrieval/stages/sort-relevance",
                 "retrieval/stages/sort-attribute",
                 "retrieval/stages/mmr",
-                "retrieval/stages/rerank"
+                "retrieval/stages/rerank",
+                "retrieval/stages/score-normalize"
               ]
             },
             {
@@ -163,7 +165,9 @@
                 "retrieval/stages/group-by",
                 "retrieval/stages/cluster",
                 "retrieval/stages/sample",
-                "retrieval/stages/summarize"
+                "retrieval/stages/summarize",
+                "retrieval/stages/limit",
+                "retrieval/stages/deduplicate"
               ]
             },
             {
@@ -178,7 +182,8 @@
                 "retrieval/stages/taxonomy-enrich",
                 "retrieval/stages/document-enrich",
                 "retrieval/stages/cross-compare",
-                "retrieval/stages/web-scrape"
+                "retrieval/stages/web-scrape",
+                "retrieval/stages/unwind"
               ]
             },
             {

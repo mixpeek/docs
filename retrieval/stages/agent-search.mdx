@@ -1,0 +1,239 @@
+---
+title: "Agent Search"
+description: "LLM-driven multi-step retrieval with iterative reasoning and tool orchestration"
+---
+
+<Frame>
+  <img src="/assets/retrievers/agent-search.svg" alt="Agent Search stage showing LLM reasoning loop with retriever stages as tools" />
+</Frame>
+
+The Agent Search stage uses an LLM reasoning loop to orchestrate other retriever stages as callable tools. Instead of executing a fixed sequence of stages, the LLM dynamically decides which stages to invoke, with what arguments, and how many iterations to perform based on the query and intermediate results.
+
+<Note>
+  **Stage Category**: FILTER (Adaptive retrieval)
+
+  **Transformation**: Query → LLM reasoning (1-N iterations) → Refined documents
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Multi-hop queries** | Questions requiring following references across documents |
+| **Iterative refinement** | Broad search followed by intelligent narrowing |
+| **Complex filtering logic** | When the right filter conditions depend on query semantics |
+| **Tree/hierarchy navigation** | Navigating hierarchical document indexes top-down |
+| **Exploratory search** | When the best search strategy isn't known upfront |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Simple keyword or vector search | `feature_search` |
+| Known metadata filter conditions | `attribute_filter` |
+| Fixed pipeline with known stages | Chain stages directly |
+| Latency-critical applications (< 1s) | Direct stage execution |
+| Cost-sensitive high-volume queries | Pre-configured pipelines |
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `strategy` | string | `iterative_refinement` | Reasoning strategy (see Strategies below) |
+| `stages` | list[string] | *from strategy* | Which retriever stages the agent can invoke as tools |
+| `system_prompt` | string | *from strategy* | Custom system prompt for the LLM. Supports `{{INPUT.*}}` variables |
+| `max_iterations` | integer | `5` | Maximum reasoning iterations (1-20) |
+| `timeout_seconds` | float | `60.0` | Total timeout for the reasoning loop (5-300s) |
+| `provider` | string | *auto* | LLM provider (openai, google, anthropic) |
+| `model_name` | string | *auto* | Specific model to use |
+
+## Strategies
+
+| Strategy | Default Tools | Best For |
+|----------|---------------|----------|
+| `iterative_refinement` | feature_search, attribute_filter | Progressive narrowing of results |
+| `multi_hop` | feature_search, attribute_filter, llm_filter | Following cross-document references |
+| `tree_navigation` | feature_search, attribute_filter | Hierarchical index traversal |
+| `custom` | *user-specified* | Full control over tools and prompt |
+
+## Available Tools (Stages)
+
+The agent can invoke any registered retriever stage as a tool. Each stage is presented to the LLM with a simplified parameter schema:
+
+| Tool | What the LLM Sees | Typical Use |
+|------|-------------------|-------------|
+| `feature_search` | Semantic similarity search with query and top_k | Vector search |
+| `attribute_filter` | Filter by field, operator, and value | Metadata filtering |
+| `llm_filter` | Filter by natural language criteria | Semantic filtering |
+| `rerank` | Re-score documents by relevance to query | Result refinement |
+| `llm_enrich` | Generate new fields using LLM analysis | Information extraction |
+| `taxonomy_enrich` | Classify documents against a taxonomy | Categorization |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Iterative Refinement
+{
+  "stage_type": "filter",
+  "stage_id": "agent_search",
+  "parameters": {
+    "strategy": "iterative_refinement",
+    "max_iterations": 5,
+    "timeout_seconds": 30.0
+  }
+}
+```
+
+```json Custom Strategy with Specific Tools
+{
+  "stage_type": "filter",
+  "stage_id": "agent_search",
+  "parameters": {
+    "strategy": "custom",
+    "stages": ["feature_search", "attribute_filter", "rerank"],
+    "system_prompt": "You are a document retrieval agent. Start with feature_search to find initial matches, then use attribute_filter to narrow by metadata, and rerank for final ordering.",
+    "max_iterations": 4,
+    "timeout_seconds": 45.0
+  }
+}
+```
+
+```json Multi-Hop with LLM Filter
+{
+  "stage_type": "filter",
+  "stage_id": "agent_search",
+  "parameters": {
+    "strategy": "multi_hop",
+    "max_iterations": 7,
+    "timeout_seconds": 60.0
+  }
+}
+```
+
+```json Tree Navigation
+{
+  "stage_type": "filter",
+  "stage_id": "agent_search",
+  "parameters": {
+    "strategy": "tree_navigation",
+    "max_iterations": 10,
+    "timeout_seconds": 90.0
+  }
+}
+```
+</CodeGroup>
+
+<Tip>
+  Use the `custom` strategy when you need precise control over which tools the agent can access and how it should reason. The built-in strategies provide sensible defaults for common patterns.
+</Tip>
+
+## How It Works
+
+1. **Initialize**: The LLM receives the user query, available tools, and system prompt
+2. **Reason**: The LLM analyzes the query and decides which tool to call with what arguments
+3. **Execute**: The selected stage runs as a sub-execution with the LLM-provided parameters
+4. **Observe**: Results are summarized and fed back to the LLM as tool call results
+5. **Iterate**: The LLM decides whether to call another tool or stop
+6. **Return**: Final accumulated results are returned as the stage output
+
+Each tool call creates a sub-state execution of the target stage, inheriting namespace and collection context from the parent. Results from each iteration replace the previous results, giving the LLM a fresh working set to refine.
+
+## Performance
+
+| Metric | Value |
+|--------|-------|
+| **Latency** | 2-30s (depends on iterations and sub-stages) |
+| **Memory** | O(N) per iteration result set |
+| **Cost** | LLM API calls + sub-stage costs per iteration |
+| **Complexity** | O(iterations * sub-stage complexity) |
+
+## Common Pipeline Patterns
+
+### Agent as First Stage
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "agent_search",
+    "parameters": {
+      "strategy": "iterative_refinement",
+      "stages": ["feature_search", "attribute_filter"],
+      "max_iterations": 3
+    }
+  },
+  {
+    "stage_type": "sort",
+    "stage_id": "rerank",
+    "parameters": {
+      "inference_name": "baai_bge_reranker_v2_m3",
+      "query": "{{INPUT.query}}",
+      "document_field": "content"
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "limit",
+    "parameters": {
+      "limit": 10
+    }
+  }
+]
+```
+
+### Complex Query Decomposition
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "agent_search",
+    "parameters": {
+      "strategy": "custom",
+      "stages": ["feature_search", "attribute_filter", "llm_filter"],
+      "system_prompt": "Break down the user's complex query into sub-queries. Use feature_search for each sub-query, attribute_filter to narrow by metadata, and llm_filter to validate relevance. Combine the best results.",
+      "max_iterations": 5,
+      "timeout_seconds": 45.0
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "deduplicate",
+    "parameters": {
+      "strategy": "field",
+      "fields": ["document_id"]
+    }
+  }
+]
+```
+
+## Response Metadata
+
+The stage returns execution metadata in `stage_statistics`:
+
+| Field | Description |
+|-------|-------------|
+| `iterations_used` | Number of reasoning iterations completed |
+| `timeout_hit` | Whether the timeout was reached |
+| `strategy` | Strategy that was used |
+| `stages_invoked` | List of tool calls made (name + arguments) |
+| `total_llm_cost` | Total LLM API cost for the reasoning loop |
+| `model_used` | LLM model that was used |
+
+## Error Handling
+
+| Error | Behavior |
+|-------|----------|
+| Sub-stage execution fails | Error message returned to LLM; it can retry or try a different approach |
+| Timeout reached | Returns results accumulated so far (graceful degradation) |
+| Max iterations reached | Returns latest results from last successful tool call |
+| Unknown stage in tools list | Stage is skipped (logged as warning) |
+| LLM returns no tool calls | Loop ends; returns current results |
+| Empty collection | Returns empty result set (no error) |
+
+## Related
+
+- [Feature Search](/retrieval/stages/feature-search) - Vector similarity search (commonly used as agent tool)
+- [Attribute Filter](/retrieval/stages/attribute-filter) - Metadata filtering (commonly used as agent tool)
+- [LLM Filter](/retrieval/stages/llm-filter) - Natural language filtering
+- [Rerank](/retrieval/stages/rerank) - Result re-scoring by relevance

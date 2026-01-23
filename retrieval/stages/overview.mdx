@@ -13,25 +13,25 @@ Stages are organized into five categories based on how they transform the docume
   <Card title="FILTER" icon="filter">
     Reduce the document set by matching criteria. Outputs a subset of input documents.
 
-    **Stages**: feature_search, attribute_filter, llm_filter, query_expand
+    **Stages**: feature_search, attribute_filter, llm_filter, agent_search, query_expand
   </Card>
 
   <Card title="SORT" icon="arrow-up-arrow-down">
     Reorder documents by relevance or field values. Same documents, different order.
 
-    **Stages**: sort_relevance, sort_attribute, mmr, rerank
+    **Stages**: sort_relevance, sort_attribute, mmr, rerank, score_normalize
   </Card>
 
   <Card title="REDUCE" icon="compress">
     Aggregate or reduce the document count. Combine, group, or sample results.
 
-    **Stages**: aggregate, group_by, cluster, sample, summarize
+    **Stages**: aggregate, group_by, cluster, sample, summarize, limit, deduplicate
   </Card>
 
   <Card title="APPLY" icon="wand-magic-sparkles">
     Enrich or transform documents. May add fields, create new documents, or restructure data.
 
-    **Stages**: json_transform, rag_prepare, external_web_search, api_call, sql_lookup, llm_enrich, taxonomy_enrich, document_enrich, cross_compare, web_scrape
+    **Stages**: json_transform, rag_prepare, external_web_search, api_call, sql_lookup, llm_enrich, taxonomy_enrich, document_enrich, cross_compare, web_scrape, unwind
   </Card>
 
   <Card title="ENRICH" icon="code">
@@ -50,6 +50,7 @@ Stages are organized into five categories based on how they transform the docume
 | [Feature Search](/retrieval/stages/feature-search) | Search by vector similarity using multimodal embeddings |
 | [Attribute Filter](/retrieval/stages/attribute-filter) | Filter by metadata fields with boolean logic (AND/OR/NOT) |
 | [LLM Filter](/retrieval/stages/llm-filter) | Semantic filtering using LLM-based evaluation |
+| [Agent Search](/retrieval/stages/agent-search) | LLM-driven multi-step retrieval with iterative reasoning and tool orchestration |
 | [Query Expand](/retrieval/stages/query-expand) | LLM-powered query expansion with RRF result fusion |
 
 ### Sort Stages
@@ -60,6 +61,7 @@ Stages are organized into five categories based on how they transform the docume
 | [Sort Attribute](/retrieval/stages/sort-attribute) | Order by any metadata field (dates, price, etc.) |
 | [MMR](/retrieval/stages/mmr) | Diversify results with Maximal Marginal Relevance |
 | [Rerank](/retrieval/stages/rerank) | Re-score with cross-encoder models (e.g., BGE reranker) |
+| [Score Normalize](/retrieval/stages/score-normalize) | Rescale scores to a common range for consistent comparison |
 
 ### Reduce Stages
 
@@ -70,6 +72,8 @@ Stages are organized into five categories based on how they transform the docume
 | [Cluster](/retrieval/stages/cluster) | Discover themes via embedding-based clustering |
 | [Sample](/retrieval/stages/sample) | Random or stratified sampling of results |
 | [Summarize](/retrieval/stages/summarize) | Condense documents into an LLM-generated summary |
+| [Limit](/retrieval/stages/limit) | Truncate results to a maximum count with optional offset |
+| [Deduplicate](/retrieval/stages/deduplicate) | Remove duplicate documents by field or content similarity |
 
 ### Apply Stages
 
@@ -85,6 +89,7 @@ Stages are organized into five categories based on how they transform the docume
 | [Document Enrich](/retrieval/stages/document-enrich) | Cross-collection joins (LEFT JOIN) |
 | [Cross Compare](/retrieval/stages/cross-compare) | Multi-tier cross-collection matching with classification |
 | [Web Scrape](/retrieval/stages/web-scrape) | Extract full page content from URLs |
+| [Unwind](/retrieval/stages/unwind) | Decompose array fields into separate documents |
 
 ### Enrich Stages
 
@@ -257,6 +262,10 @@ Stages are organized into five categories based on how they transform the docume
 | Order by price/date/rating | sort_attribute |
 | Re-sort by relevance scores | sort_relevance |
 | Diversify results | mmr |
+| Normalize scores across sources | score_normalize |
+| Truncate to top-N results | limit |
+| Remove duplicate results | deduplicate |
+| Expand array fields to documents | unwind |
 | Answer questions from docs | summarize |
 | Compute statistics on results | aggregate |
 | Find themes in results | cluster |
@@ -285,6 +294,10 @@ Stages are organized into five categories based on how they transform the docume
 | sort_attribute | < 5ms | Free |
 | sort_relevance | < 5ms | Free |
 | mmr | 10-50ms | Free |
+| score_normalize | < 1ms | Free |
+| limit | < 1ms | Free |
+| deduplicate | 5-50ms | Free |
+| unwind | < 5ms | Free |
 | summarize | 500-2000ms | LLM API |
 | aggregate | 5-50ms | Free |
 | cluster | 50-200ms | Inference |

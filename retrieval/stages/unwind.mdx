@@ -1,0 +1,181 @@
+---
+title: "Unwind"
+description: "Decompose array fields into separate documents for per-element processing"
+---
+
+<Frame>
+  <img src="/assets/retrievers/unwind.svg" alt="Unwind stage showing array decomposition into separate documents" />
+</Frame>
+
+The Unwind stage decomposes array fields into separate documents, producing one output document per array element. This is the retriever pipeline equivalent of MongoDB's `$unwind`, Snowflake's `LATERAL FLATTEN`, and Spark's `explode()`.
+
+<Note>
+  **Stage Category**: APPLY (Expands documents)
+
+  **Transformation**: N documents → M documents (where M ≥ N, one per array element)
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Tag expansion** | Decompose multi-tag documents for per-tag analysis |
+| **Segment decomposition** | Flatten video/audio segments into individual results |
+| **Author attribution** | Expand author lists for per-author scoring |
+| **Chunk flattening** | Convert grouped chunks back into individual documents |
+| **Category expansion** | Expand multi-category items for faceted search |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Filtering documents | `attribute_filter` or `llm_filter` |
+| Restructuring without expansion | `json_transform` |
+| Sorting documents | `sort_attribute` or `sort_relevance` |
+| Grouping documents | `group_by` (inverse operation) |
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `field` | string | *required* | Dot-notation path to the array field to unwind |
+| `preserve_null_and_empty` | boolean | `false` | Keep documents where array is null/missing/empty |
+| `include_array_index` | string | `null` | Field name to store the element's array index |
+| `output_field` | string | `null` | Place unwound element in this field instead of replacing |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Basic Tag Unwind
+{
+  "stage_type": "apply",
+  "stage_id": "unwind",
+  "parameters": {
+    "field": "metadata.tags"
+  }
+}
+```
+
+```json With Array Index Tracking
+{
+  "stage_type": "apply",
+  "stage_id": "unwind",
+  "parameters": {
+    "field": "content.segments",
+    "include_array_index": "segment_index",
+    "preserve_null_and_empty": true
+  }
+}
+```
+
+```json Output to Separate Field
+{
+  "stage_type": "apply",
+  "stage_id": "unwind",
+  "parameters": {
+    "field": "metadata.authors",
+    "output_field": "current_author"
+  }
+}
+```
+</CodeGroup>
+
+## How It Works
+
+1. For each input document, extracts the array value at the specified `field` path
+2. If the value is an array with K elements, produces K output documents
+3. Each output document preserves all original fields, with the array field replaced by a single element
+4. Documents with null/empty arrays are either dropped or preserved based on `preserve_null_and_empty`
+5. Non-array values are passed through unchanged
+
+<Tip>
+  Use `include_array_index` when you need to reconstruct the original order later, such as when reassembling video segments after per-segment scoring.
+</Tip>
+
+## Performance
+
+| Metric | Value |
+|--------|-------|
+| **Latency** | < 5ms |
+| **Memory** | Proportional to output count |
+| **Cost** | Free |
+| **Complexity** | O(total array elements) |
+
+## Common Pipeline Patterns
+
+### Per-Tag Scoring
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "feature_search",
+    "parameters": {
+      "feature_uris": [{"input": {"text": "{{INPUT.query}}"}, "uri": "mixpeek://text_extractor@v1/embedding"}],
+      "limit": 50
+    }
+  },
+  {
+    "stage_type": "apply",
+    "stage_id": "unwind",
+    "parameters": {
+      "field": "metadata.tags",
+      "include_array_index": "tag_index"
+    }
+  },
+  {
+    "stage_type": "reduce",
+    "stage_id": "group_by",
+    "parameters": {
+      "field": "metadata.tags"
+    }
+  }
+]
+```
+
+### Segment-Level Retrieval
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "feature_search",
+    "parameters": {
+      "feature_uris": [{"input": {"text": "{{INPUT.query}}"}, "uri": "mixpeek://text_extractor@v1/embedding"}],
+      "limit": 20
+    }
+  },
+  {
+    "stage_type": "apply",
+    "stage_id": "unwind",
+    "parameters": {
+      "field": "content.segments",
+      "output_field": "current_segment"
+    }
+  },
+  {
+    "stage_type": "sort",
+    "stage_id": "rerank",
+    "parameters": {
+      "inference_name": "baai_bge_reranker_v2_m3",
+      "query": "{{INPUT.query}}",
+      "document_field": "current_segment"
+    }
+  }
+]
+```
+
+## Error Handling
+
+| Error | Behavior |
+|-------|----------|
+| Field path doesn't exist | Document dropped (or preserved if `preserve_null_and_empty=true`) |
+| Field is not an array | Document passed through unchanged |
+| Empty array | Document dropped (or preserved with null if `preserve_null_and_empty=true`) |
+| Null field value | Same as empty array behavior |
+
+## Related
+
+- [JSON Transform](/retrieval/stages/json-transform) - Restructure document fields without expansion
+- [Group By](/retrieval/stages/group-by) - Inverse operation: group documents by field value
+- [Deduplicate](/retrieval/stages/deduplicate) - Remove duplicates after expansion
