@@ -115,6 +115,12 @@ curl -s --request GET \
     "description": "Join and enrich documents with data from another collection",
     "category": "apply",
     "icon": "link"
+  },
+  {
+    "stage_id": "cross_compare",
+    "description": "Multi-tier cross-collection comparison with classification",
+    "category": "apply",
+    "icon": "code-compare"
   }
 ]
 ```
@@ -151,6 +157,7 @@ Apply stages enrich or transform documents. Use these to add context, join data,
 | Stage ID | Description | Transformation |
 |----------|-------------|----------------|
 | `document_enrich` | Join documents with data from another collection | N → N (LEFT JOIN) |
+| `cross_compare` | Multi-tier comparison against a reference collection | N → M (findings) or N → N (enrich) |
 | `api_call` | Enrich documents with external API calls | N → N |
 | `json_transform` | Transform document structure using Jinja2 templates | N → N |
 | `external_web_search` | Search the web using Exa AI-native search | 0 → M (creates documents) |
@@ -482,6 +489,102 @@ Each result becomes a document with:
     "category": "news",
     "start_published_date": "2024-10-01",
     "include_text": true
+  }
+}
+```
+</CodeGroup>
+
+---
+
+### cross_compare
+
+Compares source documents against a reference collection using a cascading match strategy (exact → fuzzy → semantic → visual). Each comparison produces a classified finding with a score and confidence level. Ideal for drift detection, deduplication, and compliance checking.
+
+<Note>
+  This stage can output either **findings** (N → M, one document per comparison) or **enriched documents** (N → N, results attached as a field). Set `output_mode` to control this behavior.
+</Note>
+
+**Parameters:**
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `reference_collection_id` | Yes | Collection containing reference documents to compare against |
+| `source_field` | No | Field on source documents to extract comparison elements (default: `content`) |
+| `reference_field` | No | Field on reference documents containing comparison content (default: `content`) |
+| `extraction_mode` | No | Element extraction: `raw`, `lines`, `labels`, `list` (default: `raw`) |
+| `match_tiers` | No | Ordered matching cascade (default: `["exact", "fuzzy"]`) |
+| `fuzzy_threshold` | No | Minimum fuzzy score (default: 0.75) |
+| `semantic_threshold` | No | Minimum semantic similarity (default: 0.85) |
+| `visual_threshold` | No | Minimum visual similarity (default: 0.55) |
+| `classifications` | No | Score-to-label mapping rules (see below) |
+| `output_mode` | No | `findings` (N→M) or `enrich` (N→N) (default: `findings`) |
+| `output_field` | No | Field name for enrich mode results (default: `comparison_results`) |
+| `include_visual_comparison` | No | Enable DINOv2 + SigLIP visual comparison (default: false) |
+| `reference_limit` | No | Max reference documents to fetch (default: 200) |
+| `source_doc_type_filter` | No | Only process source docs with this doc_type |
+
+**Examples:**
+
+<CodeGroup>
+```json Content Drift Detection
+{
+  "stage_type": "apply",
+  "stage_id": "cross_compare",
+  "parameters": {
+    "reference_collection_id": "col_documentation",
+    "source_field": "content",
+    "reference_field": "content",
+    "extraction_mode": "labels",
+    "match_tiers": ["exact", "fuzzy", "semantic"],
+    "include_visual_comparison": true,
+    "classifications": [
+      {"min_score": 0.95, "label": "current"},
+      {"min_score": 0.75, "label": "needs_review"},
+      {"min_score": 0.0, "label": "outdated"}
+    ]
+  }
+}
+```
+
+```json Catalog Matching (Enrich Mode)
+{
+  "stage_type": "apply",
+  "stage_id": "cross_compare",
+  "parameters": {
+    "reference_collection_id": "col_internal_catalog",
+    "source_field": "product_name",
+    "reference_field": "product_name",
+    "match_tiers": ["exact", "fuzzy"],
+    "fuzzy_threshold": 0.80,
+    "output_mode": "enrich",
+    "output_field": "catalog_match",
+    "classifications": [
+      {"min_score": 0.95, "label": "exact_match"},
+      {"min_score": 0.80, "label": "likely_match"},
+      {"min_score": 0.0, "label": "no_match"}
+    ]
+  }
+}
+```
+
+```json Deduplication Check
+{
+  "stage_type": "apply",
+  "stage_id": "cross_compare",
+  "parameters": {
+    "reference_collection_id": "col_existing_corpus",
+    "source_field": "content",
+    "reference_field": "content",
+    "extraction_mode": "lines",
+    "match_tiers": ["exact", "fuzzy", "semantic"],
+    "semantic_threshold": 0.90,
+    "output_mode": "enrich",
+    "output_field": "duplication_analysis",
+    "classifications": [
+      {"min_score": 0.95, "label": "duplicate"},
+      {"min_score": 0.80, "label": "near_duplicate"},
+      {"min_score": 0.0, "label": "unique"}
+    ]
   }
 }
 ```

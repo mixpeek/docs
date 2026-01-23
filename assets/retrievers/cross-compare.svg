@@ -1,0 +1,179 @@
+<svg viewBox="0 0 1000 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sourceGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="refGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#d97706;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="cascadeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="classifyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ea580c;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="outputGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="400" fill="#f8fafc"/>
+
+  <text x="500" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">Cross Compare: Multi-Tier Content Matching</text>
+  <text x="500" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">Compare source documents against a reference collection with cascading match strategies and classification</text>
+
+  <!-- Source Documents -->
+  <g filter="url(#shadow)">
+    <rect x="20" y="75" width="150" height="170" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="20" y="75" width="150" height="28" rx="10" fill="url(#sourceGrad)"/>
+    <rect x="20" y="93" width="150" height="10" fill="url(#sourceGrad)"/>
+    <text x="95" y="95" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Source Documents</text>
+  </g>
+  <g transform="translate(30, 115)">
+    <rect x="0" y="0" width="130" height="120" rx="4" fill="#eff6ff"/>
+    <text x="65" y="16" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#2563eb" text-anchor="middle">N documents</text>
+    <text x="65" y="36" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">source_field: content</text>
+    <text x="65" y="56" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Extraction modes:</text>
+    <text x="65" y="72" font-family="monospace" font-size="7" fill="#7c3aed" text-anchor="middle">raw | lines</text>
+    <text x="65" y="86" font-family="monospace" font-size="7" fill="#7c3aed" text-anchor="middle">labels | list</text>
+    <text x="65" y="106" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">max 50 docs processed</text>
+  </g>
+
+  <!-- Reference Collection -->
+  <g filter="url(#shadow)">
+    <rect x="200" y="65" width="150" height="110" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="200" y="65" width="150" height="28" rx="10" fill="url(#refGrad)"/>
+    <rect x="200" y="83" width="150" height="10" fill="url(#refGrad)"/>
+    <text x="275" y="85" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">Reference Collection</text>
+  </g>
+  <g transform="translate(210, 105)">
+    <rect x="0" y="0" width="130" height="60" rx="4" fill="#fef3c7"/>
+    <text x="65" y="16" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#d97706" text-anchor="middle">reference_collection_id</text>
+    <text x="65" y="34" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">reference_field: content</text>
+    <text x="65" y="50" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">up to 200 docs fetched</text>
+  </g>
+
+  <!-- Arrows to Matching Cascade -->
+  <path d="M 170 160 L 380 160" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+  <path d="M 275 175 L 275 195 L 390 195 L 390 160" stroke="#94a3b8" stroke-width="1.5" fill="none" stroke-dasharray="4 3"/>
+
+  <!-- Matching Cascade -->
+  <g filter="url(#shadow)">
+    <rect x="390" y="65" width="240" height="195" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="390" y="65" width="240" height="28" rx="10" fill="url(#cascadeGrad)"/>
+    <rect x="390" y="83" width="240" height="10" fill="url(#cascadeGrad)"/>
+    <text x="510" y="85" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Matching Cascade</text>
+  </g>
+  <g transform="translate(400, 105)">
+    <rect x="0" y="0" width="220" height="28" rx="4" fill="#dcfce7"/>
+    <text x="14" y="11" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#16a34a">1</text>
+    <text x="30" y="11" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#16a34a">exact</text>
+    <text x="110" y="11" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">case-insensitive match</text>
+    <text x="200" y="11" font-family="monospace" font-size="7" fill="#16a34a" text-anchor="end">1.0</text>
+    <text x="110" y="24" font-family="system-ui, sans-serif" font-size="6" fill="#64748b" text-anchor="middle">stops here if match found</text>
+
+    <rect x="0" y="34" width="220" height="28" rx="4" fill="#dbeafe"/>
+    <text x="14" y="45" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#2563eb">2</text>
+    <text x="30" y="45" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#2563eb">fuzzy</text>
+    <text x="120" y="45" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">SequenceMatcher ratio</text>
+    <text x="200" y="45" font-family="monospace" font-size="7" fill="#2563eb" text-anchor="end">&gt;0.75</text>
+    <text x="110" y="58" font-family="system-ui, sans-serif" font-size="6" fill="#64748b" text-anchor="middle">stops here if threshold met</text>
+
+    <rect x="0" y="68" width="220" height="28" rx="4" fill="#f3e8ff"/>
+    <text x="14" y="79" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#7c3aed">3</text>
+    <text x="30" y="79" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#7c3aed">semantic</text>
+    <text x="130" y="79" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">vector similarity</text>
+    <text x="200" y="79" font-family="monospace" font-size="7" fill="#7c3aed" text-anchor="end">&gt;0.85</text>
+    <text x="110" y="92" font-family="system-ui, sans-serif" font-size="6" fill="#64748b" text-anchor="middle">text embeddings (E5)</text>
+
+    <rect x="0" y="102" width="220" height="28" rx="4" fill="#fce7f3"/>
+    <text x="14" y="113" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#db2777">4</text>
+    <text x="30" y="113" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#db2777">visual</text>
+    <text x="130" y="113" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">DINOv2 + SigLIP</text>
+    <text x="200" y="113" font-family="monospace" font-size="7" fill="#db2777" text-anchor="end">&gt;0.55</text>
+    <text x="110" y="126" font-family="system-ui, sans-serif" font-size="6" fill="#64748b" text-anchor="middle">weighted visual embeddings</text>
+
+    <rect x="0" y="136" width="220" height="16" rx="3" fill="#f1f5f9"/>
+    <text x="110" y="148" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">no match → "none" tier, no_match_label</text>
+  </g>
+
+  <!-- Arrow to Classification -->
+  <path d="M 630 160 L 660 160" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Classification + Output -->
+  <g filter="url(#shadow)">
+    <rect x="670" y="65" width="210" height="195" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="670" y="65" width="210" height="28" rx="10" fill="url(#outputGrad)"/>
+    <rect x="670" y="83" width="210" height="10" fill="url(#outputGrad)"/>
+    <text x="775" y="85" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Classify &amp; Output</text>
+  </g>
+  <g transform="translate(680, 100)">
+    <text x="95" y="12" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#475569" text-anchor="middle">Classification Rules:</text>
+
+    <rect x="0" y="20" width="190" height="18" rx="3" fill="#dcfce7"/>
+    <text x="95" y="33" font-family="monospace" font-size="7" fill="#16a34a" text-anchor="middle">&gt;=0.95 → "exact_match"</text>
+
+    <rect x="0" y="42" width="190" height="18" rx="3" fill="#dbeafe"/>
+    <text x="95" y="55" font-family="monospace" font-size="7" fill="#2563eb" text-anchor="middle">&gt;=0.85 → "close_match"</text>
+
+    <rect x="0" y="64" width="190" height="18" rx="3" fill="#fef3c7"/>
+    <text x="95" y="77" font-family="monospace" font-size="7" fill="#d97706" text-anchor="middle">&gt;=0.65 → "partial_match"</text>
+
+    <rect x="0" y="86" width="190" height="18" rx="3" fill="#fee2e2"/>
+    <text x="95" y="99" font-family="monospace" font-size="7" fill="#dc2626" text-anchor="middle">&lt;0.65 → "no_match"</text>
+
+    <rect x="0" y="115" width="190" height="38" rx="4" fill="#ccfbf1"/>
+    <text x="95" y="130" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#0d9488" text-anchor="middle">Output Mode:</text>
+    <text x="95" y="146" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">findings (N→M) | enrich (N→N)</text>
+  </g>
+
+  <!-- Use Cases -->
+  <g transform="translate(20, 290)">
+    <text x="0" y="0" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#475569">Use Cases:</text>
+
+    <rect x="0" y="15" width="220" height="50" rx="4" fill="#f3e8ff"/>
+    <text x="110" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#7c3aed" text-anchor="middle">Content Drift Detection</text>
+    <text x="110" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Video UI vs Documentation</text>
+
+    <rect x="240" y="15" width="220" height="50" rx="4" fill="#eff6ff"/>
+    <text x="350" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#2563eb" text-anchor="middle">Catalog Matching</text>
+    <text x="350" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Supplier vs Internal products</text>
+
+    <rect x="480" y="15" width="220" height="50" rx="4" fill="#fef3c7"/>
+    <text x="590" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#d97706" text-anchor="middle">Deduplication</text>
+    <text x="590" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">New content vs Existing corpus</text>
+
+    <rect x="720" y="15" width="220" height="50" rx="4" fill="#dcfce7"/>
+    <text x="830" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#16a34a" text-anchor="middle">Compliance Checking</text>
+    <text x="830" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Content vs Requirements</text>
+  </g>
+
+  <!-- Pipeline Position -->
+  <g transform="translate(20, 360)">
+    <text x="0" y="0" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#475569">Typical Pipeline:</text>
+
+    <rect x="0" y="10" width="180" height="28" rx="4" fill="#eff6ff"/>
+    <text x="90" y="28" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#2563eb" text-anchor="middle">1. feature_search (FILTER)</text>
+
+    <text x="194" y="28" font-family="system-ui, sans-serif" font-size="12" fill="#94a3b8">&#x2192;</text>
+
+    <rect x="215" y="10" width="220" height="28" rx="4" fill="#f3e8ff"/>
+    <text x="325" y="28" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#7c3aed" text-anchor="middle">2. cross_compare (APPLY)</text>
+
+    <text x="449" y="28" font-family="system-ui, sans-serif" font-size="12" fill="#94a3b8">&#x2192;</text>
+
+    <rect x="470" y="10" width="220" height="28" rx="4" fill="#ccfbf1"/>
+    <text x="580" y="28" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#0d9488" text-anchor="middle">3. Classified Findings / Enriched Docs</text>
+  </g>
+</svg>

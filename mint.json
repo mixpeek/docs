@@ -139,63 +139,52 @@
           "pages": [
             "retrieval/stages/overview",
             {
-              "group": "Search & Retrieval",
+              "group": "Filter",
               "pages": [
                 "retrieval/stages/feature-search",
-                "retrieval/stages/hybrid-search",
-                "retrieval/stages/semantic-search"
-              ]
-            },
-            {
-              "group": "Filtering & Ranking",
-              "pages": [
                 "retrieval/stages/attribute-filter",
                 "retrieval/stages/llm-filter",
-                "retrieval/stages/rerank",
-                "retrieval/stages/mmr"
+                "retrieval/stages/query-expand"
               ]
             },
             {
-              "group": "Enrichment",
+              "group": "Sort",
               "pages": [
-                "retrieval/stages/document-enrich",
-                "retrieval/stages/taxonomy-enrich",
-                "retrieval/stages/llm-enrich"
+                "retrieval/stages/sort-relevance",
+                "retrieval/stages/sort-attribute",
+                "retrieval/stages/mmr",
+                "retrieval/stages/rerank"
               ]
             },
             {
-              "group": "Transformation",
+              "group": "Reduce",
               "pages": [
                 "retrieval/stages/aggregate",
                 "retrieval/stages/group-by",
-                "retrieval/stages/json-transform",
+                "retrieval/stages/cluster",
+                "retrieval/stages/sample",
                 "retrieval/stages/summarize"
               ]
             },
             {
-              "group": "External Operations",
+              "group": "Apply",
               "pages": [
-                "retrieval/stages/api-call",
+                "retrieval/stages/json-transform",
+                "retrieval/stages/rag-prepare",
                 "retrieval/stages/external-web-search",
-                "retrieval/stages/web-scrape",
+                "retrieval/stages/api-call",
                 "retrieval/stages/sql-lookup",
+                "retrieval/stages/llm-enrich",
+                "retrieval/stages/taxonomy-enrich",
+                "retrieval/stages/document-enrich",
+                "retrieval/stages/cross-compare",
+                "retrieval/stages/web-scrape"
+              ]
+            },
+            {
+              "group": "Enrich",
+              "pages": [
                 "retrieval/stages/code-execution"
-              ]
-            },
-            {
-              "group": "Sorting & Sampling",
-              "pages": [
-                "retrieval/stages/sort-attribute",
-                "retrieval/stages/sort-relevance",
-                "retrieval/stages/sample",
-                "retrieval/stages/cluster"
-              ]
-            },
-            {
-              "group": "Preparation",
-              "pages": [
-                "retrieval/stages/query-expand",
-                "retrieval/stages/rag-prepare"
               ]
             }
           ]

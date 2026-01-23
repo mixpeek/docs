@@ -7,80 +7,90 @@ Retriever stages are the building blocks of search pipelines in Mixpeek. Each st
 
 ## Stage Categories
 
-Stages are organized into four categories based on how they transform the document set:
+Stages are organized into five categories based on how they transform the document set:
 
 <CardGroup cols={2}>
   <Card title="FILTER" icon="filter">
     Reduce the document set by matching criteria. Outputs a subset of input documents.
 
-    **Examples**: semantic_search, hybrid_search, structured_filter, llm_filter, query_expand
+    **Stages**: feature_search, attribute_filter, llm_filter, query_expand
   </Card>
 
   <Card title="SORT" icon="arrow-up-arrow-down">
     Reorder documents by relevance or field values. Same documents, different order.
 
-    **Examples**: rerank, sort_by_field, sort_relevance, mmr, learned_rerank
+    **Stages**: sort_relevance, sort_attribute, mmr, rerank
   </Card>
 
   <Card title="REDUCE" icon="compress">
-    Aggregate or reduce the document count. Combine, deduplicate, or limit results.
+    Aggregate or reduce the document count. Combine, group, or sample results.
 
-    **Examples**: summarize, aggregate, cluster, group_by, sample
+    **Stages**: aggregate, group_by, cluster, sample, summarize
   </Card>
 
   <Card title="APPLY" icon="wand-magic-sparkles">
-    Enrich documents with additional data. Same count, added fields.
+    Enrich or transform documents. May add fields, create new documents, or restructure data.
 
-    **Examples**: api_call, llm_enrichment, document_enrich, code_execution, rag_prepare
+    **Stages**: json_transform, rag_prepare, external_web_search, api_call, sql_lookup, llm_enrich, taxonomy_enrich, document_enrich, cross_compare, web_scrape
+  </Card>
+
+  <Card title="ENRICH" icon="code">
+    Execute custom code in isolated sandboxes for dynamic enrichments.
+
+    **Stages**: code_execution
   </Card>
 </CardGroup>
 
 ## All Stages
 
-### Search & Filter Stages
+### Filter Stages
 
-| Stage | Category | Description |
-|-------|----------|-------------|
-| [Semantic Search](/retrieval/stages/semantic-search) | FILTER | Vector similarity search using embeddings |
-| [Hybrid Search](/retrieval/stages/hybrid-search) | FILTER | Combined vector + text search with RRF |
-| [Structured Filter](/retrieval/stages/structured-filter) | FILTER | Filter by metadata fields and conditions |
-| [LLM Filter](/retrieval/stages/llm-filter) | FILTER | Content-based filtering using LLMs |
-| [Query Expand](/retrieval/stages/query-expand) | FILTER | LLM-powered query expansion with result fusion |
+| Stage | Description |
+|-------|-------------|
+| [Feature Search](/retrieval/stages/feature-search) | Search by vector similarity using multimodal embeddings |
+| [Attribute Filter](/retrieval/stages/attribute-filter) | Filter by metadata fields with boolean logic (AND/OR/NOT) |
+| [LLM Filter](/retrieval/stages/llm-filter) | Semantic filtering using LLM-based evaluation |
+| [Query Expand](/retrieval/stages/query-expand) | LLM-powered query expansion with RRF result fusion |
 
-### Sorting Stages
+### Sort Stages
 
-| Stage | Category | Description |
-|-------|----------|-------------|
-| [Rerank](/retrieval/stages/rerank) | SORT | Neural re-scoring with cross-encoders |
-| [Sort By Field](/retrieval/stages/sort-by-field) | SORT | Order by any metadata field |
-| [Sort Relevance](/retrieval/stages/sort-relevance) | SORT | Reorder by relevance scores |
-| [MMR](/retrieval/stages/mmr) | SORT | Diversify results with Maximal Marginal Relevance |
-| [Learned Rerank](/retrieval/stages/learned-rerank) | SORT | Personalized reranking with bandit learning |
+| Stage | Description |
+|-------|-------------|
+| [Sort Relevance](/retrieval/stages/sort-relevance) | Reorder by relevance scores |
+| [Sort Attribute](/retrieval/stages/sort-attribute) | Order by any metadata field (dates, price, etc.) |
+| [MMR](/retrieval/stages/mmr) | Diversify results with Maximal Marginal Relevance |
+| [Rerank](/retrieval/stages/rerank) | Re-score with cross-encoder models (e.g., BGE reranker) |
 
-### Reduction Stages
+### Reduce Stages
 
-| Stage | Category | Description |
-|-------|----------|-------------|
-| [Summarize](/retrieval/stages/summarize) | REDUCE | LLM-powered document summarization |
-| [Aggregate](/retrieval/stages/aggregate) | REDUCE | Compute statistical aggregations |
-| [Cluster](/retrieval/stages/cluster) | REDUCE | Group documents by embedding similarity |
-| [Group By](/retrieval/stages/group-by) | REDUCE | Aggregate documents by field values |
-| [Sample](/retrieval/stages/sample) | REDUCE | Random or stratified sampling |
+| Stage | Description |
+|-------|-------------|
+| [Aggregate](/retrieval/stages/aggregate) | Compute COUNT, SUM, AVG, etc. on results |
+| [Group By](/retrieval/stages/group-by) | Group documents by field value (decompose/recompose) |
+| [Cluster](/retrieval/stages/cluster) | Discover themes via embedding-based clustering |
+| [Sample](/retrieval/stages/sample) | Random or stratified sampling of results |
+| [Summarize](/retrieval/stages/summarize) | Condense documents into an LLM-generated summary |
 
-### Enrichment Stages
+### Apply Stages
 
-| Stage | Category | Description |
-|-------|----------|-------------|
-| [API Call](/retrieval/stages/api-call) | APPLY | Enrich with external REST APIs |
-| [SQL Lookup](/retrieval/stages/sql-lookup) | APPLY | Join with SQL database data |
-| [Document Enrich](/retrieval/stages/document-enrich) | APPLY | Cross-collection joins |
-| [Taxonomy Enrich](/retrieval/stages/taxonomy-enrich) | APPLY | Classify against taxonomies |
-| [LLM Enrichment](/retrieval/stages/llm-enrichment) | APPLY | Extract structured data with LLMs |
-| [JSON Transform](/retrieval/stages/json-transform) | APPLY | Template-based transformations |
-| [RAG Prepare](/retrieval/stages/rag-prepare) | APPLY | Format for LLM context windows |
-| [Code Execution](/retrieval/stages/code-execution) | APPLY | Execute custom Python code |
-| [External Web Search](/retrieval/stages/external-web-search) | APPLY | Augment with Exa web search |
-| [Web Scrape](/retrieval/stages/web-scrape) | APPLY | Extract content from URLs |
+| Stage | Description |
+|-------|-------------|
+| [JSON Transform](/retrieval/stages/json-transform) | Reshape documents using Jinja2 templates |
+| [RAG Prepare](/retrieval/stages/rag-prepare) | Format for LLM context with token management and citations |
+| [External Web Search](/retrieval/stages/external-web-search) | Augment with Exa AI-native web search |
+| [API Call](/retrieval/stages/api-call) | Enrich with external REST API responses |
+| [SQL Lookup](/retrieval/stages/sql-lookup) | Join with PostgreSQL/Snowflake data |
+| [LLM Enrich](/retrieval/stages/llm-enrich) | Generate new fields with LLM prompts |
+| [Taxonomy Enrich](/retrieval/stages/taxonomy-enrich) | Classify documents against taxonomy nodes |
+| [Document Enrich](/retrieval/stages/document-enrich) | Cross-collection joins (LEFT JOIN) |
+| [Cross Compare](/retrieval/stages/cross-compare) | Multi-tier cross-collection matching with classification |
+| [Web Scrape](/retrieval/stages/web-scrape) | Extract full page content from URLs |
+
+### Enrich Stages
+
+| Stage | Description |
+|-------|-------------|
+| [Code Execution](/retrieval/stages/code-execution) | Execute Python/TypeScript/JavaScript in sandboxes |
 
 ## Pipeline Patterns
 
@@ -90,26 +100,28 @@ Stages are organized into four categories based on how they transform the docume
 [
   {
     "stage_type": "filter",
-    "stage_id": "semantic_search",
+    "stage_id": "feature_search",
     "parameters": {
-      "query": "{{INPUT.query}}",
-      "vector_index": "text_extractor_v1_embedding",
-      "top_k": 50
+      "feature_uris": [{"input": {"text": "{{INPUT.query}}"}, "uri": "mixpeek://text_extractor@v1/embedding"}],
+      "limit": 50
     }
   },
   {
     "stage_type": "sort",
     "stage_id": "rerank",
     "parameters": {
-      "model": "bge-reranker-v2-m3",
-      "top_n": 10
+      "inference_name": "baai_bge_reranker_v2_m3",
+      "query": "{{INPUT.query}}",
+      "document_field": "content",
+      "top_k": 10
     }
   },
   {
     "stage_type": "apply",
     "stage_id": "rag_prepare",
     "parameters": {
-      "max_tokens": 8000
+      "max_tokens": 8000,
+      "output_mode": "single_context"
     }
   }
 ]
@@ -121,40 +133,28 @@ Stages are organized into four categories based on how they transform the docume
 [
   {
     "stage_type": "filter",
-    "stage_id": "hybrid_search",
+    "stage_id": "feature_search",
     "parameters": {
-      "query": "{{INPUT.query}}",
-      "vector_index": "text_extractor_v1_embedding",
-      "top_k": 100,
-      "vector_weight": 0.6,
-      "text_weight": 0.4
+      "feature_uris": [{"input": {"text": "{{INPUT.query}}"}, "uri": "mixpeek://text_extractor@v1/embedding"}],
+      "limit": 100
     }
   },
   {
     "stage_type": "filter",
-    "stage_id": "structured_filter",
+    "stage_id": "attribute_filter",
     "parameters": {
-      "conditions": {
-        "AND": [
-          {"field": "metadata.in_stock", "operator": "eq", "value": true},
-          {"field": "metadata.price", "operator": "lte", "value": "{{INPUT.max_price}}"}
-        ]
-      }
+      "AND": [
+        {"field": "metadata.in_stock", "operator": "eq", "value": true},
+        {"field": "metadata.price", "operator": "lte", "value": "{{INPUT.max_price}}"}
+      ]
     }
   },
   {
     "stage_type": "sort",
-    "stage_id": "sort_by_field",
+    "stage_id": "sort_attribute",
     "parameters": {
-      "sort_field": "metadata.{{INPUT.sort_by}}",
-      "order": "{{INPUT.sort_order}}"
-    }
-  },
-  {
-    "stage_type": "reduce",
-    "stage_id": "limit",
-    "parameters": {
-      "limit": 20
+      "field": "metadata.{{INPUT.sort_by}}",
+      "direction": "{{INPUT.sort_order}}"
     }
   }
 ]
@@ -166,11 +166,10 @@ Stages are organized into four categories based on how they transform the docume
 [
   {
     "stage_type": "filter",
-    "stage_id": "semantic_search",
+    "stage_id": "feature_search",
     "parameters": {
-      "query": "{{INPUT.query}}",
-      "vector_index": "text_extractor_v1_embedding",
-      "top_k": 100
+      "feature_uris": [{"input": {"text": "{{INPUT.query}}"}, "uri": "mixpeek://text_extractor@v1/embedding"}],
+      "limit": 100
     }
   },
   {
@@ -183,19 +182,12 @@ Stages are organized into four categories based on how they transform the docume
     }
   },
   {
-    "stage_type": "reduce",
-    "stage_id": "deduplicate",
-    "parameters": {
-      "method": "semantic",
-      "similarity_threshold": 0.9
-    }
-  },
-  {
     "stage_type": "sort",
     "stage_id": "rerank",
     "parameters": {
-      "model": "cohere-rerank-v3",
-      "top_n": 15
+      "inference_name": "baai_bge_reranker_v2_m3",
+      "query": "{{INPUT.query}}",
+      "top_k": 15
     }
   },
   {
@@ -215,29 +207,29 @@ Stages are organized into four categories based on how they transform the docume
 [
   {
     "stage_type": "filter",
-    "stage_id": "hybrid_search",
+    "stage_id": "feature_search",
     "parameters": {
-      "query": "{{INPUT.query}}",
-      "vector_index": "text_extractor_v1_embedding",
-      "top_k": 20
+      "feature_uris": [{"input": {"text": "{{INPUT.query}}"}, "uri": "mixpeek://text_extractor@v1/embedding"}],
+      "limit": 20
     }
   },
   {
     "stage_type": "apply",
     "stage_id": "document_enrich",
     "parameters": {
-      "collection_id": "users",
-      "lookup_field": "user_id",
+      "target_collection_id": "col_users",
       "source_field": "metadata.author_id",
-      "result_field": "author"
+      "target_field": "user_id",
+      "output_field": "author"
     }
   },
   {
     "stage_type": "apply",
-    "stage_id": "llm_enrichment",
+    "stage_id": "llm_enrich",
     "parameters": {
-      "model": "gpt-4o-mini",
-      "prompt": "Extract key topics and entities",
+      "provider": "openai",
+      "model_name": "gpt-4o-mini",
+      "prompt": "Extract key topics and entities from: {{DOC.content}}",
       "output_field": "analysis"
     }
   },
@@ -245,8 +237,9 @@ Stages are organized into four categories based on how they transform the docume
     "stage_type": "sort",
     "stage_id": "rerank",
     "parameters": {
-      "model": "bge-reranker-v2-m3",
-      "top_n": 10
+      "inference_name": "baai_bge_reranker_v2_m3",
+      "query": "{{INPUT.query}}",
+      "top_k": 10
     }
   }
 ]
@@ -256,16 +249,14 @@ Stages are organized into four categories based on how they transform the docume
 
 | Goal | Recommended Stage |
 |------|-------------------|
-| Find semantically similar documents | semantic_search |
-| Match exact keywords + meaning | hybrid_search |
-| Filter by metadata fields | structured_filter |
+| Find semantically similar documents | feature_search |
+| Filter by metadata fields | attribute_filter |
 | Filter by content meaning | llm_filter |
 | Improve recall with query variations | query_expand |
 | Get best relevance ranking | rerank |
-| Order by price/date/rating | sort_by_field |
+| Order by price/date/rating | sort_attribute |
 | Re-sort by relevance scores | sort_relevance |
 | Diversify results | mmr |
-| Personalized ranking | learned_rerank |
 | Answer questions from docs | summarize |
 | Compute statistics on results | aggregate |
 | Find themes in results | cluster |
@@ -275,40 +266,43 @@ Stages are organized into four categories based on how they transform the docume
 | Add database data | sql_lookup |
 | Join Mixpeek collections | document_enrich |
 | Classify documents | taxonomy_enrich |
-| Extract structured data | llm_enrichment |
+| Generate new fields with LLM | llm_enrich |
 | Transform document structure | json_transform |
 | Prepare for LLM context | rag_prepare |
-| Custom transformations | code_execution |
+| Custom code transformations | code_execution |
 | Add web search results | external_web_search |
 | Extract URL content | web_scrape |
 
 ## Performance Considerations
 
-| Stage Type | Typical Latency | Cost |
-|------------|-----------------|------|
-| semantic_search | 5-50ms | Index storage |
-| hybrid_search | 20-100ms | Index storage |
-| structured_filter | < 5ms | Free |
+| Stage | Typical Latency | Cost |
+|-------|-----------------|------|
+| feature_search | 5-50ms | Index storage |
+| attribute_filter | < 5ms | Free |
 | llm_filter | 200-500ms | LLM API |
 | query_expand | 300-800ms | LLM API |
-| rerank | 50-100ms | API calls |
-| sort_by_field | < 5ms | Free |
+| rerank | 50-100ms | Inference |
+| sort_attribute | < 5ms | Free |
 | sort_relevance | < 5ms | Free |
 | mmr | 10-50ms | Free |
-| learned_rerank | 20-50ms | Free |
 | summarize | 500-2000ms | LLM API |
 | aggregate | 5-50ms | Free |
-| cluster | 50-200ms | Free |
+| cluster | 50-200ms | Inference |
 | group_by | 5-20ms | Free |
 | sample | < 5ms | Free |
-| llm_enrichment | 300-800ms | LLM API |
+| llm_enrich | 300-800ms | LLM API |
 | api_call | 50-500ms | External API |
 | sql_lookup | 10-100ms | Database |
 | code_execution | 5-50ms | Free |
 | rag_prepare | < 10ms | Free |
+| json_transform | < 5ms | Free |
+| external_web_search | 100-500ms | Exa API |
+| taxonomy_enrich | 20-100ms | Inference |
+| document_enrich | 10-50ms | Database |
+| web_scrape | 500-5000ms | External |
 
 <Tip>
-  Order stages efficiently: cheap operations (filters, limits) before expensive ones (rerank, LLM calls). This reduces the document count before costly processing.
+  Order stages efficiently: cheap operations (filters, sorts) before expensive ones (rerank, LLM calls). This reduces the document count before costly processing.
 </Tip>
 
 ## Template Variables
@@ -318,19 +312,17 @@ All stages support template variables for dynamic configuration:
 | Variable | Description |
 |----------|-------------|
 | `{{INPUT.*}}` | Input parameters from retriever call |
-| `{{DOC.*}}` | Document fields (in APPLY stages) |
+| `{{DOC.*}}` | Document fields (in APPLY/ENRICH stages) |
 | `{{CONTEXT.*}}` | Pipeline context (index, citations) |
 
 ```json
 {
   "stage_type": "filter",
-  "stage_id": "structured_filter",
+  "stage_id": "attribute_filter",
   "parameters": {
-    "conditions": {
-      "field": "metadata.tenant_id",
-      "operator": "eq",
-      "value": "{{INPUT.tenant_id}}"
-    }
+    "field": "metadata.tenant_id",
+    "operator": "eq",
+    "value": "{{INPUT.tenant_id}}"
   }
 }
 ```

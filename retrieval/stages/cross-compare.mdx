@@ -1,0 +1,423 @@
+---
+title: "Cross Compare"
+description: "Multi-tier cross-collection content matching with configurable classification"
+---
+
+<Frame>
+  <img src="/assets/retrievers/cross-compare.svg" alt="Cross Compare stage showing multi-tier matching cascade between source and reference collections" />
+</Frame>
+
+The Cross Compare stage compares source documents against a reference collection using a cascading match strategy: exact → fuzzy → semantic → visual. Each match is classified using configurable rules, enabling drift detection, deduplication, and compliance checking workflows.
+
+<Note>
+  **Stage Category**: APPLY (Cross-collection comparison)
+
+  **Transformation**: N documents → M finding documents (`findings` mode) or N documents → N enriched documents (`enrich` mode)
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Content drift detection** | Compare video UI against documentation to find outdated content |
+| **Product catalog matching** | Match supplier products against internal catalog |
+| **Content deduplication** | Check new content against existing corpus |
+| **Compliance checking** | Verify content against requirements or standards |
+| **Cross-reference validation** | Validate labels, features, or terms across sources |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Simple field joins | `document_enrich` |
+| External API enrichment | `api_call` |
+| Single-collection filtering | `attribute_filter` or `feature_search` |
+| Semantic similarity search | `feature_search` |
+
+## Parameters
+
+### Core Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `reference_collection_id` | string | *Required* | Collection containing reference documents to compare against |
+| `source_field` | string | `content` | Field on source documents to extract comparison elements from |
+| `reference_field` | string | `content` | Field on reference documents containing comparison content |
+| `extraction_mode` | string | `raw` | How to extract elements: `raw`, `lines`, `labels`, or `list` |
+
+### Matching Configuration
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `match_tiers` | string[] | `["exact", "fuzzy"]` | Ordered matching cascade. Stops at first successful match. |
+| `fuzzy_threshold` | float | `0.75` | Minimum fuzzy score to accept a match |
+| `semantic_threshold` | float | `0.85` | Minimum semantic similarity to accept |
+| `visual_threshold` | float | `0.55` | Minimum visual similarity to accept |
+
+### Classification
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `classifications` | object[] | See below | Score-to-label mapping rules (evaluated in order) |
+| `no_match_label` | string | `no_match` | Label when no tier matches |
+
+Default classification rules:
+```json
+[
+  {"min_score": 0.95, "label": "exact_match"},
+  {"min_score": 0.85, "label": "close_match"},
+  {"min_score": 0.65, "label": "partial_match"},
+  {"min_score": 0.0, "label": "no_match"}
+]
+```
+
+### Output Configuration
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `output_mode` | string | `findings` | `findings` (N-to-M) or `enrich` (1-to-1) |
+| `output_field` | string | `comparison_results` | Field name for results in `enrich` mode |
+
+### Visual Comparison
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `include_visual_comparison` | boolean | `false` | Enable visual embedding comparison |
+| `text_vector_index` | string | `intfloat__multilingual_e5_large_instruct` | Vector index for semantic matching |
+| `image_vector_index` | string | `google__siglip_base_patch16_224` | SigLIP vector index |
+| `structure_vector_index` | string | `facebook__dinov2_base` | DINOv2 vector index |
+| `dinov2_weight` | float | `0.7` | Weight for DINOv2 in combined visual score |
+| `siglip_weight` | float | `0.3` | Weight for SigLIP in combined visual score |
+
+### Reference & Source Configuration
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `reference_limit` | integer | `200` | Max reference documents to fetch |
+| `reference_doc_type` | string | `null` | Filter reference docs by doc_type |
+| `source_location_field` | string | `start_time` | Field containing location reference (timestamp, page) |
+| `source_doc_type_filter` | string | `null` | Only process source docs with this doc_type |
+| `filter_generic_labels` | boolean | `true` | Filter generic UI labels in `labels` mode |
+
+## Extraction Modes
+
+<Tabs>
+  <Tab title="raw">
+    Use the field value as a single element. Best for comparing whole content blocks.
+
+    ```json
+    {"extraction_mode": "raw"}
+    ```
+  </Tab>
+  <Tab title="lines">
+    Split by newlines. Each line becomes a comparison element. Useful for step-by-step instructions or structured text.
+
+    ```json
+    {"extraction_mode": "lines"}
+    ```
+  </Tab>
+  <Tab title="labels">
+    Extract UI/feature labels via pattern matching. Identifies instruction patterns ("Click **Settings**"), em-dash separators ("Label — description"), and action labels ("Configure X").
+
+    Generic labels like "Save", "Cancel", "Next" are filtered by default.
+
+    ```json
+    {"extraction_mode": "labels", "filter_generic_labels": true}
+    ```
+  </Tab>
+  <Tab title="list">
+    Field is already a list of elements. Used directly without extraction.
+
+    ```json
+    {"extraction_mode": "list"}
+    ```
+  </Tab>
+</Tabs>
+
+## Matching Cascade
+
+The matching cascade tries each tier in order and stops at the first successful match:
+
+```
+For each source element:
+  ├─ exact:    Case-insensitive string match → score = 1.0
+  ├─ fuzzy:    SequenceMatcher ratio ≥ fuzzy_threshold
+  ├─ semantic: Vector similarity ≥ semantic_threshold
+  └─ visual:   DINOv2 + SigLIP similarity ≥ visual_threshold
+```
+
+If no tier matches, the element receives `match_tier: "none"` and the `no_match_label` classification.
+
+## Configuration Examples
+
+<CodeGroup>
+```json Content Drift Detection
+{
+  "stage_type": "apply",
+  "stage_id": "cross_compare",
+  "parameters": {
+    "reference_collection_id": "col_documentation",
+    "source_field": "content",
+    "reference_field": "content",
+    "extraction_mode": "labels",
+    "match_tiers": ["exact", "fuzzy", "semantic"],
+    "include_visual_comparison": true,
+    "source_doc_type_filter": "scene",
+    "source_location_field": "start_time",
+    "classifications": [
+      {"min_score": 0.95, "label": "current"},
+      {"min_score": 0.75, "label": "needs_review"},
+      {"min_score": 0.0, "label": "outdated"}
+    ]
+  }
+}
+```
+
+```json Product Catalog Matching
+{
+  "stage_type": "apply",
+  "stage_id": "cross_compare",
+  "parameters": {
+    "reference_collection_id": "col_internal_catalog",
+    "source_field": "product_name",
+    "reference_field": "product_name",
+    "extraction_mode": "raw",
+    "match_tiers": ["exact", "fuzzy"],
+    "fuzzy_threshold": 0.80,
+    "output_mode": "enrich",
+    "output_field": "catalog_match",
+    "classifications": [
+      {"min_score": 0.95, "label": "exact_match"},
+      {"min_score": 0.80, "label": "likely_match"},
+      {"min_score": 0.0, "label": "no_match"}
+    ]
+  }
+}
+```
+
+```json Content Deduplication
+{
+  "stage_type": "apply",
+  "stage_id": "cross_compare",
+  "parameters": {
+    "reference_collection_id": "col_existing_corpus",
+    "source_field": "content",
+    "reference_field": "content",
+    "extraction_mode": "lines",
+    "match_tiers": ["exact", "fuzzy", "semantic"],
+    "semantic_threshold": 0.90,
+    "output_mode": "enrich",
+    "output_field": "duplication_analysis",
+    "classifications": [
+      {"min_score": 0.95, "label": "duplicate"},
+      {"min_score": 0.80, "label": "near_duplicate"},
+      {"min_score": 0.0, "label": "unique"}
+    ]
+  }
+}
+```
+
+```json Compliance Checking
+{
+  "stage_type": "apply",
+  "stage_id": "cross_compare",
+  "parameters": {
+    "reference_collection_id": "col_requirements",
+    "source_field": "content",
+    "reference_field": "requirement_text",
+    "extraction_mode": "lines",
+    "match_tiers": ["exact", "fuzzy", "semantic"],
+    "fuzzy_threshold": 0.70,
+    "semantic_threshold": 0.80,
+    "output_mode": "findings",
+    "classifications": [
+      {"min_score": 0.90, "label": "compliant"},
+      {"min_score": 0.70, "label": "partial"},
+      {"min_score": 0.0, "label": "non_compliant"}
+    ]
+  }
+}
+```
+</CodeGroup>
+
+## Output Schema
+
+### Findings Mode
+
+Each comparison produces a finding document:
+
+```json
+{
+  "element_type": "text",
+  "source_content": "Configure API Keys",
+  "source_location": "00:01:23",
+  "reference_match": "API Key Configuration",
+  "reference_url": "https://docs.example.com/api-keys",
+  "match_tier": "fuzzy",
+  "match_score": 0.87,
+  "classification": "close_match",
+  "confidence": 0.92,
+  "signals": {
+    "context_match": true,
+    "workflow_match": false,
+    "transcript_match": true
+  }
+}
+```
+
+### Enrich Mode
+
+Comparison results attached as a field on source documents:
+
+```json
+{
+  "document_id": "doc_source_123",
+  "content": "...",
+  "comparison_results": [
+    {
+      "element_type": "text",
+      "source_content": "Configure API Keys",
+      "match_tier": "fuzzy",
+      "match_score": 0.87,
+      "classification": "close_match",
+      "confidence": 0.92
+    }
+  ]
+}
+```
+
+### Finding Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `element_type` | string | Type of element: `text`, `code`, `visual`, or custom |
+| `source_content` | string | Content from the source document |
+| `source_location` | string | Location reference (timestamp, page number) |
+| `reference_match` | string | Best matching content from reference |
+| `reference_url` | string | URL or ID of matched reference document |
+| `match_tier` | string | Tier used: `exact`, `fuzzy`, `semantic`, `visual`, `none` |
+| `match_score` | float | Match score (0.0 - 1.0) |
+| `classification` | string | Label from classification rules |
+| `confidence` | float | Multi-signal confidence (0.0 - 1.0) |
+| `signals` | object | Corroborating signals used in confidence |
+
+## Performance
+
+| Scenario | Expected Latency | Notes |
+|----------|------------------|-------|
+| Exact + fuzzy only (50 docs) | 50-200ms | In-memory string matching |
+| With semantic tier (50 docs) | 200-500ms | Qdrant vector queries |
+| With visual comparison (50 docs) | 500-1500ms | Multiple vector queries |
+| Large reference set (200 docs) | 300-800ms | More candidates to compare |
+
+<Tip>
+  Reference documents are fetched once and reused across all source documents. The matching cascade short-circuits at the first successful tier, so ordering `match_tiers` from fastest to slowest (exact → fuzzy → semantic → visual) is optimal.
+</Tip>
+
+**Limits:**
+- Max source documents per execution: 50
+- Max reference documents fetched: 200 (configurable via `reference_limit`)
+
+## Common Pipeline Patterns
+
+### Drift Detection Pipeline
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "feature_search",
+    "parameters": {
+      "features": [{
+        "feature_uri": "mixpeek://text_extractor@v1/multilingual_e5_large_instruct_v1",
+        "query_input": "{{INPUT.query}}",
+        "top_k": 50
+      }],
+      "final_top_k": 50
+    }
+  },
+  {
+    "stage_type": "apply",
+    "stage_id": "cross_compare",
+    "parameters": {
+      "reference_collection_id": "col_documentation",
+      "source_field": "content",
+      "reference_field": "content",
+      "extraction_mode": "labels",
+      "match_tiers": ["exact", "fuzzy", "semantic"],
+      "include_visual_comparison": true,
+      "classifications": [
+        {"min_score": 0.95, "label": "current"},
+        {"min_score": 0.75, "label": "needs_review"},
+        {"min_score": 0.0, "label": "outdated"}
+      ]
+    }
+  }
+]
+```
+
+### Catalog Match + Transform
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "feature_search",
+    "parameters": {
+      "features": [{
+        "feature_uri": "mixpeek://text_extractor@v1/multilingual_e5_large_instruct_v1",
+        "query_input": "{{INPUT.query}}",
+        "top_k": 30
+      }],
+      "final_top_k": 30
+    }
+  },
+  {
+    "stage_type": "apply",
+    "stage_id": "cross_compare",
+    "parameters": {
+      "reference_collection_id": "col_reference_catalog",
+      "source_field": "product_name",
+      "reference_field": "product_name",
+      "match_tiers": ["exact", "fuzzy"],
+      "output_mode": "enrich",
+      "output_field": "match_result"
+    }
+  },
+  {
+    "stage_type": "apply",
+    "stage_id": "json_transform",
+    "parameters": {
+      "template": "{\"product\": \"{{ DOC.product_name }}\", \"match_status\": \"{{ DOC.match_result[0].classification }}\", \"score\": {{ DOC.match_result[0].match_score }}}"
+    }
+  }
+]
+```
+
+## Error Handling
+
+| Error | Behavior |
+|-------|----------|
+| Reference collection not found | Stage fails with error |
+| No reference documents found | All elements classified as `no_match` |
+| Vector index not available | Semantic/visual tiers skipped silently |
+| Source field missing on document | Document skipped |
+| Exceeds max_working_documents | Extra documents passed through unchanged |
+
+## vs Other Enrichment Stages
+
+| Feature | cross_compare | document_enrich | api_call |
+|---------|---------------|-----------------|----------|
+| **Purpose** | Multi-tier comparison with classification | Simple field join/lookup | External API enrichment |
+| **Data source** | Internal Qdrant collections | Internal Qdrant collections | External HTTP APIs |
+| **Matching** | Cascading: exact → fuzzy → semantic → visual | Top-1 vector or key match | N/A |
+| **Output** | Classified findings with scores | Joined fields | API response |
+| **Latency** | 50-1500ms | 5-20ms | 100-500ms |
+| **Best for** | Drift detection, dedup, compliance | Cross-collection joins | Third-party data |
+
+## Related
+
+- [Document Enrich](/retrieval/stages/document-enrich) - Simple cross-collection joins
+- [Feature Search](/retrieval/stages/feature-search) - Vector search (often used before cross_compare)
+- [JSON Transform](/retrieval/stages/json-transform) - Transform comparison output
+- [Taxonomy Enrich](/retrieval/stages/taxonomy-enrich) - Classification enrichment
