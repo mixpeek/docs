@@ -1,0 +1,106 @@
+# Mixpeek Documentation
+
+> Multimodal AI infrastructure that makes unstructured data searchable and AI-ready.
+
+## Documentation Overview
+
+Mixpeek is a multimodal data warehouse and retrieval platform. This documentation covers the complete platform for processing images, videos, audio, PDFs, and text into searchable, AI-ready assets.
+
+## Quick Links
+
+- Full Documentation: https://docs.mixpeek.com
+- API Reference: https://docs.mixpeek.com/api-reference
+- OpenAPI Spec: https://api.mixpeek.com/docs/openapi.json
+- Quickstart: https://docs.mixpeek.com/overview/quickstart
+
+## Core Concepts
+
+### The 5-Stage Pipeline
+1. **Ingestion** - Upload files via URL or direct upload to buckets
+2. **Extraction** - Run AI models to extract features (embeddings, transcripts, objects)
+3. **Enrichment** - Apply taxonomies and clustering for organization
+4. **Indexing** - Store vectors and metadata for retrieval
+5. **Retrieval** - Query with configurable retriever pipelines
+
+### Key Resources
+- **Namespaces**: Tenant isolation boundaries
+- **Buckets**: Raw file storage (maps to S3/GCS)
+- **Collections**: Processing pipelines with feature extractors
+- **Documents**: Processed assets with embeddings and metadata
+- **Retrievers**: Configurable search pipelines with stages
+- **Taxonomies**: Hierarchical classification systems
+
+## Essential Documentation Pages
+
+### Getting Started
+- /overview/introduction - Platform overview
+- /overview/quickstart - 5-minute getting started guide
+- /overview/concepts - Core terminology and concepts
+- /overview/architecture - System architecture
+- /overview/data-model - Data model and relationships
+
+### Data Ingestion
+- /ingestion/objects - Working with raw objects
+- /ingestion/uploads - File upload methods
+- /ingestion/buckets - Bucket management
+- /ingestion/collections - Collection configuration
+
+### Feature Extraction
+- /processing/feature-extractors - Available extractors
+- /processing/extractors/multimodal - Multimodal embeddings
+- /processing/extractors/image - Image analysis
+- /processing/extractors/text - Text processing
+- /processing/extractors/document - PDF/document extraction
+
+### Search & Retrieval
+- /retrieval/retrievers - Retriever configuration
+- /retrieval/stages/overview - Pipeline stages overview
+- /retrieval/stages/feature-search - Vector/semantic search
+- /retrieval/stages/rerank - Result reranking
+- /retrieval/filters - Query filtering
+
+### Enrichment
+- /enrichment/taxonomies - Taxonomy-based classification
+- /enrichment/clusters - Automatic clustering
+
+## API Authentication
+
+All API requests require Bearer token authentication:
+```
+Authorization: Bearer YOUR_API_KEY
+```
+
+Namespace context is provided via header:
+```
+X-Namespace: ns_your_namespace_id
+```
+
+## Common API Patterns
+
+### Create a Collection
+POST /v1/collections
+- Define feature extractors for processing
+- Link to a bucket for source data
+
+### Upload and Process Data
+1. POST /v1/buckets/{bucket_id}/objects - Create object reference
+2. POST /v1/buckets/{bucket_id}/uploads - Upload file
+3. Collection triggers batch processing automatically
+
+### Execute Search
+POST /v1/retrievers/{retriever_id}/execute
+- Provide query in inputs
+- Configure stages for filtering, ranking, enrichment
+
+## SDKs
+
+- Python: `pip install mixpeek`
+- JavaScript: `npm install mixpeek-sdk`
+- CLI: `pip install mixpeek-cli`
+
+## Support
+
+- Documentation: https://docs.mixpeek.com
+- GitHub: https://github.com/mixpeek
+- Discord: https://discord.gg/mixpeek
+- Email: support@mixpeek.com
