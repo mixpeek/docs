@@ -10,7 +10,7 @@ description: "Classify and tag documents using predefined taxonomies"
 The Taxonomy Enrich stage classifies documents against predefined taxonomies, adding structured category labels and hierarchical classifications to your search results.
 
 <Note>
-  **Stage Category**: APPLY (Enriches documents with classifications)
+  **Stage Category**: ENRICH (Enriches documents with classifications)
 
   **Transformation**: N documents → N documents (with taxonomy labels added)
 </Note>
@@ -49,7 +49,7 @@ The Taxonomy Enrich stage classifies documents against predefined taxonomies, ad
 <CodeGroup>
 ```json Basic Classification
 {
-  "stage_type": "apply",
+  "stage_type": "enrich",
   "stage_id": "taxonomy_enrich",
   "parameters": {
     "taxonomy_id": "product_categories",
@@ -61,7 +61,7 @@ The Taxonomy Enrich stage classifies documents against predefined taxonomies, ad
 
 ```json High-Confidence Only
 {
-  "stage_type": "apply",
+  "stage_type": "enrich",
   "stage_id": "taxonomy_enrich",
   "parameters": {
     "taxonomy_id": "topics",
@@ -75,7 +75,7 @@ The Taxonomy Enrich stage classifies documents against predefined taxonomies, ad
 
 ```json Hierarchical with Ancestors
 {
-  "stage_type": "apply",
+  "stage_type": "enrich",
   "stage_id": "taxonomy_enrich",
   "parameters": {
     "taxonomy_id": "industry_taxonomy",
@@ -89,7 +89,7 @@ The Taxonomy Enrich stage classifies documents against predefined taxonomies, ad
 
 ```json Multiple Classifications
 {
-  "stage_type": "apply",
+  "stage_type": "enrich",
   "stage_id": "taxonomy_enrich",
   "parameters": {
     "taxonomy_id": "content_types",
@@ -213,7 +213,7 @@ Each node has:
     }
   },
   {
-    "stage_type": "apply",
+    "stage_type": "enrich",
     "stage_id": "taxonomy_enrich",
     "parameters": {
       "taxonomy_id": "product_categories",
@@ -250,7 +250,7 @@ Each node has:
     }
   },
   {
-    "stage_type": "apply",
+    "stage_type": "enrich",
     "stage_id": "taxonomy_enrich",
     "parameters": {
       "taxonomy_id": "topics",
@@ -258,7 +258,7 @@ Each node has:
     }
   },
   {
-    "stage_type": "apply",
+    "stage_type": "enrich",
     "stage_id": "taxonomy_enrich",
     "parameters": {
       "taxonomy_id": "sentiment",
@@ -282,7 +282,7 @@ Each node has:
     }
   },
   {
-    "stage_type": "apply",
+    "stage_type": "enrich",
     "stage_id": "taxonomy_enrich",
     "parameters": {
       "taxonomy_id": "categories",

@@ -10,7 +10,7 @@ description: "Aggregate documents by shared field values into logical groups"
 The Group By stage aggregates documents that share the same value for a specified field, creating logical groups. This is useful for organizing results by category, author, date, or any other attribute.
 
 <Note>
-  **Stage Category**: REDUCE (Groups documents)
+  **Stage Category**: GROUP (Groups documents)
 
   **Transformation**: N documents → G groups (where G = unique field values)
 </Note>
@@ -49,7 +49,7 @@ The Group By stage aggregates documents that share the same value for a specifie
 <CodeGroup>
 ```json Basic Group By
 {
-  "stage_type": "reduce",
+  "stage_type": "group",
   "stage_id": "group_by",
   "parameters": {
     "field": "metadata.category"
@@ -59,7 +59,7 @@ The Group By stage aggregates documents that share the same value for a specifie
 
 ```json Limited Docs Per Group
 {
-  "stage_type": "reduce",
+  "stage_type": "group",
   "stage_id": "group_by",
   "parameters": {
     "field": "metadata.author",
@@ -71,7 +71,7 @@ The Group By stage aggregates documents that share the same value for a specifie
 
 ```json Sorted Groups
 {
-  "stage_type": "reduce",
+  "stage_type": "group",
   "stage_id": "group_by",
   "parameters": {
     "field": "metadata.brand",
@@ -84,7 +84,7 @@ The Group By stage aggregates documents that share the same value for a specifie
 
 ```json Date Grouping
 {
-  "stage_type": "reduce",
+  "stage_type": "group",
   "stage_id": "group_by",
   "parameters": {
     "field": "metadata.publish_date",
@@ -96,7 +96,7 @@ The Group By stage aggregates documents that share the same value for a specifie
 
 ```json Nested Field Grouping
 {
-  "stage_type": "reduce",
+  "stage_type": "group",
   "stage_id": "group_by",
   "parameters": {
     "field": "metadata.source.type",
@@ -169,7 +169,7 @@ The Group By stage aggregates documents that share the same value for a specifie
     }
   },
   {
-    "stage_type": "reduce",
+    "stage_type": "group",
     "stage_id": "group_by",
     "parameters": {
       "field": "metadata.category",
@@ -193,7 +193,7 @@ The Group By stage aggregates documents that share the same value for a specifie
     }
   },
   {
-    "stage_type": "reduce",
+    "stage_type": "group",
     "stage_id": "group_by",
     "parameters": {
       "field": "metadata.brand",
@@ -229,7 +229,7 @@ The Group By stage aggregates documents that share the same value for a specifie
     }
   },
   {
-    "stage_type": "apply",
+    "stage_type": "enrich",
     "stage_id": "document_enrich",
     "parameters": {
       "collection_id": "authors",
@@ -239,7 +239,7 @@ The Group By stage aggregates documents that share the same value for a specifie
     }
   },
   {
-    "stage_type": "reduce",
+    "stage_type": "group",
     "stage_id": "group_by",
     "parameters": {
       "field": "author.name",
@@ -273,7 +273,7 @@ The Group By stage aggregates documents that share the same value for a specifie
     }
   },
   {
-    "stage_type": "reduce",
+    "stage_type": "group",
     "stage_id": "group_by",
     "parameters": {
       "field": "metadata.month",
@@ -327,7 +327,7 @@ Groups containing highest-scoring documents first.
 
 ```json
 {
-  "stage_type": "reduce",
+  "stage_type": "group",
   "stage_id": "group_by",
   "parameters": {
     "field": "metadata.category",

@@ -10,7 +10,7 @@ description: "Group documents by embedding similarity into semantic clusters"
 The Cluster stage groups documents based on embedding similarity, creating semantic clusters of related content. This helps organize search results into meaningful groups and discover themes within your results.
 
 <Note>
-  **Stage Category**: REDUCE (Groups documents)
+  **Stage Category**: GROUP (Groups documents)
 
   **Transformation**: N documents → K clusters with documents
 </Note>
@@ -57,7 +57,7 @@ The Cluster stage groups documents based on embedding similarity, creating seman
 <CodeGroup>
 ```json Basic Clustering
 {
-  "stage_type": "reduce",
+  "stage_type": "group",
   "stage_id": "cluster",
   "parameters": {
     "num_clusters": 5
@@ -67,7 +67,7 @@ The Cluster stage groups documents based on embedding similarity, creating seman
 
 ```json Auto-Labeled Clusters
 {
-  "stage_type": "reduce",
+  "stage_type": "group",
   "stage_id": "cluster",
   "parameters": {
     "num_clusters": 8,
@@ -78,7 +78,7 @@ The Cluster stage groups documents based on embedding similarity, creating seman
 
 ```json Density-Based Clustering
 {
-  "stage_type": "reduce",
+  "stage_type": "group",
   "stage_id": "cluster",
   "parameters": {
     "algorithm": "hdbscan",
@@ -90,7 +90,7 @@ The Cluster stage groups documents based on embedding similarity, creating seman
 
 ```json Custom Embedding Field
 {
-  "stage_type": "reduce",
+  "stage_type": "group",
   "stage_id": "cluster",
   "parameters": {
     "num_clusters": 6,
@@ -102,7 +102,7 @@ The Cluster stage groups documents based on embedding similarity, creating seman
 
 ```json Fine-Grained Clustering
 {
-  "stage_type": "reduce",
+  "stage_type": "group",
   "stage_id": "cluster",
   "parameters": {
     "num_clusters": 15,
@@ -197,7 +197,7 @@ The Cluster stage groups documents based on embedding similarity, creating seman
     }
   },
   {
-    "stage_type": "reduce",
+    "stage_type": "group",
     "stage_id": "cluster",
     "parameters": {
       "num_clusters": 5,
@@ -221,7 +221,7 @@ The Cluster stage groups documents based on embedding similarity, creating seman
     }
   },
   {
-    "stage_type": "reduce",
+    "stage_type": "group",
     "stage_id": "cluster",
     "parameters": {
       "num_clusters": 10,
@@ -256,7 +256,7 @@ The Cluster stage groups documents based on embedding similarity, creating seman
     }
   },
   {
-    "stage_type": "reduce",
+    "stage_type": "group",
     "stage_id": "cluster",
     "parameters": {
       "algorithm": "hdbscan",
@@ -290,7 +290,7 @@ The Cluster stage groups documents based on embedding similarity, creating seman
     }
   },
   {
-    "stage_type": "reduce",
+    "stage_type": "group",
     "stage_id": "cluster",
     "parameters": {
       "num_clusters": 5

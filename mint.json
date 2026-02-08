@@ -162,12 +162,17 @@
               "group": "Reduce",
               "pages": [
                 "retrieval/stages/aggregate",
-                "retrieval/stages/group-by",
-                "retrieval/stages/cluster",
                 "retrieval/stages/sample",
                 "retrieval/stages/summarize",
                 "retrieval/stages/limit",
                 "retrieval/stages/deduplicate"
+              ]
+            },
+            {
+              "group": "Group",
+              "pages": [
+                "retrieval/stages/group-by",
+                "retrieval/stages/cluster"
               ]
             },
             {
@@ -178,18 +183,18 @@
                 "retrieval/stages/external-web-search",
                 "retrieval/stages/api-call",
                 "retrieval/stages/sql-lookup",
-                "retrieval/stages/llm-enrich",
-                "retrieval/stages/taxonomy-enrich",
-                "retrieval/stages/document-enrich",
                 "retrieval/stages/cross-compare",
                 "retrieval/stages/web-scrape",
-                "retrieval/stages/unwind"
+                "retrieval/stages/unwind",
+                "retrieval/stages/code-execution"
               ]
             },
             {
               "group": "Enrich",
               "pages": [
-                "retrieval/stages/code-execution"
+                "retrieval/stages/llm-enrich",
+                "retrieval/stages/taxonomy-enrich",
+                "retrieval/stages/document-enrich"
               ]
             }
           ]

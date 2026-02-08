@@ -7,7 +7,7 @@ Retriever stages are the building blocks of search pipelines in Mixpeek. Each st
 
 ## Stage Categories
 
-Stages are organized into five categories based on how they transform the document set:
+Stages are organized into six categories based on how they transform the document set:
 
 <CardGroup cols={2}>
   <Card title="FILTER" icon="filter">
@@ -23,21 +23,27 @@ Stages are organized into five categories based on how they transform the docume
   </Card>
 
   <Card title="REDUCE" icon="compress">
-    Aggregate or reduce the document count. Combine, group, or sample results.
+    Collapse results into aggregated values. Produces a single value or smaller set from the input.
 
-    **Stages**: aggregate, group_by, cluster, sample, summarize, limit, deduplicate
+    **Stages**: aggregate, sample, summarize, limit, deduplicate
+  </Card>
+
+  <Card title="GROUP" icon="layer-group">
+    Reshape results by bucketing documents into logical groups or clusters.
+
+    **Stages**: group_by, cluster
   </Card>
 
   <Card title="APPLY" icon="wand-magic-sparkles">
-    Enrich or transform documents. May add fields, create new documents, or restructure data.
+    Transform or restructure documents. May reshape fields, create new documents, or call external services.
 
-    **Stages**: json_transform, rag_prepare, external_web_search, api_call, sql_lookup, llm_enrich, taxonomy_enrich, document_enrich, cross_compare, web_scrape, unwind
+    **Stages**: json_transform, rag_prepare, external_web_search, api_call, sql_lookup, cross_compare, web_scrape, unwind, code_execution
   </Card>
 
-  <Card title="ENRICH" icon="code">
-    Execute custom code in isolated sandboxes for dynamic enrichments.
+  <Card title="ENRICH" icon="sparkles">
+    Add knowledge to documents using AI models, taxonomies, or cross-collection joins.
 
-    **Stages**: code_execution
+    **Stages**: llm_enrich, taxonomy_enrich, document_enrich
   </Card>
 </CardGroup>
 
@@ -68,12 +74,17 @@ Stages are organized into five categories based on how they transform the docume
 | Stage | Description |
 |-------|-------------|
 | [Aggregate](/retrieval/stages/aggregate) | Compute COUNT, SUM, AVG, etc. on results |
-| [Group By](/retrieval/stages/group-by) | Group documents by field value (decompose/recompose) |
-| [Cluster](/retrieval/stages/cluster) | Discover themes via embedding-based clustering |
 | [Sample](/retrieval/stages/sample) | Random or stratified sampling of results |
 | [Summarize](/retrieval/stages/summarize) | Condense documents into an LLM-generated summary |
 | [Limit](/retrieval/stages/limit) | Truncate results to a maximum count with optional offset |
 | [Deduplicate](/retrieval/stages/deduplicate) | Remove duplicate documents by field or content similarity |
+
+### Group Stages
+
+| Stage | Description |
+|-------|-------------|
+| [Group By](/retrieval/stages/group-by) | Group documents by field value (decompose/recompose) |
+| [Cluster](/retrieval/stages/cluster) | Discover themes via embedding-based clustering |
 
 ### Apply Stages
 
@@ -84,18 +95,18 @@ Stages are organized into five categories based on how they transform the docume
 | [External Web Search](/retrieval/stages/external-web-search) | Augment with Exa AI-native web search |
 | [API Call](/retrieval/stages/api-call) | Enrich with external REST API responses |
 | [SQL Lookup](/retrieval/stages/sql-lookup) | Join with PostgreSQL/Snowflake data |
-| [LLM Enrich](/retrieval/stages/llm-enrich) | Generate new fields with LLM prompts |
-| [Taxonomy Enrich](/retrieval/stages/taxonomy-enrich) | Classify documents against taxonomy nodes |
-| [Document Enrich](/retrieval/stages/document-enrich) | Cross-collection joins (LEFT JOIN) |
 | [Cross Compare](/retrieval/stages/cross-compare) | Multi-tier cross-collection matching with classification |
 | [Web Scrape](/retrieval/stages/web-scrape) | Extract full page content from URLs |
 | [Unwind](/retrieval/stages/unwind) | Decompose array fields into separate documents |
+| [Code Execution](/retrieval/stages/code-execution) | Execute Python/TypeScript/JavaScript in sandboxes |
 
 ### Enrich Stages
 
 | Stage | Description |
 |-------|-------------|
-| [Code Execution](/retrieval/stages/code-execution) | Execute Python/TypeScript/JavaScript in sandboxes |
+| [LLM Enrich](/retrieval/stages/llm-enrich) | Generate new fields with LLM prompts |
+| [Taxonomy Enrich](/retrieval/stages/taxonomy-enrich) | Classify documents against taxonomy nodes |
+| [Document Enrich](/retrieval/stages/document-enrich) | Cross-collection joins (LEFT JOIN) |
 
 ## Pipeline Patterns
 
@@ -219,7 +230,7 @@ Stages are organized into five categories based on how they transform the docume
     }
   },
   {
-    "stage_type": "apply",
+    "stage_type": "enrich",
     "stage_id": "document_enrich",
     "parameters": {
       "target_collection_id": "col_users",
@@ -229,7 +240,7 @@ Stages are organized into five categories based on how they transform the docume
     }
   },
   {
-    "stage_type": "apply",
+    "stage_type": "enrich",
     "stage_id": "llm_enrich",
     "parameters": {
       "provider": "openai",
@@ -325,7 +336,7 @@ All stages support template variables for dynamic configuration:
 | Variable | Description |
 |----------|-------------|
 | `{{INPUT.*}}` | Input parameters from retriever call |
-| `{{DOC.*}}` | Document fields (in APPLY/ENRICH stages) |
+| `{{DOC.*}}` | Document fields (in APPLY, ENRICH, and GROUP stages) |
 | `{{CONTEXT.*}}` | Pipeline context (index, citations) |
 
 ```json

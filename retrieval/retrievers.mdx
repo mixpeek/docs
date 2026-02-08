@@ -24,7 +24,7 @@ Retrievers combine feature-aware search stages, structured filters, enrichment j
   },
   "stages": [
     {
-      "stage_type": "apply",
+      "stage_type": "enrich",
       "stage_id": "document_enrich",
       "parameters": {
         "target_collection_id": "col_catalog",
@@ -73,8 +73,10 @@ Stages are the building blocks of retriever pipelines. Each stage belongs to a *
 |----------|----------|-------------------|
 | **filter** | Reduce the number of documents while preserving schema | Attribute filters, semantic search, hybrid search |
 | **sort** | Reorder documents without changing the set | Attribute sort, score-based ordering, reranking |
-| **reduce** | Aggregate to a smaller set of documents | Top-k selection, clustering reducers, deduplication |
-| **apply** | Enrich or transform documents without dropping them | Taxonomy joins, API enrichment, LLM enrichers, JSON transforms |
+| **reduce** | Collapse results into aggregated values | Top-k selection, deduplication, sampling, summarization |
+| **group** | Reshape results by bucketing into logical groups | Group by field, semantic clustering |
+| **apply** | Transform or restructure documents | JSON transforms, API calls, code execution, web scrape |
+| **enrich** | Add knowledge to documents using AI or joins | LLM enrichment, taxonomy classification, cross-collection joins |
 
 <Note>
   Retrieve the live registry with `GET /v1/retrievers/stages`. Each entry includes `stage_id`, category, icon, and parameter schema so you can dynamically build configuration UIs or validations.
@@ -113,7 +115,7 @@ curl -s --request GET \
   {
     "stage_id": "document_enrich",
     "description": "Join and enrich documents with data from another collection",
-    "category": "apply",
+    "category": "enrich",
     "icon": "link"
   },
   {
@@ -144,27 +146,45 @@ Sort stages reorder documents without changing the result set. Place these after
 
 ### Reduce Stages
 
-Reduce stages aggregate documents to a smaller set. Use these for deduplication or clustering.
+Reduce stages collapse results into aggregated values. Use these for deduplication, sampling, or summarization.
 
 <Note>
   Use `GET /v1/retrievers/stages?category=reduce` to retrieve the current list of reduce stages and their parameter schemas.
 </Note>
 
+### Group Stages
+
+Group stages reshape results by bucketing documents into logical groups or clusters.
+
+<Note>
+  Use `GET /v1/retrievers/stages?category=group` to retrieve the current list of group stages and their parameter schemas.
+</Note>
+
 ### Apply Stages
 
-Apply stages enrich or transform documents. Use these to add context, join data, or reshape output.
+Apply stages transform or restructure documents. Use these to reshape output, call external services, or run custom code.
 
 | Stage ID | Description | Transformation |
 |----------|-------------|----------------|
-| `document_enrich` | Join documents with data from another collection | N → N (LEFT JOIN) |
 | `cross_compare` | Multi-tier comparison against a reference collection | N → M (findings) or N → N (enrich) |
 | `api_call` | Enrich documents with external API calls | N → N |
 | `json_transform` | Transform document structure using Jinja2 templates | N → N |
 | `external_web_search` | Search the web using Exa AI-native search | 0 → M (creates documents) |
+| `code_execution` | Execute custom Python/TypeScript/JavaScript in sandboxes | N → M (custom logic) |
+
+### Enrich Stages
+
+Enrich stages add knowledge to documents using AI models, taxonomies, or cross-collection joins.
+
+| Stage ID | Description | Transformation |
+|----------|-------------|----------------|
+| `llm_enrich` | Generate new fields with LLM prompts | N → N (with extracted data added) |
+| `taxonomy_enrich` | Classify documents against taxonomy nodes | N → N (with taxonomy labels added) |
+| `document_enrich` | Join documents with data from another collection | N → N (LEFT JOIN) |
 
 ---
 
-## Apply Stage Details
+## Enrich Stage Details
 
 ### document_enrich
 
@@ -200,7 +220,7 @@ Joins documents with data from another collection, similar to a SQL LEFT JOIN. E
 <CodeGroup>
 ```json Direct Field Join
 {
-  "stage_type": "apply",
+  "stage_type": "enrich",
   "stage_id": "document_enrich",
   "parameters": {
     "target_collection_id": "col_products",
@@ -214,7 +234,7 @@ Joins documents with data from another collection, similar to a SQL LEFT JOIN. E
 
 ```json Retriever-Based Enrichment
 {
-  "stage_type": "apply",
+  "stage_type": "enrich",
   "stage_id": "document_enrich",
   "parameters": {
     "target_collection_id": "col_similar_items",
@@ -232,7 +252,7 @@ Joins documents with data from another collection, similar to a SQL LEFT JOIN. E
 
 ```json Conditional Enrichment
 {
-  "stage_type": "apply",
+  "stage_type": "enrich",
   "stage_id": "document_enrich",
   "parameters": {
     "target_collection_id": "col_specs",

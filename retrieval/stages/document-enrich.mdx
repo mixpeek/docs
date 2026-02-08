@@ -10,7 +10,7 @@ description: "Join documents across collections for cross-reference enrichment"
 The Document Enrich stage performs collection joins by looking up related documents from other Mixpeek collections. This enables cross-reference enrichment without external database calls.
 
 <Note>
-  **Stage Category**: APPLY (Enriches documents)
+  **Stage Category**: ENRICH (Enriches documents)
 
   **Transformation**: N documents → N documents (with joined data added)
 </Note>
@@ -49,7 +49,7 @@ The Document Enrich stage performs collection joins by looking up related docume
 <CodeGroup>
 ```json Basic Collection Join
 {
-  "stage_type": "apply",
+  "stage_type": "enrich",
   "stage_id": "document_enrich",
   "parameters": {
     "collection_id": "user_profiles",
@@ -62,7 +62,7 @@ The Document Enrich stage performs collection joins by looking up related docume
 
 ```json Select Specific Fields
 {
-  "stage_type": "apply",
+  "stage_type": "enrich",
   "stage_id": "document_enrich",
   "parameters": {
     "collection_id": "products",
@@ -76,7 +76,7 @@ The Document Enrich stage performs collection joins by looking up related docume
 
 ```json Multiple Related Documents
 {
-  "stage_type": "apply",
+  "stage_type": "enrich",
   "stage_id": "document_enrich",
   "parameters": {
     "collection_id": "reviews",
@@ -91,7 +91,7 @@ The Document Enrich stage performs collection joins by looking up related docume
 
 ```json Nested Field Lookup
 {
-  "stage_type": "apply",
+  "stage_type": "enrich",
   "stage_id": "document_enrich",
   "parameters": {
     "collection_id": "categories",
@@ -183,7 +183,7 @@ The Document Enrich stage performs collection joins by looking up related docume
     }
   },
   {
-    "stage_type": "apply",
+    "stage_type": "enrich",
     "stage_id": "document_enrich",
     "parameters": {
       "collection_id": "users",
@@ -210,7 +210,7 @@ The Document Enrich stage performs collection joins by looking up related docume
     }
   },
   {
-    "stage_type": "apply",
+    "stage_type": "enrich",
     "stage_id": "document_enrich",
     "parameters": {
       "collection_id": "reviews",
@@ -239,7 +239,7 @@ The Document Enrich stage performs collection joins by looking up related docume
     }
   },
   {
-    "stage_type": "apply",
+    "stage_type": "enrich",
     "stage_id": "document_enrich",
     "parameters": {
       "collection_id": "categories",
@@ -249,7 +249,7 @@ The Document Enrich stage performs collection joins by looking up related docume
     }
   },
   {
-    "stage_type": "apply",
+    "stage_type": "enrich",
     "stage_id": "document_enrich",
     "parameters": {
       "collection_id": "categories",

@@ -10,7 +10,7 @@ description: "Extract structured data from documents using language model analys
 The LLM Enrich stage uses language models to extract structured data from document content. It can identify entities, classify content, extract key information, and generate structured outputs.
 
 <Note>
-  **Stage Category**: APPLY (Enriches documents)
+  **Stage Category**: ENRICH (Enriches documents)
 
   **Transformation**: N documents → N documents (with extracted data added)
 </Note>
@@ -58,7 +58,7 @@ The LLM Enrich stage uses language models to extract structured data from docume
 <CodeGroup>
 ```json Basic Entity Extraction
 {
-  "stage_type": "apply",
+  "stage_type": "enrich",
   "stage_id": "llm_enrich",
   "parameters": {
     "model": "gpt-4o-mini",
@@ -70,7 +70,7 @@ The LLM Enrich stage uses language models to extract structured data from docume
 
 ```json Structured Output with Schema
 {
-  "stage_type": "apply",
+  "stage_type": "enrich",
   "stage_id": "llm_enrich",
   "parameters": {
     "model": "gpt-4o",
@@ -92,7 +92,7 @@ The LLM Enrich stage uses language models to extract structured data from docume
 
 ```json Key Facts Extraction
 {
-  "stage_type": "apply",
+  "stage_type": "enrich",
   "stage_id": "llm_enrich",
   "parameters": {
     "model": "gpt-4o-mini",
@@ -114,7 +114,7 @@ The LLM Enrich stage uses language models to extract structured data from docume
 
 ```json Topic Classification
 {
-  "stage_type": "apply",
+  "stage_type": "enrich",
   "stage_id": "llm_enrich",
   "parameters": {
     "model": "claude-3-haiku",
@@ -134,7 +134,7 @@ The LLM Enrich stage uses language models to extract structured data from docume
 
 ```json Contact Information Extraction
 {
-  "stage_type": "apply",
+  "stage_type": "enrich",
   "stage_id": "llm_enrich",
   "parameters": {
     "model": "gpt-4o-mini",
@@ -245,7 +245,7 @@ Define structured output using JSON Schema:
     }
   },
   {
-    "stage_type": "apply",
+    "stage_type": "enrich",
     "stage_id": "llm_enrich",
     "parameters": {
       "model": "gpt-4o-mini",
@@ -291,7 +291,7 @@ Define structured output using JSON Schema:
     }
   },
   {
-    "stage_type": "apply",
+    "stage_type": "enrich",
     "stage_id": "llm_enrich",
     "parameters": {
       "model": "gpt-4o",
@@ -368,7 +368,7 @@ Use your own LLM API keys instead of Mixpeek's default keys. This gives you cont
 
     ```json
     {
-      "stage_type": "apply",
+      "stage_type": "enrich",
       "stage_id": "llm_enrich",
       "parameters": {
         "model": "gpt-4o-mini",
@@ -386,7 +386,7 @@ Use your own LLM API keys instead of Mixpeek's default keys. This gives you cont
 <CodeGroup>
 ```json OpenAI BYOK
 {
-  "stage_type": "apply",
+  "stage_type": "enrich",
   "stage_id": "llm_enrich",
   "parameters": {
     "provider": "openai",
@@ -400,7 +400,7 @@ Use your own LLM API keys instead of Mixpeek's default keys. This gives you cont
 
 ```json Anthropic BYOK
 {
-  "stage_type": "apply",
+  "stage_type": "enrich",
   "stage_id": "llm_enrich",
   "parameters": {
     "provider": "anthropic",
@@ -414,7 +414,7 @@ Use your own LLM API keys instead of Mixpeek's default keys. This gives you cont
 
 ```json Google BYOK
 {
-  "stage_type": "apply",
+  "stage_type": "enrich",
   "stage_id": "llm_enrich",
   "parameters": {
     "provider": "google",
