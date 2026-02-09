@@ -1,0 +1,252 @@
+---
+title: "Instagram"
+description: "Monitor public Instagram Business and Creator accounts using Mixpeek's Instagram integration."
+---
+
+<Note>
+  The Instagram integration uses the **Business Discovery API** to fetch public media from other Instagram Business or Creator accounts. You authenticate with your own account, then monitor any number of public accounts.
+</Note>
+
+## Prerequisites
+
+- A **Facebook account** with a **Facebook Page** that has a linked **Instagram Business or Creator account**. This is your "viewer" account — you don't need to own the accounts you're monitoring.
+- The Facebook/Instagram app must have the `instagram_basic`, `pages_show_list`, and `business_management` permissions.
+
+<Info>
+  You don't need any relationship with the accounts you monitor. Business Discovery works with any public Instagram Business or Creator account.
+</Info>
+
+## How It Works
+
+The Instagram integration uses Meta's Business Discovery API, which allows an authenticated Instagram Business Account to query public profile data and media from other Business or Creator accounts.
+
+**Key concepts:**
+
+- **Viewer Account** — Your authenticated Instagram Business Account. This is the account that makes API calls on your behalf.
+- **Target Accounts** — The public Instagram accounts you want to monitor. Each target is configured as a separate sync config with the account's username as the `source_path`.
+- **One Connection, Many Targets** — A single OAuth connection provides the viewer account. You can create unlimited sync configs to monitor different target accounts.
+
+### Data Flow
+
+```
+Instagram OAuth → Connection (viewer: @your_business_account)
+    │
+    ├── Sync Config (source_path: "nike")
+    │       → Business Discovery API → Media items
+    │       → Download to S3 → Bucket Objects
+    │       → Collection Pipeline → Qdrant Documents
+    │
+    ├── Sync Config (source_path: "adidas")
+    │       → ...
+    │
+    └── Sync Config (source_path: "spotify")
+            → ...
+```
+
+### What Gets Synced
+
+For each media item on the target account, Mixpeek captures:
+
+| Field | Description |
+|-------|-------------|
+| **Media Content** | The image or video file, downloaded and stored in your bucket |
+| **Media Type** | `IMAGE`, `VIDEO`, `CAROUSEL_ALBUM`, or `REEL` |
+| **Caption** | The post's caption text |
+| **Timestamp** | When the post was published |
+| **Like Count** | Number of likes at sync time |
+| **Comments Count** | Number of comments at sync time |
+| **Permalink** | Direct link to the post on Instagram |
+
+## Setup
+
+<Steps>
+  <Step title="Create an Instagram Connection">
+    Navigate to **Connections** in Mixpeek Studio and click **Add Connection**. Select **Instagram** and complete the OAuth flow.
+
+    During OAuth, you'll be asked to grant permissions and select which Facebook Pages to share. Make sure to select a Page that has a linked Instagram Business Account.
+
+    <Warning>
+      If none of your Facebook Pages have a linked Instagram Business Account, the connection will fall back to your Facebook user profile and Business Discovery will not work. Ensure at least one Page has a linked IG Business Account in **Page Settings &rarr; Instagram**.
+    </Warning>
+  </Step>
+
+  <Step title="Create a Bucket">
+    Create a bucket to store the synced Instagram media.
+
+    <CodeGroup>
+    ```python Python
+    from mixpeek import Mixpeek
+
+    client = Mixpeek(api_key="your-api-key")
+
+    bucket = client.buckets.create(
+        bucket_name="instagram-brand-monitor"
+    )
+    ```
+
+    ```bash cURL
+    curl -X POST https://api.mixpeek.com/v1/buckets \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "X-Namespace: YOUR_NAMESPACE" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "bucket_name": "instagram-brand-monitor"
+      }'
+    ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Add Sync Configs for Target Accounts">
+    Create a sync config for each Instagram account you want to monitor. The `source_path` is the target account's username.
+
+    <CodeGroup>
+    ```python Python
+    # Monitor multiple brands
+    brands = ["nike", "adidas", "apple", "spotify", "netflix"]
+
+    for brand in brands:
+        sync = client.buckets.syncs.create(
+            bucket_id=bucket.bucket_id,
+            connection_id="your-connection-id",
+            source_path=brand,
+            sync_mode="initial_only",
+            batch_size=100
+        )
+        print(f"Created sync for @{brand}: {sync.sync_config_id}")
+    ```
+
+    ```bash cURL
+    curl -X POST https://api.mixpeek.com/v1/buckets/BUCKET_ID/syncs \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "X-Namespace: YOUR_NAMESPACE" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "connection_id": "your-connection-id",
+        "source_path": "nike",
+        "sync_mode": "initial_only",
+        "batch_size": 100
+      }'
+    ```
+    </CodeGroup>
+
+    **Sync modes:**
+    - `initial_only` — Fetches all available media once.
+    - `continuous` — Periodically checks for new posts and syncs them incrementally.
+  </Step>
+
+  <Step title="Trigger the Sync">
+    Trigger each sync config to start fetching media.
+
+    <CodeGroup>
+    ```python Python
+    for sync_config_id in sync_config_ids:
+        result = client.buckets.syncs.trigger(
+            bucket_id=bucket.bucket_id,
+            sync_config_id=sync_config_id
+        )
+        print(f"Triggered: {result.sync_job_id}")
+    ```
+
+    ```bash cURL
+    curl -X POST https://api.mixpeek.com/v1/buckets/BUCKET_ID/syncs/SYNC_CONFIG_ID/trigger \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "X-Namespace: YOUR_NAMESPACE"
+    ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Process with a Collection">
+    Create a collection with a feature extractor to process the synced media. The `multimodal_extractor` generates 1408-dimensional embeddings for both images and videos.
+
+    <CodeGroup>
+    ```python Python
+    collection = client.collections.create(
+        collection_name="instagram-multimodal",
+        source={
+            "type": "bucket",
+            "bucket_ids": [bucket.bucket_id]
+        },
+        feature_extractor={
+            "feature_extractor_name": "multimodal_extractor",
+            "version": "v1",
+            "parameters": {
+                "run_multimodal_embedding": True
+            }
+        }
+    )
+    ```
+
+    ```bash cURL
+    curl -X POST https://api.mixpeek.com/v1/collections \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "X-Namespace: YOUR_NAMESPACE" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "collection_name": "instagram-multimodal",
+        "source": {
+          "type": "bucket",
+          "bucket_ids": ["BUCKET_ID"]
+        },
+        "feature_extractor": {
+          "feature_extractor_name": "multimodal_extractor",
+          "version": "v1",
+          "parameters": {
+            "run_multimodal_embedding": true
+          }
+        }
+      }'
+    ```
+    </CodeGroup>
+
+    Batch processing runs automatically when syncs complete. Documents are created in Qdrant with multimodal embeddings, video segments, thumbnails, and full lineage back to the original bucket object.
+  </Step>
+</Steps>
+
+## Resilience
+
+The Instagram sync provider includes built-in resilience for handling the Facebook Graph API at scale:
+
+| Feature | Behavior |
+|---------|----------|
+| **Adaptive Page Size** | Starts at 25 items per request. Automatically halves on server errors (minimum 5), preventing failures on large accounts. |
+| **Exponential Backoff** | Retries up to 3 times with exponential backoff and jitter on 5xx errors and network timeouts. |
+| **Rate Limit Handling** | Respects `429 Retry-After` headers from the Graph API. The Instagram API allows ~200 calls per hour per account. |
+| **Graph API Error Parsing** | Parses 400 error responses from the Graph API. Retries "reduce data" errors with smaller page sizes. Fails fast on non-retryable errors (invalid username, permission denied). |
+| **Graceful Degradation** | If a page of results fails after all retries, items already synced from previous pages are preserved. |
+| **CDN Download Retries** | Media downloads from Instagram's CDN retry independently with their own backoff logic. |
+
+## Token Lifecycle
+
+Instagram access tokens have a limited lifespan. The integration handles token management automatically:
+
+1. **Short-lived token** (1 hour) — Obtained during the OAuth callback.
+2. **Long-lived token** (60 days) — Exchanged automatically during the OAuth flow.
+3. **Auto-refresh** — When a token is within 7 days of expiry, it's refreshed automatically before each sync execution.
+
+<Warning>
+  If a token expires without being refreshed (e.g., no syncs run for 60+ days), you'll need to re-authenticate by creating a new connection.
+</Warning>
+
+## Limitations
+
+- **Business/Creator accounts only** — Business Discovery only works with public Instagram Business or Creator accounts. Personal accounts cannot be discovered.
+- **Public media only** — Only publicly visible posts are accessible. Stories, DMs, and private account content are not available.
+- **Rate limits** — The Graph API allows approximately 200 calls per hour per authenticated account. With a default page size of 25, this supports syncing ~5,000 media items per hour.
+- **No real-time updates** — Media is fetched on-demand when a sync is triggered. Use `continuous` sync mode for periodic polling.
+
+## Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Brand Monitoring" icon="chart-line">
+    Track competitor visual strategies across Instagram. Analyze creative trends, posting frequency, and content themes using multimodal search.
+  </Card>
+  <Card title="Influencer Analysis" icon="user-group">
+    Build a searchable database of influencer content. Find visually similar posts, track engagement patterns, and identify content themes.
+  </Card>
+  <Card title="Content Intelligence" icon="brain">
+    Process Instagram media through feature extractors to detect objects, extract text from images, transcribe video audio, and generate semantic embeddings for search.
+  </Card>
+  <Card title="Creative Benchmarking" icon="ranking-star">
+    Compare visual content across brands. Use multimodal retrieval to find similar creative executions and track how visual trends evolve over time.
+  </Card>
+</CardGroup>

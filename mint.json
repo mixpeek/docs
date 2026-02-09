@@ -253,6 +253,13 @@
           ]
         },
         {
+          "group": "Social Media",
+          "pages": [
+            "integrations/social-media/overview",
+            "integrations/social-media/instagram"
+          ]
+        },
+        {
           "group": "Developer Tools",
           "pages": [
             "integrations/developer-tools/sdk-usage",

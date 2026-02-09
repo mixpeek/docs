@@ -1,0 +1,59 @@
+---
+title: "Overview"
+description: "Connect Mixpeek to social media platforms to ingest and analyze public media at scale."
+---
+
+<Note>
+  Social media integrations allow you to monitor and analyze public media from other accounts using platform APIs. Mixpeek handles authentication, media download, and processing automatically.
+</Note>
+
+Social media platforms are rich sources of multimodal content — images, videos, carousels, and metadata like captions, engagement metrics, and timestamps. By connecting Mixpeek to social media APIs, you can build brand monitoring, competitive analysis, and content intelligence pipelines without manual data collection.
+
+## Why Connect Social Media?
+
+<CardGroup cols={2}>
+  <Card title="Brand Monitoring" icon="binoculars">
+    Track visual content from competitor and partner accounts. Analyze trends in imagery, messaging, and creative strategy across your industry.
+  </Card>
+  <Card title="Multimodal Analysis" icon="photo-film">
+    Process images and videos through Mixpeek's feature extractors to generate embeddings, detect scenes, extract text, and classify content automatically.
+  </Card>
+  <Card title="Scalable Collection" icon="arrows-spin">
+    Sync media from multiple accounts with built-in pagination, rate limit handling, and adaptive resilience for large accounts.
+  </Card>
+  <Card title="Unified Pipeline" icon="diagram-project">
+    Social media content flows through the same bucket, collection, and retriever pipeline as your other data sources — no special handling required.
+  </Card>
+</CardGroup>
+
+## How It Works
+
+Social media integrations use a **connection + sync config** architecture:
+
+1. **Connection** — Authenticates with the platform via OAuth. One connection provides API access through your authenticated account.
+2. **Sync Configs** — Each sync config targets a specific account to monitor. One connection can have many sync configs, each pointing at a different account.
+3. **Sync Execution** — When triggered, Mixpeek fetches media from the target account, downloads content to your bucket (S3/LocalStack), and creates bucket objects with metadata.
+4. **Processing** — Bucket objects flow through your collection pipeline for feature extraction, embedding generation, and indexing — just like any other data source.
+
+```
+Connection (OAuth)
+    ├── Sync Config: @nike       → Bucket Objects → Collection → Documents
+    ├── Sync Config: @adidas     → Bucket Objects → Collection → Documents
+    └── Sync Config: @spotify    → Bucket Objects → Collection → Documents
+```
+
+## Supported Platforms
+
+<CardGroup cols={3}>
+  <Card title="Instagram" icon="instagram" href="/integrations/social-media/instagram">
+    Monitor public Instagram Business and Creator accounts via the Business Discovery API.
+  </Card>
+</CardGroup>
+
+## Getting Started
+
+1. **Authenticate** — Create a connection by completing the OAuth flow for your chosen platform.
+2. **Add Accounts** — Create sync configs for each account you want to monitor.
+3. **Trigger Sync** — Run an initial sync to pull media into your bucket.
+4. **Process** — Set up a collection with a feature extractor to generate embeddings and index the content.
+5. **Retrieve** — Build retrievers to search across your synced social media content.
