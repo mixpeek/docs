@@ -1,469 +1,423 @@
 ---
 title: "MCP Server"
-description: "Model Context Protocol server for Claude and AI applications"
+description: "Connect Claude and AI assistants to Mixpeek via the Model Context Protocol"
 ---
 
-The Mixpeek MCP (Model Context Protocol) server exposes all Mixpeek operations as tools that can be used by Claude, Claude Code, and other AI applications that support MCP.
+The Mixpeek MCP server lets AI assistants like Claude manage your entire Mixpeek workflow — creating namespaces, uploading files, building search pipelines, and querying results — all through natural language.
 
 <Info>
-**What is MCP?** The Model Context Protocol is an open protocol developed by Anthropic that standardizes how AI applications connect to external data sources and tools. [Learn more about MCP](https://modelcontextprotocol.io)
+**What is MCP?** The [Model Context Protocol](https://modelcontextprotocol.io) is an open standard that lets AI assistants connect to external tools and data sources. Instead of copy-pasting API calls, you describe what you want and Claude handles the rest.
 </Info>
 
-## Overview
+## Two Servers, Two Use Cases
 
-The Mixpeek MCP server provides **43 comprehensive tools** covering all Mixpeek operations, allowing AI assistants to:
-
-- Create and manage namespaces, buckets, and collections
-- Upload and process files with feature extractors
-- Build multi-stage search pipelines
-- Execute semantic searches and retrievals
-- Manage taxonomies and clusters
-- Start conversational AI agent sessions
-
-## Features
+Mixpeek provides two MCP servers for different scenarios:
 
 <CardGroup cols={2}>
-  <Card title="Complete API Coverage" icon="layer-group">
-    All 43 Mixpeek operations exposed as MCP tools
+  <Card title="Full Platform Server" icon="layer-group">
+    **43 tools** covering every Mixpeek operation. Use this when you need to manage your entire Mixpeek setup — namespaces, buckets, collections, retrievers, taxonomies, and more.
+
+    Best for: building pipelines, managing resources, exploring your data
   </Card>
-  <Card title="Fully Managed" icon="cloud">
-    Hosted service - no infrastructure to deploy or maintain
-  </Card>
-  <Card title="Simple Authentication" icon="key">
-    Use your existing Mixpeek API key - no additional setup
-  </Card>
-  <Card title="Streaming Support" icon="stream">
-    Real-time responses for retrievers and agents via SSE
+  <Card title="Retriever Server" icon="magnifying-glass">
+    **3 focused tools** scoped to a single retriever. Dynamically generates a `search` tool whose input schema matches your retriever's configuration — so Claude knows exactly what parameters to pass.
+
+    Best for: embedding search into AI apps, agents, or workflows
   </Card>
 </CardGroup>
 
-## Quick Start
+---
 
-Connect to the Mixpeek MCP server using your existing API key. No infrastructure to manage!
+## Full Platform Server
 
-### Claude Desktop Setup
+### Setup
 
-Add this to your Claude Desktop config:
+Add to your Claude Desktop or Claude Code config:
 
-**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+<CodeGroup>
 
-```json
+```json Claude Desktop
+// macOS: ~/Library/Application Support/Claude/claude_desktop_config.json
+// Windows: %APPDATA%\Claude\claude_desktop_config.json
 {
   "mcpServers": {
     "mixpeek": {
       "url": "https://mcp.mixpeek.com",
       "headers": {
-        "Authorization": "Bearer YOUR_MIXPEEK_API_KEY"
+        "Authorization": "Bearer YOUR_API_KEY"
       }
     }
   }
 }
 ```
 
-### Claude Code Setup
-
-Add to your Claude Code MCP settings:
-
-```json
+```json Claude Code
+// .claude/settings.json or ~/.claude/settings.json
 {
   "mcpServers": {
     "mixpeek": {
       "url": "https://mcp.mixpeek.com",
       "headers": {
-        "Authorization": "Bearer YOUR_MIXPEEK_API_KEY"
+        "Authorization": "Bearer YOUR_API_KEY"
       }
     }
   }
 }
 ```
 
-That's it! Replace `YOUR_MIXPEEK_API_KEY` with your API key from the [Mixpeek dashboard](https://mixpeek.com/dashboard).
+</CodeGroup>
 
-<Note>
-**Need an API key?** Sign up at [mixpeek.com](https://mixpeek.com) to get your free API key.
-</Note>
+Replace `YOUR_API_KEY` with your key from the [Mixpeek dashboard](https://mixpeek.com/dashboard).
 
-## Available Tools
-
-The MCP server exposes 43 tools across 9 categories:
-
-### Namespace Management (5 tools)
-
-Manage isolated workspaces for multi-tenant applications.
-
-| Tool | Description |
-|------|-------------|
-| `create_namespace` | Create a new workspace |
-| `list_namespaces` | List all namespaces |
-| `get_namespace` | Get namespace details |
-| `update_namespace` | Update namespace configuration |
-| `delete_namespace` | Delete namespace |
-
-### Bucket Management (6 tools)
-
-File storage and object management.
-
-| Tool | Description |
-|------|-------------|
-| `create_bucket` | Create file storage bucket |
-| `list_buckets` | List all buckets |
-| `get_bucket` | Get bucket details |
-| `update_bucket` | Update bucket configuration |
-| `delete_bucket` | Delete bucket |
-| `upload_object` | Upload file from URL or local path |
-
-### Collection Management (7 tools)
-
-Document collections with feature extraction.
-
-| Tool | Description |
-|------|-------------|
-| `create_collection` | Create collection with feature extractors |
-| `list_collections` | List all collections |
-| `get_collection` | Get collection details |
-| `update_collection` | Update collection configuration |
-| `clone_collection` | Clone existing collection |
-| `trigger_collection` | Trigger processing pipeline |
-| `delete_collection` | Delete collection |
-
-### Document Management (5 tools)
-
-CRUD operations on documents.
-
-| Tool | Description |
-|------|-------------|
-| `create_document` | Add document to collection |
-| `list_documents` | Query documents with filters |
-| `get_document` | Get document by ID |
-| `update_document` | Update document data |
-| `delete_document` | Delete document |
-
-### Retriever Management (7 tools)
-
-Multi-stage search pipelines with 23 retriever stages.
-
-| Tool | Description |
-|------|-------------|
-| `create_retriever` | Create multi-stage search pipeline |
-| `list_retrievers` | List all retrievers |
-| `get_retriever` | Get retriever configuration |
-| `update_retriever` | Update retriever metadata |
-| `clone_retriever` | Clone existing retriever |
-| `execute_retriever` | Execute search pipeline |
-| `delete_retriever` | Delete retriever |
-
-**Supported Retriever Stages (23 total):**
-
-- **Search**: `feature_search`, `hybrid_search`, `semantic_search`
-- **Filter**: `attribute_filter`, `llm_filter`, `query_expand`
-- **Rank**: `sort_relevance`, `sort_attribute`, `rerank`, `mmr`
-- **Transform**: `group_by`, `aggregate`, `cluster`, `sample`, `summarize`, `json_transform`
-- **Enrich**: `document_enrich`, `taxonomy_enrich`, `llm_enrich`
-- **External**: `api_call`, `external_web_search`, `web_scrape`, `sql_lookup`, `code_execution`, `rag_prepare`
-
-### Taxonomy Management (5 tools)
-
-Hierarchical classification systems.
-
-| Tool | Description |
-|------|-------------|
-| `create_taxonomy` | Create classification hierarchy |
-| `list_taxonomies` | List all taxonomies |
-| `get_taxonomy` | Get taxonomy details |
-| `execute_taxonomy` | Apply taxonomy classification |
-| `delete_taxonomy` | Delete taxonomy |
-
-### Cluster Management (4 tools)
-
-Document clustering and discovery.
-
-| Tool | Description |
-|------|-------------|
-| `create_cluster` | Create clustering configuration |
-| `list_clusters` | List all clusters |
-| `execute_cluster` | Run clustering algorithm |
-| `delete_cluster` | Delete cluster |
-
-### Agent Management (3 tools)
-
-Conversational AI sessions.
-
-| Tool | Description |
-|------|-------------|
-| `create_agent_session` | Start conversational AI session |
-| `send_agent_message` | Send message to agent |
-| `get_agent_history` | Get conversation history |
-
-### Search (1 tool)
-
-Global namespace search.
-
-| Tool | Description |
-|------|-------------|
-| `search_namespace` | Search across all resources |
-
-## Usage Examples
-
-### Example 1: Create Collection with Feature Extractor
-
-Ask Claude in natural language:
-
-```
-"Create a collection called 'videos' in my namespace with the multimodal
-extractor to process video files with scene detection"
-```
-
-Claude will use the `create_collection` tool:
-
-```json
-{
-  "namespace_id": "ns_abc123",
-  "collection_name": "videos",
-  "feature_extractors": [
-    {
-      "feature_extractor_name": "multimodal_extractor",
-      "version": "v1",
-      "parameters": {
-        "split_method": "scene",
-        "scene_detection_threshold": 0.3,
-        "run_transcription": true,
-        "run_video_description": true
-      }
-    }
-  ]
-}
-```
-
-### Example 2: Build Multi-Stage Retriever
-
-Ask Claude:
-
-```
-"Create a retriever that searches my videos collection, reranks the top 50
-results with Cohere to get the best 10, and adds GPT-4 summaries"
-```
-
-Claude uses `create_retriever`:
-
-```json
-{
-  "namespace_id": "ns_abc123",
-  "retriever_name": "video-search",
-  "collection_identifiers": ["videos"],
-  "stages": [
-    {
-      "stage_name": "feature_search",
-      "parameters": {
-        "features": ["multimodal"],
-        "top_k": 50,
-        "min_score": 0.7
-      }
-    },
-    {
-      "stage_name": "rerank",
-      "parameters": {
-        "inference_name": "cohere-rerank",
-        "top_k": 10
-      }
-    },
-    {
-      "stage_name": "llm_enrich",
-      "parameters": {
-        "inference_name": "gpt-4",
-        "fields_to_generate": [
-          {
-            "name": "summary",
-            "prompt": "Summarize this video segment in 2 sentences"
-          }
-        ]
-      }
-    }
-  ]
-}
-```
-
-### Example 3: Execute Search
-
-Ask Claude:
-
-```
-"Search for videos about machine learning tutorials using the video-search retriever"
-```
-
-Claude uses `execute_retriever`:
-
-```json
-{
-  "namespace_id": "ns_abc123",
-  "retriever_id": "ret_xyz789",
-  "inputs": {
-    "query": "machine learning tutorial"
-  }
-}
-```
-
-## Authentication
-
-The MCP server uses your existing Mixpeek API key for authentication. Each tool call is authenticated using the same permission system as the REST API.
-
-**Security Features:**
-
-- ✅ All requests authenticated via API key
-- ✅ Same RBAC permissions as REST API
-- ✅ Automatic rate limiting per organization
-- ✅ Audit logging for all operations
-- ✅ TLS encryption for all connections
-
-<Warning>
-**Keep your API key secure!** Never commit API keys to version control or share them publicly.
-</Warning>
-
-## How It Works
-
-The Mixpeek MCP server is a hosted service that provides a Model Context Protocol interface to all Mixpeek operations.
-
-**Architecture:**
-
-```
-┌─────────────────┐
-│  Claude Desktop │
-│  or Claude Code │
-└────────┬────────┘
-         │ HTTP/SSE + API Key
-         │
-         ▼
-┌─────────────────────────┐
-│   MCP Server (Hosted)   │
-│  https://mcp.mixpeek.com │
-├─────────────────────────┤
-│  • 43 MCP Tools         │
-│  • API Key Auth         │
-│  • SSE Streaming        │
-│  • Rate Limiting        │
-└────────┬────────────────┘
-         │ Direct Service Calls
-         │
-         ▼
-┌─────────────────────────┐
-│   Mixpeek Services      │
-├─────────────────────────┤
-│  • MongoDB (metadata)   │
-│  • Redis (cache)        │
-│  • Qdrant (vectors)     │
-│  • S3 (storage)         │
-└─────────────────────────┘
-```
-
-**Key Features:**
-
-- **Fully Managed**: No infrastructure to deploy or maintain
-- **Shared Resources**: Uses the same databases as the REST API
-- **Real-time Streaming**: SSE support for retriever and agent responses
-- **Secure**: TLS encryption, API key authentication, rate limiting
-
-## Use Cases
+### Available Tools (43)
 
 <AccordionGroup>
-  <Accordion title="AI-Powered Content Search" icon="magnifying-glass">
-    Use Claude to build and execute complex search pipelines across your multimodal content:
+  <Accordion title="Namespace Management" icon="folder" defaultOpen>
+    Namespaces are isolated workspaces. Each namespace maps to its own vector collection in Qdrant.
 
-    - "Find all video segments mentioning product demos in Q4"
-    - "Show me documents about pricing that were uploaded last month"
-    - "Search for images with people smiling in outdoor settings"
+    | Tool | Description |
+    |------|-------------|
+    | `create_namespace` | Create a new workspace with feature extractors |
+    | `list_namespaces` | List all namespaces in your organization |
+    | `get_namespace` | Get namespace details by ID or name |
+    | `update_namespace` | Update namespace configuration |
+    | `delete_namespace` | Delete a namespace and all its resources |
   </Accordion>
 
-  <Accordion title="Automated Pipeline Creation" icon="robot">
-    Let Claude configure your entire data processing pipeline:
+  <Accordion title="Bucket Management" icon="bucket">
+    Buckets store your raw files (videos, images, documents) before processing.
 
-    - "Set up a collection to process PDFs with OCR and extract tables"
-    - "Create a retriever that searches videos by transcript and visual similarity"
-    - "Build a taxonomy to classify customer support tickets"
+    | Tool | Description |
+    |------|-------------|
+    | `create_bucket` | Create a file storage bucket |
+    | `list_buckets` | List all buckets in a namespace |
+    | `get_bucket` | Get bucket details |
+    | `update_bucket` | Update bucket configuration |
+    | `delete_bucket` | Delete a bucket and its objects |
+    | `upload_object` | Upload a file from a URL |
   </Accordion>
 
-  <Accordion title="Data Exploration & Analysis" icon="chart-line">
-    Explore your data conversationally:
+  <Accordion title="Collection Management" icon="layer-group">
+    Collections define how your data is processed — which feature extractors run, what embeddings are generated.
 
-    - "What collections do I have and how many documents are in each?"
-    - "Show me the most recent uploads to my images bucket"
-    - "Find clusters of similar documents in my research collection"
+    | Tool | Description |
+    |------|-------------|
+    | `create_collection` | Create a collection with feature extractors |
+    | `list_collections` | List all collections in a namespace |
+    | `get_collection` | Get collection details |
+    | `update_collection` | Update collection configuration |
+    | `clone_collection` | Clone an existing collection |
+    | `trigger_collection` | Trigger the processing pipeline |
+    | `delete_collection` | Delete a collection and its documents |
   </Accordion>
 
-  <Accordion title="RAG Application Development" icon="layer-group">
-    Build RAG applications using natural language:
+  <Accordion title="Document Management" icon="file">
+    Documents are the processed records stored in your namespace with extracted features and embeddings.
 
-    - "Create a retriever that searches my knowledge base and prepares results for GPT-4"
-    - "Add a reranking stage to improve relevance"
-    - "Enrich results with summaries and key points"
+    | Tool | Description |
+    |------|-------------|
+    | `create_document` | Add a document to a collection |
+    | `list_documents` | Query documents with filters |
+    | `get_document` | Get a document by ID |
+    | `update_document` | Update document fields |
+    | `delete_document` | Delete a document |
+  </Accordion>
+
+  <Accordion title="Retriever Management" icon="filter">
+    Retrievers are multi-stage search pipelines. Chain stages together to search, filter, rerank, and enrich results.
+
+    | Tool | Description |
+    |------|-------------|
+    | `create_retriever` | Create a multi-stage search pipeline |
+    | `list_retrievers` | List all retrievers |
+    | `get_retriever` | Get retriever configuration and stages |
+    | `update_retriever` | Update retriever metadata |
+    | `clone_retriever` | Clone an existing retriever |
+    | `execute_retriever` | Run the search pipeline with inputs |
+    | `delete_retriever` | Delete a retriever |
+
+    **23 available stages** across 5 categories:
+
+    | Category | Stages |
+    |----------|--------|
+    | **Filter** | `feature_search`, `attribute_filter`, `llm_filter`, `query_expand`, `agent_search` |
+    | **Sort** | `sort_relevance`, `sort_attribute`, `rerank`, `mmr`, `score_normalize` |
+    | **Reduce** | `group_by`, `aggregate`, `cluster`, `sample`, `summarize`, `limit`, `deduplicate` |
+    | **Apply** | `json_transform`, `api_call`, `external_web_search`, `sql_lookup`, `code_execution`, `cross_compare`, `rag_prepare`, `unwind` |
+    | **Enrich** | `document_enrich`, `taxonomy_enrich`, `llm_enrich`, `web_scrape` |
+  </Accordion>
+
+  <Accordion title="Taxonomy Management" icon="sitemap">
+    Taxonomies are hierarchical classification systems you can apply to documents.
+
+    | Tool | Description |
+    |------|-------------|
+    | `create_taxonomy` | Create a classification hierarchy |
+    | `list_taxonomies` | List all taxonomies |
+    | `get_taxonomy` | Get taxonomy details |
+    | `execute_taxonomy` | Classify documents with a taxonomy |
+    | `delete_taxonomy` | Delete a taxonomy |
+  </Accordion>
+
+  <Accordion title="Cluster Management" icon="circle-nodes">
+    Clusters group similar documents together for discovery and organization.
+
+    | Tool | Description |
+    |------|-------------|
+    | `create_cluster` | Create a clustering configuration |
+    | `list_clusters` | List all clusters |
+    | `execute_cluster` | Run the clustering algorithm |
+    | `delete_cluster` | Delete a cluster |
+  </Accordion>
+
+  <Accordion title="Agent & Search" icon="robot">
+    Conversational AI sessions and global search.
+
+    | Tool | Description |
+    |------|-------------|
+    | `create_agent_session` | Start a conversational AI session |
+    | `send_agent_message` | Send a message to an agent |
+    | `get_agent_history` | Get conversation history |
+    | `search_namespace` | Search across all resources in a namespace |
   </Accordion>
 </AccordionGroup>
 
+### Examples
+
+**Create a collection and process videos:**
+```
+"Create a collection called 'product-demos' with the multimodal extractor
+for scene detection and transcription, then upload this video URL to it"
+```
+
+**Build a search pipeline:**
+```
+"Create a retriever called 'demo-search' that does a feature search on
+my product-demos collection, reranks the top 50 down to 10 with Cohere,
+and adds a 2-sentence summary using GPT-4"
+```
+
+**Query your data:**
+```
+"Search for product demos about the new dashboard feature"
+```
+
+---
+
+## Retriever Server
+
+The Retriever MCP server is a lightweight server scoped to a **single retriever**. It reads your retriever's `input_schema` at startup and generates a typed `search` tool whose parameters match exactly — so the AI assistant knows what inputs are available without any guesswork.
+
+### Tools
+
+| Tool | Description |
+|------|-------------|
+| `search` | Execute the retriever. Parameters are generated from the retriever's `input_schema` — including the correct field names, types, required flags, enums, and descriptions. Pagination parameters (`page`, `page_size`) are added automatically. |
+| `describe` | Returns structured metadata: retriever ID, name, collections, input fields, and stage configuration. |
+| `explain` | Returns a human-readable explanation of the pipeline: what each stage does, in what order. |
+
+### How Dynamic Schema Works
+
+When the server starts, it fetches your retriever's configuration and converts its `input_schema` into a JSON Schema for the `search` tool. For example, if your retriever has:
+
+```json
+{
+  "input_schema": {
+    "query": { "type": "text", "required": true, "description": "Search query" },
+    "category": {
+      "type": "string",
+      "required": false,
+      "enum": ["electronics", "clothing", "home"],
+      "description": "Filter by category"
+    }
+  }
+}
+```
+
+The `search` tool will expose `query` (required string) and `category` (optional enum) as typed parameters — plus `page` and `page_size` for pagination.
+
+<Note>
+If your retriever's `input_schema` has a field named `page` or `page_size`, the pagination parameters are automatically renamed to `_pagination_page` and `_pagination_page_size` to avoid conflicts.
+</Note>
+
+### Setup
+
+<Tabs>
+  <Tab title="Claude Desktop (stdio)">
+    ```json
+    {
+      "mcpServers": {
+        "my-search": {
+          "command": "mixpeek-mcp-retriever",
+          "args": [
+            "--retriever-id", "ret_abc123",
+            "--namespace-id", "ns_xyz789",
+            "--api-key", "YOUR_API_KEY"
+          ]
+        }
+      }
+    }
+    ```
+
+    Requires the `mixpeek-mcp-retriever` CLI installed:
+    ```bash
+    pip install mixpeek  # includes the CLI
+    ```
+  </Tab>
+  <Tab title="HTTP (deployed)">
+    Run the server as an HTTP endpoint for remote access:
+
+    ```bash
+    mixpeek-mcp-retriever \
+      --retriever-id ret_abc123 \
+      --namespace-id ns_xyz789 \
+      --api-key YOUR_API_KEY \
+      --transport http \
+      --port 8081
+    ```
+
+    Then connect your MCP client to `http://your-host:8081`.
+
+    **HTTP Endpoints:**
+
+    | Method | Path | Description |
+    |--------|------|-------------|
+    | `GET` | `/health` | Health check with retriever info |
+    | `GET` | `/tools` | List all 3 tools with schemas |
+    | `POST` | `/tools/call` | Execute a tool (requires `Authorization` header) |
+  </Tab>
+  <Tab title="Environment Variables">
+    All settings can be configured via environment variables (prefixed with `RETRIEVER_MCP_`):
+
+    ```bash
+    export RETRIEVER_MCP_RETRIEVER_ID=ret_abc123
+    export RETRIEVER_MCP_NAMESPACE_ID=ns_xyz789
+    export RETRIEVER_MCP_API_KEY=YOUR_API_KEY
+    export RETRIEVER_MCP_TRANSPORT=stdio   # or "http"
+    export RETRIEVER_MCP_HTTP_PORT=8081
+    ```
+
+    Then just run `mixpeek-mcp-retriever` with no arguments.
+  </Tab>
+</Tabs>
+
+### Example Conversation
+
+Once connected, you can interact naturally:
+
+```
+You: "What does this retriever do?"
+Claude: [calls describe] → "This is 'Product Search' — it searches your
+products collection by text query with an optional category filter,
+using feature search → attribute filter → reranking."
+
+You: "Search for wireless headphones under electronics"
+Claude: [calls search with query="wireless headphones", category="electronics"]
+→ Returns top 10 matching products with scores and metadata.
+
+You: "Explain the pipeline stages"
+Claude: [calls explain] → "1. feature_search: embeds your query and finds
+the top 50 matches. 2. attribute_filter: filters by category field.
+3. rerank: reranks with Cohere down to the top 10."
+```
+
+---
+
+## Authentication & Security
+
+Both MCP servers use your existing Mixpeek API key with the same permissions as the REST API.
+
+- All requests authenticated via API key
+- Same RBAC permissions as the REST API
+- Rate limiting per organization
+- Audit logging for all operations
+- TLS encryption on the hosted server
+
+<Warning>
+**Keep your API key secure.** Never commit keys to version control. For the Retriever Server, prefer environment variables over CLI arguments in production.
+</Warning>
+
+## Architecture
+
+```
+┌─────────────────────┐
+│   Claude / AI App   │
+└──────────┬──────────┘
+           │ MCP Protocol
+           │
+     ┌─────┴──────┐
+     │            │
+     ▼            ▼
+┌──────────┐  ┌──────────────┐
+│ Full     │  │ Retriever    │
+│ Platform │  │ Server       │
+│ Server   │  │ (per-retriever)│
+│ 43 tools │  │ 3 tools      │
+└────┬─────┘  └──────┬───────┘
+     │               │
+     └───────┬───────┘
+             │ Direct service calls
+             ▼
+     ┌───────────────┐
+     │ Mixpeek       │
+     │ Services      │
+     │ (MongoDB,     │
+     │  Qdrant,      │
+     │  Redis, S3)   │
+     └───────────────┘
+```
+
+**Full Platform Server** — Hosted at `https://mcp.mixpeek.com`. Connect with just a URL and API key. Covers all operations.
+
+**Retriever Server** — Runs locally (stdio) or as a deployed HTTP service. Scoped to one retriever with a dynamically typed search tool. Ideal for embedding a specific search capability into an AI agent or workflow.
+
 ## Troubleshooting
 
-### Connection Issues
+<AccordionGroup>
+  <Accordion title="Claude can't connect to the MCP server">
+    - Verify the URL is `https://mcp.mixpeek.com` (full platform) or your Retriever Server host
+    - Check that the `Authorization` header format is `Bearer YOUR_API_KEY`
+    - Restart Claude Desktop or Claude Code after changing config
+  </Accordion>
 
-**Issue**: Claude can't connect to the MCP server
+  <Accordion title="Tools return 'Unauthorized' or 'Invalid API key'">
+    - Verify your API key at [mixpeek.com/dashboard](https://mixpeek.com/dashboard)
+    - Check that the key has permissions for the namespace you're accessing
+    - Make sure there are no extra spaces in the key
+  </Accordion>
 
-**Solutions**:
-- Verify the URL is `https://mcp.mixpeek.com`
-- Check that your API key is correct and starts with `sk_`
-- Ensure the Authorization header format is `Bearer YOUR_API_KEY`
-- Restart Claude Desktop/Code after updating configuration
+  <Accordion title="Retriever Server fails to start">
+    - Ensure `--retriever-id` and `--namespace-id` are correct
+    - Verify the API key has access to that namespace
+    - Check that the retriever exists: `GET /v1/retrievers/{id}`
+  </Accordion>
 
-### Authentication Errors
+  <Accordion title="Search returns empty results">
+    - Confirm your collection has processed documents (not just uploaded files)
+    - Check that the retriever's `feature_uri` matches your collection's extractor
+    - Try a broader query or remove optional filters
+  </Accordion>
 
-**Issue**: Tools return "Unauthorized" or "Invalid API key"
-
-**Solutions**:
-- Verify your API key is valid at [mixpeek.com/dashboard](https://mixpeek.com/dashboard)
-- Check that your API key has the required permissions
-- Ensure you're not using an expired or revoked key
-- Make sure there are no extra spaces in the API key
-
-### Tool Execution Errors
-
-**Issue**: Tools return errors when executed
-
-**Solutions**:
-- Ensure the namespace exists before creating resources in it
-- Check that required parameters are provided and correctly formatted
-- Verify resource IDs (namespace_id, collection_id, etc.) are valid
-- Review tool parameter schemas in the documentation above
-
-### Slow Response Times
-
-**Issue**: MCP tools take a long time to respond
-
-**Solutions**:
-- Large file uploads may take time depending on file size
-- Processing pipelines with multiple stages can be compute-intensive
-- Check [status.mixpeek.com](https://status.mixpeek.com) for any service issues
-- For large batch operations, consider using the REST API directly
+  <Accordion title="Slow response times">
+    - Large file uploads depend on file size and network
+    - Multi-stage retrievers with LLM enrichment or reranking take more time
+    - Check [status.mixpeek.com](https://status.mixpeek.com) for service issues
+  </Accordion>
+</AccordionGroup>
 
 ## Next Steps
 
 <CardGroup cols={2}>
   <Card title="Core Concepts" icon="book" href="/overview/concepts">
-    Learn about Mixpeek's data model
+    Understand namespaces, collections, and documents
   </Card>
   <Card title="Feature Extractors" icon="microchip" href="/processing/feature-extractors">
-    Explore available feature extractors
+    Choose the right extractor for your data
   </Card>
   <Card title="Retriever Stages" icon="filter" href="/retrieval/stages/overview">
-    Learn about retriever stages
+    Learn what each pipeline stage does
   </Card>
   <Card title="API Reference" icon="code" href="/api-reference">
-    View complete API documentation
+    Full REST API documentation
   </Card>
 </CardGroup>
-
-## Additional Resources
-
-- [Model Context Protocol Documentation](https://modelcontextprotocol.io)
-- [Claude Desktop MCP Guide](https://docs.anthropic.com/claude/docs/mcp)
-- [Mixpeek API Documentation](/api-reference)
-- [Get Your API Key](https://mixpeek.com/dashboard)
-
----
-
-**Questions or issues?** Contact support at [support@mixpeek.com](mailto:support@mixpeek.com) or visit [mixpeek.com/support](https://mixpeek.com/support).
