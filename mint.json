@@ -649,6 +649,18 @@
         "api-reference/webhooks/update-webhook",
         "api-reference/webhooks/delete-webhook"
       ]
+    },
+    {
+      "group": "Alerts",
+      "pages": [
+        "api-reference/alerts/create-alert",
+        "api-reference/alerts/get-alert",
+        "api-reference/alerts/update-alert",
+        "api-reference/alerts/list-alerts",
+        "api-reference/alerts/delete-alert",
+        "api-reference/alerts/list-alert-executions",
+        "api-reference/alerts/list-all-executions"
+      ]
     }
   ],
   "footerSocials": {
