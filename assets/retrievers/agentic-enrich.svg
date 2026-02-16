@@ -1,0 +1,132 @@
+<svg viewBox="0 0 1000 430" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="inputGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="agentGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#f59e0b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#d97706;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="toolGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7c3aed;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="outputGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
+    </marker>
+    <marker id="arrowAmber" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#d97706"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="430" fill="#f8fafc"/>
+
+  <text x="500" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">Agentic Enrichment: Multi-Turn Reasoning Classification</text>
+  <text x="500" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">Claude agent with tool access classifies each document via taxonomy lookup, example search, and content analysis</text>
+
+  <!-- Input Documents -->
+  <g filter="url(#shadow)">
+    <rect x="20" y="75" width="155" height="165" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="20" y="75" width="155" height="28" rx="10" fill="url(#inputGrad)"/>
+    <rect x="20" y="93" width="155" height="10" fill="url(#inputGrad)"/>
+    <text x="97" y="95" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Input Documents</text>
+  </g>
+  <g transform="translate(30, 115)">
+    <text x="67" y="12" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#2563eb" text-anchor="middle">N documents</text>
+    <rect x="0" y="22" width="135" height="24" rx="3" fill="#dbeafe"/>
+    <text x="67" y="38" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">content: "A product review</text>
+    <rect x="0" y="52" width="135" height="24" rx="3" fill="#dbeafe"/>
+    <text x="67" y="68" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">video discussing the</text>
+    <rect x="0" y="82" width="135" height="24" rx="3" fill="#dbeafe"/>
+    <text x="67" y="98" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">latest smartphones..."</text>
+    <text x="67" y="118" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Unclassified content</text>
+  </g>
+
+  <path d="M 175 160 L 215 160" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Agent Reasoning Loop -->
+  <g filter="url(#shadow)">
+    <rect x="225" y="65" width="410" height="245" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="225" y="65" width="410" height="28" rx="10" fill="url(#agentGrad)"/>
+    <rect x="225" y="83" width="410" height="10" fill="url(#agentGrad)"/>
+    <text x="430" y="85" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Agent Reasoning Loop (per document)</text>
+  </g>
+
+  <!-- Iteration indicator -->
+  <path d="M 595 100 C 625 100, 625 145, 595 145" stroke="#d97706" stroke-width="1.5" fill="none" stroke-dasharray="3,2" marker-end="url(#arrowAmber)"/>
+  <text x="633" y="126" font-family="system-ui, sans-serif" font-size="7" fill="#d97706">iterate</text>
+
+  <!-- LLM Decision -->
+  <g transform="translate(240, 103)">
+    <rect x="0" y="0" width="190" height="55" rx="6" fill="#fffbeb" stroke="#fbbf24" stroke-width="1"/>
+    <text x="95" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#d97706" text-anchor="middle">Claude Reasons + Decides</text>
+    <text x="95" y="34" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Analyzes doc + prior tool results</text>
+    <text x="95" y="48" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Selects next tool or final answer</text>
+  </g>
+
+  <!-- Arrow from LLM to tools -->
+  <path d="M 430 163 L 430 178" stroke="#94a3b8" stroke-width="1.5" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Tools -->
+  <g transform="translate(240, 185)">
+    <rect x="0" y="0" width="380" height="110" rx="6" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1"/>
+    <text x="190" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#7c3aed" text-anchor="middle">Available Tools</text>
+
+    <!-- get_taxonomy_categories -->
+    <rect x="10" y="30" width="170" height="32" rx="4" fill="url(#toolGrad)"/>
+    <text x="95" y="44" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="white" text-anchor="middle">get_taxonomy_categories</text>
+    <text x="95" y="56" font-family="system-ui, sans-serif" font-size="6" fill="#e9d5ff" text-anchor="middle">Load category definitions</text>
+
+    <!-- query_examples -->
+    <rect x="190" y="30" width="170" height="32" rx="4" fill="url(#toolGrad)"/>
+    <text x="275" y="44" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="white" text-anchor="middle">query_examples</text>
+    <text x="275" y="56" font-family="system-ui, sans-serif" font-size="6" fill="#e9d5ff" text-anchor="middle">Search classified examples</text>
+
+    <!-- analyze_content -->
+    <rect x="10" y="70" width="170" height="32" rx="4" fill="url(#toolGrad)"/>
+    <text x="95" y="84" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="white" text-anchor="middle">analyze_content</text>
+    <text x="95" y="96" font-family="system-ui, sans-serif" font-size="6" fill="#e9d5ff" text-anchor="middle">Gemini video/image analysis</text>
+
+    <text x="300" y="92" font-family="system-ui, sans-serif" font-size="8" fill="#7c3aed" text-anchor="middle">Auto-enabled based</text>
+    <text x="300" y="102" font-family="system-ui, sans-serif" font-size="8" fill="#7c3aed" text-anchor="middle">on configuration</text>
+  </g>
+
+  <path d="M 635 190 L 670 190" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
+
+  <!-- Output -->
+  <g filter="url(#shadow)">
+    <rect x="680" y="70" width="200" height="240" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="680" y="70" width="200" height="28" rx="10" fill="url(#outputGrad)"/>
+    <rect x="680" y="88" width="200" height="10" fill="url(#outputGrad)"/>
+    <text x="780" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Enriched Documents</text>
+  </g>
+  <g transform="translate(690, 110)">
+    <rect x="0" y="0" width="180" height="190" rx="4" fill="#ccfbf1"/>
+    <text x="90" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#0d9488" text-anchor="middle">N documents</text>
+    <text x="90" y="38" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">+ classification: {</text>
+    <text x="90" y="56" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">"iab_tier1":</text>
+    <text x="90" y="70" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">"Technology &amp; Computing",</text>
+    <text x="90" y="88" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">"iab_tier2":</text>
+    <text x="90" y="102" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">"Consumer Electronics",</text>
+    <text x="90" y="120" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">"confidence": 0.92,</text>
+    <text x="90" y="138" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">"reasoning": "Video</text>
+    <text x="90" y="152" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">discusses smartphone</text>
+    <text x="90" y="166" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">features..."</text>
+    <text x="90" y="184" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">}</text>
+  </g>
+
+  <!-- Transformation Note -->
+  <g transform="translate(50, 340)">
+    <rect x="0" y="0" width="900" height="55" rx="6" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+    <text x="450" y="20" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#16a34a" text-anchor="middle">Transformation: N documents → N documents (with agent-produced structured classification)</text>
+    <text x="450" y="40" font-family="system-ui, sans-serif" font-size="9" fill="#475569" text-anchor="middle">Multi-turn reasoning with tool access. Default: Claude (reasoning) + Gemini (content analysis). BYOK supported.</text>
+  </g>
+</svg>
