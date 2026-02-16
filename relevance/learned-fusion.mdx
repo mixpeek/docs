@@ -1,0 +1,180 @@
+---
+title: "Learned Fusion"
+description: "How Thompson Sampling adapts fusion weights from user interactions to personalize search results"
+---
+
+Learned fusion automatically discovers the optimal blend of embedding features for your users. Instead of manually setting weights (`text: 0.7, image: 0.3`), the system learns from interaction data which features produce results users engage with.
+
+<Frame>
+  <img src="/assets/relevance/thompson-sampling-cycle.svg" alt="Thompson Sampling: Beta distributions evolve from uniform to peaked as interactions accumulate" />
+</Frame>
+
+## How It Works
+
+Learned fusion uses **Thompson Sampling**, a well-studied algorithm for the multi-armed bandit problem. Here's how it applies to search fusion:
+
+<Steps>
+  <Step title="Initialize with uniform priors">
+    Each search feature (e.g., text embeddings, image embeddings) starts with a Beta(1, 1) distribution — a flat line that assigns equal probability to all weight values. This means zero assumptions about which feature is better.
+  </Step>
+  <Step title="Sample weights at query time">
+    When a query arrives, the system draws a random weight from each feature's Beta distribution and normalizes them to sum to 1. Early on, samples are highly variable (exploration). As data accumulates, they stabilize (exploitation).
+  </Step>
+  <Step title="Execute search with sampled weights">
+    The feature search stage runs each embedding search and fuses results using the sampled weights — functionally identical to weighted fusion, but with dynamically chosen weights.
+  </Step>
+  <Step title="Capture user interactions">
+    Users interact with results: clicks, purchases, skips. Each interaction is recorded with the document ID, position, and the context key that identifies which weight sample was used.
+  </Step>
+  <Step title="Update Beta distributions">
+    Positive interactions (clicks, purchases) increment the `alpha` parameter: `alpha = 1 + clicks`. Non-engagement increments `beta`: `beta = 1 + (impressions - clicks)`. This shifts the distribution toward weights that produce engaging results.
+  </Step>
+  <Step title="Repeat with better weights">
+    Next query: the updated distributions produce weight samples closer to what works. After hundreds of interactions, the system converges on near-optimal weights while still occasionally exploring alternatives.
+  </Step>
+</Steps>
+
+## Thompson Sampling Explained
+
+Think of it like flipping weighted coins. Each feature has its own coin:
+
+- **At the start**, both coins are fair — you have no idea which feature is better, so you flip both and take whatever comes up.
+- **After 50 interactions**, the text feature's coin lands "heads" 65% of the time (users click on text-matched results more). You naturally start weighting text higher, but still try image sometimes.
+- **After 1000 interactions**, the text coin lands heads 72% of the time with very little variance. You're confident in the weights and rarely deviate.
+
+The mathematical version: each "coin" is a Beta(alpha, beta) distribution where alpha counts successes (clicks) and beta counts non-successes (impressions without clicks). Sampling from this distribution gives you a weight that naturally balances exploration and exploitation.
+
+## Hierarchical Fallback
+
+Not every user has enough interaction history for personalized weights. The system uses a three-level fallback:
+
+| Level | Context | Min Interactions | When Used |
+|-------|---------|:---:|-----------|
+| **Personal** | Individual user | 5 | User has clicked/purchased enough for reliable weights |
+| **Demographic** | User segment | 1 | User is new, but their segment has data |
+| **Global** | All users | 1 | No segment data; uses aggregate behavior |
+| **Prior** | Uniform | 0 | No interactions at all; falls back to equal weights |
+
+The `user_id` in your interaction signals enables personal-level learning. The `segment` field (e.g., "enterprise", "consumer", "power-user") enables demographic-level learning.
+
+## End-to-End Walkthrough
+
+### 1. Create a retriever with learned fusion
+
+<CodeGroup>
+```json Retriever Configuration
+{
+  "name": "product-search-learned",
+  "stages": [
+    {
+      "stage_type": "filter",
+      "stage_id": "feature_search",
+      "parameters": {
+        "searches": [
+          {
+            "feature_uri": "mixpeek://text_extractor@v1/multilingual_e5_large_instruct_v1",
+            "query": "{{INPUT.query}}",
+            "top_k": 100
+          },
+          {
+            "feature_uri": "mixpeek://multimodal_extractor@v1/vertex_multimodal_embedding",
+            "query": "{{INPUT.query}}",
+            "top_k": 100
+          }
+        ],
+        "fusion": "learned",
+        "final_top_k": 25
+      }
+    }
+  ]
+}
+```
+</CodeGroup>
+
+### 2. Execute a search
+
+```bash
+curl -X POST "$MP_API_URL/v1/retrievers/{retriever_id}/execute" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
+  -d '{
+    "query": {
+      "query": "wireless earbuds noise canceling"
+    },
+    "user_id": "user_456"
+  }'
+```
+
+With zero interactions, this behaves like RRF (uniform weights). The response includes an `execution_id` you'll use for interaction tracking.
+
+### 3. Capture interactions
+
+```bash
+curl -X POST "$MP_API_URL/v1/retrievers/interactions" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
+  -d '{
+    "feature_id": "doc_product_789",
+    "interaction_type": ["click", "purchase"],
+    "position": 2,
+    "metadata": {
+      "query": "wireless earbuds noise canceling"
+    },
+    "user_id": "user_456",
+    "session_id": "sess_abc"
+  }'
+```
+
+### 4. Improved results over time
+
+After 100+ interactions, the same search for `user_456` returns results with personalized fusion weights. If this user consistently engages with text-matched results over image-matched ones, the text feature weight increases for their queries.
+
+### 5. Verify convergence
+
+Use [analytics](/relevance/analytics) to check how weights are evolving:
+
+```bash
+curl "$MP_API_URL/v1/analytics/retrievers/{retriever_id}/signals?signal_type=learned_weights&hours=168" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE"
+```
+
+## Configuration Reference
+
+<ParamField path="fusion" type="string" required>
+  Set to `"learned"` to enable Thompson Sampling fusion.
+</ParamField>
+
+<ParamField path="searches[].feature_uri" type="string" required>
+  Each feature URI defines an "arm" in the bandit. The system learns a separate weight for each.
+</ParamField>
+
+<ParamField path="user_id" type="string">
+  Passed at execution time. Enables personal-level weight learning. Without this, the system uses global weights only.
+</ParamField>
+
+The Thompson Sampler uses these internal parameters (not user-configurable):
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `prior_alpha` | `1.0` | Beta distribution alpha prior (uniform) |
+| `prior_beta` | `1.0` | Beta distribution beta prior (uniform) |
+| `exploration_bonus` | `1.0` | Multiplier for distribution variance; >1 increases exploration |
+| `min_interactions` | `5` | Minimum interactions before using personal context |
+
+## When to Use Learned vs Static
+
+| Scenario | Recommendation | Why |
+|----------|---------------|-----|
+| New product, no interaction data | `rrf` | No data to learn from; RRF is a strong default |
+| Domain expert knows feature importance | `weighted` | Manual weights capture expert knowledge immediately |
+| Diverse user base with different preferences | `learned` | Different users may benefit from different feature weights |
+| A/B testing fusion approaches | `rrf` → `learned` | Start with baseline, measure improvement with evaluations |
+| Single search feature | None needed | Fusion only applies when combining multiple features |
+
+## Related
+
+- [Fusion Strategies](/relevance/fusion-strategies) — comparison of all 5 strategies
+- [Interaction Signals](/relevance/interactions) — capturing the data that powers learning
+- [Evaluations](/relevance/evaluations) — measuring learned fusion quality
+- [Feature Search stage](/retrieval/stages/feature-search) — where fusion is configured

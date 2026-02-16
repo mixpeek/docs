@@ -208,6 +208,17 @@
       ]
     },
     {
+      "group": "Relevance & Personalization",
+      "pages": [
+        "relevance/overview",
+        "relevance/interactions",
+        "relevance/fusion-strategies",
+        "relevance/learned-fusion",
+        "relevance/evaluations",
+        "relevance/analytics"
+      ]
+    },
+    {
       "group": "Enrich & Organize",
       "pages": [
         "enrichment/taxonomies",

@@ -1,0 +1,211 @@
+---
+title: "Interaction Signals"
+description: "Strategy for capturing the right signals to power fusion learning, personalization, and analytics"
+---
+
+Interactions are the raw material for relevance engineering. This page covers **signal strategy** — which signals to capture, when, and why. For the API itself, see the [Interactions API reference](/retrieval/interactions).
+
+## Signal Strength Matrix
+
+Not all signals carry equal weight. The table below maps each interaction type to how it's used across the platform:
+
+| Signal Type | Strength | Fusion Learning | Personalization | Analytics | Fine-Tuning |
+|-------------|----------|:-:|:-:|:-:|:-:|
+| `click` | Moderate | Primary positive signal | Session history | CTR metrics | Positive pairs |
+| `long_view` | Strong | High-weight positive | Preference indicator | Engagement depth | Strong positive |
+| `purchase` | Strongest | Conversion signal | Purchase exclusion | Revenue attribution | Gold standard |
+| `add_to_cart` | Strong | Intent signal | Cart-based recs | Funnel metrics | Near-positive |
+| `positive_feedback` | Explicit | Direct reward | Profile building | Quality score | Ground truth |
+| `negative_feedback` | Explicit | Direct penalty | Anti-preference | Issue detection | Hard negative |
+| `skip` | Weak negative | Implicit penalty | — | Skip rate | Soft negative |
+| `return_to_results` | Moderate negative | Bounce signal | — | Bounce rate | Negative pair |
+| `share` | Strong | Social proof | Sharing patterns | Virality | Strong positive |
+| `bookmark` | Moderate | Save intent | Saved items | Save rate | Positive |
+| `copy` | Moderate | Content value | — | Engagement | Positive |
+| `dwell_time` | Variable | Duration-weighted | — | Engagement depth | Weighted |
+| `scroll_depth` | Weak | Engagement depth | — | Content quality | — |
+| `query_refinement` | Negative | Query failure signal | — | Query analysis | — |
+
+## Use Case Patterns
+
+<Tabs>
+  <Tab title="E-commerce">
+    **Primary signals:** `purchase`, `add_to_cart`, `click`
+
+    E-commerce prioritizes conversion signals. A purchase is the strongest indicator that a result was relevant.
+
+    ```json
+    {
+      "feature_id": "doc_product_123",
+      "interaction_type": ["purchase"],
+      "position": 2,
+      "metadata": {
+        "order_value": 49.99,
+        "query": "wireless earbuds",
+        "category": "electronics"
+      },
+      "user_id": "user_456",
+      "session_id": "sess_789"
+    }
+    ```
+
+    **Key patterns:**
+    - Track `add_to_cart` separately from `purchase` to measure funnel drop-off
+    - Use `position` for learning-to-rank bias correction
+    - Store `order_value` in metadata for revenue-weighted metrics
+  </Tab>
+  <Tab title="Media & Entertainment">
+    **Primary signals:** `long_view`, `click`, `share`
+
+    Media platforms care about engagement depth. A video watched to 80% is a stronger signal than a click.
+
+    ```json
+    {
+      "feature_id": "doc_video_456",
+      "interaction_type": ["click", "long_view"],
+      "position": 1,
+      "metadata": {
+        "duration_ms": 45000,
+        "completion_pct": 0.82,
+        "query": "cooking tutorial"
+      },
+      "user_id": "user_789"
+    }
+    ```
+
+    **Key patterns:**
+    - Combine `click` and `long_view` in a single event when engagement is sustained
+    - Use `duration_ms` and `completion_pct` to distinguish genuine views from bounces
+    - Track `share` events as strong positive signals for content quality
+  </Tab>
+  <Tab title="Enterprise Search">
+    **Primary signals:** `click`, `positive_feedback`, `bookmark`
+
+    Enterprise search benefits from explicit feedback since clicks alone may indicate obligation rather than satisfaction.
+
+    ```json
+    {
+      "feature_id": "doc_kb_789",
+      "interaction_type": ["positive_feedback"],
+      "position": 3,
+      "metadata": {
+        "query": "PTO policy 2025",
+        "department": "engineering"
+      },
+      "user_id": "user_012"
+    }
+    ```
+
+    **Key patterns:**
+    - Add thumbs-up/down UI to capture explicit feedback
+    - Store `department` or `role` in metadata for demographic-level learned fusion
+    - Track `query_refinement` to find queries where results aren't meeting expectations
+  </Tab>
+  <Tab title="Recommendations">
+    **Primary signals:** `click`, `purchase`, `negative_feedback`
+
+    Recommendation systems need both positive and negative signals to avoid recommending disliked content.
+
+    ```json
+    {
+      "feature_id": "doc_rec_321",
+      "interaction_type": ["negative_feedback"],
+      "position": 0,
+      "metadata": {
+        "reason": "not_interested",
+        "source": "homepage_feed"
+      },
+      "user_id": "user_654"
+    }
+    ```
+
+    **Key patterns:**
+    - Capture "not interested" / "hide" as `negative_feedback` to actively suppress similar content
+    - Use purchase history to filter already-bought items from results
+    - Track position carefully — recommendation position bias is stronger than search
+  </Tab>
+</Tabs>
+
+## Implementation Patterns
+
+<CodeGroup>
+```javascript Client-Side (Browser)
+// Track clicks with position
+document.querySelectorAll('.search-result').forEach((el, index) => {
+  el.addEventListener('click', () => {
+    fetch('/api/interactions', {
+      method: 'POST',
+      body: JSON.stringify({
+        feature_id: el.dataset.documentId,
+        interaction_type: ['click'],
+        position: index,
+        metadata: { query: currentQuery },
+        user_id: userId,
+        session_id: sessionId
+      })
+    });
+  });
+});
+
+// Track dwell time on result detail pages
+let startTime = Date.now();
+window.addEventListener('beforeunload', () => {
+  const dwellMs = Date.now() - startTime;
+  navigator.sendBeacon('/api/interactions', JSON.stringify({
+    feature_id: currentDocId,
+    interaction_type: dwellMs > 5000 ? ['click', 'long_view'] : ['click'],
+    position: resultPosition,
+    metadata: { duration_ms: dwellMs, query: originalQuery },
+    user_id: userId
+  }));
+});
+```
+
+```python Server-Side (Python)
+from mixpeek import Mixpeek
+
+client = Mixpeek(api_key="your-api-key")
+
+# Record a purchase event server-side
+client.retrievers.interactions.create(
+    feature_id="doc_product_123",
+    interaction_type=["purchase", "click"],
+    position=2,
+    metadata={
+        "order_id": "ord_456",
+        "order_value": 49.99,
+        "query": original_query
+    },
+    user_id=user_id,
+    session_id=session_id
+)
+```
+</CodeGroup>
+
+## Position Tracking
+
+<Warning>
+  **Always capture `position`.** Without position data, the system cannot correct for position bias — the tendency for users to click higher-ranked results regardless of relevance. This is critical for both learned fusion and fine-tuning.
+</Warning>
+
+Position bias correction works by comparing the click-through rate at each position against the expected baseline. A click at position 8 is a much stronger relevance signal than a click at position 1, because users are less likely to scroll that far.
+
+## Cold Start Considerations
+
+When you first deploy, you have zero interactions. Here's what happens at each stage:
+
+| Interactions | Fusion Behavior | What To Do |
+|-------------|----------------|------------|
+| 0 | Falls back to `rrf` (uniform weights) | Ship with `rrf`, start collecting signals |
+| 1–50 | Global-level learned weights only | Monitor analytics for obvious issues |
+| 50–500 | Demographic-level personalization begins | Verify evaluation metrics are trending up |
+| 500+ | Per-user personalization kicks in | Run benchmarks to compare against baseline |
+
+The system handles this automatically through the [hierarchical fallback](/relevance/learned-fusion#hierarchical-fallback) in Thompson Sampling: personal context (if enough data) → demographic context → global context → uniform prior.
+
+## Next Steps
+
+- [Interactions API reference](/retrieval/interactions) — endpoint details, request/response format
+- [Learned Fusion](/relevance/learned-fusion) — how interactions become fusion weights
+- [Analytics](/relevance/analytics) — monitor interaction-driven metrics
+- [API Reference: Create Interaction](/api-reference/retriever-interactions/create-interaction) — full API specification

@@ -1,0 +1,59 @@
+---
+title: "Relevance & Personalization"
+description: "Build search systems that improve automatically from user behavior"
+---
+
+Every search system starts static: you configure stages, deploy a retriever, and hope the ranking is good enough. Relevance engineering turns that static system into a learning loop where every user interaction makes results better.
+
+<Frame>
+  <img src="/assets/relevance/feedback-loop.svg" alt="The relevance feedback loop: Search → Results → Interact → Learn → Measure" />
+</Frame>
+
+## The Feedback Loop
+
+The loop has five steps:
+
+1. **Search** — A user submits a query. Your retriever executes feature searches across one or more embedding indexes, fusing results with a strategy (RRF, weighted, or learned).
+
+2. **Results** — The retriever returns ranked documents. Each result has a score, metadata, and position in the list.
+
+3. **Interact** — Users click, purchase, skip, or provide feedback. You capture these signals through the [Interactions API](/retrieval/interactions).
+
+4. **Learn** — Mixpeek's Thompson Sampling algorithm updates Beta distributions for each feature, learning which embedding indexes produce the most engaging results for different user segments.
+
+5. **Measure** — You run [evaluations](/relevance/evaluations) against ground truth datasets and monitor [analytics](/relevance/analytics) to confirm the system is improving.
+
+Then the loop repeats. The next search benefits from everything learned so far.
+
+## What to Read Next
+
+<CardGroup cols={2}>
+  <Card title="Interaction Signals" icon="hand-pointer" href="/relevance/interactions">
+    Strategy for capturing the right signals and building user preference profiles.
+  </Card>
+  <Card title="Fusion Strategies" icon="arrows-merge" href="/relevance/fusion-strategies">
+    Deep dive into RRF, DBSF, Weighted, Max, and Learned fusion with formulas.
+  </Card>
+  <Card title="Learned Fusion" icon="brain" href="/relevance/learned-fusion">
+    How Thompson Sampling adapts fusion weights from interaction data.
+  </Card>
+  <Card title="Evaluations" icon="chart-bar" href="/relevance/evaluations">
+    Measure retriever quality with NDCG, Precision, Recall, MAP, MRR, and F1.
+  </Card>
+  <Card title="Analytics" icon="chart-line" href="/relevance/analytics">
+    Monitor latency, stage performance, slow queries, and AI tuning recommendations.
+  </Card>
+  <Card title="Benchmarks" icon="flask" href="/retrieval/benchmarks">
+    Replay historical sessions to compare retriever configurations before deploying.
+  </Card>
+</CardGroup>
+
+## How It All Connects
+
+Interactions feed two systems simultaneously. **Learned fusion** uses them to adjust how multiple embedding features are weighted at query time — making real-time improvements without manual tuning. **Evaluations** use them (via ground truth datasets derived from interaction history) to measure quality offline, giving you confidence before changing production retrievers.
+
+Analytics ties everything together by surfacing slow queries, cache performance, and AI-powered tuning recommendations. Benchmarks let you replay historical sessions against candidate configurations to predict impact before going live.
+
+<Tip>
+  **Start simple, graduate to learned.** Begin with `rrf` fusion (the default — no configuration needed). Once you have 100+ interactions, switch to `learned` fusion to let the system adapt automatically. Use evaluations to verify the improvement.
+</Tip>

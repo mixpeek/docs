@@ -1,0 +1,249 @@
+---
+title: "Fusion Strategies"
+description: "How multiple search results are combined into a single ranked list using RRF, DBSF, Weighted, Max, or Learned fusion"
+---
+
+When a [feature search](/retrieval/stages/feature-search) stage queries multiple embedding indexes (e.g., text + image), it produces separate ranked lists that need to be merged. Fusion strategies determine how those lists become one.
+
+<Frame>
+  <img src="/assets/relevance/fusion-strategies-comparison.svg" alt="Comparison of RRF, Weighted, and Learned fusion strategies" />
+</Frame>
+
+## Strategy Reference
+
+| Strategy | Formula | Configuration | Best For |
+|----------|---------|---------------|----------|
+| `rrf` | `1 / (k + rank)` | None (k=60 default) | General purpose, no tuning needed |
+| `dbsf` | Distribution-based normalization | None | Different score distributions across features |
+| `weighted` | `w₁·score₁ + w₂·score₂` | `weight` per search | Known feature importance |
+| `max` | `max(score₁, score₂)` | None | Any single match is sufficient |
+| `learned` | Thompson Sampling | Interaction data | Personalized, adaptive weights |
+
+## Reciprocal Rank Fusion (RRF)
+
+The default strategy. RRF ignores raw similarity scores and uses only rank position. This makes it robust when different features produce scores on different scales.
+
+**Formula:**
+
+```
+score(doc) = Σ  1 / (k + rank_i(doc))
+```
+
+Where `k = 60` (constant that prevents top-ranked items from dominating) and `rank_i` is the document's position in the i-th feature's result list.
+
+**Why it works:** A document ranked #1 by text search and #3 by image search gets a higher fused score than a document ranked #2 by both. The rank-based approach means you don't need to calibrate score ranges across features.
+
+<CodeGroup>
+```json Configuration
+{
+  "stage_type": "filter",
+  "stage_id": "feature_search",
+  "parameters": {
+    "searches": [
+      {
+        "feature_uri": "mixpeek://text_extractor@v1/multilingual_e5_large_instruct_v1",
+        "query": "{{INPUT.query}}",
+        "top_k": 100
+      },
+      {
+        "feature_uri": "mixpeek://multimodal_extractor@v1/vertex_multimodal_embedding",
+        "query": "{{INPUT.query}}",
+        "top_k": 100
+      }
+    ],
+    "fusion": "rrf",
+    "final_top_k": 25
+  }
+}
+```
+</CodeGroup>
+
+<Tip>
+  RRF is the best default. Use it unless you have a specific reason to choose another strategy.
+</Tip>
+
+## Distribution-Based Score Fusion (DBSF)
+
+DBSF normalizes scores from each feature into a common distribution before combining them. This handles cases where one feature produces scores in [0.8, 0.99] and another in [0.1, 0.6].
+
+**How it works:**
+
+1. For each feature, compute the mean (μ) and standard deviation (σ) of scores
+2. Normalize each score: `normalized = (score - μ) / σ`
+3. Sum normalized scores across features
+
+DBSF is useful when features have different score distributions, but the raw scores themselves carry meaningful information (unlike RRF which ignores scores entirely).
+
+<CodeGroup>
+```json Configuration
+{
+  "stage_type": "filter",
+  "stage_id": "feature_search",
+  "parameters": {
+    "searches": [
+      {
+        "feature_uri": "mixpeek://text_extractor@v1/multilingual_e5_large_instruct_v1",
+        "query": "{{INPUT.query}}",
+        "top_k": 100
+      },
+      {
+        "feature_uri": "mixpeek://multimodal_extractor@v1/vertex_multimodal_embedding",
+        "query": "{{INPUT.query}}",
+        "top_k": 100
+      }
+    ],
+    "fusion": "dbsf",
+    "final_top_k": 25
+  }
+}
+```
+</CodeGroup>
+
+## Weighted Fusion
+
+You manually assign a weight to each search feature. Scores are multiplied by their weight and summed. Use this when you know from domain expertise that one feature is more important than another.
+
+**Formula:**
+
+```
+score(doc) = w₁ · score₁(doc) + w₂ · score₂(doc) + ...
+```
+
+Weights don't need to sum to 1 — they're relative importance indicators.
+
+<CodeGroup>
+```json Configuration
+{
+  "stage_type": "filter",
+  "stage_id": "feature_search",
+  "parameters": {
+    "searches": [
+      {
+        "feature_uri": "mixpeek://text_extractor@v1/multilingual_e5_large_instruct_v1",
+        "query": "{{INPUT.query}}",
+        "top_k": 100,
+        "weight": 0.7
+      },
+      {
+        "feature_uri": "mixpeek://multimodal_extractor@v1/vertex_multimodal_embedding",
+        "query": "{{INPUT.image_url}}",
+        "top_k": 100,
+        "weight": 0.3
+      }
+    ],
+    "fusion": "weighted",
+    "final_top_k": 25
+  }
+}
+```
+</CodeGroup>
+
+<Warning>
+  Weighted fusion is sensitive to score scale differences. If text scores are in [0.8, 1.0] and image scores are in [0.1, 0.5], a 50/50 weight split will still favor text. Consider DBSF or RRF if score ranges differ significantly.
+</Warning>
+
+## Max Fusion
+
+Takes the maximum score across all features for each document. A document only needs to be a strong match on **one** feature to rank highly.
+
+**Formula:**
+
+```
+score(doc) = max(score₁(doc), score₂(doc), ...)
+```
+
+Use this when any single strong match is sufficient — for example, a product that matches either the text description or the visual similarity should rank high.
+
+<CodeGroup>
+```json Configuration
+{
+  "stage_type": "filter",
+  "stage_id": "feature_search",
+  "parameters": {
+    "searches": [
+      {
+        "feature_uri": "mixpeek://text_extractor@v1/multilingual_e5_large_instruct_v1",
+        "query": "{{INPUT.query}}",
+        "top_k": 100
+      },
+      {
+        "feature_uri": "mixpeek://image_extractor@v1/embedding",
+        "query": "{{INPUT.image_url}}",
+        "top_k": 100
+      }
+    ],
+    "fusion": "max",
+    "final_top_k": 25
+  }
+}
+```
+</CodeGroup>
+
+## Learned Fusion
+
+Learned fusion replaces static weights with weights that adapt automatically from user [interaction](/relevance/interactions) data. Under the hood, it uses Thompson Sampling with Beta distributions to balance exploration (trying different weight combinations) with exploitation (using what's known to work).
+
+See [Learned Fusion](/relevance/learned-fusion) for the full deep dive.
+
+<CodeGroup>
+```json Configuration
+{
+  "stage_type": "filter",
+  "stage_id": "feature_search",
+  "parameters": {
+    "searches": [
+      {
+        "feature_uri": "mixpeek://text_extractor@v1/multilingual_e5_large_instruct_v1",
+        "query": "{{INPUT.query}}",
+        "top_k": 100
+      },
+      {
+        "feature_uri": "mixpeek://multimodal_extractor@v1/vertex_multimodal_embedding",
+        "query": "{{INPUT.image_url}}",
+        "top_k": 100
+      }
+    ],
+    "fusion": "learned",
+    "final_top_k": 25
+  }
+}
+```
+</CodeGroup>
+
+## Choosing a Strategy
+
+```
+Do you have multiple search features?
+├── No  → No fusion needed (single feature search)
+└── Yes
+    ├── Do you have interaction data (100+ signals)?
+    │   ├── Yes → Use "learned" (adapts automatically)
+    │   └── No
+    │       ├── Do you know which features matter more?
+    │       │   ├── Yes → Use "weighted"
+    │       │   └── No
+    │       │       ├── Do features have different score scales?
+    │       │       │   ├── Yes → Use "dbsf"
+    │       │       │   └── No → Use "rrf" (default)
+    │       └── Is any single match sufficient?
+    │           └── Yes → Use "max"
+```
+
+## Performance Comparison
+
+| Strategy | Latency Overhead | Configuration Effort | Adapts Over Time | Best Quality Ceiling |
+|----------|:---:|:---:|:---:|:---:|
+| RRF | < 5ms | None | No | Good |
+| DBSF | < 5ms | None | No | Good |
+| Weighted | < 5ms | Manual tuning | No | Good (if well-tuned) |
+| Max | < 5ms | None | No | Moderate |
+| Learned | < 10ms | Interaction tracking | Yes | Best |
+
+All strategies add minimal latency. The real difference is in quality: learned fusion converges toward optimal weights for your specific users and content, while static strategies require manual tuning or accept a one-size-fits-all approach.
+
+## Related
+
+- [Feature Search stage](/retrieval/stages/feature-search) — where fusion is configured
+- [Learned Fusion deep dive](/relevance/learned-fusion) — Thompson Sampling explained
+- [Interaction Signals](/relevance/interactions) — capturing the data that powers learned fusion
+- [Evaluations](/relevance/evaluations) — measuring the impact of different fusion strategies

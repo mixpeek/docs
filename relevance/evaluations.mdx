@@ -1,0 +1,201 @@
+---
+title: "Evaluations"
+description: "Measure retriever quality offline with ground truth datasets and standard IR metrics"
+---
+
+Evaluations answer: "How good is my retriever?" by running queries from a ground truth dataset and comparing the results against known-relevant documents.
+
+<Frame>
+  <img src="/assets/relevance/evaluation-workflow.svg" alt="Evaluation workflow: Ground truth → Execute retriever → Compare → Metrics" />
+</Frame>
+
+## Metrics
+
+| Metric | Formula | Prioritize When |
+|--------|---------|-----------------|
+| **Precision@K** | (relevant in top K) / K | You need high accuracy in top results |
+| **Recall@K** | (relevant in top K) / (total relevant) | You need to find all relevant items |
+| **F1@K** | Harmonic mean of Precision and Recall | You need a balance of both |
+| **NDCG@K** | Normalized Discounted Cumulative Gain | Ranking order matters (position-sensitive) |
+| **MAP** | Mean Average Precision across queries | Overall retrieval quality |
+| **MRR** | 1 / (position of first relevant result) | Users care about the first good result |
+
+### Interpreting Scores
+
+- **NDCG@10 = 0.89** — Your top-10 ranking captures 89% of an ideal ordering. Most relevant docs appear near the top.
+- **Precision@10 = 0.75** — 7.5 out of every 10 results are relevant. Users see mostly relevant content.
+- **MRR = 0.93** — On average, the first relevant result appears between position 1 and 2. Users find what they need quickly.
+- **Recall@20 = 0.60** — You're surfacing 60% of all relevant documents in the top 20. Good for discovery; may need a higher K or better embeddings for completeness.
+
+## Running an Evaluation
+
+<Steps>
+  <Step title="Create a ground truth dataset">
+    A dataset is a collection of queries, each paired with the document IDs that are considered relevant.
+
+    ```bash
+    curl -X POST "$MP_API_URL/v1/retrievers/evaluations/datasets" \
+      -H "Authorization: Bearer $MP_API_KEY" \
+      -H "X-Namespace: $MP_NAMESPACE" \
+      -d '{
+        "dataset_name": "product-search-golden",
+        "queries": [
+          {
+            "query_id": "q1",
+            "query_input": {"query": "wireless earbuds"},
+            "relevant_documents": ["doc_a1", "doc_a2", "doc_a3"]
+          },
+          {
+            "query_id": "q2",
+            "query_input": {"query": "noise canceling headphones"},
+            "relevant_documents": ["doc_b1", "doc_b4", "doc_b7"]
+          },
+          {
+            "query_id": "q3",
+            "query_input": {"query": "running headphones waterproof"},
+            "relevant_documents": ["doc_c2", "doc_c5"]
+          }
+        ]
+      }'
+    ```
+  </Step>
+  <Step title="Run the evaluation">
+    Execute your retriever against every query in the dataset and compute metrics.
+
+    ```bash
+    curl -X POST "$MP_API_URL/v1/retrievers/{retriever_id}/evaluations" \
+      -H "Authorization: Bearer $MP_API_KEY" \
+      -H "X-Namespace: $MP_NAMESPACE" \
+      -d '{
+        "dataset_name": "product-search-golden",
+        "evaluation_config": {
+          "k_values": [1, 5, 10, 20],
+          "metrics": ["precision", "recall", "f1", "ndcg", "map", "mrr"]
+        }
+      }'
+    ```
+
+    This returns a `task_id` and `evaluation_id`. The evaluation runs asynchronously.
+  </Step>
+  <Step title="Get results">
+    Poll the evaluation until it completes:
+
+    ```bash
+    curl "$MP_API_URL/v1/retrievers/{retriever_id}/evaluations/{evaluation_id}" \
+      -H "Authorization: Bearer $MP_API_KEY" \
+      -H "X-Namespace: $MP_NAMESPACE"
+    ```
+
+    Response:
+
+    ```json
+    {
+      "evaluation_id": "eval_abc123",
+      "status": "completed",
+      "query_count": 3,
+      "overall_metrics": {
+        "precision": 0.75,
+        "recall": 0.82,
+        "f1_score": 0.78,
+        "mean_average_precision": 0.71
+      },
+      "metrics_by_k": {
+        "1": {"precision": 0.67, "recall": 0.28, "ndcg": 0.67, "mrr": 0.67},
+        "5": {"precision": 0.73, "recall": 0.65, "ndcg": 0.81, "mrr": 0.89},
+        "10": {"precision": 0.75, "recall": 0.82, "ndcg": 0.89, "mrr": 0.93},
+        "20": {"precision": 0.68, "recall": 0.95, "ndcg": 0.91, "mrr": 0.93}
+      }
+    }
+    ```
+  </Step>
+</Steps>
+
+## Comparing Retriever Configurations
+
+Run the same dataset against different retrievers to compare configurations:
+
+```bash
+# Evaluate baseline (RRF fusion)
+curl -X POST "$MP_API_URL/v1/retrievers/ret_baseline/evaluations" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
+  -d '{"dataset_name": "product-search-golden"}'
+
+# Evaluate candidate (learned fusion)
+curl -X POST "$MP_API_URL/v1/retrievers/ret_learned/evaluations" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE" \
+  -d '{"dataset_name": "product-search-golden"}'
+```
+
+Then compare the `metrics_by_k` results side by side. If the candidate shows higher NDCG@10 and MAP, it's producing better rankings.
+
+<Tip>
+  For live traffic comparison, use [Benchmarks](/retrieval/benchmarks) which replay real user sessions. Evaluations are for offline measurement with curated ground truth.
+</Tip>
+
+## Configuration Reference
+
+<ParamField path="dataset_name" type="string" required>
+  Name of the ground truth dataset to evaluate against.
+</ParamField>
+
+<ParamField path="evaluation_config.k_values" type="array" default="[1, 5, 10, 20]">
+  K values for computing Precision@K, Recall@K, NDCG@K, and F1@K. Include the K values that match your UI (e.g., if you show 10 results per page, include `10`).
+</ParamField>
+
+<ParamField path="evaluation_config.metrics" type="array" default='["precision", "recall", "f1", "map", "ndcg", "mrr"]'>
+  Which metrics to compute. Available: `precision`, `recall`, `f1`, `map`, `ndcg`, `mrr`.
+</ParamField>
+
+## Best Practices
+
+1. **Use 50+ queries** — Small datasets produce noisy metrics. Aim for at least 50 representative queries.
+
+2. **Include head, torso, and tail queries** — Don't just test popular queries. Include rare, long-tail queries that are harder for the retriever.
+
+3. **Test multiple K values** — A retriever might have great Precision@5 but poor Recall@20. Multiple K values reveal the full picture.
+
+4. **Re-evaluate after changes** — Run evaluations after changing fusion strategy, adding rerank stages, or updating embeddings.
+
+5. **Version your datasets** — Keep ground truth datasets stable over time so you can track metric trends across retriever versions.
+
+## Evaluations vs Interactions vs Benchmarks
+
+<Tabs>
+  <Tab title="Evaluations">
+    **What:** Offline measurement against curated ground truth datasets.
+
+    **When:** Before deploying changes. After updating embeddings, fusion strategy, or stages.
+
+    **Input:** Ground truth query-document pairs you create.
+
+    **Output:** NDCG, Precision, Recall, MAP, MRR, F1 at multiple K values.
+  </Tab>
+  <Tab title="Interactions">
+    **What:** Real-time capture of user behavior (clicks, purchases, skips).
+
+    **When:** Continuously, in production.
+
+    **Input:** User events from your application.
+
+    **Output:** Training data for learned fusion, analytics signals, fine-tuning pairs.
+  </Tab>
+  <Tab title="Benchmarks">
+    **What:** Replay historical user sessions against multiple retriever configurations.
+
+    **When:** Before deploying a new retriever configuration to production.
+
+    **Input:** Historical sessions with interactions (automatic from your production data).
+
+    **Output:** Side-by-side comparison of baseline vs candidate retrievers.
+  </Tab>
+</Tabs>
+
+## Related
+
+- [Benchmarks](/retrieval/benchmarks) — live session replay comparison
+- [Analytics](/relevance/analytics) — production monitoring and slow query detection
+- [Interaction Signals](/relevance/interactions) — building ground truth from user behavior
+- [API Reference: Run Evaluation](/api-reference/retriever-evaluations/run-evaluation) — full API specification
+- [API Reference: Create Dataset](/api-reference/retriever-evaluations/create-evaluation-dataset) — dataset creation API

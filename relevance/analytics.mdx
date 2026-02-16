@@ -1,0 +1,212 @@
+---
+title: "Analytics"
+description: "Monitor retriever performance, identify slow queries, and get AI-powered tuning recommendations"
+---
+
+Analytics gives you visibility into how your retrievers perform in production. Track latency, stage-level bottlenecks, cache efficiency, and get automated recommendations for improvement.
+
+## Endpoints Overview
+
+| Endpoint | Method | Returns |
+|----------|--------|---------|
+| `/analytics/retrievers/{id}/performance` | GET | Latency percentiles (P50/P95/P99), query counts, trends |
+| `/analytics/retrievers/{id}/stages` | GET | Per-stage execution times and document flow |
+| `/analytics/retrievers/{id}/signals` | GET | Operational signals (cache hits, rerank scores, filter reduction) |
+| `/analytics/retrievers/{id}/cache-performance` | GET | Cache hit/miss rates, latency savings |
+| `/analytics/retrievers/{id}/slow-queries` | GET | Slowest queries with stage-level breakdown |
+| `/analytics/retrievers/{id}/analyze-tuning` | POST | AI-powered parameter tuning recommendations |
+
+## Performance Metrics
+
+Get latency percentiles and query volume over time:
+
+<CodeGroup>
+```bash cURL
+curl "$MP_API_URL/v1/analytics/retrievers/{retriever_id}/performance?group_by=hour&start_date=2025-01-01T00:00:00Z" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE"
+```
+
+```python Python
+from mixpeek import Mixpeek
+
+client = Mixpeek(api_key="your-api-key")
+
+performance = client.analytics.retrievers.performance(
+    retriever_id="ret_abc123",
+    group_by="hour",
+    start_date="2025-01-01T00:00:00Z"
+)
+```
+</CodeGroup>
+
+**Query parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `start_date` | datetime | — | Start of time range (UTC) |
+| `end_date` | datetime | — | End of time range (UTC) |
+| `group_by` | string | `"hour"` | Time grouping: `hour`, `day`, `week` |
+
+**Response includes:** P50, P95, and P99 latency, query counts, result counts, and trends over the time range.
+
+## Stage Breakdown
+
+Understand which stages consume the most time:
+
+<CodeGroup>
+```bash cURL
+curl "$MP_API_URL/v1/analytics/retrievers/{retriever_id}/stages?hours=24" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE"
+```
+
+```python Python
+stages = client.analytics.retrievers.stages(
+    retriever_id="ret_abc123",
+    hours=24
+)
+```
+</CodeGroup>
+
+**Query parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `hours` | integer | `24` | Hours of history (1–720) |
+
+**Response includes:** Per-stage execution time, document count entering/exiting each stage, and stage-level latency distributions. Use this to identify bottlenecks — a rerank stage processing 500 documents is slower than one processing 50.
+
+## Slow Queries
+
+Find the queries that take the longest to execute:
+
+<CodeGroup>
+```bash cURL
+curl "$MP_API_URL/v1/analytics/retrievers/{retriever_id}/slow-queries?limit=10&hours=24" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE"
+```
+
+```python Python
+slow = client.analytics.retrievers.slow_queries(
+    retriever_id="ret_abc123",
+    limit=10,
+    hours=24
+)
+```
+</CodeGroup>
+
+**Query parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `limit` | integer | `10` | Number of slow queries to return |
+| `hours` | integer | `24` | Hours of history (1–720) |
+
+**Response includes:** Query text, total execution time, result count, and stage-by-stage breakdown for each slow query. Use this to find pathological queries that need optimization.
+
+## Cache Performance
+
+Monitor how effectively caching reduces latency:
+
+<CodeGroup>
+```bash cURL
+curl "$MP_API_URL/v1/analytics/retrievers/{retriever_id}/cache-performance?hours=24" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE"
+```
+
+```python Python
+cache = client.analytics.retrievers.cache_performance(
+    retriever_id="ret_abc123",
+    hours=24
+)
+```
+</CodeGroup>
+
+**Response includes:** Hit/miss rates, average latency for cache hits vs full execution, and hourly trends. A low hit rate may indicate your queries are too diverse for caching, or that cache TTL needs adjustment.
+
+## Retriever Signals
+
+Get raw operational signals for debugging:
+
+<CodeGroup>
+```bash cURL
+curl "$MP_API_URL/v1/analytics/retrievers/{retriever_id}/signals?signal_type=rerank_scores&limit=100&hours=24" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE"
+```
+
+```python Python
+signals = client.analytics.retrievers.signals(
+    retriever_id="ret_abc123",
+    signal_type="rerank_scores",
+    limit=100,
+    hours=24
+)
+```
+</CodeGroup>
+
+**Signal types:**
+
+| Signal | Description |
+|--------|-------------|
+| `cache_hit` | Query served from cache |
+| `cache_miss` | Cache miss, full execution |
+| `rerank_scores` | Score distribution from rerank stage |
+| `filter_reduction` | How much the filter stage reduced the candidate set |
+| `expansion_results` | Query expansion output |
+
+## AI-Powered Tuning
+
+Get automated recommendations for improving your retriever:
+
+<CodeGroup>
+```bash cURL
+curl -X POST "$MP_API_URL/v1/analytics/retrievers/{retriever_id}/analyze-tuning?days=7" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $MP_NAMESPACE"
+```
+
+```python Python
+tuning = client.analytics.retrievers.analyze_tuning(
+    retriever_id="ret_abc123",
+    days=7
+)
+```
+</CodeGroup>
+
+**Query parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `days` | integer | `7` | Days of history to analyze (1–90) |
+
+**Response includes:** Parameter suggestions (e.g., "reduce top_k from 500 to 200"), cache optimization tips, and performance improvement estimates based on observed patterns.
+
+## Identifying Relevance Issues
+
+Use analytics to spot relevance problems:
+
+| Symptom | Analytics Signal | Likely Cause | Action |
+|---------|-----------------|-------------|--------|
+| High latency, normal results | Stage breakdown shows slow rerank | Too many candidates entering rerank | Reduce `top_k` or add a limit stage before rerank |
+| Low click-through rate | Interaction signals show high skip rate | Poor ranking or irrelevant results | Check fusion strategy, consider learned fusion |
+| Cache hit rate dropping | Cache performance shows increasing misses | Query diversity increasing or TTL too short | Adjust cache strategy, review in [caching best practices](/best-practices/caching-strategies) |
+| Inconsistent latency | Slow queries show specific patterns | Certain query types trigger expensive paths | Add pre-filters or query-specific optimization |
+
+## Monitoring Cadence
+
+| Frequency | Check | Tools |
+|-----------|-------|-------|
+| **Daily** | Slow queries, P95 latency | `/slow-queries`, `/performance` |
+| **Weekly** | Stage breakdown, cache efficiency, interaction trends | `/stages`, `/cache-performance`, `/signals` |
+| **Monthly** | AI tuning analysis, full evaluation run | `/analyze-tuning`, [Evaluations](/relevance/evaluations) |
+
+## Related
+
+- [Evaluations](/relevance/evaluations) — offline quality measurement
+- [Benchmarks](/retrieval/benchmarks) — historical session replay
+- [Caching Strategies](/best-practices/caching-strategies) — optimizing cache performance
+- [Interaction Signals](/relevance/interactions) — capturing user behavior data
