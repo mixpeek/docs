@@ -1,0 +1,178 @@
+---
+title: "Retriever Enrichments"
+description: "Run retriever pipelines on documents at ingestion time"
+---
+
+Retriever enrichments let you attach arbitrary retriever pipelines to collections. When documents are ingested, the configured retrievers execute against each document and write selected result fields back to the document. This enables LLM classification, cross-collection joins, and multi-stage enrichment without building custom extractor plugins.
+
+## How It Works
+
+1. **Attach** a retriever enrichment to a collection with input mappings and write-back field configuration
+2. **Ingest** documents via batch processing as usual
+3. **Post-processing** executes the retriever for each document, mapping document fields to retriever inputs
+4. **Write-back** extracts specified fields from retriever results and writes them to the document
+
+Retriever enrichments run in **Phase 4** of post-processing by default (after taxonomies, clusters, and alerts), but you can configure them to run in any phase.
+
+## Configuration
+
+Each retriever enrichment has three main sections:
+
+### Input Mappings
+
+Map document fields or constant values to retriever input parameters:
+
+```json
+{
+  "input_mappings": [
+    {
+      "input_key": "query",
+      "source": {
+        "source_type": "document_field",
+        "path": "title"
+      }
+    },
+    {
+      "input_key": "collection_id",
+      "source": {
+        "source_type": "constant",
+        "value": "col_reference_data"
+      }
+    }
+  ]
+}
+```
+
+### Write-Back Fields
+
+Configure which retriever result fields to write back to documents:
+
+```json
+{
+  "write_back_fields": [
+    {
+      "source_field": "category",
+      "target_field": "_enrichment_category",
+      "mode": "first"
+    },
+    {
+      "source_field": "related_items",
+      "target_field": "_related_ids",
+      "mode": "all_as_array"
+    }
+  ]
+}
+```
+
+**Write-back modes:**
+
+| Mode | Behavior |
+|------|----------|
+| `first` | Write value from the first result only (default) |
+| `all_as_array` | Collect values from all results into a list |
+| `concat` | Concatenate string values from all results with ", " separator |
+
+### Execution Control
+
+| Field | Description | Default |
+|-------|-------------|---------|
+| `execution_phase` | Post-processing phase (1-4) | 4 (Enrichment) |
+| `priority` | Priority within phase (higher = runs first) | 0 |
+| `scroll_filters` | Filter which documents to enrich | None (all documents) |
+| `enabled` | Whether enrichment is active | true |
+
+## Example: LLM Classification at Ingestion
+
+Attach a retriever with an `llm_enrich` stage to classify documents as they're ingested:
+
+<CodeGroup>
+```python Python
+from mixpeek import Mixpeek
+
+client = Mixpeek(api_key="your-api-key")
+
+# Update collection to add retriever enrichment
+client.collections.update(
+    collection_id="col_articles",
+    retriever_enrichments=[
+        {
+            "retriever_id": "ret_classifier",
+            "input_mappings": [
+                {
+                    "input_key": "query",
+                    "source": {
+                        "source_type": "document_field",
+                        "path": "content"
+                    }
+                }
+            ],
+            "write_back_fields": [
+                {
+                    "source_field": "category",
+                    "target_field": "_llm_category",
+                    "mode": "first"
+                },
+                {
+                    "source_field": "sentiment",
+                    "target_field": "_llm_sentiment",
+                    "mode": "first"
+                }
+            ],
+            "enabled": True
+        }
+    ]
+)
+```
+</CodeGroup>
+
+## Example: Cross-Collection Join
+
+Use a retriever enrichment to join data from a reference collection:
+
+<CodeGroup>
+```python Python
+client.collections.update(
+    collection_id="col_products",
+    retriever_enrichments=[
+        {
+            "retriever_id": "ret_brand_lookup",
+            "input_mappings": [
+                {
+                    "input_key": "query",
+                    "source": {
+                        "source_type": "document_field",
+                        "path": "brand_name"
+                    }
+                }
+            ],
+            "write_back_fields": [
+                {
+                    "source_field": "brand_logo_url",
+                    "target_field": "_brand_logo",
+                    "mode": "first"
+                },
+                {
+                    "source_field": "brand_category",
+                    "target_field": "_brand_category",
+                    "mode": "first"
+                }
+            ],
+            "enabled": True
+        }
+    ]
+)
+```
+</CodeGroup>
+
+<Note>
+  Retriever enrichments execute sequentially within each collection to avoid race conditions. For collections with many documents, enrichment time scales linearly with document count.
+</Note>
+
+## Comparison with Other Enrichment Types
+
+| Feature | Taxonomies | Clusters | Alerts | Retriever Enrichments |
+|---------|-----------|----------|--------|----------------------|
+| Purpose | Vector-based classification | Document grouping | Notifications | Arbitrary retriever pipelines |
+| Output | Label + score fields | Cluster assignments | Webhook notifications | Configurable field write-back |
+| Phase | 1 | 2 | 3 | 4 (default) |
+| Use cases | Face matching, entity linking | Segmentation, pattern discovery | Content monitoring | LLM classification, cross-collection joins |

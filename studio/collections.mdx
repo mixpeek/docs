@@ -43,6 +43,9 @@ iconType: "solid"
   <Step title="Attach taxonomies (optional)">
     Configure on-demand or materialized applications from the collection page.
   </Step>
+  <Step title="Attach retriever enrichments (optional)">
+    Configure retriever enrichments to run retriever pipelines on documents during post-processing. Each enrichment maps document fields to retriever inputs, executes the retriever, and writes selected result fields back to the document. Use for LLM classification, cross-collection joins, or multi-stage enrichment at ingestion time.
+  </Step>
 </Steps>
 
 <Callout type="info">
