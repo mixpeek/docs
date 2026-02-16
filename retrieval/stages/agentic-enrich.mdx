@@ -1,0 +1,422 @@
+---
+title: "Agentic Enrich"
+description: "Classify documents using a multi-turn reasoning agent with tool access"
+---
+
+The Agentic Enrich stage uses a multi-turn reasoning agent (default: Claude) that can call tools — taxonomy lookup, example search, and content analysis — to produce high-quality structured classifications for each document.
+
+<Note>
+  **Stage Category**: ENRICH (Enriches documents)
+
+  **Transformation**: N documents → N documents (with agent-produced classification added)
+</Note>
+
+## When to Use
+
+| Use Case | Description |
+|----------|-------------|
+| **Complex classification** | Ambiguous categories requiring multi-step reasoning |
+| **Multimodal analysis** | Video/image content needing perceptual analysis + reasoning |
+| **Taxonomy-aware classification** | Agent looks up taxonomy definitions before deciding |
+| **Few-shot classification** | Agent queries already-classified examples for reference |
+
+## When NOT to Use
+
+| Scenario | Recommended Alternative |
+|----------|------------------------|
+| Simple single-shot extraction | `llm_enrich` (faster, cheaper) |
+| Vector-based taxonomy matching | `taxonomy_enrich` (no LLM cost) |
+| High-throughput batch processing | `llm_enrich` with batch API |
+| Deterministic field transformation | `json_transform` |
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `system_prompt` | string | *Required* | System prompt for the reasoning agent. Supports `{{INPUT.*}}`, `{{DOC.*}}`, `{{CONTEXT.*}}` templates |
+| `output_schema` | object | *Required* | JSON schema for the structured output the agent must produce |
+| `output_field` | string | `metadata.classification` | Dot-path where classification is stored on each document |
+| `provider` | string | `anthropic` | LLM provider for the reasoning agent |
+| `model_name` | string | `claude-sonnet-4-5-20250929` | Model for the reasoning agent |
+| `api_key` | string | `null` | BYOK API key. Supports `{{secrets.*}}` |
+| `taxonomy_id` | string | `null` | Taxonomy to load via `get_taxonomy_categories` tool |
+| `example_collection_ids` | array | `null` | Collections to search for classified examples |
+| `analysis_provider` | object | Google/Gemini | Secondary LLM config for `analyze_content` tool |
+| `enabled_tools` | array | `null` | Explicit tool list. Auto-detected when null |
+| `max_turns` | integer | `8` | Maximum agent reasoning turns (1-20) |
+| `timeout_seconds` | float | `60.0` | Max wall-clock seconds per document (5-300) |
+| `temperature` | float | `0.0` | Sampling temperature for the agent |
+| `when` | object | `null` | Conditional filter — only enrich matching documents |
+| `max_concurrency` | integer | `2` | Parallel agent loops (1-5) |
+
+## Available Tools
+
+The agent has access to three tools, auto-enabled based on configuration:
+
+| Tool | Enabled When | Description |
+|------|-------------|-------------|
+| `get_taxonomy_categories` | `taxonomy_id` is set | Loads full taxonomy definition (categories, hierarchy, descriptions) from the database |
+| `query_examples` | `example_collection_ids` is set | Vector search against already-classified collections, optionally filtered by category label |
+| `analyze_content` | Always available | Delegates to a secondary LLM (default: Gemini) for specialized content analysis (video, image, audio) |
+
+## Configuration Examples
+
+<CodeGroup>
+```json Video Classification (Claude + Gemini)
+{
+  "stage_type": "enrich",
+  "stage_id": "agentic_enrich",
+  "parameters": {
+    "provider": "anthropic",
+    "model_name": "claude-sonnet-4-5-20250929",
+    "system_prompt": "You are an expert IAB content classifier. Use the available tools to: 1) Load the IAB taxonomy categories, 2) Analyze the video content with the analyze_content tool, 3) Query for similar already-classified examples. Make your classification decision with detailed reasoning.",
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "iab_tier1": {"type": "string"},
+        "iab_tier2": {"type": "string"},
+        "confidence": {"type": "number"},
+        "reasoning": {"type": "string"}
+      },
+      "required": ["iab_tier1", "confidence", "reasoning"]
+    },
+    "output_field": "iab_classification",
+    "taxonomy_id": "tax_iab_content",
+    "example_collection_ids": ["col_classified_videos"],
+    "analysis_provider": {
+      "provider": "google",
+      "model_name": "gemini-2.5-flash"
+    },
+    "max_turns": 10,
+    "when": {"field": "_internal.modality", "operator": "eq", "value": "video"}
+  }
+}
+```
+
+```json Simple Text Classification
+{
+  "stage_type": "enrich",
+  "stage_id": "agentic_enrich",
+  "parameters": {
+    "system_prompt": "Analyze the document and classify it into a technology category with confidence score and reasoning.",
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "category": {"type": "string"},
+        "confidence": {"type": "number"},
+        "reasoning": {"type": "string"}
+      },
+      "required": ["category", "confidence", "reasoning"]
+    },
+    "output_field": "metadata.classification",
+    "max_turns": 3,
+    "timeout_seconds": 30
+  }
+}
+```
+
+```json Taxonomy-Aware with Examples
+{
+  "stage_type": "enrich",
+  "stage_id": "agentic_enrich",
+  "parameters": {
+    "system_prompt": "You are a product classifier. First load the taxonomy to see available categories, then search for similar already-classified products. Use those references to classify this product accurately.",
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "category_id": {"type": "string"},
+        "category_name": {"type": "string"},
+        "confidence": {"type": "number"},
+        "similar_products": {"type": "array", "items": {"type": "string"}}
+      },
+      "required": ["category_id", "category_name", "confidence"]
+    },
+    "output_field": "product_classification",
+    "taxonomy_id": "tax_product_categories",
+    "example_collection_ids": ["col_classified_products"],
+    "max_turns": 8
+  }
+}
+```
+
+```json Conditional Enrichment
+{
+  "stage_type": "enrich",
+  "stage_id": "agentic_enrich",
+  "parameters": {
+    "system_prompt": "Classify this image content by subject matter and artistic style.",
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "subject": {"type": "string"},
+        "style": {"type": "string"},
+        "confidence": {"type": "number"}
+      }
+    },
+    "output_field": "image_classification",
+    "max_turns": 5,
+    "when": {"field": "_internal.modality", "operator": "eq", "value": "image"}
+  }
+}
+```
+</CodeGroup>
+
+## How It Works
+
+For each document, the stage runs a multi-turn agent loop:
+
+1. **Initialize**: Agent receives the document content + system prompt + available tools
+2. **Reason**: Agent analyzes the document and optionally calls tools (taxonomy lookup, example search, content analysis)
+3. **Observe**: Tool results are fed back to the agent as context
+4. **Iterate**: Loop continues until the agent produces a final answer (or `max_turns`/`timeout_seconds` is reached)
+5. **Output**: The agent's structured JSON response is merged into the document at `output_field`
+
+## Output Examples
+
+### With Taxonomy + Examples
+
+```json
+{
+  "document_id": "doc_abc123",
+  "content": "A product review video discussing...",
+  "iab_classification": {
+    "iab_tier1": "Technology & Computing",
+    "iab_tier2": "Consumer Electronics",
+    "confidence": 0.92,
+    "reasoning": "The video discusses smartphone features and pricing. Taxonomy lookup confirmed 'Consumer Electronics' under 'Technology & Computing'. Similar classified videos (col_classified_videos) showed consistent T&C categorization for product review content."
+  }
+}
+```
+
+### Simple Classification
+
+```json
+{
+  "document_id": "doc_def456",
+  "content": "Introduction to machine learning algorithms...",
+  "metadata": {
+    "classification": {
+      "category": "Artificial Intelligence",
+      "confidence": 0.88,
+      "reasoning": "Document covers supervised and unsupervised learning methods, neural network architectures, and model evaluation."
+    }
+  }
+}
+```
+
+### Conditional Skip (When Condition)
+
+```json
+{
+  "document_id": "doc_ghi789",
+  "_internal": {"modality": "text"},
+  "content": "Plain text document...",
+  "iab_classification": null
+}
+```
+
+Documents that don't match the `when` condition are passed through unchanged.
+
+## Performance
+
+| Metric | Value |
+|--------|-------|
+| **Latency** | 2-30s per document (depends on turns and tools) |
+| **LLM calls** | 3-15 per document |
+| **Max documents** | 10 per execution |
+| **Parallel** | Up to `max_concurrency` (default 2) |
+
+<Warning>
+  Agentic enrichment makes multiple LLM calls per document. Use the `when` condition to limit which documents are processed, and keep `max_turns` low for simple tasks.
+</Warning>
+
+## Common Pipeline Patterns
+
+### Search + Agentic Classify + Filter
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "feature_search",
+    "parameters": {
+      "searches": [
+        {
+          "feature_uri": "mixpeek://multimodal_extractor@v1/vertex_multimodal_embedding",
+          "query": "{{INPUT.query}}",
+          "top_k": 20
+        }
+      ],
+      "final_top_k": 20
+    }
+  },
+  {
+    "stage_type": "enrich",
+    "stage_id": "agentic_enrich",
+    "parameters": {
+      "system_prompt": "Classify this content by IAB category using the taxonomy and examples.",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "iab_category": {"type": "string"},
+          "confidence": {"type": "number"}
+        }
+      },
+      "output_field": "classification",
+      "taxonomy_id": "tax_iab",
+      "example_collection_ids": ["col_labeled"],
+      "max_turns": 6
+    }
+  },
+  {
+    "stage_type": "filter",
+    "stage_id": "attribute_filter",
+    "parameters": {
+      "field": "classification.confidence",
+      "operator": "gte",
+      "value": 0.8
+    }
+  }
+]
+```
+
+### Multimodal Analysis Pipeline
+
+```json
+[
+  {
+    "stage_type": "filter",
+    "stage_id": "feature_search",
+    "parameters": {
+      "searches": [
+        {
+          "feature_uri": "mixpeek://multimodal_extractor@v1/vertex_multimodal_embedding",
+          "query": "{{INPUT.query}}",
+          "top_k": 10
+        }
+      ],
+      "final_top_k": 10
+    }
+  },
+  {
+    "stage_type": "enrich",
+    "stage_id": "agentic_enrich",
+    "parameters": {
+      "system_prompt": "Use the analyze_content tool to examine this media, then classify by topic and sentiment.",
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "topic": {"type": "string"},
+          "sentiment": {"type": "string", "enum": ["positive", "neutral", "negative"]},
+          "summary": {"type": "string"}
+        }
+      },
+      "output_field": "media_analysis",
+      "analysis_provider": {
+        "provider": "google",
+        "model_name": "gemini-2.5-flash"
+      },
+      "max_turns": 5
+    }
+  },
+  {
+    "stage_type": "sort",
+    "stage_id": "rerank",
+    "parameters": {
+      "inference_name": "baai_bge_reranker_v2_m3",
+      "query": "{{INPUT.query}}",
+      "document_field": "content"
+    }
+  }
+]
+```
+
+## Bring Your Own Key (BYOK)
+
+Use your own LLM API keys instead of Mixpeek's default keys for both the reasoning agent and the analysis provider.
+
+<Steps>
+  <Step title="Store your API keys as secrets">
+    ```bash
+    curl -X POST "https://api.mixpeek.com/v1/organizations/secrets" \
+      -H "Authorization: Bearer YOUR_MIXPEEK_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "secret_name": "anthropic_api_key",
+        "secret_value": "sk-ant-..."
+      }'
+    ```
+  </Step>
+
+  <Step title="Reference secrets in your stage config">
+    ```json
+    {
+      "stage_type": "enrich",
+      "stage_id": "agentic_enrich",
+      "parameters": {
+        "provider": "anthropic",
+        "model_name": "claude-sonnet-4-5-20250929",
+        "api_key": "{{secrets.anthropic_api_key}}",
+        "system_prompt": "Classify this content.",
+        "output_schema": {"type": "object", "properties": {"category": {"type": "string"}}},
+        "analysis_provider": {
+          "provider": "google",
+          "model_name": "gemini-2.5-flash",
+          "api_key": "{{secrets.google_api_key}}"
+        }
+      }
+    }
+    ```
+  </Step>
+</Steps>
+
+<Note>
+  When `api_key` is not specified, the stage uses Mixpeek's default API keys and usage is charged to your Mixpeek account.
+</Note>
+
+## Stage Metadata
+
+The stage returns execution metadata for observability:
+
+| Field | Description |
+|-------|-------------|
+| `documents_enriched` | Number of documents processed by the agent |
+| `documents_skipped` | Number of documents skipped (when condition) |
+| `total_cost` | Total LLM API cost across all documents |
+| `total_tokens_input` | Total input tokens consumed |
+| `total_tokens_output` | Total output tokens generated |
+| `reasoning_traces` | Per-document traces with tool calls and turn history |
+| `conditional` | Whether a `when` condition was applied |
+
+## Error Handling
+
+| Error | Behavior |
+|-------|----------|
+| Agent timeout | Returns best result so far, or null |
+| Max turns reached | Loop ends; latest structured output used |
+| Schema validation fail | Raw text stored in `output_field` |
+| Tool execution error | Error message returned to agent; it can retry or skip |
+| Missing system_prompt | Stage fails with validation error |
+| Invalid taxonomy_id | `get_taxonomy_categories` tool returns error to agent |
+| Empty content | Agent receives empty document; classification based on metadata |
+| Invalid API key | Error returned with auth failure |
+
+## Cost Considerations
+
+| Setting | Cost Impact |
+|---------|-------------|
+| `max_turns: 3` | Low — simple direct classification |
+| `max_turns: 10` | Medium — multi-tool research workflow |
+| `max_concurrency: 1` | Sequential, slower but controlled cost |
+| `when` condition | Skip documents that don't need classification |
+| `timeout_seconds: 30` | Cap per-document spend |
+
+<Tip>
+  Start with `max_turns: 3` and increase only if the agent consistently needs more iterations. Most straightforward classifications finish in 2-4 turns.
+</Tip>
+
+## Related
+
+- [LLM Enrich](/retrieval/stages/llm-enrich) — Single-shot LLM enrichment (faster, cheaper)
+- [Taxonomy Enrich](/retrieval/stages/taxonomy-enrich) — Vector-based taxonomy matching (no LLM cost)
+- [Agent Search](/retrieval/stages/agent-search) — Multi-turn agent for search (different use case)

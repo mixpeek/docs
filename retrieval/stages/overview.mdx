@@ -43,7 +43,7 @@ Stages are organized into six categories based on how they transform the documen
   <Card title="ENRICH" icon="sparkles">
     Add knowledge to documents using AI models, taxonomies, or cross-collection joins.
 
-    **Stages**: llm_enrich, taxonomy_enrich, document_enrich
+    **Stages**: llm_enrich, taxonomy_enrich, document_enrich, agentic_enrich
   </Card>
 </CardGroup>
 
@@ -107,6 +107,7 @@ Stages are organized into six categories based on how they transform the documen
 | [LLM Enrich](/retrieval/stages/llm-enrich) | Generate new fields with LLM prompts |
 | [Taxonomy Enrich](/retrieval/stages/taxonomy-enrich) | Classify documents against taxonomy nodes |
 | [Document Enrich](/retrieval/stages/document-enrich) | Cross-collection joins (LEFT JOIN) |
+| [Agentic Enrich](/retrieval/stages/agentic-enrich) | Multi-turn agent with tool access for complex classification |
 
 ## Pipeline Patterns
 
@@ -286,6 +287,7 @@ Stages are organized into six categories based on how they transform the documen
 | Add database data | sql_lookup |
 | Join Mixpeek collections | document_enrich |
 | Classify documents | taxonomy_enrich |
+| Complex multi-step classification | agentic_enrich |
 | Generate new fields with LLM | llm_enrich |
 | Transform document structure | json_transform |
 | Prepare for LLM context | rag_prepare |
@@ -315,6 +317,7 @@ Stages are organized into six categories based on how they transform the documen
 | group_by | 5-20ms | Free |
 | sample | < 5ms | Free |
 | llm_enrich | 300-800ms | LLM API |
+| agentic_enrich | 2-30s | LLM API (multi-turn) |
 | api_call | 50-500ms | External API |
 | sql_lookup | 10-100ms | Database |
 | code_execution | 5-50ms | Free |

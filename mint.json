@@ -194,7 +194,8 @@
               "pages": [
                 "retrieval/stages/llm-enrich",
                 "retrieval/stages/taxonomy-enrich",
-                "retrieval/stages/document-enrich"
+                "retrieval/stages/document-enrich",
+                "retrieval/stages/agentic-enrich"
               ]
             }
           ]
@@ -208,7 +209,8 @@
       "group": "Enrich & Organize",
       "pages": [
         "enrichment/taxonomies",
-        "enrichment/clusters"
+        "enrichment/clusters",
+        "enrichment/retriever-enrichments"
       ]
     },
     {
