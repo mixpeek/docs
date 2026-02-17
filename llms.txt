@@ -8,10 +8,10 @@ Mixpeek is a multimodal data warehouse and retrieval platform. This documentatio
 
 ## Quick Links
 
-- Full Documentation: https://docs.mixpeek.com
-- API Reference: https://docs.mixpeek.com/api-reference
+- Full Documentation: https://mixpeek.com/docs
+- API Reference: https://mixpeek.com/docs/api-reference
 - OpenAPI Spec: https://api.mixpeek.com/docs/openapi.json
-- Quickstart: https://docs.mixpeek.com/overview/quickstart
+- Quickstart: https://mixpeek.com/docs/overview/quickstart
 
 ## Core Concepts
 
@@ -100,7 +100,7 @@ POST /v1/retrievers/{retriever_id}/execute
 
 ## Support
 
-- Documentation: https://docs.mixpeek.com
+- Documentation: https://mixpeek.com/docs
 - GitHub: https://github.com/mixpeek
 - Discord: https://discord.gg/mixpeek
 - Email: support@mixpeek.com

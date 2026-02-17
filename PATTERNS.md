@@ -60,7 +60,7 @@ Namespaces are...
 
 ```mdx
 <!-- ❌ BAD - absolute external URLs -->
-[Retrievers](https://docs.mixpeek.com/retrieval/retrievers)
+[Retrievers](https://mixpeek.com/docs/retrieval/retrievers)
 
 <!-- ✅ GOOD - relative internal links -->
 [Retrievers](/retrieval/retrievers)
