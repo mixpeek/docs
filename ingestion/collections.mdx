@@ -45,7 +45,8 @@ curl -sS -X POST "$MP_API_URL/v1/collections" \
 
 Key fields:
 
-- `source` – either `{ "type": "bucket", "bucket_id": ... }` or `{ "type": "collection", "collection_id": ... }`.
+- `source` – either `{ "type": "bucket", "bucket_ids": [...] }` or `{ "type": "collection", "collection_id": ... }`.
+- `source.source_namespace_id` – optional. Reference buckets from a different namespace in the same organization. See [Cross-Namespace Sources](#cross-namespace-sources) below.
 - `feature_extractor` – singular object in v2 (breaking change from v1). Configure model, input mappings, passthrough fields, and runtime parameters.
 - `taxonomy_applications` – optional list of taxonomies to materialize (`materialize`) or attach on demand (`on_demand`).
 
@@ -70,6 +71,40 @@ Bucket (videos) ──▶ Collection A (frames)
 
 - Tiered processing respects dependencies. Ray processes a tier only after upstream tiers finish.
 - Every document stores `root_object_id`, `source_collection_id`, `source_document_id`, `lineage_path`, and `processing_tier`.
+
+## Cross-Namespace Sources
+
+Collections can process buckets from a different namespace within the same organization using `source_namespace_id`. Documents still land in the collection's own namespace.
+
+```bash
+curl -sS -X POST "$MP_API_URL/v1/collections" \
+  -H "Authorization: Bearer $MP_API_KEY" \
+  -H "X-Namespace: $NAMESPACE_B" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "collection_name": "faces-from-shared-videos",
+    "source": {
+      "type": "bucket",
+      "bucket_ids": ["<bucket_id_in_namespace_a>"],
+      "source_namespace_id": "<namespace_a_id>"
+    },
+    "feature_extractor": {
+      "feature_extractor_name": "face_identity_extractor",
+      "version": "v1",
+      "input_mappings": { "video": "video" }
+    }
+  }'
+```
+
+Use cases:
+
+- **Shared raw data** – upload videos once in namespace A, run different extractors in namespaces B and C.
+- **Team isolation** – each team owns a namespace but references a central data bucket.
+- **Environment promotion** – process staging buckets from a production namespace.
+
+<Note>
+  `source_namespace_id` is only valid for bucket sources (`type: "bucket"`). Collection-to-collection sources must be within the same namespace.
+</Note>
 
 ## Collection Operations
 
