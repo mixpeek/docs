@@ -18,25 +18,25 @@ MCP clients have context limits. Instead of loading all 43 tools, pick the scope
     **18 tools** — Buckets, collections, and documents.
     Best for data pipelines and content upload workflows.
 
-    `https://mcp.mixpeek.com/ingestion`
+    `https://mcp.mixpeek.com/ingestion/mcp`
   </Card>
   <Card title="Retrieval Server" icon="magnifying-glass">
     **11 tools** — Retrievers, agents, and search.
     Best for RAG applications, search UIs, and agent workflows.
 
-    `https://mcp.mixpeek.com/retrieval`
+    `https://mcp.mixpeek.com/retrieval/mcp`
   </Card>
   <Card title="Admin Server" icon="gear">
     **14 tools** — Namespaces, taxonomies, and clusters.
     Best for platform administration and enrichment.
 
-    `https://mcp.mixpeek.com/admin`
+    `https://mcp.mixpeek.com/admin/mcp`
   </Card>
   <Card title="Full Platform" icon="layer-group">
     **43 tools** — Everything in one server.
     Best for power users who need all capabilities.
 
-    `https://mcp.mixpeek.com`
+    `https://mcp.mixpeek.com/mcp`
   </Card>
 </CardGroup>
 
@@ -56,7 +56,7 @@ Add to your Claude Desktop or Claude Code config. Replace `YOUR_API_KEY` with yo
     {
       "mcpServers": {
         "mixpeek-ingestion": {
-          "url": "https://mcp.mixpeek.com/ingestion",
+          "url": "https://mcp.mixpeek.com/ingestion/mcp",
           "headers": {
             "Authorization": "Bearer YOUR_API_KEY"
           }
@@ -70,7 +70,7 @@ Add to your Claude Desktop or Claude Code config. Replace `YOUR_API_KEY` with yo
     {
       "mcpServers": {
         "mixpeek-retrieval": {
-          "url": "https://mcp.mixpeek.com/retrieval",
+          "url": "https://mcp.mixpeek.com/retrieval/mcp",
           "headers": {
             "Authorization": "Bearer YOUR_API_KEY"
           }
@@ -84,7 +84,7 @@ Add to your Claude Desktop or Claude Code config. Replace `YOUR_API_KEY` with yo
     {
       "mcpServers": {
         "mixpeek-admin": {
-          "url": "https://mcp.mixpeek.com/admin",
+          "url": "https://mcp.mixpeek.com/admin/mcp",
           "headers": {
             "Authorization": "Bearer YOUR_API_KEY"
           }
@@ -98,7 +98,7 @@ Add to your Claude Desktop or Claude Code config. Replace `YOUR_API_KEY` with yo
     {
       "mcpServers": {
         "mixpeek": {
-          "url": "https://mcp.mixpeek.com",
+          "url": "https://mcp.mixpeek.com/mcp",
           "headers": {
             "Authorization": "Bearer YOUR_API_KEY"
           }
