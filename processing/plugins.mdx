@@ -242,6 +242,129 @@ curl -X POST "https://api.mixpeek.com/v1/namespaces/$NS_ID/plugins/$PLUGIN_ID/de
 
 ---
 
+## Manifest Features Format
+
+The `features` list in `manifest.py` is how Mixpeek knows which Qdrant vector indexes to create for your plugin. Use the **exact key names** below — using the wrong names silently creates a collection with no vector indexes.
+
+<Warning>
+The wrong key names are a common pitfall. They produce no error at upload time but result in 0 documents being indexed.
+</Warning>
+
+```python
+# ✅ CORRECT — these exact key names are required
+features = [
+    {
+        "feature_type": "embedding",       # must be "embedding"
+        "feature_name": "my_embedding",    # the vector index name
+        "embedding_dim": 768,              # vector dimensionality
+        "distance_metric": "cosine",       # "cosine", "euclid", or "dot"
+    },
+]
+
+# ❌ WRONG — intuitive but silently ignored (0 vectors created)
+features = [
+    {
+        "type": "vector",          # wrong key: use feature_type
+        "name": "my_embedding",    # wrong key: use feature_name
+        "dimensions": 768,         # wrong key: use embedding_dim
+        "distance": "cosine",      # wrong key: use distance_metric
+    },
+]
+```
+
+Multiple vectors are supported — add one entry per embedding your plugin produces:
+
+```python
+features = [
+    {
+        "feature_type": "embedding",
+        "feature_name": "visual_embedding",
+        "embedding_dim": 768,
+        "distance_metric": "cosine",
+    },
+    {
+        "feature_type": "embedding",
+        "feature_name": "semantic_embedding",
+        "embedding_dim": 384,
+        "distance_metric": "cosine",
+    },
+]
+```
+
+---
+
+## DataFrame Schema Reference
+
+Your plugin's `__call__(batch: pd.DataFrame)` receives a DataFrame with the following columns:
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `data` | `str` | For binary blobs: **S3 URL** (e.g. `s3://bucket/org_.../file.jpg`). For text blobs: **raw string content**. Never raw bytes. |
+| `document_id` | `str` | Unique document ID (e.g. `doc_abc123`) |
+| `object_id` | `str` | Source object ID in the bucket |
+| `blob_id` | `str` | Blob identifier within the object |
+| `blob_property` | `str` | Property name that produced this blob (matches your bucket schema key, e.g. `"content"`) |
+| `blob_type` | `str` | Asset type: `"image"`, `"video"`, `"audio"`, `"text"` |
+| `collection_id` | `str` | Collection that triggered processing |
+| `feature_extractor_id` | `str` | ID of the feature extractor |
+| `mime_type` | `str` | MIME type (e.g. `image/jpeg`, `text/plain`) |
+| `size_bytes` | `int` | File size in bytes (0 for inline text) |
+
+<Warning>
+**`input_mappings` does NOT rename columns.** The `data` column is always `data` regardless of any `input_mappings` configuration in `manifest.py`. `input_mappings` is metadata only — it does not transform the DataFrame. Always read from `batch["data"]`.
+</Warning>
+
+### Loading Assets from S3 URLs
+
+The `data` column contains `s3://` URLs, not raw bytes. Use the stable **Plugin SDK** to resolve them to local paths:
+
+```python
+from shared.plugins import open_asset  # stable public import
+
+class MyProcessor:
+    def __call__(self, batch: pd.DataFrame) -> pd.DataFrame:
+        for idx, row in batch.iterrows():
+            s3_url = row["data"]  # e.g. "s3://mixpeek-server-dev/org_.../file.jpg"
+
+            # open_asset downloads and auto-cleans temp files
+            with open_asset(s3_url, suffix=".jpg") as local_path:
+                from PIL import Image
+                img = Image.open(local_path).convert("RGB")
+                # ... process img ...
+
+        return batch
+```
+
+For text blobs, the `data` column contains the raw string — no download needed:
+
+```python
+class MyTextProcessor:
+    def __call__(self, batch: pd.DataFrame) -> pd.DataFrame:
+        texts = batch["data"].fillna("").tolist()
+        batch["embedding"] = self._model.encode(texts).tolist()
+        return batch
+```
+
+If you need the raw `(path, is_temp)` tuple rather than a context manager, use `download_asset`:
+
+```python
+from shared.plugins import download_asset
+
+local_path, is_temp = download_asset(row["data"], suffix=".mp4")
+try:
+    result = process(local_path)
+finally:
+    if is_temp:
+        import os
+        os.unlink(local_path)
+```
+
+<Note>
+**Backward compatibility:** The internal path `from shared.utilities.files import resolve_url_to_local_path` still works but may change without notice. Prefer `from shared.plugins import open_asset` for future-proof plugins.
+</Note>
+
+---
+
 ## Using Built-in Services
 
 Instead of implementing models from scratch, compose existing Mixpeek services:
@@ -641,15 +764,649 @@ Custom plugins are scanned before deployment. Code violating these rules is reje
 | Image | `PIL`, `cv2`, `imageio` |
 | Audio | `librosa`, `soundfile`, `ffmpeg-python` |
 | HTTP | `requests`, `httpx`, `aiohttp` |
-| Utils | `json`, `re`, `typing`, `dataclasses`, `pydantic`, `logging` |
+| Utils | `os`, `json`, `re`, `typing`, `dataclasses`, `pydantic`, `logging` |
 
 ### Forbidden
 
 | Category | Blocked | Reason |
 |----------|---------|--------|
-| Execution | `subprocess`, `os.system`, `eval`, `exec` | Shell/code execution |
+| Execution | `subprocess`, `os.system`, `os.popen`, `os.exec*`, `eval`, `exec` | Shell/code execution |
 | System | `ctypes`, `socket`, `multiprocessing` | Low-level access |
-| Builtins | `open`, `setattr`, `getattr`, `__import__` | File/attribute manipulation |
+| Builtins | `open`, `setattr`, `delattr`, `__import__` | File/attribute mutation |
+
+<Note>
+`import os` is **allowed**. Only specific dangerous functions (`os.system`, `os.popen`, `os.exec*`, `os.spawn*`) are blocked. Safe uses like `os.environ["KEY"]` and `os.path.join(...)` work fine.
+</Note>
+
+### Allowed Read-Only Builtins
+
+`getattr()`, `hasattr()`, and `dir()` are **allowed** in custom plugins. These are read-only operations commonly used by ML libraries and configuration patterns:
+
+```python
+# All of these are fine in custom plugins
+model_name = getattr(config, "model_name", "default")
+if hasattr(self, "_model"):
+    self._model.eval()
+
+# os.environ is allowed for device/runtime configuration
+import os
+os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
+```
+
+### File I/O in Plugins
+
+<Warning>
+Direct `open()` calls in your plugin `.py` files are blocked by the security scanner.
+</Warning>
+
+However, **library-internal file I/O is allowed**. The scanner only analyzes your plugin's Python source code via AST inspection — it does not scan compiled C extensions or library internals. This means:
+
+| Pattern | Allowed? | Why |
+|---------|----------|-----|
+| `onnxruntime.InferenceSession("model.onnx")` | Yes | C++ internal file I/O |
+| `transformers.AutoModel.from_pretrained(...)` | Yes | Library-internal download + read |
+| `torch.load("weights.pt")` | Yes | Library-internal file I/O |
+| `open("config.json", "r")` in your `.py` | **No** | Direct `open()` in plugin code |
+| `pd.read_csv("data.csv")` | Yes | Library-internal file I/O |
+
+<Tip>
+For reading configuration files, embed your config as Python dicts/dataclasses in your plugin code, or use `json.loads()` on a string constant.
+</Tip>
+
+---
+
+## Using Platform LLM Services
+
+Custom plugins can access Mixpeek's platform LLM services (Gemini, OpenAI, Anthropic) through the `container.llm` accessor. This gives you:
+- **Platform-managed API keys** — no need to bring your own
+- **Response caching** for repeated calls
+- **Cost tracking** integrated with your org billing
+- **Error handling** with typed failures
+
+### Quick Example
+
+```python
+# pipeline.py
+def build_steps(extractor_request, container=None, **kwargs):
+    config = {
+        "llm_service": container.llm,  # Pass to your processor
+        "threshold": 0.8,
+    }
+
+    pipeline = PipelineDefinition(
+        name="brand_compliance",
+        version="v1",
+        steps=[
+            StepDefinition(
+                service_class=BrandComplianceProcessor,
+                resource_type=ResourceType.API,
+                config=config,
+            ),
+        ]
+    )
+    return {"steps": build_pipeline_steps(pipeline)}
+```
+
+```python
+# processors/compliance.py
+import asyncio
+
+class BrandComplianceProcessor:
+    def __init__(self, config, **kwargs):
+        self._llm = config.get("llm_service")
+        self.threshold = config.get("threshold", 0.8)
+
+    def __call__(self, batch):
+        loop = asyncio.new_event_loop()
+        for idx, row in batch.iterrows():
+            result = loop.run_until_complete(
+                self._llm.generate(
+                    instruction="Evaluate this image for brand compliance",
+                    images=[row["image_url"]],
+                    provider="google",
+                    model="gemini-2.5-flash",
+                    schema={
+                        "type": "object",
+                        "properties": {
+                            "compliant": {"type": "boolean"},
+                            "violations": {"type": "array", "items": {"type": "string"}},
+                            "score": {"type": "number"}
+                        }
+                    }
+                )
+            )
+            batch.at[idx, "compliance_result"] = result.data
+        return batch
+```
+
+### Available LLM Methods
+
+| Method | Description |
+|--------|-------------|
+| `container.llm.generate(instruction, text, images, provider, model, schema)` | Convenience method for text/image generation |
+| `container.llm.process(LLMRequest(...))` | Full control with `LLMRequest` object |
+| `container.llm.service` | Direct access to `CentralLLMService` instance |
+
+### Supported Providers
+
+| Provider | Models | Best For |
+|----------|--------|----------|
+| `google` | `gemini-2.5-flash`, `gemini-2.5-pro` | Fast multimodal, structured output |
+| `openai` | `gpt-4o`, `gpt-4o-mini` | Text generation, function calling |
+| `anthropic` | `claude-sonnet-4-20250514` | Complex reasoning, long context |
+
+---
+
+## Plugin Parameters and Secrets
+
+### How Parameters Flow
+
+Plugin parameters are configured when enabling the plugin for a namespace. They flow through the pipeline as:
+
+```
+Enable Plugin API → MongoDB namespace.feature_extractors[].params → extractor_request.params → build_steps()
+```
+
+```python
+# When enabling a plugin via API:
+curl -X POST "https://api.mixpeek.com/v1/organizations/$ORG_ID/plugins/$PLUGIN_ID/enable" \
+  -H "Authorization: Bearer $API_KEY" \
+  -d '{
+    "params": {
+      "model_name": "gemini-2.5-flash",
+      "confidence_threshold": 0.8,
+      "api_key": "your-external-api-key"
+    }
+  }'
+```
+
+```python
+# In your pipeline.py, read params:
+def build_steps(extractor_request, container=None, **kwargs):
+    params = extractor_request.extractor_config.parameters or {}
+    model_name = params.get("model_name", "gemini-2.5-flash")
+    threshold = params.get("confidence_threshold", 0.8)
+```
+
+### Managing Secrets
+
+Custom plugins can access encrypted organization secrets via `container.secrets`. Secrets are stored encrypted at rest using the Organization Secrets API and decrypted on demand at plugin runtime.
+
+```python
+# In your pipeline.py:
+def build_steps(extractor_request, container=None, **kwargs):
+    processor = MyProcessor(
+        config={},
+        secrets=container.secrets,  # Pass secrets accessor to your processor
+    )
+    return {"steps": [processor], "prepare": lambda ds: ds}
+
+class MyProcessor:
+    def __init__(self, config, secrets=None):
+        self._secrets = secrets
+
+    async def process(self, data):
+        # Read a secret at runtime (decrypted automatically)
+        api_key = await self._secrets.get("EXTERNAL_API_KEY")
+        # Use for external service calls
+```
+
+| Method | Description |
+|--------|-------------|
+| `await container.secrets.get("KEY")` | Get a decrypted secret value by name |
+| `await container.secrets.list()` | List available secret names (not values) |
+
+<Note>
+For platform LLM services (Gemini, OpenAI, Anthropic), use `container.llm` instead — it handles API keys automatically. Use `container.secrets` for your own external API keys, tokens, and credentials.
+</Note>
+
+You can also pass non-secret configuration as plugin parameters:
+
+```python
+# Plugin parameters (stored in MongoDB, not encrypted)
+{
+  "params": {
+    "webhook_url": "https://your-service.com/callback",
+    "threshold": 0.8
+  }
+}
+```
+
+---
+
+## Archive Size and Model Loading
+
+### Upload Limits
+
+| Limit | Value |
+|-------|-------|
+| Archive upload size | 500 MB |
+| Extracted archive size | 500 MB |
+| Max files in archive | 1,000 |
+
+### Loading Large Models
+
+Most ML models exceed 500 MB. The recommended pattern is **lazy downloading from HuggingFace Hub** at init time:
+
+```python
+class MyProcessor:
+    def __init__(self, config, **kwargs):
+        self._model = None
+
+    def _ensure_model_loaded(self):
+        if self._model is None:
+            # Downloaded once, cached on disk for subsequent calls
+            from transformers import AutoModel
+            self._model = AutoModel.from_pretrained(
+                "google/siglip-base-patch16-224",
+                cache_dir="/tmp/hf_cache"
+            )
+
+    def __call__(self, batch):
+        self._ensure_model_loaded()
+        # ... process batch
+```
+
+For custom model weights, use the namespace model API:
+
+```python
+from shared.models.loader import load_namespace_model
+
+weights = load_namespace_model("my-fine-tuned-model_1_0_0")
+```
+
+<Tip>
+First cold start will download models (~1-2 min depending on size). Subsequent starts use the HuggingFace cache. Use `LazyModelMixin` for automatic cluster-wide caching.
+</Tip>
+
+---
+
+## Plugins vs Retrievers: Architecture
+
+Understanding the boundary between plugins and retrievers is key for building retrieval-augmented pipelines.
+
+### Plugin Responsibility
+
+Plugins handle **data transformation**: embedding, classification, extraction.
+
+```
+Raw Data → Plugin (batch/realtime) → Embeddings + Structured Output → Qdrant
+```
+
+### Retriever Responsibility
+
+Retrievers handle **search and retrieval context**: query processing, vector search, reranking, enrichment.
+
+```
+Query → Retriever Stages → [semantic_search → rerank → agentic_enrich] → Results
+```
+
+### How They Interact
+
+```
+┌───────────────────────────────────────────────────┐
+│                    Ingestion                       │
+│  Object → Plugin pipeline.py → Embeddings → Qdrant│
+└───────────────────────────────────────────────────┘
+
+┌───────────────────────────────────────────────────┐
+│                    Retrieval                       │
+│  Query → Plugin realtime.py (embed query)          │
+│       → Retriever semantic_search (Qdrant search)  │
+│       → Retriever rerank (sort results)            │
+│       → Retriever agentic_enrich (LLM analysis)    │
+│       → Results with scores                        │
+└───────────────────────────────────────────────────┘
+```
+
+### What `realtime.py` Receives
+
+The `run_inference(inputs, parameters)` method receives:
+- `inputs["texts"]` or `inputs["text"]` — text to embed
+- `inputs["vector_index"]` — which vector index to use
+- `parameters` — inference options
+
+It does **not** receive retrieval context or search results. If your pipeline needs retrieval context (e.g., "compare this image against 5 nearest references"), use retriever stages:
+
+1. **Plugin `pipeline.py`**: Embed reference images during ingestion
+2. **Plugin `realtime.py`**: Embed the query image at search time
+3. **Retriever `semantic_search` stage**: Find nearest references in Qdrant
+4. **Retriever `agentic_enrich` or `code_execution` stage**: Run VLM comparison with retrieved references
+
+<Note>
+For retrieval-dependent analysis (like brand compliance with reference comparison), the VLM evaluation belongs in a retriever stage, not in the plugin's `realtime.py`.
+</Note>
+
+---
+
+## Example: Image Classification Plugin
+
+Here's a complete image processing plugin (addresses the common need for non-text templates):
+
+```python
+# manifest.py
+feature_extractor_name = "image_classifier"
+version = "1.0.0"
+description = "Image classification with structured labels"
+
+dependencies = ["torch", "torchvision", "pillow"]
+
+features = [
+    {
+        "feature_name": "image_embedding",
+        "feature_type": "embedding",
+        "embedding_dim": 512,
+        "distance_metric": "cosine",
+    }
+]
+
+feature_uri = "mixpeek://image_classifier@1.0.0/image_embedding"
+
+output_schema = {
+    "image_embedding": {"type": "array", "items": {"type": "number"}},
+    "labels": {"type": "array", "items": {"type": "string"}},
+    "confidence": {"type": "number"},
+}
+```
+
+```python
+# processors/classifier.py
+import io
+import pandas as pd
+import requests
+
+class ImageClassifierProcessor:
+    def __init__(self, config=None, **kwargs):
+        self._model = None
+        self._preprocess = None
+        self.config = config or {}
+
+    def _ensure_model_loaded(self):
+        if self._model is None:
+            import torch
+            from torchvision import models, transforms
+
+            self._model = models.mobilenet_v2(pretrained=True)
+            self._model.eval()
+            self._preprocess = transforms.Compose([
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406],
+                    std=[0.229, 0.224, 0.225]
+                ),
+            ])
+
+    def __call__(self, batch: pd.DataFrame) -> pd.DataFrame:
+        self._ensure_model_loaded()
+        import torch
+        from PIL import Image
+
+        embeddings = []
+        labels_list = []
+
+        for _, row in batch.iterrows():
+            image_url = row.get("source_url") or row.get("image_url", "")
+            try:
+                resp = requests.get(image_url, timeout=30)
+                img = Image.open(io.BytesIO(resp.content)).convert("RGB")
+                tensor = self._preprocess(img).unsqueeze(0)
+
+                with torch.no_grad():
+                    output = self._model(tensor)
+                    # Use penultimate layer as embedding
+                    embedding = output.squeeze().tolist()[:512]
+                    top_classes = torch.topk(output, 5).indices[0].tolist()
+
+                embeddings.append(embedding)
+                labels_list.append([str(c) for c in top_classes])
+            except Exception:
+                embeddings.append([0.0] * 512)
+                labels_list.append([])
+
+        batch["image_embedding"] = embeddings
+        batch["labels"] = labels_list
+        return batch
+```
+
+```python
+# pipeline.py
+from engine.plugins.extractors.pipeline import (
+    PipelineDefinition, ResourceType, RowCondition,
+    StepDefinition, build_pipeline_steps,
+)
+from .processors.classifier import ImageClassifierProcessor
+
+def build_steps(extractor_request, container=None, **kwargs):
+    params = (extractor_request.extractor_config.parameters or {})
+
+    pipeline = PipelineDefinition(
+        name="image_classifier",
+        version="1.0.0",
+        steps=[
+            StepDefinition(
+                service_class=ImageClassifierProcessor,
+                resource_type=ResourceType.GPU,
+                condition=RowCondition.IS_IMAGE,
+                config={"threshold": params.get("threshold", 0.5)},
+            ),
+        ]
+    )
+    return {"steps": build_pipeline_steps(pipeline)}
+```
+
+---
+
+## Example: VLM Analyzer Plugin
+
+A plugin that uses platform LLM services for vision-language analysis:
+
+```python
+# manifest.py
+feature_extractor_name = "vlm_analyzer"
+version = "1.0.0"
+description = "Vision-language analysis using Gemini"
+
+dependencies = ["pillow", "httpx"]
+
+features = [
+    {
+        "feature_name": "vlm_embedding",
+        "feature_type": "embedding",
+        "embedding_dim": 384,
+        "distance_metric": "cosine",
+    }
+]
+
+output_schema = {
+    "vlm_embedding": {"type": "array", "items": {"type": "number"}},
+    "analysis": {"type": "object"},
+    "tags": {"type": "array", "items": {"type": "string"}},
+}
+```
+
+```python
+# processors/analyzer.py
+import asyncio
+import hashlib
+import pandas as pd
+
+class VLMAnalyzerProcessor:
+    def __init__(self, config=None, **kwargs):
+        self.config = config or {}
+        self._llm = config.get("llm_service")
+        self.analysis_prompt = config.get(
+            "prompt",
+            "Describe this image. Return tags and a detailed description."
+        )
+
+    def _text_to_embedding(self, text, dim=384):
+        """Deterministic text-to-embedding for analysis results."""
+        h = hashlib.sha256(text.encode()).digest()
+        return [((b % 200) - 100) / 100.0 for b in (h * (dim // 32 + 1))[:dim]]
+
+    def __call__(self, batch: pd.DataFrame) -> pd.DataFrame:
+        loop = asyncio.new_event_loop()
+        embeddings = []
+        analyses = []
+        tags_list = []
+
+        for _, row in batch.iterrows():
+            image_url = row.get("source_url", "")
+            try:
+                result = loop.run_until_complete(
+                    self._llm.generate(
+                        instruction=self.analysis_prompt,
+                        images=[image_url],
+                        provider="google",
+                        model="gemini-2.5-flash",
+                        schema={
+                            "type": "object",
+                            "properties": {
+                                "description": {"type": "string"},
+                                "tags": {"type": "array", "items": {"type": "string"}},
+                            }
+                        }
+                    )
+                )
+                analysis = result.data
+                analyses.append(analysis)
+                tags_list.append(analysis.get("tags", []))
+                embeddings.append(
+                    self._text_to_embedding(analysis.get("description", ""))
+                )
+            except Exception:
+                analyses.append({})
+                tags_list.append([])
+                embeddings.append([0.0] * 384)
+
+        batch["vlm_embedding"] = embeddings
+        batch["analysis"] = analyses
+        batch["tags"] = tags_list
+        return batch
+```
+
+```python
+# pipeline.py
+from engine.plugins.extractors.pipeline import (
+    PipelineDefinition, ResourceType, RowCondition,
+    StepDefinition, build_pipeline_steps,
+)
+from .processors.analyzer import VLMAnalyzerProcessor
+
+def build_steps(extractor_request, container=None, **kwargs):
+    params = (extractor_request.extractor_config.parameters or {})
+
+    config = {
+        "llm_service": container.llm,
+        "prompt": params.get("prompt", "Describe this image in detail."),
+    }
+
+    pipeline = PipelineDefinition(
+        name="vlm_analyzer",
+        version="1.0.0",
+        steps=[
+            StepDefinition(
+                service_class=VLMAnalyzerProcessor,
+                resource_type=ResourceType.API,
+                condition=RowCondition.IS_IMAGE,
+                config=config,
+            ),
+        ]
+    )
+    return {"steps": build_pipeline_steps(pipeline)}
+```
+
+---
+
+## Local Testing
+
+### Unit Testing Your Plugin
+
+Test your processors locally without the full Mixpeek stack:
+
+```python
+# tests/test_my_processor.py
+import pandas as pd
+from my_plugin.processors.core import MyProcessor
+
+def test_processor_basic():
+    processor = MyProcessor(config={"threshold": 0.5})
+    batch = pd.DataFrame({
+        "text": ["Hello world", "Test input"],
+        "document_id": ["doc_1", "doc_2"],
+    })
+
+    result = processor(batch)
+
+    assert "my_embedding" in result.columns
+    assert len(result) == 2
+    assert all(len(e) == 384 for e in result["my_embedding"])
+```
+
+### Testing with Mock LLM Service
+
+```python
+# tests/test_with_llm.py
+from unittest.mock import AsyncMock, MagicMock
+
+def test_vlm_processor():
+    mock_llm = MagicMock()
+    mock_llm.generate = AsyncMock(return_value=MagicMock(
+        data={"description": "A red car", "tags": ["car", "red", "vehicle"]}
+    ))
+
+    processor = VLMAnalyzerProcessor(config={
+        "llm_service": mock_llm,
+        "prompt": "Describe this image",
+    })
+
+    batch = pd.DataFrame({
+        "source_url": ["https://example.com/car.jpg"],
+    })
+    result = processor(batch)
+
+    assert result["tags"].iloc[0] == ["car", "red", "vehicle"]
+    mock_llm.generate.assert_called_once()
+```
+
+### Testing build_steps
+
+```python
+# tests/test_pipeline.py
+from unittest.mock import MagicMock
+from my_plugin.pipeline import build_steps
+
+def test_build_steps_returns_steps():
+    mock_request = MagicMock()
+    mock_request.extractor_config.parameters = {"threshold": 0.8}
+
+    mock_container = MagicMock()
+
+    result = build_steps(mock_request, container=mock_container)
+
+    assert "steps" in result
+    assert len(result["steps"]) > 0
+```
+
+### Running the Security Scanner Locally
+
+Before uploading, validate your plugin passes the security scan:
+
+```python
+# test_security.py
+from api.namespaces.plugins.security.scanner import PluginSecurityScanner
+
+scanner = PluginSecurityScanner(strict_mode=False)
+result = scanner.scan_directory("my_plugin/")
+
+if not result.passed:
+    for v in result.violations:
+        print(f"{v.filename}:{v.line}: [{v.severity}] {v.message}")
+else:
+    print("Security scan passed!")
+```
 
 ---
 
@@ -746,24 +1503,79 @@ def build_steps(extractor_request, **kwargs):
 ### Plugin validation failed
 
 Check the `validation_errors` array. Common issues:
-- Using `setattr()` or `getattr()` - use class attributes instead
-- Importing `subprocess` - use `requests` or `httpx` for HTTP
-- Using `open()` - use provided data loading APIs
+- Using `setattr()` or `delattr()` — use class attributes or constructor assignment instead
+- Importing `subprocess` — use `requests` or `httpx` for HTTP
+- Using `open()` directly — library-internal file I/O (torch.load, transformers, etc.) is allowed
+- Using `eval()` or `exec()` — use `json.loads()` for parsing, dataclasses for config
+
+<Tip>
+`import os` and `getattr()` / `hasattr()` are all allowed. Only the dangerous functions (`os.system`, `os.popen`, `os.exec*`) are blocked.
+</Tip>
+
+### Task shows COMPLETED but 0 documents were written
+
+This is the most confusing failure mode. The task API returns `COMPLETED` even when the Qdrant upsert fails for every row — for example, because your plugin declared new vector names that weren't registered in the namespace's Qdrant schema.
+
+**Symptoms:**
+```
+Task status: COMPLETED
+Documents found: 0
+```
+
+**Most common cause — wrong `features` format in `manifest.py`:**
+
+If you used the wrong key names (`type`/`name`/`dimensions` instead of `feature_type`/`feature_name`/`embedding_dim`), the collection is created with `vector_indexes: []` in MongoDB. The engine then tries to write embeddings to vector names that don't exist in Qdrant and fails silently.
+
+**Fix:** Correct the `features` format (see [Manifest Features Format](#manifest-features-format)) and recreate the collection.
+
+**Diagnosis steps:**
+1. Check that `vector_indexes` is non-empty on your collection: `GET /v1/collections/{collection_id}`
+2. If `vector_indexes` is empty, delete and recreate the collection with corrected `manifest.py`
+3. Check Ray worker logs for Qdrant upsert errors (`Not existing vector name`)
+
+### Retriever creation fails with `collection_identifiers` error
+
+The retriever create endpoint requires `collection_identifiers`, not `collection_ids`. The error response hints at this:
+
+```json
+{"hint": "Add collection_identifiers to your retriever"}
+```
+
+Use:
+```json
+{
+  "collection_identifiers": ["col_abc123"]
+}
+```
+Not `"collection_ids"` (used by other endpoints).
 
 ### Model loading is slow
 
 - Use `LazyModelMixin` for automatic cluster caching
 - Pre-deploy models via the Model Registry API
+- For HuggingFace models, set `cache_dir="/tmp/hf_cache"` to reuse across restarts
 - Check `cached: true` in deployment response
+
+### Archive too large
+
+The upload limit is 500 MB. For plugins with large models:
+- Don't bundle model weights in the archive
+- Download from HuggingFace Hub at init time using lazy loading
+- Use `load_namespace_model()` for custom weights uploaded via the Models API
 
 ### Batch processing fails
 
-1. Ensure `_process_batch()` returns a DataFrame
+1. Ensure `__call__()` returns a DataFrame with the same number of rows
 2. Reset DataFrame index: `batch = batch.reset_index(drop=True)`
 3. Handle None/empty values: `batch["col"].fillna("")`
+4. Wrap async LLM calls with `asyncio.new_event_loop().run_until_complete()`
 
 ### Real-time endpoint not responding
 
 1. Check deployment status via `/status` endpoint
 2. Verify plugin is `DEPLOYED` not `NOT_DEPLOYED`
 3. Check Ray Serve logs for errors
+
+### Can't access retrieval context in realtime.py
+
+`realtime.py` handles embedding, not retrieval. If your pipeline needs to compare against stored references, configure retriever stages (`semantic_search` → `rerank` → `agentic_enrich`) to handle the retrieval and comparison logic. See [Plugins vs Retrievers](#plugins-vs-retrievers-architecture) above.

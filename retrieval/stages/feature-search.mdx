@@ -532,6 +532,159 @@ Each result includes:
 | Filter syntax error | Stage fails with error |
 | No matching documents | Returns empty results |
 
+## Creating a Retriever with feature_search
+
+The following is a **complete working example** of creating a retriever that uses the `feature_search` stage, then executing it. Pay close attention to the field names — several are easy to confuse.
+
+<Warning>
+**Common mistakes:**
+- Use `collection_identifiers` (not `collection_ids`) in the retriever body.
+- Use `type: "text"` (not `"string"`) in `input_schema` values.
+- `stage_type` at the outer level must be `"filter"`.
+- `stage_id: "feature_search"` lives inside the `config` object, **not** at the outer `stage_id`.
+- `final_top_k` lives inside `config.parameters`, not at the top level.
+</Warning>
+
+### Step 1 — Create the Retriever
+
+<CodeGroup>
+```bash cURL
+curl -X POST "https://api.mixpeek.com/v1/retrievers" \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: $NAMESPACE_ID" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "retriever_name": "my-semantic-retriever",
+
+    "collection_identifiers": ["col_abc123"],
+
+    "input_schema": {
+      "query": {
+        "type": "text",
+        "description": "Search query",
+        "required": true
+      }
+    },
+
+    "stages": [
+      {
+        "stage_name": "Semantic Search",
+        "stage_type": "filter",
+        "config": {
+          "stage_id": "feature_search",
+          "parameters": {
+            "searches": [
+              {
+                "feature_uri": "mixpeek://text_extractor@v1/multilingual_e5_large_instruct_v1",
+                "query": {
+                  "input_mode": "text",
+                  "value": "{{INPUT.query}}"
+                },
+                "top_k": 50
+              }
+            ],
+            "final_top_k": 10
+          }
+        }
+      }
+    ]
+  }'
+```
+
+```python Python
+import httpx
+
+response = httpx.post(
+    "https://api.mixpeek.com/v1/retrievers",
+    headers={
+        "Authorization": f"Bearer {api_key}",
+        "X-Namespace": namespace_id,
+    },
+    json={
+        "retriever_name": "my-semantic-retriever",
+        # ✅ correct field: collection_identifiers
+        "collection_identifiers": ["col_abc123"],
+        "input_schema": {
+            "query": {
+                "type": "text",       # ✅ "text", not "string"
+                "description": "Search query",
+                "required": True,
+            }
+        },
+        "stages": [
+            {
+                "stage_name": "Semantic Search",
+                "stage_type": "filter",   # ✅ required at outer stage
+                "config": {
+                    "stage_id": "feature_search",  # ✅ inside config
+                    "parameters": {
+                        "searches": [
+                            {
+                                "feature_uri": (
+                                    "mixpeek://text_extractor@v1/"
+                                    "multilingual_e5_large_instruct_v1"
+                                ),
+                                "query": {
+                                    "input_mode": "text",
+                                    "value": "{{INPUT.query}}",
+                                },
+                                "top_k": 50,
+                            }
+                        ],
+                        "final_top_k": 10,  # ✅ inside parameters
+                    },
+                },
+            }
+        ],
+    },
+)
+data = response.json()
+retriever_id = data["retriever"]["retriever_id"]
+```
+</CodeGroup>
+
+### Step 2 — Execute the Retriever
+
+<CodeGroup>
+```bash cURL
+curl -X POST "https://api.mixpeek.com/v1/retrievers/$RETRIEVER_ID/execute" \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: $NAMESPACE_ID" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "inputs": {
+      "query": "machine learning for fashion brand compliance"
+    }
+  }'
+```
+
+```python Python
+response = httpx.post(
+    f"https://api.mixpeek.com/v1/retrievers/{retriever_id}/execute",
+    headers={
+        "Authorization": f"Bearer {api_key}",
+        "X-Namespace": namespace_id,
+    },
+    json={
+        "inputs": {"query": "machine learning for fashion brand compliance"}
+    },
+)
+results = response.json()
+```
+</CodeGroup>
+
+### Finding the Right feature_uri
+
+The `feature_uri` must match an embedding index that exists in your namespace. To discover available feature URIs, list the vector indexes in a collection:
+
+```bash
+curl "https://api.mixpeek.com/v1/collections/$COLLECTION_ID" \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: $NAMESPACE_ID"
+```
+
+Each item in the `vector_indexes` array has a `feature_uri` field — use that value directly in your retriever stage.
+
 ## Related Stages
 
 - [Attribute Filter](/retrieval/stages/attribute-filter) - Metadata-based filtering
