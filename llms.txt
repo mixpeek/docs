@@ -15,53 +15,150 @@ Mixpeek is a multimodal data warehouse and retrieval platform. This documentatio
 
 ## Core Concepts
 
-### The 5-Stage Pipeline
-1. **Ingestion** - Upload files via URL or direct upload to buckets
-2. **Extraction** - Run AI models to extract features (embeddings, transcripts, objects)
-3. **Enrichment** - Apply taxonomies and clustering for organization
-4. **Indexing** - Store vectors and metadata for retrieval
-5. **Retrieval** - Query with configurable retriever pipelines
+### Terminology
+- **Namespace** = Qdrant collection (tenant isolation boundary)
+- **Bucket** = Raw file storage (S3/GCS/Azure/R2/Wasabi/Tigris)
+- **Collection** = Processing pipeline with configured feature extractors
+- **Document** = Qdrant point + payload; `document_id` for app logic
+- **Retriever** = Multi-stage configurable search pipeline
+- **Taxonomy** = Hierarchical classification system
+- **Cluster** = Automatic semantic grouping of content
+- **Plugin** = Custom Python-based feature extractor
+- **Manifest** = Infrastructure-as-code resource definition
 
-### Key Resources
-- **Namespaces**: Tenant isolation boundaries
-- **Buckets**: Raw file storage (maps to S3/GCS)
-- **Collections**: Processing pipelines with feature extractors
-- **Documents**: Processed assets with embeddings and metadata
-- **Retrievers**: Configurable search pipelines with stages
-- **Taxonomies**: Hierarchical classification systems
+### Data Ingestion Flow
+Never insert directly into Qdrant. Always: Bucket upload → Trigger collection → Wait for batch.
+
+### Storage Tiering
+Collections have lifecycle states: `active` (Qdrant + S3 Vectors), `cold` (S3 only), `archived` (metadata only).
 
 ## Essential Documentation Pages
 
 ### Getting Started
 - /overview/introduction - Platform overview
 - /overview/quickstart - 5-minute getting started guide
-- /overview/concepts - Core terminology and concepts
+- /overview/concepts - Core terminology
 - /overview/architecture - System architecture
 - /overview/data-model - Data model and relationships
 
 ### Data Ingestion
 - /ingestion/objects - Working with raw objects
 - /ingestion/uploads - File upload methods
-- /ingestion/buckets - Bucket management
+- /ingestion/buckets - Bucket management and syncs
 - /ingestion/collections - Collection configuration
+- /ingestion/namespaces - Namespace management
+- /ingestion/features - Feature overview
 
 ### Feature Extraction
-- /processing/feature-extractors - Available extractors
-- /processing/extractors/multimodal - Multimodal embeddings
-- /processing/extractors/image - Image analysis
-- /processing/extractors/text - Text processing
+- /processing/feature-extractors - Available extractors overview
+- /processing/extractors/multimodal - Multimodal dense/sparse embeddings
+- /processing/extractors/image - Image analysis (detection, OCR, segmentation)
+- /processing/extractors/text - Text processing and embeddings
 - /processing/extractors/document - PDF/document extraction
+- /processing/extractors/face-identity - Face recognition and identity
+- /processing/extractors/web-scraper - Web content extraction
+- /processing/extractors/course-content - Educational content parsing
+- /processing/extractors/passthrough - No-op extractor
+- /processing/plugins - Custom Python plugin system
+- /processing/model-registry - Custom model management
+- /processing/batching - Batch processing and retry logic
+- /processing/pipelines - Pipeline configuration
 
 ### Search & Retrieval
-- /retrieval/retrievers - Retriever configuration
+- /retrieval/retrievers - Retriever creation and management
 - /retrieval/stages/overview - Pipeline stages overview
-- /retrieval/stages/feature-search - Vector/semantic search
-- /retrieval/stages/rerank - Result reranking
-- /retrieval/filters - Query filtering
+- /retrieval/filters - Query filtering syntax
 
-### Enrichment
+#### Filter Stages
+- /retrieval/stages/feature-search - Vector/semantic search
+- /retrieval/stages/attribute-filter - Metadata filtering
+- /retrieval/stages/llm-filter - LLM-based semantic filtering
+- /retrieval/stages/agent-search - Autonomous agent search
+- /retrieval/stages/query-expand - Query expansion
+
+#### Sort Stages
+- /retrieval/stages/sort-relevance - Score-based ordering
+- /retrieval/stages/sort-attribute - Field-based ordering
+- /retrieval/stages/mmr - Maximal Marginal Relevance
+- /retrieval/stages/rerank - Cross-encoder reranking
+- /retrieval/stages/score-normalize - Score normalization
+
+#### Reduce Stages
+- /retrieval/stages/aggregate - Group and reduce
+- /retrieval/stages/sample - Random sampling
+- /retrieval/stages/summarize - LLM summarization
+- /retrieval/stages/limit - Top-K cutoff
+- /retrieval/stages/deduplicate - Near-duplicate removal
+
+#### Group Stages
+- /retrieval/stages/group-by - Bucket by field value
+- /retrieval/stages/cluster - Semantic clustering of results
+
+#### Apply Stages
+- /retrieval/stages/json-transform - Reshape/project fields
+- /retrieval/stages/rag-prepare - Format for RAG injection
+- /retrieval/stages/external-web-search - Augment with live web results
+- /retrieval/stages/api-call - Call external HTTP endpoint
+- /retrieval/stages/sql-lookup - Join with SQL data source
+- /retrieval/stages/cross-compare - LLM-powered comparison
+- /retrieval/stages/web-scrape - Fetch content from URLs in results
+- /retrieval/stages/unwind - Flatten array fields
+- /retrieval/stages/code-execution - Sandboxed Python on results
+
+#### Enrich Stages
+- /retrieval/stages/llm-enrich - Add LLM-generated fields
+- /retrieval/stages/taxonomy-enrich - Apply taxonomy classification
+- /retrieval/stages/document-enrich - Join with related documents
+- /retrieval/stages/agentic-enrich - Autonomous enrichment
+
+### Retriever Features
+- /retrieval/interactions - Click/view/conversion tracking
+- /retrieval/benchmarks - Head-to-head configuration comparison
+
+### Relevance & Personalization
+- /relevance/overview - Relevance system overview
+- /relevance/interactions - Interaction signal collection
+- /relevance/fusion-strategies - Weighted, RRF, learned fusion
+- /relevance/learned-fusion - ML-trained fusion weights
+- /relevance/evaluations - Offline evaluation datasets
+- /relevance/analytics - Retrieval quality analytics
+
+### Enrichment & Organization
 - /enrichment/taxonomies - Taxonomy-based classification
-- /enrichment/clusters - Automatic clustering
+- /enrichment/clusters - Automatic semantic clustering
+- /enrichment/retriever-enrichments - Retriever-based enrichment
+
+### Operations
+- /operations/security - Auth, RBAC, secrets management
+- /operations/webhooks - Async event delivery
+- /operations/manifests - Infrastructure-as-code
+- /operations/storage-tiering - Storage lifecycle management
+
+### Best Practices
+- /best-practices/schema-design - Collection and document schema
+- /best-practices/feature-selection - Choosing the right extractors
+- /best-practices/caching-strategies - Query and model caching
+- /best-practices/cost-optimization - Reducing compute and storage costs
+
+### Troubleshooting
+- /troubleshoot/errors - Error reference
+- /troubleshoot/limits - Rate limits and quotas
+- /troubleshoot/common-issues - Common problems and fixes
+- /troubleshoot/faq - Frequently asked questions
+
+### Integrations
+- /integrations/search-widget - Embeddable search UI
+- /integrations/object-storage/s3 - AWS S3
+- /integrations/object-storage/gcs - Google Cloud Storage
+- /integrations/object-storage/azure-blob - Azure Blob Storage
+- /integrations/object-storage/r2 - Cloudflare R2
+- /integrations/object-storage/wasabi - Wasabi
+- /integrations/object-storage/tigris - Tigris
+- /integrations/social-media/instagram - Instagram connector
+- /integrations/developer-tools/python-sdk - Python SDK
+- /integrations/developer-tools/javascript-sdk - JavaScript SDK
+- /integrations/developer-tools/mixpeek-cli - CLI
+- /integrations/developer-tools/mcp-server - MCP server for agents
 
 ## API Authentication
 
@@ -77,26 +174,38 @@ X-Namespace: ns_your_namespace_id
 
 ## Common API Patterns
 
-### Create a Collection
-POST /v1/collections
-- Define feature extractors for processing
-- Link to a bucket for source data
+### Create a Namespace
+POST /v1/namespaces
+
+### Create a Bucket and Collection
+POST /v1/buckets
+POST /v1/collections (with feature_extractors array)
 
 ### Upload and Process Data
-1. POST /v1/buckets/{bucket_id}/objects - Create object reference
-2. POST /v1/buckets/{bucket_id}/uploads - Upload file
-3. Collection triggers batch processing automatically
+1. POST /v1/buckets/{bucket_id}/uploads — upload file
+2. Collection triggers batch processing automatically
+3. GET /v1/buckets/{bucket_id}/batches/{batch_id} — poll status
 
 ### Execute Search
 POST /v1/retrievers/{retriever_id}/execute
-- Provide query in inputs
-- Configure stages for filtering, ranking, enrichment
+- Provide query in `inputs`
+- Retriever runs configured stages pipeline
+
+### Deploy a Custom Plugin
+POST /v1/namespaces/{ns_id}/plugins — upload plugin code
+POST /v1/namespaces/{ns_id}/plugins/{plugin_id}/deploy — deploy
+
+### Apply Manifest (IaC)
+POST /v1/manifest/apply — declaratively create/update resources
+POST /v1/manifest/validate — validate without applying
+GET /v1/manifest/export — export current state as manifest
 
 ## SDKs
 
 - Python: `pip install mixpeek`
 - JavaScript: `npm install mixpeek-sdk`
 - CLI: `pip install mixpeek-cli`
+- MCP Server: expose retrievers as tools for Claude and agents
 
 ## Support
 
