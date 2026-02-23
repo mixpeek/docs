@@ -231,7 +231,8 @@
       "pages": [
         "operations/security",
         "operations/webhooks",
-        "operations/manifests"
+        "operations/manifests",
+        "operations/storage-tiering"
       ]
     },
     {
@@ -255,6 +256,7 @@
     {
       "group": "Integrations",
       "pages": [
+        "integrations/search-widget",
         {
           "group": "Object Storage",
           "pages": [

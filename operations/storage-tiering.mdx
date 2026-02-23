@@ -1,0 +1,305 @@
+---
+title: "Storage Tiering"
+description: "Manage collection lifecycle with S3 Vectors canonical storage and Qdrant hot cache"
+---
+
+## Overview
+
+Storage tiering separates your **canonical vector store** (S3 Vectors — permanent, durable, cheap) from the **serving layer** (Qdrant — fast, in-memory, only active collections). This gives you:
+
+- **Durability**: vectors survive Qdrant restarts or data loss without re-processing
+- **Cost efficiency**: idle collections don't consume Qdrant RAM/disk
+- **Transparent search**: cold collections are still searchable via S3 Vectors
+
+## Architecture
+
+```
+Ingest → S3 Vectors (canonical, always written first)
+       → Qdrant (serving layer, written second)
+
+Search → Active collections: Qdrant (~10ms)
+       → Cold collections: S3 Vectors (~100ms)
+       → Results merged transparently
+```
+
+Every vector is written to S3 Vectors **before** Qdrant during ingestion. This means S3 Vectors is always the source of truth.
+
+## Lifecycle States
+
+Collections have three lifecycle states:
+
+| State | Qdrant | S3 Vectors | Search Latency | Cost |
+|-------|--------|------------|----------------|------|
+| **Active** | Yes | Yes | ~10ms | Full |
+| **Cold** | No | Yes | ~100ms | ~90% less |
+| **Archived** | No | No | N/A | Metadata only |
+
+- **Active** (default): Vectors in both Qdrant and S3 — fastest search
+- **Cold**: Vectors evicted from Qdrant, served from S3 — slower but significantly cheaper
+- **Archived**: Vectors deleted from both stores — only MongoDB metadata remains
+
+## Transitioning Collections
+
+### API
+
+<CodeGroup>
+```python Python
+from mixpeek import Mixpeek
+
+client = Mixpeek(api_key="your-api-key")
+
+# Move to cold storage (evict from Qdrant)
+client.collections.transition_lifecycle(
+    collection_id="col_abc123",
+    lifecycle_state="cold",
+    async_transition=False,  # Block until done
+)
+
+# Rehydrate back to Qdrant
+client.collections.transition_lifecycle(
+    collection_id="col_abc123",
+    lifecycle_state="active",
+)
+
+# Archive (permanent — cannot be undone)
+client.collections.transition_lifecycle(
+    collection_id="col_abc123",
+    lifecycle_state="archived",
+)
+```
+
+```javascript JavaScript
+import { Mixpeek } from 'mixpeek-sdk';
+
+const client = new Mixpeek({ apiKey: 'your-api-key' });
+
+// Move to cold storage
+await client.collections.transitionLifecycle('col_abc123', {
+  lifecycle_state: 'cold',
+  async_transition: false,
+});
+
+// Rehydrate
+await client.collections.transitionLifecycle('col_abc123', {
+  lifecycle_state: 'active',
+});
+```
+
+```bash cURL
+# Move to cold
+curl -X PATCH https://api.mixpeek.com/v1/collections/col_abc123/lifecycle \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: $NAMESPACE_ID" \
+  -H "Content-Type: application/json" \
+  -d '{"lifecycle_state": "cold", "async_transition": false}'
+
+# Check status
+curl https://api.mixpeek.com/v1/collections/col_abc123/lifecycle \
+  -H "Authorization: Bearer $API_KEY" \
+  -H "X-Namespace: $NAMESPACE_ID"
+```
+</CodeGroup>
+
+### Valid Transitions
+
+| From | To | Description |
+|------|----|-------------|
+| Active | Cold | Evict from Qdrant |
+| Active | Archived | Delete all vectors |
+| Cold | Active | Rehydrate to Qdrant |
+| Cold | Archived | Delete S3 Vectors |
+| Archived | — | Terminal state |
+
+<Warning>
+  **Archived is permanent.** Once archived, vectors cannot be recovered. You would need to re-ingest documents to restore the collection.
+</Warning>
+
+### Async vs Sync
+
+By default, transitions run asynchronously via Celery and return a `task_id` for tracking. Set `async_transition: false` to block until completion — useful for scripts and testing.
+
+## Tiering Rules
+
+You can configure automatic tiering rules on each collection. In V1, rules are stored but **not enforced** — manual transitions only. Enforcement via Celery Beat is planned.
+
+```python
+# Configure auto-eviction after 30 days of inactivity
+client.collections.update("col_abc123", {
+    "tiering_rules": [
+        {"rule_type": "auto_evict", "enabled": True, "threshold_days": 30},
+        {"rule_type": "auto_archive", "enabled": False, "threshold_days": 90},
+        {"rule_type": "auto_rehydrate", "enabled": True, "threshold_days": None},
+    ]
+})
+```
+
+| Rule | Description |
+|------|-------------|
+| `auto_evict` | Move to cold after N days of query inactivity |
+| `auto_archive` | Archive after N days in cold storage |
+| `auto_rehydrate` | Rehydrate when a retriever targets the collection |
+
+## Federated Search
+
+When a retriever targets multiple collections and some are cold, Mixpeek automatically:
+
+1. Queries **Qdrant** for active collections
+2. Queries **S3 Vectors** for cold collections
+3. Merges results by score and returns top-k
+
+This is completely transparent — your retriever configuration doesn't change.
+
+<Note>
+  Cold search uses brute-force similarity (cosine/dot/euclidean) over the S3 Vectors index. Expect ~100ms latency vs ~10ms for Qdrant. For latency-sensitive workloads, keep collections active.
+</Note>
+
+## Search Behavior by Tier
+
+Not all search capabilities are available in every tier. The table below shows what works where:
+
+| Capability | Active (Qdrant) | Cold (S3 Vectors) | Notes |
+|---|---|---|---|
+| Semantic search | ~10ms | ~100ms | Brute-force in cold |
+| Keyword/BM25 | Yes | No | Rehydrate first |
+| Attribute filters | Full | Exact-match only | Complex filters ignored in cold |
+| Group-by | Yes | No | Rehydrate first |
+| Sparse vectors | Yes | No | Rehydrate first |
+| Score ordering | Yes | Yes | Scores identical across tiers |
+| Result fusion (RRF) | Yes | Yes | Merged transparently |
+
+<Note>
+  When a retriever targets a mix of active and cold collections, results are fused using reciprocal rank fusion (RRF). Score ordering is preserved — the same document returns the same score regardless of tier.
+</Note>
+
+## Source Tier Attribution
+
+Every search result includes a `_source_tier` field indicating which storage tier served it. The stage statistics also include a `source_tiers` breakdown showing how many results came from each tier.
+
+<CodeGroup>
+```python Python
+result = client.retrievers.execute(
+    retriever_id="ret_abc123",
+    inputs={"query": "quarterly revenue"},
+)
+
+# Check which tier served each result
+for doc in result.results:
+    print(f"{doc.document_id}: served from {doc._source_tier}")
+    # e.g. "doc_123: served from active"
+    # e.g. "doc_456: served from cold"
+
+# Check tier breakdown in stage metadata
+for stage in result.stage_statistics.stages:
+    tiers = stage.metadata.get("source_tiers", {})
+    print(f"Stage '{stage.name}': {tiers}")
+    # e.g. "Stage 'feature_search': {'active': 8, 'cold': 2}"
+```
+
+```javascript JavaScript
+const result = await client.retrievers.execute('ret_abc123', {
+  inputs: { query: 'quarterly revenue' },
+});
+
+// Check which tier served each result
+for (const doc of result.results) {
+  console.log(`${doc.document_id}: served from ${doc._source_tier}`);
+}
+
+// Check tier breakdown in stage metadata
+for (const stage of result.stage_statistics.stages) {
+  const tiers = stage.metadata?.source_tiers || {};
+  console.log(`Stage '${stage.name}':`, tiers);
+}
+```
+</CodeGroup>
+
+## Warnings and Error Handling
+
+Storage tiering surfaces clear errors and warnings when search behavior is affected.
+
+### Archived collections
+
+If a retriever targets a collection that has been archived, the API returns a **400 error** with the list of archived collection IDs:
+
+```json
+{
+  "error": {
+    "message": "Cannot search archived collections",
+    "type": "BadRequestError",
+    "details": {
+      "archived_collection_ids": ["col_abc123", "col_def456"]
+    }
+  }
+}
+```
+
+### Partially archived retrievers
+
+When a retriever targets a mix of active/cold and archived collections, the archived collections are **skipped** and a warning is included in the stage metadata:
+
+```json
+{
+  "stage_statistics": {
+    "stages": [
+      {
+        "name": "feature_search",
+        "metadata": {
+          "warnings": [
+            "Skipped archived collections: col_abc123"
+          ],
+          "source_tiers": { "active": 8, "cold": 2 }
+        }
+      }
+    ]
+  }
+}
+```
+
+### Cold search failures
+
+If an S3 Vectors query fails for a cold collection, results are returned from the remaining collections with a warning (rather than failing the entire request):
+
+```json
+{
+  "metadata": {
+    "warnings": ["Cold search failed for collection col_xyz: timeout"]
+  }
+}
+```
+
+### Empty rehydrate
+
+When rehydrating a collection that has no vectors in S3 Vectors (e.g., it was archived and re-created), the response includes a warning:
+
+```json
+{
+  "lifecycle_state": "active",
+  "warning": "No vectors found in S3 Vectors to rehydrate"
+}
+```
+
+## Limitations
+
+- **Reduced capabilities in cold tier**: Keyword/BM25 search, group-by, and sparse vectors are not available for cold collections — see the [capability matrix](#search-behavior-by-tier) above. Rehydrate to active to restore full functionality.
+- **Cold search latency**: ~100ms vs ~10ms for active collections (brute-force similarity over S3 Vectors)
+- **No automatic TTL in V1**: Lifecycle transitions are manual only — tiering rules are stored but not enforced yet
+
+## Studio
+
+Navigate to **Collections > [collection] > Storage** tab to:
+
+- View current lifecycle state and vector counts
+- Transition between tiers with confirmation dialogs
+- Configure tiering rules (stored for future enforcement)
+- See storage breakdown (Qdrant vs S3 Vectors)
+
+## Best Practices
+
+<Tip>
+  **Cold-tier idle collections** to reduce Qdrant costs. S3 Vectors storage is ~90% cheaper than dedicated vector database instances.
+</Tip>
+
+- Set `auto_evict` to 30 days for collections that see periodic traffic
+- Keep latency-sensitive production collections active
+- Use `async_transition: true` for large collections (millions of vectors)
+- Monitor the Storage tab in Studio to identify candidates for cold-tiering

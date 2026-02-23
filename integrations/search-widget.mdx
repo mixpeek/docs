@@ -1,0 +1,348 @@
+---
+title: "Search Widget"
+description: "Drop-in React component for AI-powered multimodal search — add search to any site in minutes"
+---
+
+`@mixpeek/search-js` is a drop-in React component that connects to any published Mixpeek retriever. It provides a full search UI with keyboard shortcuts, filters, AI answers, and streaming results — no backend code required on your side.
+
+<CodeGroup>
+```bash npm
+npm install @mixpeek/search-js
+```
+
+```bash yarn
+yarn add @mixpeek/search-js
+```
+
+```bash pnpm
+pnpm add @mixpeek/search-js
+```
+</CodeGroup>
+
+## Quick Start
+
+<Steps>
+  <Step title="Set up your search backend">
+    Use the [docs search quickstart](#quickstart-docs-search) to provision a complete pipeline in one API call, or [create a retriever manually](/retrieval/retrievers) and [publish it](#publishing-a-retriever).
+  </Step>
+  <Step title="Install the widget">
+    ```bash
+    npm install @mixpeek/search-js
+    ```
+  </Step>
+  <Step title="Add to your app">
+    ```tsx
+    import { MixpeekSearch } from "@mixpeek/search-js";
+    import "@mixpeek/search-js/styles.css";
+
+    export default function App() {
+      return (
+        <MixpeekSearch
+          projectKey="your-retriever-slug"
+          placeholder="Search..."
+          theme="auto"
+          accentColor="#6366f1"
+        />
+      );
+    }
+    ```
+  </Step>
+</Steps>
+
+Users press `Cmd+K` (or `Ctrl+K`) to open the search modal. Results stream in from your retriever pipeline.
+
+## Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `projectKey` | `string` | **required** | Published retriever slug or `ret_sk_*` API key |
+| `placeholder` | `string` | `"Search..."` | Input placeholder text |
+| `maxResults` | `number` | `10` | Maximum results to show |
+| `theme` | `"light" \| "dark" \| "auto"` | `"auto"` | Color theme |
+| `accentColor` | `string` | `"#6366f1"` | Accent color (hex) |
+| `position` | `"modal" \| "inline"` | `"modal"` | Modal overlay or inline embed |
+| `keyboardShortcut` | `boolean` | `true` | Enable Cmd+K / Ctrl+K |
+| `showPoweredBy` | `boolean` | `true` | Show "Search by Mixpeek" badge |
+| `enableAIAnswer` | `boolean` | `false` | Show AI-generated answer with citations |
+| `enableShareLinks` | `boolean` | `false` | Enable shareable search URLs |
+| `defaultOpen` | `boolean` | `false` | Start with modal open |
+| `defaultFilters` | `Record<string, unknown>` | - | Default filter values on mount |
+
+### Callbacks
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `onSearch` | `(query: string) => void` | Fires when a search is performed |
+| `onResultClick` | `(result, index) => void` | Fires when a result is clicked |
+| `onZeroResults` | `(query: string) => void` | Fires when no results are found |
+| `onFilterChange` | `(filterInputs) => void` | Fires when filters change |
+| `transformResults` | `(results[]) => results[]` | Transform results before rendering |
+| `renderResult` | `(result, index) => ReactNode` | Custom result renderer |
+
+## CDN Usage (No Build Step)
+
+For sites without a build system, load the widget via CDN:
+
+```html
+<link rel="stylesheet" href="https://cdn.mixpeek.com/search/v1/mixpeek-search.css" />
+<script
+  src="https://cdn.mixpeek.com/search/v1/loader.js"
+  data-project-key="your-retriever-slug"
+  data-mount="search-container">
+</script>
+
+<div id="search-container"></div>
+```
+
+## Filters
+
+The widget includes built-in filter components for facets, ranges, and LLM-powered smart filtering.
+
+### Facet Filter
+
+Single or multi-select dropdown:
+
+```tsx
+<MixpeekSearch projectKey="my-search">
+  <FacetFilter
+    field="category"
+    label="Category"
+    options={[
+      { label: "Electronics", value: "electronics" },
+      { label: "Clothing", value: "clothing" },
+    ]}
+    multiple={true}
+  />
+</MixpeekSearch>
+```
+
+### Range Filter
+
+Numeric min/max slider:
+
+```tsx
+<RangeFilter
+  field="price"
+  label="Price"
+  min={0}
+  max={1000}
+  step={10}
+  unit="$"
+/>
+```
+
+### Smart Filter (LLM-based)
+
+Natural language filtering powered by the retriever's LLM filter stage:
+
+```tsx
+<SmartFilter
+  label="Describe what you want"
+  placeholder="e.g. red shoes under $50"
+/>
+```
+
+## AI Answers
+
+Enable `enableAIAnswer` to show an LLM-generated answer with citations above search results. This requires an `agent_search` or `rag_prepare` stage in your retriever.
+
+```tsx
+<MixpeekSearch
+  projectKey="docs-search"
+  enableAIAnswer={true}
+/>
+```
+
+## Hooks
+
+Access search state from any child component:
+
+```tsx
+import { useSearchKit } from "@mixpeek/search-js";
+
+function MyComponent() {
+  const {
+    query,
+    results,
+    isLoading,
+    aiAnswer,
+    isOpen,
+    open,
+    close,
+    search,
+    filterInputs,
+    setFilter,
+    clearFilters,
+    hasActiveFilters,
+  } = useSearchKit();
+
+  return <div>{results.length} results for "{query}"</div>;
+}
+```
+
+**Available hooks:** `useSearchKit`, `useSearch`, `useFilters`, `useKeyboardShortcut`, `useRecentSearches`.
+
+## Setting Up the Backend
+
+The widget needs a published retriever to connect to. There are two paths:
+
+### Quickstart: Docs Search
+
+Provision a complete search pipeline in one API call. This creates a namespace, bucket, collection (with web scraper + text embeddings), retriever, and published endpoint automatically:
+
+```bash
+curl -X POST https://api.mixpeek.com/v1/quickstart/docs-search \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "site_url": "https://docs.example.com",
+    "site_name": "Example Docs"
+  }'
+```
+
+The response includes a retriever slug and embed snippet ready to paste:
+
+```json
+{
+  "retriever_slug": "example-docs-search",
+  "api_key": "ret_sk_...",
+  "embed_snippet": "<MixpeekSearch projectKey=\"example-docs-search\" />"
+}
+```
+
+**Options:** `enable_code_search` (default: true), `enable_image_search` (default: false), `max_pages` (default: 200), `max_depth` (default: 3).
+
+### Bootstrap CLI
+
+The `@mixpeek/react-searchkit` package includes a CLI to scaffold a retriever with search, filter, and RAG stages:
+
+```bash
+npx mixpeek-bootstrap --api-key YOUR_API_KEY --slug my-site-search
+```
+
+This creates a retriever with `feature_search`, `attribute_filter`, and `rag_prepare` stages pre-configured.
+
+### Manual Setup
+
+For full control, create each resource yourself:
+
+<Steps>
+  <Step title="Create a namespace and bucket">
+    Set up storage and enable the feature extractors you need ([guide](/ingestion/namespaces)).
+  </Step>
+  <Step title="Create a collection">
+    Configure a collection with a feature extractor (e.g., `text_extractor`, `web_scraper`, `multimodal_extractor`) and trigger processing on your data ([guide](/ingestion/collections)).
+  </Step>
+  <Step title="Create and publish a retriever">
+    Build a retriever with the stages you need, then publish it to get a slug for the widget ([guide](/retrieval/retrievers)).
+  </Step>
+</Steps>
+
+### Publishing a Retriever
+
+Once you have a retriever, publish it to make it accessible to the widget:
+
+<CodeGroup>
+```python Python
+from mixpeek import Mixpeek
+
+client = Mixpeek(api_key="your-api-key")
+
+result = client.retrievers.publish(
+    retriever_id="ret_abc123",
+    public_name="my-search",
+)
+
+print(result.public_url)  # https://mxp.co/r/my-search
+```
+
+```bash cURL
+curl -X POST https://api.mixpeek.com/v1/retrievers/ret_abc123/publish \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"public_name": "my-search"}'
+```
+</CodeGroup>
+
+The `public_name` becomes the `projectKey` you pass to the widget.
+
+## Authentication
+
+The widget supports two authentication modes:
+
+| Mode | `projectKey` value | When to use |
+|------|-------------------|-------------|
+| **Public slug** | `"my-retriever-slug"` | Public-facing search (no auth needed) |
+| **Scoped API key** | `"ret_sk_..."` | Authenticated access with a `retrieverSlug` prop |
+
+```tsx
+// Public slug (most common)
+<MixpeekSearch projectKey="my-retriever-slug" />
+
+// Scoped API key
+<MixpeekSearch projectKey="ret_sk_..." retrieverSlug="my-retriever-slug" />
+```
+
+## Examples
+
+The search widget is used on [mixpeek.com](https://mixpeek.com) as the site-wide search in the navigation bar, powered by `@mixpeek/search-js` with the `mixpeek-blog-search` retriever slug.
+
+```tsx
+<MixpeekSearch
+  projectKey="mixpeek-blog-search"
+  placeholder="Search..."
+  theme={isScrolled ? "light" : "dark"}
+  accentColor="#6366f1"
+  maxResults={10}
+  showPoweredBy={true}
+  keyboardShortcut={true}
+  transformResults={(results) =>
+    results.map((r) => ({
+      id: r.document_id || r.id,
+      title: r.title || r.page_title || "Mixpeek",
+      content: r.content || r.text || "",
+      page_url: r.page_url || r.url || null,
+      image_url: r.image_url || null,
+      score: r.score,
+    }))
+  }
+/>
+```
+
+## Exported Components
+
+For building fully custom search experiences, the package exports composable sub-components:
+
+| Component | Description |
+|-----------|-------------|
+| `SearchButton` | Standalone search trigger button |
+| `SearchModal` | Search modal container |
+| `SearchInput` | Input field |
+| `SearchResults` | Results list |
+| `ResultCard` | Individual result card |
+| `AIAnswer` | AI-generated answer panel |
+| `FilterPanel` | Filter container |
+| `FacetFilter` | Select/multi-select filter |
+| `RangeFilter` | Min/max range slider |
+| `SmartFilter` | LLM-powered natural language filter |
+| `PoweredBy` | "Search by Mixpeek" badge |
+| `ShareLink` | Shareable search URL generator |
+| `ZeroResults` | Empty state placeholder |
+| `IntentCTA` | Enterprise CTA capture |
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Retrievers" icon="filter" href="/retrieval/retrievers">
+    Build the retriever pipeline behind your widget
+  </Card>
+  <Card title="Retriever Stages" icon="layer-group" href="/retrieval/stages/overview">
+    Configure search, reranking, and enrichment stages
+  </Card>
+  <Card title="Interactions" icon="chart-line" href="/relevance/interactions">
+    Use interaction data to improve search relevance
+  </Card>
+  <Card title="JavaScript SDK" icon="js" href="/integrations/developer-tools/javascript-sdk">
+    Full SDK for programmatic access
+  </Card>
+</CardGroup>

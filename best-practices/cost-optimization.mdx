@@ -524,10 +524,22 @@ if cost_per_conversion > target_cpa:
   </Step>
 </Steps>
 
+## Storage Tiering
+
+Cold-tier idle collections to reduce Qdrant costs. S3 Vectors storage is ~90% cheaper than dedicated vector database instances.
+
+- **Move inactive collections to cold storage**: Collections that haven't been queried in 30+ days can be evicted from Qdrant while remaining searchable via S3 Vectors (~100ms latency vs ~10ms).
+- **Configure auto-evict rules**: Set `auto_evict` with a 30-day threshold on collections that see periodic traffic.
+- **Archive stale collections**: Collections no longer needed can be archived to retain only metadata (no search, no storage cost).
+- **Keep latency-sensitive collections active**: Production collections with strict SLA requirements should remain in Qdrant.
+
+See [Storage Tiering](/operations/storage-tiering) for full documentation on lifecycle management.
+
 ## Next Steps
 
 - Monitor with [Analytics Overview](/operations/analytics-overview)
 - Understand limits via [Rate Limits & Quotas](/operations/rate-limits-quotas)
 - Optimize caching with [Caching Strategies](/best-practices/caching-strategies)
 - Review [Feature Extractors](/processing/feature-extractors) model options
+- Reduce Qdrant costs with [Storage Tiering](/operations/storage-tiering)
 

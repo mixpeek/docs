@@ -125,6 +125,12 @@ Each document includes:
 
 Use `/v1/collections/{collection_id}/documents/list` for structured filters, pagination, and presigned URLs, or `/v1/retrievers` for pipeline-based retrieval.
 
+## Storage Lifecycle
+
+Collections start in the **active** lifecycle state with vectors in both Qdrant (fast search) and S3 Vectors (durable canonical store). You can transition collections to **cold** (S3 only) or **archived** (metadata only) to manage costs.
+
+See [Storage Tiering](/operations/storage-tiering) for full details on lifecycle management.
+
 ## Best Practices
 
 1. **Keep collections focused**—one extractor per collection (v2) encourages composable pipelines.
@@ -132,3 +138,4 @@ Use `/v1/collections/{collection_id}/documents/list` for structured filters, pag
 3. **Leverage `source.type=collection`** for multi-tier workflows (e.g., video → frames → scenes).
 4. **Attach taxonomies** either as materialized enrichments or retriever stages, depending on latency and cost requirements.
 5. **Monitor document counts** with `GET /v1/collections/{id}` to plan Qdrant shard sizing.
+6. **Cold-tier idle collections** to reduce Qdrant costs — see [Storage Tiering](/operations/storage-tiering).

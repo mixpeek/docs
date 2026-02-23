@@ -48,6 +48,17 @@ iconType: "solid"
   </Step>
 </Steps>
 
+### Storage Tab
+
+The **Storage** tab on each collection page lets you manage the storage lifecycle:
+
+- **View lifecycle state**: Active, Cold, or Archived with vector counts
+- **Transition tiers**: Move to Cold (evict from Qdrant), Rehydrate (restore to Qdrant), or Archive (permanent deletion)
+- **Configure tiering rules**: Set auto-evict and auto-archive thresholds (stored for future enforcement)
+- **Storage breakdown**: See vector counts in Qdrant vs S3 Vectors
+
+See [Storage Tiering](/operations/storage-tiering) for full documentation.
+
 <Callout type="info">
 Documents are stored as Qdrant points with payload and vectors; the point ID is the document_id in results.
 </Callout>
