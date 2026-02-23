@@ -12,31 +12,29 @@
       <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
     </linearGradient>
-    <filter id="shadowTS" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
-    </filter>
+    
     <marker id="arrowTS" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
       <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
     </marker>
   </defs>
 
   <!-- Background -->
-  <rect width="1200" height="480" fill="#f8fafc"/>
+  <rect width="1200" height="480" fill="none"/>
 
   <!-- Title -->
-  <text x="600" y="40" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="600" fill="#0f172a" text-anchor="middle">Thompson Sampling: Learning Optimal Fusion Weights</text>
-  <text x="600" y="65" font-family="system-ui, sans-serif" font-size="13" fill="#64748b" text-anchor="middle">Beta distributions evolve from uniform (no data) to peaked (confident) as interactions accumulate</text>
+  <text x="600" y="40" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="600" fill="#f1f5f9" text-anchor="middle">Thompson Sampling: Learning Optimal Fusion Weights</text>
+  <text x="600" y="65" font-family="system-ui, sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">Beta distributions evolve from uniform (no data) to peaked (confident) as interactions accumulate</text>
 
   <!-- Phase 1: Uniform Prior -->
-  <g filter="url(#shadowTS)">
-    <rect x="40" y="100" width="340" height="280" rx="12" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="40" y="100" width="340" height="280" rx="12" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="40" y="100" width="340" height="32" rx="12" fill="url(#priorGrad)"/>
     <rect x="40" y="120" width="340" height="12" fill="url(#priorGrad)"/>
     <text x="210" y="123" font-family="system-ui, sans-serif" font-size="13" font-weight="600" fill="white" text-anchor="middle">Cold Start (0 interactions)</text>
   </g>
 
   <!-- Flat Beta curve representation -->
-  <text x="210" y="160" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#0f172a" text-anchor="middle">Beta(1, 1) = Uniform</text>
+  <text x="210" y="160" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#f1f5f9" text-anchor="middle">Beta(1, 1) = Uniform</text>
   <!-- Flat line representing uniform distribution -->
   <line x1="80" y1="220" x2="340" y2="220" stroke="#6366f1" stroke-width="3"/>
   <line x1="80" y1="260" x2="80" y2="180" stroke="#cbd5e1" stroke-width="1"/>
@@ -57,14 +55,14 @@
   <text x="405" y="255" font-family="system-ui, sans-serif" font-size="10" fill="#94a3b8" text-anchor="middle">signals</text>
 
   <!-- Phase 2: Learning -->
-  <g filter="url(#shadowTS)">
-    <rect x="440" y="100" width="320" height="280" rx="12" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="440" y="100" width="320" height="280" rx="12" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="440" y="100" width="320" height="32" rx="12" fill="url(#learningGrad)"/>
     <rect x="440" y="120" width="320" height="12" fill="url(#learningGrad)"/>
     <text x="600" y="123" font-family="system-ui, sans-serif" font-size="13" font-weight="600" fill="white" text-anchor="middle">Learning (~100 interactions)</text>
   </g>
 
-  <text x="600" y="160" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#0f172a" text-anchor="middle">Beta(15, 8) vs Beta(8, 12)</text>
+  <text x="600" y="160" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#f1f5f9" text-anchor="middle">Beta(15, 8) vs Beta(8, 12)</text>
   <!-- Bumpy curve for text (higher) -->
   <path d="M 480 250 Q 520 250 540 240 Q 560 220 580 195 Q 600 180 620 195 Q 640 220 660 240 Q 680 250 720 250" stroke="#f97316" stroke-width="3" fill="none"/>
   <!-- Lower curve for image -->
@@ -90,14 +88,14 @@
   <text x="785" y="255" font-family="system-ui, sans-serif" font-size="10" fill="#94a3b8" text-anchor="middle">signals</text>
 
   <!-- Phase 3: Converged -->
-  <g filter="url(#shadowTS)">
-    <rect x="820" y="100" width="340" height="280" rx="12" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="820" y="100" width="340" height="280" rx="12" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="820" y="100" width="340" height="32" rx="12" fill="url(#convergedGrad)"/>
     <rect x="820" y="120" width="340" height="12" fill="url(#convergedGrad)"/>
     <text x="990" y="123" font-family="system-ui, sans-serif" font-size="13" font-weight="600" fill="white" text-anchor="middle">Converged (1000+ interactions)</text>
   </g>
 
-  <text x="990" y="160" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#0f172a" text-anchor="middle">Beta(150, 80) vs Beta(70, 120)</text>
+  <text x="990" y="160" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#f1f5f9" text-anchor="middle">Beta(150, 80) vs Beta(70, 120)</text>
   <!-- Sharp peak for text -->
   <path d="M 860 250 Q 920 250 950 248 Q 970 240 980 200 Q 990 170 1000 200 Q 1010 240 1030 248 Q 1060 250 1100 250" stroke="#10b981" stroke-width="3" fill="none"/>
   <!-- Sharp peak for image (lower position) -->
@@ -116,12 +114,12 @@
 
   <!-- Bottom summary -->
   <g transform="translate(100, 430)">
-    <text x="0" y="14" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#0f172a">How it works:</text>
+    <text x="0" y="14" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#f1f5f9">How it works:</text>
     <text x="110" y="14" font-family="system-ui, sans-serif" font-size="11" fill="#475569">Each search feature has a Beta(alpha, beta) distribution.</text>
     <text x="500" y="14" font-family="system-ui, sans-serif" font-size="11" fill="#475569">Click on text result? alpha_text += 1.</text>
     <text x="730" y="14" font-family="system-ui, sans-serif" font-size="11" fill="#475569">Skip image result? beta_image += 1.</text>
   </g>
   <g transform="translate(100, 452)">
-    <text x="0" y="14" font-family="system-ui, sans-serif" font-size="11" fill="#64748b">At query time, sample a weight from each distribution and normalize. More data = narrower distributions = more consistent weights.</text>
+    <text x="0" y="14" font-family="system-ui, sans-serif" font-size="11" fill="#94a3b8">At query time, sample a weight from each distribution and normalize. More data = narrower distributions = more consistent weights.</text>
   </g>
 </svg>

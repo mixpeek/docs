@@ -12,22 +12,20 @@
       <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
     </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
-    </filter>
+    
     <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
       <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
     </marker>
   </defs>
 
-  <rect width="1000" height="380" fill="#f8fafc"/>
+  <rect width="1000" height="380" fill="none"/>
 
-  <text x="500" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">Deduplicate Stage: Remove Duplicate Documents</text>
-  <text x="500" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">Remove exact or near-duplicate documents using field matching or semantic similarity</text>
+  <text x="500" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#f1f5f9" text-anchor="middle">Deduplicate Stage: Remove Duplicate Documents</text>
+  <text x="500" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#94a3b8" text-anchor="middle">Remove exact or near-duplicate documents using field matching or semantic similarity</text>
 
   <!-- Input Documents -->
-  <g filter="url(#shadow)">
-    <rect x="30" y="80" width="200" height="180" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="30" y="80" width="200" height="180" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="30" y="80" width="200" height="28" rx="10" fill="url(#inputGrad)"/>
     <rect x="30" y="98" width="200" height="10" fill="url(#inputGrad)"/>
     <text x="130" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Input Documents</text>
@@ -51,8 +49,8 @@
   <path d="M 230 170 L 270 170" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Deduplication Engine -->
-  <g filter="url(#shadow)">
-    <rect x="280" y="70" width="340" height="200" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="280" y="70" width="340" height="200" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="280" y="70" width="340" height="28" rx="10" fill="url(#dedupGrad)"/>
     <rect x="280" y="88" width="340" height="10" fill="url(#dedupGrad)"/>
     <text x="450" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Deduplication Strategies</text>
@@ -62,13 +60,13 @@
     <text x="77" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#7c3aed" text-anchor="middle">Field Match</text>
     <text x="77" y="36" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">dedup_field:</text>
     <text x="77" y="50" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">"metadata.product_id"</text>
-    <text x="77" y="64" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Exact match on field</text>
+    <text x="77" y="64" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">Exact match on field</text>
 
     <rect x="165" y="0" width="155" height="70" rx="4" fill="#ede9fe"/>
     <text x="242" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#7c3aed" text-anchor="middle">Semantic Similarity</text>
     <text x="242" y="36" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">similarity_threshold:</text>
     <text x="242" y="50" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">0.95</text>
-    <text x="242" y="64" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Near-duplicate detection</text>
+    <text x="242" y="64" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">Near-duplicate detection</text>
 
     <rect x="0" y="80" width="320" height="70" rx="4" fill="#f5f3ff"/>
     <text x="160" y="100" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#7c3aed" text-anchor="middle">Keep Strategy</text>
@@ -83,8 +81,8 @@
   <path d="M 620 170 L 660 170" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Output -->
-  <g filter="url(#shadow)">
-    <rect x="670" y="80" width="180" height="180" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="670" y="80" width="180" height="180" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="670" y="80" width="180" height="28" rx="10" fill="url(#outputGrad)"/>
     <rect x="670" y="98" width="180" height="10" fill="url(#outputGrad)"/>
     <text x="760" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Deduplicated</text>
@@ -100,7 +98,7 @@
     <text x="80" y="74" font-family="monospace" font-size="8" fill="#0d9488" text-anchor="middle">[3] "Noise cancelling..."</text>
 
     <text x="80" y="102" font-family="system-ui, sans-serif" font-size="8" fill="#16a34a" text-anchor="middle">Duplicates removed</text>
-    <text x="80" y="118" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Best version kept</text>
+    <text x="80" y="118" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">Best version kept</text>
   </g>
 
   <!-- Features -->
@@ -112,8 +110,8 @@
     <text x="50" y="79" font-family="system-ui, sans-serif" font-size="7" fill="#475569" text-anchor="middle">Better UX</text>
     <text x="50" y="96" font-family="system-ui, sans-serif" font-size="7" fill="#475569" text-anchor="middle">Cross-collection</text>
     <text x="50" y="120" font-family="system-ui, sans-serif" font-size="8" fill="#16a34a" text-anchor="middle">Fast</text>
-    <text x="50" y="137" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Hash-based</text>
-    <text x="50" y="151" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">comparison</text>
+    <text x="50" y="137" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">Hash-based</text>
+    <text x="50" y="151" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">comparison</text>
   </g>
 
   <!-- Use Cases -->

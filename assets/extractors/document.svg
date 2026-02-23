@@ -24,24 +24,22 @@
       <stop offset="0%" style="stop-color:#eab308;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#ca8a04;stop-opacity:1" />
     </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
-    </filter>
+    
     <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
       <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
     </marker>
   </defs>
 
   <!-- Background -->
-  <rect width="1100" height="480" fill="#f8fafc"/>
+  <rect width="1100" height="480" fill="none"/>
 
   <!-- Title -->
-  <text x="550" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">Document Graph Extractor: Spatial Block Extraction</text>
-  <text x="550" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">PDF parsing with layout detection, confidence scoring, and optional VLM correction</text>
+  <text x="550" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#f1f5f9" text-anchor="middle">Document Graph Extractor: Spatial Block Extraction</text>
+  <text x="550" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#94a3b8" text-anchor="middle">PDF parsing with layout detection, confidence scoring, and optional VLM correction</text>
 
   <!-- PDF Input -->
-  <g filter="url(#shadow)">
-    <rect x="30" y="80" width="160" height="140" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="30" y="80" width="160" height="140" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="30" y="80" width="160" height="28" rx="10" fill="url(#objectGrad)"/>
     <rect x="30" y="98" width="160" height="10" fill="url(#objectGrad)"/>
     <text x="110" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">PDF Input</text>
@@ -50,8 +48,8 @@
     <rect x="0" y="0" width="140" height="90" rx="4" fill="#fff7ed"/>
     <text x="70" y="16" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#c2410c" text-anchor="middle">Required</text>
     <text x="70" y="32" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">"pdf": URL/S3 path</text>
-    <text x="70" y="48" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Scanned or digital</text>
-    <text x="70" y="62" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Any page count</text>
+    <text x="70" y="48" font-family="system-ui, sans-serif" font-size="8" fill="#94a3b8" text-anchor="middle">Scanned or digital</text>
+    <text x="70" y="62" font-family="system-ui, sans-serif" font-size="8" fill="#94a3b8" text-anchor="middle">Any page count</text>
     <text x="70" y="80" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">Mixed quality supported</text>
   </g>
 
@@ -59,8 +57,8 @@
   <path d="M 190 150 L 220 150" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Layout Detection -->
-  <g filter="url(#shadow)">
-    <rect x="230" y="70" width="180" height="160" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="230" y="70" width="180" height="160" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="230" y="70" width="180" height="28" rx="10" fill="url(#layoutGrad)"/>
     <rect x="230" y="88" width="180" height="10" fill="url(#layoutGrad)"/>
     <text x="320" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Layout Detection</text>
@@ -81,8 +79,8 @@
   <path d="M 410 150 L 440 150" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Confidence Scoring -->
-  <g filter="url(#shadow)">
-    <rect x="450" y="70" width="180" height="160" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="450" y="70" width="180" height="160" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="450" y="70" width="180" height="28" rx="10" fill="url(#confidenceGrad)"/>
     <rect x="450" y="88" width="180" height="10" fill="url(#confidenceGrad)"/>
     <text x="540" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Confidence</text>
@@ -105,7 +103,7 @@
   <text x="600" y="270" font-family="system-ui, sans-serif" font-size="8" fill="#ec4899">Low confidence → VLM</text>
 
   <!-- VLM Correction (Optional) -->
-  <g filter="url(#shadow)">
+  <g>
     <rect x="690" y="250" width="180" height="120" rx="10" fill="white" stroke="#f9a8d4" stroke-width="2" stroke-dasharray="8,4"/>
     <rect x="690" y="250" width="180" height="28" rx="10" fill="url(#vlmGrad)"/>
     <rect x="690" y="268" width="180" height="10" fill="url(#vlmGrad)"/>
@@ -126,8 +124,8 @@
   <path d="M 780 250 L 780 200 L 900 200 L 900 150" stroke="#ec4899" stroke-width="2" stroke-dasharray="5,5" fill="none"/>
 
   <!-- Output -->
-  <g filter="url(#shadow)">
-    <rect x="910" y="60" width="170" height="180" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="910" y="60" width="170" height="180" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="910" y="60" width="170" height="28" rx="10" fill="url(#featureGrad)"/>
     <rect x="910" y="78" width="170" height="10" fill="url(#featureGrad)"/>
     <text x="995" y="80" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Output Blocks</text>
@@ -158,17 +156,17 @@
     <rect x="10" y="30" width="110" height="50" rx="4" fill="#dcfce7"/>
     <text x="65" y="44" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#166534" text-anchor="middle">Fast Mode</text>
     <text x="65" y="58" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">~15 pages/sec</text>
-    <text x="65" y="71" font-family="system-ui, sans-serif" font-size="6" fill="#64748b" text-anchor="middle">No VLM correction</text>
+    <text x="65" y="71" font-family="system-ui, sans-serif" font-size="6" fill="#94a3b8" text-anchor="middle">No VLM correction</text>
 
     <rect x="135" y="30" width="110" height="50" rx="4" fill="#fef9c3"/>
     <text x="190" y="44" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#854d0e" text-anchor="middle">Standard</text>
     <text x="190" y="58" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">~5 pages/sec</text>
-    <text x="190" y="71" font-family="system-ui, sans-serif" font-size="6" fill="#64748b" text-anchor="middle">Layout detection</text>
+    <text x="190" y="71" font-family="system-ui, sans-serif" font-size="6" fill="#94a3b8" text-anchor="middle">Layout detection</text>
 
     <rect x="260" y="30" width="110" height="50" rx="4" fill="#fce7f3"/>
     <text x="315" y="44" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#9f1239" text-anchor="middle">VLM Enabled</text>
     <text x="315" y="58" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">~1 page/sec</text>
-    <text x="315" y="71" font-family="system-ui, sans-serif" font-size="6" fill="#64748b" text-anchor="middle">Degraded docs</text>
+    <text x="315" y="71" font-family="system-ui, sans-serif" font-size="6" fill="#94a3b8" text-anchor="middle">Degraded docs</text>
   </g>
 
   <!-- Use cases -->
@@ -186,7 +184,7 @@
     <g transform="translate(330, 28)">
       <text x="0" y="12" font-family="system-ui, sans-serif" font-size="8" fill="#dc2626">✗ Simple text-only docs → use text_extractor</text>
       <text x="0" y="26" font-family="system-ui, sans-serif" font-size="8" fill="#dc2626">✗ Real-time requirements → VLM adds latency</text>
-      <text x="0" y="40" font-family="system-ui, sans-serif" font-size="8" fill="#64748b">Cost: $0.003-0.05/page (with/without VLM)</text>
+      <text x="0" y="40" font-family="system-ui, sans-serif" font-size="8" fill="#94a3b8">Cost: $0.003-0.05/page (with/without VLM)</text>
     </g>
   </g>
 

@@ -24,9 +24,7 @@
       <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
     </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
-    </filter>
+    
     <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
       <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
     </marker>
@@ -36,11 +34,11 @@
   </defs>
 
   <!-- Background -->
-  <rect width="1200" height="920" fill="#f8fafc"/>
+  <rect width="1200" height="920" fill="none"/>
   
   <!-- Title -->
-  <text x="600" y="40" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="600" fill="#0f172a" text-anchor="middle">Video Understanding Pipeline</text>
-  <text x="600" y="65" font-family="system-ui, sans-serif" font-size="13" fill="#64748b" text-anchor="middle">Scene detection, transcription, and hybrid visual + audio search</text>
+  <text x="600" y="40" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="600" fill="#f1f5f9" text-anchor="middle">Video Understanding Pipeline</text>
+  <text x="600" y="65" font-family="system-ui, sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">Scene detection, transcription, and hybrid visual + audio search</text>
 
   <!-- Stage Labels -->
   <text x="130" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#94a3b8">1. INGEST</text>
@@ -49,8 +47,8 @@
   <text x="1020" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#94a3b8">4. INDEX</text>
 
   <!-- Stage 1: Source Video -->
-  <g filter="url(#shadow)">
-    <rect x="50" y="115" width="180" height="200" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="50" y="115" width="180" height="200" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="50" y="115" width="180" height="28" rx="10" fill="url(#videoGrad)"/>
     <rect x="50" y="133" width="180" height="10" fill="url(#videoGrad)"/>
     <text x="140" y="135" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">🎬 Source Video</text>
@@ -68,7 +66,7 @@
     <circle cx="55" cy="72" r="5" fill="#f97316"/>
     
     <text x="70" y="100" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">product-launch.mp4</text>
-    <text x="70" y="112" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Duration: 5:32</text>
+    <text x="70" y="112" font-family="system-ui, sans-serif" font-size="8" fill="#94a3b8" text-anchor="middle">Duration: 5:32</text>
     
     <!-- Metadata -->
     <rect x="0" y="122" width="140" height="30" rx="4" fill="#fff7ed"/>
@@ -80,8 +78,8 @@
   <path d="M 230 215 L 270 215" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Stage 2: Chunking -->
-  <g filter="url(#shadow)">
-    <rect x="280" y="115" width="200" height="200" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="280" y="115" width="200" height="200" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="280" y="115" width="200" height="28" rx="10" fill="url(#chunkGrad)"/>
     <rect x="280" y="133" width="200" height="10" fill="url(#chunkGrad)"/>
     <text x="380" y="135" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">✂️ Video Chunking</text>
@@ -110,15 +108,15 @@
   <path d="M 480 215 L 520 215" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Stage 3: Parallel Extraction -->
-  <g filter="url(#shadow)">
-    <rect x="530" y="115" width="420" height="200" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="530" y="115" width="420" height="200" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="530" y="115" width="420" height="28" rx="10" fill="#1e293b"/>
     <rect x="530" y="133" width="420" height="10" fill="#1e293b"/>
     <text x="740" y="135" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">⚡ Parallel Extraction (Ray)</text>
   </g>
   
   <!-- Parallel branches indicator -->
-  <rect x="545" y="150" width="390" height="155" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,2"/>
+  <rect x="545" y="150" width="390" height="155" rx="6" fill="none" stroke="#334155" stroke-width="1" stroke-dasharray="4,2"/>
   
   <g transform="translate(555, 160)">
     <!-- Branch 1: Audio/Transcription -->
@@ -128,12 +126,12 @@
     <rect x="10" y="30" width="160" height="45" rx="5" fill="white" fill-opacity="0.95"/>
     <text x="90" y="46" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#7c3aed" text-anchor="middle">Whisper large-v3</text>
     <text x="90" y="60" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">Speech → Text + timestamps</text>
-    <text x="90" y="70" font-family="monospace" font-size="6" fill="#64748b" text-anchor="middle">GPU: 0.5 • 10-50× speedup</text>
+    <text x="90" y="70" font-family="monospace" font-size="6" fill="#94a3b8" text-anchor="middle">GPU: 0.5 • 10-50× speedup</text>
     
     <rect x="10" y="80" width="160" height="45" rx="5" fill="white" fill-opacity="0.95"/>
     <text x="90" y="96" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#7c3aed" text-anchor="middle">E5-Large Multilingual</text>
     <text x="90" y="110" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">Text → 1024d embedding</text>
-    <text x="90" y="120" font-family="monospace" font-size="6" fill="#64748b" text-anchor="middle">transcription_embedding</text>
+    <text x="90" y="120" font-family="monospace" font-size="6" fill="#94a3b8" text-anchor="middle">transcription_embedding</text>
     
     <!-- Branch 2: Visual -->
     <rect x="190" y="0" width="180" height="135" rx="8" fill="url(#visualGrad)"/>
@@ -142,20 +140,20 @@
     <rect x="200" y="30" width="160" height="45" rx="5" fill="white" fill-opacity="0.95"/>
     <text x="280" y="46" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#059669" text-anchor="middle">Vertex Multimodal</text>
     <text x="280" y="60" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">Keyframes → 1408d embedding</text>
-    <text x="280" y="70" font-family="monospace" font-size="6" fill="#64748b" text-anchor="middle">multimodal_embedding</text>
+    <text x="280" y="70" font-family="monospace" font-size="6" fill="#94a3b8" text-anchor="middle">multimodal_embedding</text>
     
     <rect x="200" y="80" width="160" height="45" rx="5" fill="white" fill-opacity="0.95"/>
     <text x="280" y="96" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#059669" text-anchor="middle">Gemini 2.5 Flash</text>
     <text x="280" y="110" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">Description + OCR</text>
-    <text x="280" y="120" font-family="monospace" font-size="6" fill="#64748b" text-anchor="middle">Combined API call</text>
+    <text x="280" y="120" font-family="monospace" font-size="6" fill="#94a3b8" text-anchor="middle">Combined API call</text>
   </g>
 
   <!-- Arrow 3→4 -->
   <path d="M 950 215 L 990 215" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Stage 4: Multi-Vector Index -->
-  <g filter="url(#shadow)">
-    <rect x="1000" y="115" width="150" height="200" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="1000" y="115" width="150" height="200" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="1000" y="115" width="150" height="28" rx="10" fill="url(#indexGrad)"/>
     <rect x="1000" y="133" width="150" height="10" fill="url(#indexGrad)"/>
     <text x="1075" y="135" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">🗂 Index</text>
@@ -166,22 +164,22 @@
     <rect x="0" y="0" width="120" height="70" rx="6" fill="#fce7f3" stroke="#f9a8d4" stroke-width="1"/>
     <text x="60" y="16" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#db2777" text-anchor="middle">📹 Scenes</text>
     <text x="60" y="32" font-family="monospace" font-size="6" fill="#475569" text-anchor="middle">video-scenes</text>
-    <text x="60" y="46" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">visual embeddings</text>
-    <text x="60" y="58" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">keyframes, OCR</text>
+    <text x="60" y="46" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">visual embeddings</text>
+    <text x="60" y="58" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">keyframes, OCR</text>
     
     <!-- Transcripts collection -->
     <rect x="0" y="78" width="120" height="70" rx="6" fill="#fce7f3" stroke="#f9a8d4" stroke-width="1"/>
     <text x="60" y="94" font-family="system-ui, sans-serif" font-size="9" font-weight="600" fill="#db2777" text-anchor="middle">🎤 Transcripts</text>
     <text x="60" y="110" font-family="monospace" font-size="6" fill="#475569" text-anchor="middle">video-transcripts</text>
-    <text x="60" y="124" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">text embeddings</text>
-    <text x="60" y="136" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">speaker diarization</text>
+    <text x="60" y="124" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">text embeddings</text>
+    <text x="60" y="136" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">speaker diarization</text>
   </g>
 
   <!-- Query Time Section -->
   <text x="600" y="355" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#475569" text-anchor="middle">Query-Time: Hybrid Visual + Audio Search</text>
   
-  <g filter="url(#shadow)">
-    <rect x="100" y="375" width="1000" height="220" rx="12" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="100" y="375" width="1000" height="220" rx="12" fill="white" stroke="#334155" stroke-width="2"/>
   </g>
 
   <!-- Query Input -->
@@ -191,16 +189,16 @@
     
     <!-- Text query -->
     <rect x="10" y="35" width="180" height="55" rx="5" fill="white" fill-opacity="0.95"/>
-    <text x="100" y="52" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#0f172a" text-anchor="middle">Text Query</text>
+    <text x="100" y="52" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#f1f5f9" text-anchor="middle">Text Query</text>
     <text x="100" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#475569" text-anchor="middle">"someone explaining</text>
     <text x="100" y="78" font-family="system-ui, sans-serif" font-size="7" fill="#475569" text-anchor="middle">product features"</text>
     
     <!-- Image query -->
     <rect x="10" y="95" width="180" height="55" rx="5" fill="white" fill-opacity="0.95"/>
-    <text x="100" y="112" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#0f172a" text-anchor="middle">Image Query (optional)</text>
+    <text x="100" y="112" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#f1f5f9" text-anchor="middle">Image Query (optional)</text>
     <rect x="20" y="118" width="40" height="25" rx="3" fill="#e2e8f0"/>
-    <text x="40" y="134" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">🖼</text>
-    <text x="110" y="132" font-family="monospace" font-size="6" fill="#64748b" text-anchor="middle">reference-scene.jpg</text>
+    <text x="40" y="134" font-family="system-ui, sans-serif" font-size="8" fill="#94a3b8" text-anchor="middle">🖼</text>
+    <text x="110" y="132" font-family="monospace" font-size="6" fill="#94a3b8" text-anchor="middle">reference-scene.jpg</text>
     
     <!-- Filter -->
     <rect x="10" y="155" width="180" height="18" rx="3" fill="rgba(255,255,255,0.5)"/>
@@ -253,29 +251,29 @@
     <text x="170" y="22" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#475569" text-anchor="middle">🎯 Matched Moments</text>
     
     <!-- Result 1 -->
-    <rect x="15" y="35" width="310" height="42" rx="5" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+    <rect x="15" y="35" width="310" height="42" rx="5" fill="white" stroke="#334155" stroke-width="1"/>
     <rect x="25" y="42" width="50" height="28" rx="3" fill="#1e293b"/>
     <text x="50" y="60" font-family="system-ui, sans-serif" font-size="10" fill="white" text-anchor="middle">▶</text>
-    <text x="145" y="52" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#0f172a">Scene 3: Product demo walkthrough</text>
-    <text x="145" y="66" font-family="monospace" font-size="7" fill="#64748b">⏱ 00:45 - 00:58 • score: 0.94 • visual+text</text>
+    <text x="145" y="52" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#f1f5f9">Scene 3: Product demo walkthrough</text>
+    <text x="145" y="66" font-family="monospace" font-size="7" fill="#94a3b8">⏱ 00:45 - 00:58 • score: 0.94 • visual+text</text>
     
     <!-- Result 2 -->
-    <rect x="15" y="82" width="310" height="42" rx="5" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+    <rect x="15" y="82" width="310" height="42" rx="5" fill="white" stroke="#334155" stroke-width="1"/>
     <rect x="25" y="89" width="50" height="28" rx="3" fill="#1e293b"/>
     <text x="50" y="107" font-family="system-ui, sans-serif" font-size="10" fill="white" text-anchor="middle">▶</text>
-    <text x="145" y="99" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#0f172a">Scene 7: Feature comparison chart</text>
-    <text x="145" y="113" font-family="monospace" font-size="7" fill="#64748b">⏱ 02:15 - 02:42 • score: 0.89 • visual</text>
+    <text x="145" y="99" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#f1f5f9">Scene 7: Feature comparison chart</text>
+    <text x="145" y="113" font-family="monospace" font-size="7" fill="#94a3b8">⏱ 02:15 - 02:42 • score: 0.89 • visual</text>
     
     <!-- Result 3 -->
-    <rect x="15" y="129" width="310" height="42" rx="5" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+    <rect x="15" y="129" width="310" height="42" rx="5" fill="white" stroke="#334155" stroke-width="1"/>
     <rect x="25" y="136" width="50" height="28" rx="3" fill="#1e293b"/>
     <text x="50" y="154" font-family="system-ui, sans-serif" font-size="10" fill="white" text-anchor="middle">▶</text>
-    <text x="145" y="146" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#0f172a">Scene 5: "...key features include..."</text>
-    <text x="145" y="160" font-family="monospace" font-size="7" fill="#64748b">⏱ 01:22 - 01:45 • score: 0.87 • transcript</text>
+    <text x="145" y="146" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#f1f5f9">Scene 5: "...key features include..."</text>
+    <text x="145" y="160" font-family="monospace" font-size="7" fill="#94a3b8">⏱ 01:22 - 01:45 • score: 0.87 • transcript</text>
   </g>
 
   <!-- Feature Extractors & Output -->
-  <g filter="url(#shadow)">
+  <g>
     <rect x="100" y="615" width="480" height="130" rx="10" fill="#1e293b"/>
     <text x="340" y="643" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="white" text-anchor="middle">Feature Extractors</text>
     <line x1="100" y1="655" x2="580" y2="655" stroke="#334155" stroke-width="1"/>
@@ -304,15 +302,15 @@
   </g>
 
   <!-- Output Example -->
-  <g filter="url(#shadow)">
-    <rect x="600" y="615" width="250" height="130" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="600" y="615" width="250" height="130" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="600" y="615" width="250" height="28" rx="10" fill="#6366f1"/>
     <rect x="600" y="633" width="250" height="10" fill="#6366f1"/>
     <text x="725" y="635" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">📄 Scene Document</text>
   </g>
   
   <g transform="translate(615, 655)">
-    <rect x="0" y="0" width="220" height="80" rx="4" fill="#f8fafc"/>
+    <rect x="0" y="0" width="220" height="80" rx="4" fill="none"/>
     <text x="10" y="14" font-family="monospace" font-size="7" fill="#7dd3fc">"document_id":</text>
     <text x="85" y="14" font-family="monospace" font-size="7" fill="#fcd34d">"doc_scene_003"</text>
     <text x="10" y="28" font-family="monospace" font-size="7" fill="#7dd3fc">"scene_index":</text>
@@ -326,8 +324,8 @@
   </g>
 
   <!-- Parameters Panel -->
-  <g filter="url(#shadow)">
-    <rect x="870" y="615" width="230" height="130" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="870" y="615" width="230" height="130" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="870" y="615" width="230" height="28" rx="10" fill="#14b8a6"/>
     <rect x="870" y="633" width="230" height="10" fill="#14b8a6"/>
     <text x="985" y="635" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">⚙️ Key Parameters</text>
@@ -349,9 +347,9 @@
 
   <!-- Workflow Summary -->
   <g transform="translate(100, 765)">
-    <rect x="0" y="0" width="1000" height="50" rx="8" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+    <rect x="0" y="0" width="1000" height="50" rx="8" fill="#f1f5f9" stroke="#334155" stroke-width="1"/>
     <text x="500" y="20" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#475569" text-anchor="middle">Search by What's Shown OR What's Said</text>
-    <text x="500" y="38" font-family="system-ui, sans-serif" font-size="9" fill="#64748b" text-anchor="middle">Video → Chunks → Parallel (Whisper + Vertex + Gemini) → Multi-Vector Index → Hybrid RRF Search → Moment-Level Results</text>
+    <text x="500" y="38" font-family="system-ui, sans-serif" font-size="9" fill="#94a3b8" text-anchor="middle">Video → Chunks → Parallel (Whisper + Vertex + Gemini) → Multi-Vector Index → Hybrid RRF Search → Moment-Level Results</text>
   </g>
 
 </svg>

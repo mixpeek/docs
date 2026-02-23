@@ -24,24 +24,22 @@
       <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
     </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
-    </filter>
+    
     <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
       <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
     </marker>
   </defs>
 
   <!-- Background -->
-  <rect width="1100" height="450" fill="#f8fafc"/>
+  <rect width="1100" height="450" fill="none"/>
 
   <!-- Title -->
-  <text x="550" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">Face Identity Extractor: Production-Grade Face Recognition</text>
-  <text x="550" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">SCRFD detection + ArcFace embeddings with 99.8%+ verification accuracy (LFW benchmark)</text>
+  <text x="550" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#f1f5f9" text-anchor="middle">Face Identity Extractor: Production-Grade Face Recognition</text>
+  <text x="550" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#94a3b8" text-anchor="middle">SCRFD detection + ArcFace embeddings with 99.8%+ verification accuracy (LFW benchmark)</text>
 
   <!-- Input -->
-  <g filter="url(#shadow)">
-    <rect x="30" y="80" width="140" height="160" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="30" y="80" width="140" height="160" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="30" y="80" width="140" height="28" rx="10" fill="url(#objectGrad)"/>
     <rect x="30" y="98" width="140" height="10" fill="url(#objectGrad)"/>
     <text x="100" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Input</text>
@@ -58,15 +56,15 @@
     <rect x="0" y="68" width="120" height="28" rx="4" fill="#fff7ed"/>
     <text x="12" y="86" font-family="system-ui, sans-serif" font-size="10" fill="#c2410c">video_frame</text>
 
-    <text x="60" y="110" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">640px+ recommended</text>
+    <text x="60" y="110" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">640px+ recommended</text>
   </g>
 
   <!-- Arrow to Detection -->
   <path d="M 170 160 L 210 160" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Stage 1: SCRFD Detection -->
-  <g filter="url(#shadow)">
-    <rect x="220" y="70" width="180" height="180" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="220" y="70" width="180" height="180" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="220" y="70" width="180" height="28" rx="10" fill="url(#detectGrad)"/>
     <rect x="220" y="88" width="180" height="10" fill="url(#detectGrad)"/>
     <text x="310" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">1. SCRFD Detection</text>
@@ -88,8 +86,8 @@
   <path d="M 400 160 L 440 160" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Stage 2: Alignment -->
-  <g filter="url(#shadow)">
-    <rect x="450" y="70" width="160" height="180" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="450" y="70" width="160" height="180" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="450" y="70" width="160" height="28" rx="10" fill="url(#alignGrad)"/>
     <rect x="450" y="88" width="160" height="10" fill="url(#alignGrad)"/>
     <text x="530" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">2. Alignment</text>
@@ -111,8 +109,8 @@
   <path d="M 610 160 L 650 160" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Stage 3: ArcFace Embedding -->
-  <g filter="url(#shadow)">
-    <rect x="660" y="70" width="180" height="180" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="660" y="70" width="180" height="180" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="660" y="70" width="180" height="28" rx="10" fill="url(#embedGrad)"/>
     <rect x="660" y="88" width="180" height="10" fill="url(#embedGrad)"/>
     <text x="750" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">3. ArcFace Embed</text>
@@ -126,16 +124,16 @@
     <rect x="0" y="62" width="160" height="70" rx="4" fill="#ede9fe"/>
     <text x="80" y="78" font-family="system-ui, sans-serif" font-size="8" font-weight="500" fill="#7c3aed" text-anchor="middle">Output:</text>
     <text x="80" y="94" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">512-D embedding</text>
-    <text x="80" y="108" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">L2 normalized</text>
-    <text x="80" y="120" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Cosine similarity</text>
+    <text x="80" y="108" font-family="system-ui, sans-serif" font-size="8" fill="#94a3b8" text-anchor="middle">L2 normalized</text>
+    <text x="80" y="120" font-family="system-ui, sans-serif" font-size="8" fill="#94a3b8" text-anchor="middle">Cosine similarity</text>
   </g>
 
   <!-- Arrow to Output -->
   <path d="M 840 160 L 880 160" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Output -->
-  <g filter="url(#shadow)">
-    <rect x="890" y="70" width="180" height="180" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="890" y="70" width="180" height="180" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="890" y="70" width="180" height="28" rx="10" fill="url(#featureGrad)"/>
     <rect x="890" y="88" width="180" height="10" fill="url(#featureGrad)"/>
     <text x="980" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Output (per face)</text>
@@ -154,8 +152,8 @@
   </g>
 
   <!-- Quality Scoring (Optional) -->
-  <g filter="url(#shadow)">
-    <rect x="450" y="270" width="200" height="80" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="450" y="270" width="200" height="80" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="450" y="270" width="200" height="28" rx="10" fill="url(#qualityGrad)"/>
     <rect x="450" y="288" width="200" height="10" fill="url(#qualityGrad)"/>
     <text x="550" y="290" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">4. Quality Scoring</text>
@@ -167,8 +165,8 @@
   </g>
 
   <!-- Matching Thresholds -->
-  <g filter="url(#shadow)">
-    <rect x="700" y="270" width="370" height="160" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="700" y="270" width="370" height="160" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="700" y="270" width="370" height="28" rx="10" fill="#1e293b"/>
     <rect x="700" y="288" width="370" height="10" fill="#1e293b"/>
     <text x="885" y="290" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Face Matching Thresholds (Cosine Similarity)</text>
@@ -188,7 +186,7 @@
 
     <rect x="0" y="68" width="330" height="40" rx="4" fill="#f1f5f9"/>
     <text x="165" y="84" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#475569" text-anchor="middle">Recommended threshold: 0.25 - 0.30</text>
-    <text x="165" y="100" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">99.8%+ accuracy on LFW benchmark</text>
+    <text x="165" y="100" font-family="system-ui, sans-serif" font-size="8" fill="#94a3b8" text-anchor="middle">99.8%+ accuracy on LFW benchmark</text>
   </g>
 
   <!-- Performance Info -->

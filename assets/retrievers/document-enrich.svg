@@ -16,22 +16,20 @@
       <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
     </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
-    </filter>
+    
     <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
       <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
     </marker>
   </defs>
 
-  <rect width="1000" height="400" fill="#f8fafc"/>
+  <rect width="1000" height="400" fill="none"/>
 
-  <text x="500" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">Document Enrich Stage: Collection Joins</text>
-  <text x="500" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">Join and enrich documents with data from another collection (SQL LEFT JOIN style)</text>
+  <text x="500" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#f1f5f9" text-anchor="middle">Document Enrich Stage: Collection Joins</text>
+  <text x="500" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#94a3b8" text-anchor="middle">Join and enrich documents with data from another collection (SQL LEFT JOIN style)</text>
 
   <!-- Source Documents -->
-  <g filter="url(#shadow)">
-    <rect x="30" y="80" width="160" height="140" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="30" y="80" width="160" height="140" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="30" y="80" width="160" height="28" rx="10" fill="url(#docGrad)"/>
     <rect x="30" y="98" width="160" height="10" fill="url(#docGrad)"/>
     <text x="110" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Source Documents</text>
@@ -41,13 +39,13 @@
     <text x="70" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#2563eb" text-anchor="middle">N documents</text>
     <text x="70" y="38" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">document_id</text>
     <text x="70" y="54" font-family="monospace" font-size="8" fill="#0d9488" text-anchor="middle">metadata.product_id</text>
-    <text x="70" y="68" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">(source_field for join)</text>
+    <text x="70" y="68" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">(source_field for join)</text>
     <text x="70" y="82" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">content, score...</text>
   </g>
 
   <!-- Join Configuration -->
-  <g filter="url(#shadow)">
-    <rect x="220" y="70" width="260" height="200" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="220" y="70" width="260" height="200" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="220" y="70" width="260" height="28" rx="10" fill="url(#joinGrad)"/>
     <rect x="220" y="88" width="260" height="10" fill="url(#joinGrad)"/>
     <text x="350" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Join Configuration</text>
@@ -80,8 +78,8 @@
   </g>
 
   <!-- Target Collection -->
-  <g filter="url(#shadow)">
-    <rect x="510" y="80" width="160" height="140" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="510" y="80" width="160" height="140" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="510" y="80" width="160" height="28" rx="10" fill="url(#targetGrad)"/>
     <rect x="510" y="98" width="160" height="10" fill="url(#targetGrad)"/>
     <text x="590" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Target Collection</text>
@@ -100,8 +98,8 @@
   <path d="M 670 150 L 710 150" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Output Documents -->
-  <g filter="url(#shadow)">
-    <rect x="720" y="80" width="200" height="140" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="720" y="80" width="200" height="140" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="720" y="80" width="200" height="28" rx="10" fill="url(#outputGrad)"/>
     <rect x="720" y="98" width="200" height="10" fill="url(#outputGrad)"/>
     <text x="820" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Enriched Documents</text>
@@ -122,21 +120,21 @@
     <rect x="0" y="15" width="200" height="60" rx="4" fill="#eff6ff"/>
     <text x="100" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#2563eb" text-anchor="middle">Direct Field Join</text>
     <text x="100" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">source_field = target_field</text>
-    <text x="100" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Fast key-based lookup</text>
+    <text x="100" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">Fast key-based lookup</text>
 
     <rect x="220" y="15" width="200" height="60" rx="4" fill="#f3e8ff"/>
     <text x="320" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#7c3aed" text-anchor="middle">Retriever-Based Join</text>
     <text x="320" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">retriever_id for similarity</text>
-    <text x="320" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Semantic matching</text>
+    <text x="320" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">Semantic matching</text>
 
     <rect x="440" y="15" width="200" height="60" rx="4" fill="#fef3c7"/>
     <text x="540" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#d97706" text-anchor="middle">strategy: enrich</text>
     <text x="540" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Merge fields into doc</text>
-    <text x="540" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">(default)</text>
+    <text x="540" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">(default)</text>
 
     <rect x="660" y="15" width="200" height="60" rx="4" fill="#dcfce7"/>
     <text x="760" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#16a34a" text-anchor="middle">strategy: append</text>
     <text x="760" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Add as nested object</text>
-    <text x="760" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Preserves structure</text>
+    <text x="760" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">Preserves structure</text>
   </g>
 </svg>

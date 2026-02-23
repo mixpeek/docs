@@ -20,28 +20,26 @@
       <stop offset="0%" style="stop-color:#ec4899;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#db2777;stop-opacity:1" />
     </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
-    </filter>
+    
   </defs>
 
   <!-- Background -->
-  <rect width="1200" height="600" fill="#f8fafc"/>
+  <rect width="1200" height="600" fill="none"/>
   
   <!-- Title -->
-  <text x="600" y="40" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="600" fill="#0f172a" text-anchor="middle">Retrieval Reassembly</text>
-  <text x="600" y="65" font-family="system-ui, sans-serif" font-size="13" fill="#64748b" text-anchor="middle">Chaining search stages to recompose results</text>
+  <text x="600" y="40" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="600" fill="#f1f5f9" text-anchor="middle">Retrieval Reassembly</text>
+  <text x="600" y="65" font-family="system-ui, sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">Chaining search stages to recompose results</text>
 
   <!-- Level Labels on left side -->
-  <text x="20" y="130" font-family="system-ui, sans-serif" font-size="12" fill="#64748b" font-weight="500">Query</text>
-  <text x="20" y="230" font-family="system-ui, sans-serif" font-size="12" fill="#64748b" font-weight="500">Vector Search</text>
-  <text x="20" y="330" font-family="system-ui, sans-serif" font-size="12" fill="#64748b" font-weight="500">Entity Filter</text>
-  <text x="20" y="430" font-family="system-ui, sans-serif" font-size="12" fill="#64748b" font-weight="500">Similarity Rank</text>
-  <text x="20" y="530" font-family="system-ui, sans-serif" font-size="12" fill="#64748b" font-weight="500">Enrich</text>
+  <text x="20" y="130" font-family="system-ui, sans-serif" font-size="12" fill="#94a3b8" font-weight="500">Query</text>
+  <text x="20" y="230" font-family="system-ui, sans-serif" font-size="12" fill="#94a3b8" font-weight="500">Vector Search</text>
+  <text x="20" y="330" font-family="system-ui, sans-serif" font-size="12" fill="#94a3b8" font-weight="500">Entity Filter</text>
+  <text x="20" y="430" font-family="system-ui, sans-serif" font-size="12" fill="#94a3b8" font-weight="500">Similarity Rank</text>
+  <text x="20" y="530" font-family="system-ui, sans-serif" font-size="12" fill="#94a3b8" font-weight="500">Enrich</text>
 
   <!-- Level 1: Query (1 item - wide) -->
-  <g filter="url(#shadow)">
-    <rect x="200" y="95" width="800" height="60" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="200" y="95" width="800" height="60" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="200" y="95" width="800" height="60" rx="10" fill="url(#queryGrad)"/>
     <text x="600" y="132" font-family="system-ui, sans-serif" font-size="16" font-weight="600" fill="white" text-anchor="middle">"product demo with Sarah"</text>
   </g>
@@ -54,44 +52,44 @@
   <line x1="850" y1="155" x2="930" y2="195" stroke="#94a3b8" stroke-width="2"/>
 
   <!-- Level 2: Vector Search Results (many items) -->
-  <g filter="url(#shadow)">
-    <rect x="200" y="195" width="100" height="50" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="200" y="195" width="100" height="50" rx="8" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="200" y="195" width="100" height="50" rx="8" fill="url(#searchGrad)"/>
     <text x="250" y="220" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">Segment 12</text>
     <text x="250" y="233" font-family="system-ui, sans-serif" font-size="9" fill="white" fill-opacity="0.8" text-anchor="middle">0.94</text>
   </g>
-  <g filter="url(#shadow)">
-    <rect x="310" y="195" width="100" height="50" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="310" y="195" width="100" height="50" rx="8" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="310" y="195" width="100" height="50" rx="8" fill="url(#searchGrad)"/>
     <text x="360" y="220" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">Segment 47</text>
     <text x="360" y="233" font-family="system-ui, sans-serif" font-size="9" fill="white" fill-opacity="0.8" text-anchor="middle">0.91</text>
   </g>
-  <g filter="url(#shadow)">
-    <rect x="420" y="195" width="100" height="50" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="420" y="195" width="100" height="50" rx="8" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="420" y="195" width="100" height="50" rx="8" fill="url(#searchGrad)"/>
     <text x="470" y="220" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">Segment 8</text>
     <text x="470" y="233" font-family="system-ui, sans-serif" font-size="9" fill="white" fill-opacity="0.8" text-anchor="middle">0.89</text>
   </g>
-  <g filter="url(#shadow)">
-    <rect x="530" y="195" width="100" height="50" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="530" y="195" width="100" height="50" rx="8" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="530" y="195" width="100" height="50" rx="8" fill="url(#searchGrad)"/>
     <text x="580" y="220" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">Segment 23</text>
     <text x="580" y="233" font-family="system-ui, sans-serif" font-size="9" fill="white" fill-opacity="0.8" text-anchor="middle">0.87</text>
   </g>
-  <g filter="url(#shadow)">
-    <rect x="640" y="195" width="100" height="50" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="640" y="195" width="100" height="50" rx="8" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="640" y="195" width="100" height="50" rx="8" fill="url(#searchGrad)"/>
     <text x="690" y="220" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">Segment 3</text>
     <text x="690" y="233" font-family="system-ui, sans-serif" font-size="9" fill="white" fill-opacity="0.8" text-anchor="middle">0.85</text>
   </g>
-  <g filter="url(#shadow)">
-    <rect x="750" y="195" width="100" height="50" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="750" y="195" width="100" height="50" rx="8" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="750" y="195" width="100" height="50" rx="8" fill="url(#searchGrad)"/>
     <text x="800" y="220" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">Segment 91</text>
     <text x="800" y="233" font-family="system-ui, sans-serif" font-size="9" fill="white" fill-opacity="0.8" text-anchor="middle">0.82</text>
   </g>
-  <g filter="url(#shadow)">
-    <rect x="860" y="195" width="100" height="50" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="860" y="195" width="100" height="50" rx="8" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="860" y="195" width="100" height="50" rx="8" fill="url(#searchGrad)"/>
     <text x="910" y="220" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">Segment 56</text>
     <text x="910" y="233" font-family="system-ui, sans-serif" font-size="9" fill="white" fill-opacity="0.8" text-anchor="middle">0.79</text>
@@ -113,26 +111,26 @@
   <text x="910" y="283" font-family="system-ui, sans-serif" font-size="9" fill="#94a3b8" text-anchor="middle">no Sarah</text>
 
   <!-- Level 3: Entity Filter Results (fewer items) -->
-  <g filter="url(#shadow)">
-    <rect x="250" y="295" width="100" height="50" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="250" y="295" width="100" height="50" rx="8" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="250" y="295" width="100" height="50" rx="8" fill="url(#filterGrad)"/>
     <text x="300" y="320" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">Segment 12</text>
     <text x="300" y="333" font-family="system-ui, sans-serif" font-size="9" fill="white" fill-opacity="0.8" text-anchor="middle">Sarah ✓</text>
   </g>
-  <g filter="url(#shadow)">
-    <rect x="420" y="295" width="100" height="50" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="420" y="295" width="100" height="50" rx="8" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="420" y="295" width="100" height="50" rx="8" fill="url(#filterGrad)"/>
     <text x="470" y="320" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">Segment 8</text>
     <text x="470" y="333" font-family="system-ui, sans-serif" font-size="9" fill="white" fill-opacity="0.8" text-anchor="middle">Sarah ✓</text>
   </g>
-  <g filter="url(#shadow)">
-    <rect x="590" y="295" width="100" height="50" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="590" y="295" width="100" height="50" rx="8" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="590" y="295" width="100" height="50" rx="8" fill="url(#filterGrad)"/>
     <text x="640" y="320" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">Segment 23</text>
     <text x="640" y="333" font-family="system-ui, sans-serif" font-size="9" fill="white" fill-opacity="0.8" text-anchor="middle">Sarah ✓</text>
   </g>
-  <g filter="url(#shadow)">
-    <rect x="760" y="295" width="100" height="50" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="760" y="295" width="100" height="50" rx="8" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="760" y="295" width="100" height="50" rx="8" fill="url(#filterGrad)"/>
     <text x="810" y="320" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">Segment 91</text>
     <text x="810" y="333" font-family="system-ui, sans-serif" font-size="9" fill="white" fill-opacity="0.8" text-anchor="middle">Sarah ✓</text>
@@ -145,26 +143,26 @@
   <line x1="810" y1="345" x2="780" y2="395" stroke="#94a3b8" stroke-width="2"/>
 
   <!-- Level 4: Similarity Rank (reordered, fewer) -->
-  <g filter="url(#shadow)">
-    <rect x="310" y="395" width="100" height="50" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="310" y="395" width="100" height="50" rx="8" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="310" y="395" width="100" height="50" rx="8" fill="url(#rankGrad)"/>
     <text x="360" y="420" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">Segment 8</text>
     <text x="360" y="433" font-family="system-ui, sans-serif" font-size="9" fill="white" fill-opacity="0.8" text-anchor="middle">#1 Product</text>
   </g>
-  <g filter="url(#shadow)">
-    <rect x="450" y="395" width="100" height="50" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="450" y="395" width="100" height="50" rx="8" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="450" y="395" width="100" height="50" rx="8" fill="url(#rankGrad)"/>
     <text x="500" y="420" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">Segment 12</text>
     <text x="500" y="433" font-family="system-ui, sans-serif" font-size="9" fill="white" fill-opacity="0.8" text-anchor="middle">#2 Product</text>
   </g>
-  <g filter="url(#shadow)">
-    <rect x="590" y="395" width="100" height="50" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="590" y="395" width="100" height="50" rx="8" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="590" y="395" width="100" height="50" rx="8" fill="url(#rankGrad)"/>
     <text x="640" y="420" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">Segment 91</text>
     <text x="640" y="433" font-family="system-ui, sans-serif" font-size="9" fill="white" fill-opacity="0.8" text-anchor="middle">#3 Product</text>
   </g>
-  <g filter="url(#shadow)">
-    <rect x="730" y="395" width="100" height="50" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="730" y="395" width="100" height="50" rx="8" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="730" y="395" width="100" height="50" rx="8" fill="url(#rankGrad)"/>
     <text x="780" y="420" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">Segment 23</text>
     <text x="780" y="433" font-family="system-ui, sans-serif" font-size="9" fill="white" fill-opacity="0.8" text-anchor="middle">#4 Product</text>
@@ -176,22 +174,22 @@
   <line x1="640" y1="445" x2="700" y2="495" stroke="#94a3b8" stroke-width="2"/>
 
   <!-- Level 5: Enriched Results (final) -->
-  <g filter="url(#shadow)">
-    <rect x="350" y="495" width="140" height="60" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="350" y="495" width="140" height="60" rx="8" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="350" y="495" width="140" height="60" rx="8" fill="url(#enrichGrad)"/>
     <text x="420" y="520" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Result 1</text>
     <text x="420" y="535" font-family="system-ui, sans-serif" font-size="9" fill="white" fill-opacity="0.9" text-anchor="middle">00:02:34 - 00:03:12</text>
     <text x="420" y="548" font-family="system-ui, sans-serif" font-size="8" fill="white" fill-opacity="0.7" text-anchor="middle">+ transcript + context</text>
   </g>
-  <g filter="url(#shadow)">
-    <rect x="530" y="495" width="140" height="60" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="530" y="495" width="140" height="60" rx="8" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="530" y="495" width="140" height="60" rx="8" fill="url(#enrichGrad)"/>
     <text x="600" y="520" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Result 2</text>
     <text x="600" y="535" font-family="system-ui, sans-serif" font-size="9" fill="white" fill-opacity="0.9" text-anchor="middle">00:08:15 - 00:09:01</text>
     <text x="600" y="548" font-family="system-ui, sans-serif" font-size="8" fill="white" fill-opacity="0.7" text-anchor="middle">+ transcript + context</text>
   </g>
-  <g filter="url(#shadow)">
-    <rect x="710" y="495" width="140" height="60" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="710" y="495" width="140" height="60" rx="8" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="710" y="495" width="140" height="60" rx="8" fill="url(#enrichGrad)"/>
     <text x="780" y="520" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Result 3</text>
     <text x="780" y="535" font-family="system-ui, sans-serif" font-size="9" fill="white" fill-opacity="0.9" text-anchor="middle">00:14:22 - 00:15:08</text>

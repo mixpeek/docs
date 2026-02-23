@@ -20,9 +20,7 @@
       <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
     </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
-    </filter>
+    
     <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
       <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
     </marker>
@@ -31,18 +29,18 @@
     </marker>
   </defs>
 
-  <rect width="1200" height="500" fill="#f8fafc"/>
+  <rect width="1200" height="500" fill="none"/>
 
-  <text x="600" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">Bootstrap Labeled Dataset Workflow</text>
-  <text x="600" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">Build a self-improving classification system using taxonomy auto-labeling</text>
+  <text x="600" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#f1f5f9" text-anchor="middle">Bootstrap Labeled Dataset Workflow</text>
+  <text x="600" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#94a3b8" text-anchor="middle">Build a self-improving classification system using taxonomy auto-labeling</text>
 
   <!-- Phase 1 Label -->
   <rect x="30" y="70" width="560" height="20" rx="4" fill="#eff6ff"/>
   <text x="310" y="84" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#2563eb" text-anchor="middle">Phase 1: Bootstrap Reference Set</text>
 
   <!-- Step 1: Upload Unlabeled -->
-  <g filter="url(#shadow)">
-    <rect x="30" y="100" width="130" height="140" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="30" y="100" width="130" height="140" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="30" y="100" width="130" height="28" rx="10" fill="url(#uploadGrad)"/>
     <rect x="30" y="118" width="130" height="10" fill="url(#uploadGrad)"/>
     <text x="95" y="120" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">1. Upload</text>
@@ -53,14 +51,14 @@
     <text x="55" y="34" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">100+ images</text>
     <rect x="0" y="46" width="110" height="32" rx="3" fill="#fef3c7"/>
     <text x="55" y="58" font-family="monospace" font-size="7" fill="#d97706" text-anchor="middle">label: null</text>
-    <text x="55" y="70" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">No labels yet</text>
+    <text x="55" y="70" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">No labels yet</text>
   </g>
 
   <path d="M 160 170 L 180 170" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Step 2: Feature Extraction -->
-  <g filter="url(#shadow)">
-    <rect x="190" y="100" width="130" height="140" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="190" y="100" width="130" height="140" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="190" y="100" width="130" height="28" rx="10" fill="url(#extractGrad)"/>
     <rect x="190" y="118" width="130" height="10" fill="url(#extractGrad)"/>
     <text x="255" y="120" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">2. Extract</text>
@@ -71,14 +69,14 @@
     <text x="55" y="34" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">image_extractor</text>
     <rect x="0" y="46" width="110" height="32" rx="3" fill="#dcfce7"/>
     <text x="55" y="58" font-family="monospace" font-size="7" fill="#0d9488" text-anchor="middle">Creates vectors</text>
-    <text x="55" y="70" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Auto-processing</text>
+    <text x="55" y="70" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">Auto-processing</text>
   </g>
 
   <path d="M 320 170 L 340 170" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Step 3: Manual Labeling -->
-  <g filter="url(#shadow)">
-    <rect x="350" y="100" width="130" height="140" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="350" y="100" width="130" height="140" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="350" y="100" width="130" height="28" rx="10" fill="url(#labelGrad)"/>
     <rect x="350" y="118" width="130" height="10" fill="url(#labelGrad)"/>
     <text x="415" y="120" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">3. Label</text>
@@ -89,14 +87,14 @@
     <text x="55" y="34" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">Review images</text>
     <rect x="0" y="46" width="110" height="32" rx="3" fill="#dcfce7"/>
     <text x="55" y="58" font-family="monospace" font-size="7" fill="#0d9488" text-anchor="middle">"Red Shoes"</text>
-    <text x="55" y="70" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">10-20 per category</text>
+    <text x="55" y="70" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">10-20 per category</text>
   </g>
 
   <path d="M 480 170 L 500 170" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Step 4: Reference Set -->
-  <g filter="url(#shadow)">
-    <rect x="510" y="100" width="130" height="140" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="510" y="100" width="130" height="140" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="510" y="100" width="130" height="28" rx="10" fill="url(#outputGrad)"/>
     <rect x="510" y="118" width="130" height="10" fill="url(#outputGrad)"/>
     <text x="575" y="120" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">4. Reference</text>
@@ -107,7 +105,7 @@
     <text x="55" y="34" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">Ready for taxonomy</text>
     <rect x="0" y="46" width="110" height="32" rx="3" fill="#dcfce7"/>
     <text x="55" y="58" font-family="system-ui, sans-serif" font-size="7" fill="#0d9488" text-anchor="middle">50+ labeled items</text>
-    <text x="55" y="70" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Multiple categories</text>
+    <text x="55" y="70" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">Multiple categories</text>
   </g>
 
   <!-- Phase 2 Label -->
@@ -115,8 +113,8 @@
   <text x="920" y="84" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#d97706" text-anchor="middle">Phase 2: Auto-Classify New Data</text>
 
   <!-- New Upload -->
-  <g filter="url(#shadow)">
-    <rect x="670" y="100" width="130" height="140" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="670" y="100" width="130" height="140" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="670" y="100" width="130" height="28" rx="10" fill="url(#uploadGrad)"/>
     <rect x="670" y="118" width="130" height="10" fill="url(#uploadGrad)"/>
     <text x="735" y="120" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">New Upload</text>
@@ -127,14 +125,14 @@
     <text x="55" y="34" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">new_shoe.jpg</text>
     <rect x="0" y="46" width="110" height="32" rx="3" fill="#fef3c7"/>
     <text x="55" y="58" font-family="monospace" font-size="7" fill="#d97706" text-anchor="middle">label: ?</text>
-    <text x="55" y="70" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Needs classification</text>
+    <text x="55" y="70" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">Needs classification</text>
   </g>
 
   <path d="M 800 170 L 820 170" stroke="#ea580c" stroke-width="2.5" fill="none" marker-end="url(#arrowOrange)"/>
 
   <!-- Taxonomy Match -->
-  <g filter="url(#shadow)">
-    <rect x="830" y="100" width="150" height="140" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="830" y="100" width="150" height="140" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="830" y="100" width="150" height="28" rx="10" fill="url(#taxonomyGrad)"/>
     <rect x="830" y="118" width="150" height="10" fill="url(#taxonomyGrad)"/>
     <text x="905" y="120" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">Taxonomy Match</text>
@@ -152,8 +150,8 @@
   <path d="M 980 170 L 1000 170" stroke="#ea580c" stroke-width="2.5" fill="none" marker-end="url(#arrowOrange)"/>
 
   <!-- Auto-Labeled -->
-  <g filter="url(#shadow)">
-    <rect x="1010" y="100" width="160" height="140" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="1010" y="100" width="160" height="140" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="1010" y="100" width="160" height="28" rx="10" fill="url(#outputGrad)"/>
     <rect x="1010" y="118" width="160" height="10" fill="url(#outputGrad)"/>
     <text x="1090" y="120" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">Auto-Labeled ✓</text>
@@ -164,7 +162,7 @@
     <text x="70" y="34" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">label: "Red Shoes"</text>
     <rect x="0" y="46" width="140" height="32" rx="3" fill="#dcfce7"/>
     <text x="70" y="58" font-family="system-ui, sans-serif" font-size="7" fill="#0d9488" text-anchor="middle">No manual work!</text>
-    <text x="70" y="70" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Added to reference set</text>
+    <text x="70" y="70" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">Added to reference set</text>
   </g>
 
   <!-- Feedback Loop Arrow -->
@@ -178,22 +176,22 @@
     <rect x="0" y="15" width="270" height="55" rx="4" fill="#f3e8ff"/>
     <text x="135" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#7c3aed" text-anchor="middle">Start with Zero Labels</text>
     <text x="135" y="50" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Build incrementally from 50-100 images</text>
-    <text x="135" y="63" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">No pre-labeled data required</text>
+    <text x="135" y="63" font-family="system-ui, sans-serif" font-size="8" fill="#94a3b8" text-anchor="middle">No pre-labeled data required</text>
 
     <rect x="290" y="15" width="270" height="55" rx="4" fill="#fef3c7"/>
     <text x="425" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#d97706" text-anchor="middle">Taxonomy Auto-Labeling</text>
     <text x="425" y="50" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Similarity-based classification</text>
-    <text x="425" y="63" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Configurable confidence threshold</text>
+    <text x="425" y="63" font-family="system-ui, sans-serif" font-size="8" fill="#94a3b8" text-anchor="middle">Configurable confidence threshold</text>
 
     <rect x="580" y="15" width="270" height="55" rx="4" fill="#dcfce7"/>
     <text x="715" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#0d9488" text-anchor="middle">Self-Improving System</text>
     <text x="715" y="50" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Each manual label improves matching</text>
-    <text x="715" y="63" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Scales from dozens to millions</text>
+    <text x="715" y="63" font-family="system-ui, sans-serif" font-size="8" fill="#94a3b8" text-anchor="middle">Scales from dozens to millions</text>
 
     <rect x="870" y="15" width="270" height="55" rx="4" fill="#fff7ed"/>
     <text x="1005" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#ea580c" text-anchor="middle">Multimodal Support</text>
     <text x="1005" y="50" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Images, video, text, faces</text>
-    <text x="1005" y="63" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Any feature extractor works</text>
+    <text x="1005" y="63" font-family="system-ui, sans-serif" font-size="8" fill="#94a3b8" text-anchor="middle">Any feature extractor works</text>
   </g>
 
   <!-- Use Cases -->
@@ -202,24 +200,24 @@
 
     <rect x="0" y="12" width="270" height="38" rx="4" fill="#eff6ff"/>
     <text x="135" y="32" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#2563eb" text-anchor="middle">Product Recognition</text>
-    <text x="135" y="45" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Auto-tag inventory, catalog images</text>
+    <text x="135" y="45" font-family="system-ui, sans-serif" font-size="8" fill="#94a3b8" text-anchor="middle">Auto-tag inventory, catalog images</text>
 
     <text x="290" y="32" font-family="system-ui, sans-serif" font-size="14" fill="#94a3b8">•</text>
 
     <rect x="310" y="12" width="270" height="38" rx="4" fill="#fce7f3"/>
     <text x="445" y="32" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#db2777" text-anchor="middle">Face Recognition</text>
-    <text x="445" y="45" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Employee ID, security camera footage</text>
+    <text x="445" y="45" font-family="system-ui, sans-serif" font-size="8" fill="#94a3b8" text-anchor="middle">Employee ID, security camera footage</text>
 
     <text x="600" y="32" font-family="system-ui, sans-serif" font-size="14" fill="#94a3b8">•</text>
 
     <rect x="620" y="12" width="270" height="38" rx="4" fill="#fef3c7"/>
     <text x="755" y="32" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#d97706" text-anchor="middle">Document Classification</text>
-    <text x="755" y="45" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Invoices, contracts, receipts by type</text>
+    <text x="755" y="45" font-family="system-ui, sans-serif" font-size="8" fill="#94a3b8" text-anchor="middle">Invoices, contracts, receipts by type</text>
 
     <text x="910" y="32" font-family="system-ui, sans-serif" font-size="14" fill="#94a3b8">•</text>
 
     <rect x="930" y="12" width="210" height="38" rx="4" fill="#e0e7ff"/>
     <text x="1035" y="32" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#6366f1" text-anchor="middle">Content Moderation</text>
-    <text x="1035" y="45" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Flag inappropriate content</text>
+    <text x="1035" y="45" font-family="system-ui, sans-serif" font-size="8" fill="#94a3b8" text-anchor="middle">Flag inappropriate content</text>
   </g>
 </svg>

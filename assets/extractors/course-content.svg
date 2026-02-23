@@ -21,24 +21,22 @@
       <stop offset="0%" style="stop-color:#06b6d4;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#0891b2;stop-opacity:1" />
     </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
-    </filter>
+    
     <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
       <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
     </marker>
   </defs>
 
   <!-- Background -->
-  <rect width="1200" height="520" fill="#f8fafc"/>
+  <rect width="1200" height="520" fill="none"/>
 
   <!-- Title -->
-  <text x="600" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">Course Content Extractor: Multimodal Learning Unit Decomposition</text>
-  <text x="600" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">Video, PDF, and code content decomposition with text, code, and visual embeddings</text>
+  <text x="600" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#f1f5f9" text-anchor="middle">Course Content Extractor: Multimodal Learning Unit Decomposition</text>
+  <text x="600" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#94a3b8" text-anchor="middle">Video, PDF, and code content decomposition with text, code, and visual embeddings</text>
 
   <!-- Input Options -->
-  <g filter="url(#shadow)">
-    <rect x="30" y="80" width="140" height="130" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="30" y="80" width="140" height="130" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="30" y="80" width="140" height="28" rx="10" fill="url(#objectGrad)"/>
     <rect x="30" y="98" width="140" height="10" fill="url(#objectGrad)"/>
     <text x="100" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Content Inputs</text>
@@ -55,8 +53,8 @@
   <path d="M 170 145 L 210 145" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Content Detection Stage -->
-  <g filter="url(#shadow)">
-    <rect x="220" y="70" width="180" height="150" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="220" y="70" width="180" height="150" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="220" y="70" width="180" height="28" rx="10" fill="url(#processGrad)"/>
     <rect x="220" y="88" width="180" height="10" fill="url(#processGrad)"/>
     <text x="310" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Content Detection</text>
@@ -83,8 +81,8 @@
   <path d="M 400 145 L 440 145" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Segmentation Stage -->
-  <g filter="url(#shadow)">
-    <rect x="450" y="70" width="180" height="150" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="450" y="70" width="180" height="150" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="450" y="70" width="180" height="28" rx="10" fill="url(#processGrad)"/>
     <rect x="450" y="88" width="180" height="10" fill="url(#processGrad)"/>
     <text x="540" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Segmentation</text>
@@ -111,8 +109,8 @@
   <path d="M 630 145 L 670 145" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Embeddings Stage -->
-  <g filter="url(#shadow)">
-    <rect x="680" y="50" width="220" height="190" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="680" y="50" width="220" height="190" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="680" y="50" width="220" height="28" rx="10" fill="url(#modelGrad)"/>
     <rect x="680" y="68" width="220" height="10" fill="url(#modelGrad)"/>
     <text x="790" y="70" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Multi-Modal Embeddings</text>
@@ -138,8 +136,8 @@
   <path d="M 900 145 L 940 145" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Output -->
-  <g filter="url(#shadow)">
-    <rect x="950" y="80" width="210" height="130" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="950" y="80" width="210" height="130" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="950" y="80" width="210" height="28" rx="10" fill="url(#featureGrad)"/>
     <rect x="950" y="98" width="210" height="10" fill="url(#featureGrad)"/>
     <text x="1055" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Learning Units</text>
@@ -157,8 +155,8 @@
   <!-- Parameters Section -->
   <text x="70" y="270" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#475569">Key Parameters</text>
 
-  <g filter="url(#shadow)">
-    <rect x="30" y="285" width="290" height="210" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="30" y="285" width="290" height="210" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <text x="175" y="310" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#475569" text-anchor="middle">Video Segmentation</text>
     <rect x="45" y="320" width="260" height="90" rx="4" fill="#f1f5f9"/>
     <text x="55" y="335" font-family="monospace" font-size="7" fill="#475569">target_segment_duration_ms: 120000</text>
@@ -176,8 +174,8 @@
   </g>
 
   <!-- Feature Toggles -->
-  <g filter="url(#shadow)">
-    <rect x="340" y="285" width="290" height="210" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="340" y="285" width="290" height="210" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <text x="485" y="310" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#475569" text-anchor="middle">Embeddings &amp; Features</text>
     <rect x="355" y="320" width="260" height="90" rx="4" fill="#f1f5f9"/>
     <text x="365" y="335" font-family="monospace" font-size="7" fill="#475569">run_text_embedding: true</text>
@@ -195,8 +193,8 @@
   </g>
 
   <!-- Vector Indexes -->
-  <g filter="url(#shadow)">
-    <rect x="650" y="285" width="510" height="210" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="650" y="285" width="510" height="210" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <text x="905" y="310" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#475569" text-anchor="middle">Required Vector Indexes (Qdrant Named Vectors)</text>
 
     <rect x="665" y="325" width="480" height="65" rx="4" fill="#fce7f3"/>

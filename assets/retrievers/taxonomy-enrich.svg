@@ -12,22 +12,20 @@
       <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
     </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
-    </filter>
+    
     <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
       <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
     </marker>
   </defs>
 
-  <rect width="1000" height="400" fill="#f8fafc"/>
+  <rect width="1000" height="400" fill="none"/>
 
-  <text x="500" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">Taxonomy Enrich Stage: Classification Enrichment</text>
-  <text x="500" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">Enrich documents with taxonomy classifications and hierarchical labels</text>
+  <text x="500" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#f1f5f9" text-anchor="middle">Taxonomy Enrich Stage: Classification Enrichment</text>
+  <text x="500" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#94a3b8" text-anchor="middle">Enrich documents with taxonomy classifications and hierarchical labels</text>
 
   <!-- Input Documents -->
-  <g filter="url(#shadow)">
-    <rect x="30" y="80" width="160" height="130" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="30" y="80" width="160" height="130" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="30" y="80" width="160" height="28" rx="10" fill="url(#docGrad)"/>
     <rect x="30" y="98" width="160" height="10" fill="url(#docGrad)"/>
     <text x="110" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Input Documents</text>
@@ -43,8 +41,8 @@
   <path d="M 190 145 L 230 145" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Taxonomy Configuration -->
-  <g filter="url(#shadow)">
-    <rect x="240" y="70" width="240" height="190" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="240" y="70" width="240" height="190" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="240" y="70" width="240" height="28" rx="10" fill="url(#taxGrad)"/>
     <rect x="240" y="88" width="240" height="10" fill="url(#taxGrad)"/>
     <text x="360" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Taxonomy Classification</text>
@@ -65,8 +63,8 @@
   <path d="M 480 145 L 520 145" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Classification Engine -->
-  <g filter="url(#shadow)">
-    <rect x="530" y="80" width="180" height="130" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="530" y="80" width="180" height="130" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="530" y="80" width="180" height="28" rx="10" fill="url(#taxGrad)"/>
     <rect x="530" y="98" width="180" height="10" fill="url(#taxGrad)"/>
     <text x="620" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Classification</text>
@@ -82,8 +80,8 @@
   <path d="M 710 145 L 750 145" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Output Documents -->
-  <g filter="url(#shadow)">
-    <rect x="760" y="70" width="200" height="190" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="760" y="70" width="200" height="190" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="760" y="70" width="200" height="28" rx="10" fill="url(#outputGrad)"/>
     <rect x="760" y="88" width="200" height="10" fill="url(#outputGrad)"/>
     <text x="860" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Enriched Documents</text>
@@ -107,21 +105,21 @@
     <rect x="0" y="15" width="200" height="60" rx="4" fill="#fce7f3"/>
     <text x="100" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#db2777" text-anchor="middle">Product Categorization</text>
     <text x="100" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">E-commerce categories</text>
-    <text x="100" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">with hierarchical paths</text>
+    <text x="100" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">with hierarchical paths</text>
 
     <rect x="220" y="15" width="200" height="60" rx="4" fill="#eff6ff"/>
     <text x="320" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#2563eb" text-anchor="middle">Content Tagging</text>
     <text x="320" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Topic classification</text>
-    <text x="320" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">for articles/media</text>
+    <text x="320" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">for articles/media</text>
 
     <rect x="440" y="15" width="200" height="60" rx="4" fill="#dcfce7"/>
     <text x="540" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#16a34a" text-anchor="middle">Faceted Search</text>
     <text x="540" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Filter results by</text>
-    <text x="540" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">taxonomy categories</text>
+    <text x="540" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">taxonomy categories</text>
 
     <rect x="660" y="15" width="200" height="60" rx="4" fill="#fef3c7"/>
     <text x="760" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#d97706" text-anchor="middle">Compliance Labels</text>
     <text x="760" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Sensitivity and access</text>
-    <text x="760" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">control classification</text>
+    <text x="760" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">control classification</text>
   </g>
 </svg>

@@ -16,24 +16,22 @@
       <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
     </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
-    </filter>
+    
     <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
       <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
     </marker>
   </defs>
 
   <!-- Background -->
-  <rect width="900" height="380" fill="#f8fafc"/>
+  <rect width="900" height="380" fill="none"/>
 
   <!-- Title -->
-  <text x="450" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">Image Extractor: Visual Similarity Search</text>
-  <text x="450" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">Google SigLIP model for 768-dimensional image embeddings with cross-modal text search</text>
+  <text x="450" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#f1f5f9" text-anchor="middle">Image Extractor: Visual Similarity Search</text>
+  <text x="450" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#94a3b8" text-anchor="middle">Google SigLIP model for 768-dimensional image embeddings with cross-modal text search</text>
 
   <!-- Input Image -->
-  <g filter="url(#shadow)">
-    <rect x="30" y="80" width="180" height="140" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="30" y="80" width="180" height="140" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="30" y="80" width="180" height="28" rx="10" fill="url(#objectGrad)"/>
     <rect x="30" y="98" width="180" height="10" fill="url(#objectGrad)"/>
     <text x="120" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Image Input</text>
@@ -42,8 +40,8 @@
     <rect x="0" y="0" width="160" height="90" rx="4" fill="#fff7ed"/>
     <text x="80" y="18" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#c2410c" text-anchor="middle">Required</text>
     <text x="80" y="36" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">"image": URL or S3 path</text>
-    <text x="80" y="54" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">JPEG, PNG, WebP, BMP</text>
-    <text x="80" y="70" font-family="system-ui, sans-serif" font-size="8" fill="#64748b" text-anchor="middle">Any resolution (224x224 internal)</text>
+    <text x="80" y="54" font-family="system-ui, sans-serif" font-size="8" fill="#94a3b8" text-anchor="middle">JPEG, PNG, WebP, BMP</text>
+    <text x="80" y="70" font-family="system-ui, sans-serif" font-size="8" fill="#94a3b8" text-anchor="middle">Any resolution (224x224 internal)</text>
     <text x="80" y="84" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">Max 10MB recommended</text>
   </g>
 
@@ -51,8 +49,8 @@
   <path d="M 210 150 L 260 150" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- SigLIP Model -->
-  <g filter="url(#shadow)">
-    <rect x="270" y="70" width="220" height="160" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="270" y="70" width="220" height="160" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="270" y="70" width="220" height="28" rx="10" fill="url(#modelGrad)"/>
     <rect x="270" y="88" width="220" height="10" fill="url(#modelGrad)"/>
     <text x="380" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Google SigLIP</text>
@@ -72,8 +70,8 @@
   <path d="M 490 150 L 540 150" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Output -->
-  <g filter="url(#shadow)">
-    <rect x="550" y="70" width="200" height="160" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="550" y="70" width="200" height="160" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="550" y="70" width="200" height="28" rx="10" fill="url(#featureGrad)"/>
     <rect x="550" y="88" width="200" height="10" fill="url(#featureGrad)"/>
     <text x="650" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Output</text>
@@ -102,8 +100,8 @@
   <!-- Cross-Modal Search Section -->
   <text x="450" y="260" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#475569" text-anchor="middle">Cross-Modal Search Compatibility</text>
 
-  <g filter="url(#shadow)">
-    <rect x="100" y="280" width="700" height="80" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="100" y="280" width="700" height="80" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="100" y="280" width="700" height="28" rx="10" fill="url(#processGrad)"/>
     <rect x="100" y="298" width="700" height="10" fill="url(#processGrad)"/>
     <text x="450" y="300" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">SigLIP Unified Embedding Space</text>

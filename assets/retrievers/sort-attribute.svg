@@ -12,22 +12,20 @@
       <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
     </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
-    </filter>
+    
     <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
       <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
     </marker>
   </defs>
 
-  <rect width="1000" height="350" fill="#f8fafc"/>
+  <rect width="1000" height="350" fill="none"/>
 
-  <text x="500" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">Sort By Field Stage: Attribute-Based Ordering</text>
-  <text x="500" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">Reorder documents by any metadata field value (price, date, rating, etc.)</text>
+  <text x="500" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#f1f5f9" text-anchor="middle">Sort By Field Stage: Attribute-Based Ordering</text>
+  <text x="500" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#94a3b8" text-anchor="middle">Reorder documents by any metadata field value (price, date, rating, etc.)</text>
 
   <!-- Input Documents -->
-  <g filter="url(#shadow)">
-    <rect x="30" y="80" width="200" height="160" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="30" y="80" width="200" height="160" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="30" y="80" width="200" height="28" rx="10" fill="url(#inputGrad)"/>
     <rect x="30" y="98" width="200" height="10" fill="url(#inputGrad)"/>
     <text x="130" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Input Documents</text>
@@ -49,8 +47,8 @@
   <path d="M 230 160 L 270 160" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Sort Configuration -->
-  <g filter="url(#shadow)">
-    <rect x="280" y="70" width="300" height="180" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="280" y="70" width="300" height="180" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="280" y="70" width="300" height="28" rx="10" fill="url(#sortGrad)"/>
     <rect x="280" y="88" width="300" height="10" fill="url(#sortGrad)"/>
     <text x="430" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Sort Configuration</text>
@@ -62,11 +60,11 @@
 
     <rect x="0" y="50" width="135" height="50" rx="4" fill="#fef3c7"/>
     <text x="67" y="68" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#d97706" text-anchor="middle">order: asc</text>
-    <text x="67" y="86" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Lowest first</text>
+    <text x="67" y="86" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">Lowest first</text>
 
     <rect x="145" y="50" width="135" height="50" rx="4" fill="#fff7ed"/>
     <text x="212" y="68" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#d97706" text-anchor="middle">order: desc</text>
-    <text x="212" y="86" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Highest first</text>
+    <text x="212" y="86" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">Highest first</text>
 
     <text x="140" y="120" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Supports nested fields: metadata.reviews.avg</text>
     <text x="140" y="136" font-family="system-ui, sans-serif" font-size="8" fill="#16a34a" text-anchor="middle">Fast: index-backed when available</text>
@@ -75,8 +73,8 @@
   <path d="M 580 160 L 620 160" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Output -->
-  <g filter="url(#shadow)">
-    <rect x="630" y="80" width="200" height="160" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="630" y="80" width="200" height="160" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="630" y="80" width="200" height="28" rx="10" fill="url(#outputGrad)"/>
     <rect x="630" y="98" width="200" height="10" fill="url(#outputGrad)"/>
     <text x="730" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Sorted Results</text>
@@ -104,12 +102,12 @@
     <text x="60" y="75" font-family="system-ui, sans-serif" font-size="7" fill="#475569" text-anchor="middle">Null handling</text>
     <text x="60" y="90" font-family="system-ui, sans-serif" font-size="7" fill="#475569" text-anchor="middle">Multi-field sort</text>
     <text x="60" y="112" font-family="system-ui, sans-serif" font-size="8" fill="#16a34a" text-anchor="middle">vs rerank:</text>
-    <text x="60" y="127" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Simpler, faster</text>
+    <text x="60" y="127" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">Simpler, faster</text>
   </g>
 
   <!-- Use Cases -->
   <g transform="translate(50, 275)">
     <text x="0" y="0" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#475569">Common Use Cases:</text>
-    <text x="150" y="0" font-family="system-ui, sans-serif" font-size="10" fill="#64748b">Price (asc/desc) | Date (newest first) | Rating (highest first) | Popularity | Distance</text>
+    <text x="150" y="0" font-family="system-ui, sans-serif" font-size="10" fill="#94a3b8">Price (asc/desc) | Date (newest first) | Rating (highest first) | Popularity | Distance</text>
   </g>
 </svg>

@@ -20,20 +20,18 @@
       <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
     </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
-    </filter>
+    
     <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
       <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
     </marker>
   </defs>
 
   <!-- Background -->
-  <rect width="1200" height="900" fill="#f8fafc"/>
+  <rect width="1200" height="900" fill="none"/>
   
   <!-- Title -->
-  <text x="600" y="40" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="600" fill="#0f172a" text-anchor="middle">Processing Pipelines: Tiered DAG Execution</text>
-  <text x="600" y="65" font-family="system-ui, sans-serif" font-size="13" fill="#64748b" text-anchor="middle">Chain collections into multi-tier extraction workflows • Parallel execution within tiers</text>
+  <text x="600" y="40" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="600" fill="#f1f5f9" text-anchor="middle">Processing Pipelines: Tiered DAG Execution</text>
+  <text x="600" y="65" font-family="system-ui, sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">Chain collections into multi-tier extraction workflows • Parallel execution within tiers</text>
 
   <!-- Tier Labels on left -->
   <g transform="translate(30, 0)">
@@ -45,14 +43,14 @@
   </g>
 
   <!-- Tier divider lines -->
-  <line x1="70" y1="210" x2="1170" y2="210" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4"/>
-  <line x1="70" y1="380" x2="1170" y2="380" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4"/>
-  <line x1="70" y1="570" x2="1170" y2="570" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4"/>
-  <line x1="70" y1="740" x2="1170" y2="740" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4"/>
+  <line x1="70" y1="210" x2="1170" y2="210" stroke="#334155" stroke-width="1" stroke-dasharray="4,4"/>
+  <line x1="70" y1="380" x2="1170" y2="380" stroke="#334155" stroke-width="1" stroke-dasharray="4,4"/>
+  <line x1="70" y1="570" x2="1170" y2="570" stroke="#334155" stroke-width="1" stroke-dasharray="4,4"/>
+  <line x1="70" y1="740" x2="1170" y2="740" stroke="#334155" stroke-width="1" stroke-dasharray="4,4"/>
 
   <!-- Source Object -->
-  <g filter="url(#shadow)">
-    <rect x="480" y="100" width="240" height="90" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="480" y="100" width="240" height="90" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="480" y="100" width="240" height="28" rx="10" fill="url(#objectGrad)"/>
     <rect x="480" y="118" width="240" height="10" fill="url(#objectGrad)"/>
     <text x="600" y="120" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">📦 Marketing Video</text>
@@ -66,8 +64,8 @@
   <!-- Tier 1 Collections -->
   <!-- Video Scenes -->
   <path d="M 540 190 L 540 210 L 300 210 L 300 230" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
-  <g filter="url(#shadow)">
-    <rect x="170" y="235" width="260" height="95" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="170" y="235" width="260" height="95" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="170" y="235" width="260" height="28" rx="10" fill="url(#tier1Grad)"/>
     <rect x="170" y="253" width="260" height="10" fill="url(#tier1Grad)"/>
     <text x="300" y="255" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">🎬 Video Scenes</text>
@@ -81,8 +79,8 @@
 
   <!-- Audio Transcript -->
   <path d="M 660 190 L 660 210 L 900 210 L 900 230" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
-  <g filter="url(#shadow)">
-    <rect x="770" y="235" width="260" height="95" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="770" y="235" width="260" height="95" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="770" y="235" width="260" height="28" rx="10" fill="url(#tier1Grad)"/>
     <rect x="770" y="253" width="260" height="10" fill="url(#tier1Grad)"/>
     <text x="900" y="255" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">🎙 Audio Transcript</text>
@@ -97,8 +95,8 @@
   <!-- Tier 2 Collections -->
   <!-- Scene Faces -->
   <path d="M 250 330 L 250 380 L 150 380 L 150 400" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
-  <g filter="url(#shadow)">
-    <rect x="80" y="405" width="140" height="90" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="80" y="405" width="140" height="90" rx="8" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="80" y="405" width="140" height="24" rx="8" fill="url(#tier2Grad)"/>
     <rect x="80" y="421" width="140" height="8" fill="url(#tier2Grad)"/>
     <text x="150" y="422" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">👤 Scene Faces</text>
@@ -112,8 +110,8 @@
 
   <!-- Scene Objects -->
   <path d="M 300 330 L 300 380 L 300 400" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
-  <g filter="url(#shadow)">
-    <rect x="230" y="405" width="140" height="90" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="230" y="405" width="140" height="90" rx="8" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="230" y="405" width="140" height="24" rx="8" fill="url(#tier2Grad)"/>
     <rect x="230" y="421" width="140" height="8" fill="url(#tier2Grad)"/>
     <text x="300" y="422" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">📦 Scene Objects</text>
@@ -127,8 +125,8 @@
 
   <!-- Scene Text -->
   <path d="M 350 330 L 350 380 L 450 380 L 450 400" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
-  <g filter="url(#shadow)">
-    <rect x="380" y="405" width="140" height="90" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="380" y="405" width="140" height="90" rx="8" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="380" y="405" width="140" height="24" rx="8" fill="url(#tier2Grad)"/>
     <rect x="380" y="421" width="140" height="8" fill="url(#tier2Grad)"/>
     <text x="450" y="422" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">📝 Scene Text</text>
@@ -142,8 +140,8 @@
 
   <!-- Speaker Segments -->
   <path d="M 850 330 L 850 380 L 750 380 L 750 400" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
-  <g filter="url(#shadow)">
-    <rect x="680" y="405" width="140" height="90" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="680" y="405" width="140" height="90" rx="8" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="680" y="405" width="140" height="24" rx="8" fill="url(#tier2Grad)"/>
     <rect x="680" y="421" width="140" height="8" fill="url(#tier2Grad)"/>
     <text x="750" y="422" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">🗣 Speaker Segments</text>
@@ -157,8 +155,8 @@
 
   <!-- Transcript Chunks -->
   <path d="M 950 330 L 950 380 L 1050 380 L 1050 400" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
-  <g filter="url(#shadow)">
-    <rect x="980" y="405" width="140" height="90" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="980" y="405" width="140" height="90" rx="8" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="980" y="405" width="140" height="24" rx="8" fill="url(#tier2Grad)"/>
     <rect x="980" y="421" width="140" height="8" fill="url(#tier2Grad)"/>
     <text x="1050" y="422" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">📄 Transcript Chunks</text>
@@ -173,8 +171,8 @@
   <!-- Tier 3 Collections -->
   <!-- Face Embeddings -->
   <path d="M 120 495 L 120 570 L 180 570 L 180 590" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
-  <g filter="url(#shadow)">
-    <rect x="110" y="595" width="140" height="85" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="110" y="595" width="140" height="85" rx="8" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="110" y="595" width="140" height="24" rx="8" fill="url(#tier3Grad)"/>
     <rect x="110" y="611" width="140" height="8" fill="url(#tier3Grad)"/>
     <text x="180" y="612" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">🔢 Face Embeddings</text>
@@ -188,8 +186,8 @@
 
   <!-- Face Expressions -->
   <path d="M 180 495 L 180 570 L 330 570 L 330 590" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
-  <g filter="url(#shadow)">
-    <rect x="260" y="595" width="140" height="85" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="260" y="595" width="140" height="85" rx="8" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="260" y="595" width="140" height="24" rx="8" fill="url(#tier3Grad)"/>
     <rect x="260" y="611" width="140" height="8" fill="url(#tier3Grad)"/>
     <text x="330" y="612" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">😊 Face Expressions</text>
@@ -203,8 +201,8 @@
 
   <!-- Speaker ID -->
   <path d="M 750 495 L 750 570 L 750 590" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
-  <g filter="url(#shadow)">
-    <rect x="680" y="595" width="140" height="85" rx="8" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="680" y="595" width="140" height="85" rx="8" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="680" y="595" width="140" height="24" rx="8" fill="url(#tier3Grad)"/>
     <rect x="680" y="611" width="140" height="8" fill="url(#tier3Grad)"/>
     <text x="750" y="612" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="white" text-anchor="middle">🎤 Speaker ID</text>
@@ -219,7 +217,7 @@
   <!-- Tier 4 Collections (Taxonomy Enrichment) -->
   <!-- Employee Match -->
   <path d="M 180 680 L 180 740 L 280 740 L 280 760" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
-  <g filter="url(#shadow)">
+  <g>
     <rect x="200" y="765" width="160" height="85" rx="8" fill="white" stroke="#14b8a6" stroke-width="2"/>
     <rect x="200" y="765" width="160" height="24" rx="8" fill="url(#tier4Grad)"/>
     <rect x="200" y="781" width="160" height="8" fill="url(#tier4Grad)"/>
@@ -234,7 +232,7 @@
 
   <!-- Executive Match -->
   <path d="M 750 680 L 750 740 L 750 760" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
-  <g filter="url(#shadow)">
+  <g>
     <rect x="670" y="765" width="160" height="85" rx="8" fill="white" stroke="#14b8a6" stroke-width="2"/>
     <rect x="670" y="765" width="160" height="24" rx="8" fill="url(#tier4Grad)"/>
     <rect x="670" y="781" width="160" height="8" fill="url(#tier4Grad)"/>
@@ -248,8 +246,8 @@
   </g>
 
   <!-- Lineage Info Box -->
-  <g filter="url(#shadow)">
-    <rect x="900" y="595" width="250" height="130" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="900" y="595" width="250" height="130" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="900" y="595" width="250" height="28" rx="10" fill="#334155"/>
     <rect x="900" y="613" width="250" height="10" fill="#334155"/>
     <text x="1025" y="615" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Document Lineage</text>
@@ -282,7 +280,7 @@
     <line x1="780" y1="6" x2="820" y2="6" stroke="#94a3b8" stroke-width="2" marker-end="url(#arrowGray)"/>
     <text x="830" y="11" font-family="system-ui, sans-serif" font-size="10" fill="#475569">Data flow</text>
     
-    <line x1="920" y1="6" x2="960" y2="6" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4,4"/>
+    <line x1="920" y1="6" x2="960" y2="6" stroke="#334155" stroke-width="1" stroke-dasharray="4,4"/>
     <text x="970" y="11" font-family="system-ui, sans-serif" font-size="10" fill="#475569">Tier boundary</text>
   </g>
 

@@ -12,24 +12,22 @@
       <stop offset="0%" style="stop-color:#ec4899;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#db2777;stop-opacity:1" />
     </linearGradient>
-    <filter id="shadowFS" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
-    </filter>
+    
     <marker id="arrowFS" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
       <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
     </marker>
   </defs>
 
   <!-- Background -->
-  <rect width="1200" height="520" fill="#f8fafc"/>
+  <rect width="1200" height="520" fill="none"/>
 
   <!-- Title -->
-  <text x="600" y="40" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="600" fill="#0f172a" text-anchor="middle">Fusion Strategies Compared</text>
-  <text x="600" y="65" font-family="system-ui, sans-serif" font-size="13" fill="#64748b" text-anchor="middle">How multiple search results are combined into a single ranked list</text>
+  <text x="600" y="40" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="600" fill="#f1f5f9" text-anchor="middle">Fusion Strategies Compared</text>
+  <text x="600" y="65" font-family="system-ui, sans-serif" font-size="13" fill="#94a3b8" text-anchor="middle">How multiple search results are combined into a single ranked list</text>
 
   <!-- Input: Two result lists -->
-  <g filter="url(#shadowFS)">
-    <rect x="60" y="100" width="200" height="160" rx="12" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="60" y="100" width="200" height="160" rx="12" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="60" y="100" width="200" height="30" rx="12" fill="#475569"/>
     <rect x="60" y="118" width="200" height="12" fill="#475569"/>
     <text x="160" y="121" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="white" text-anchor="middle">Text Search Results</text>
@@ -55,8 +53,8 @@
     </g>
   </g>
 
-  <g filter="url(#shadowFS)">
-    <rect x="60" y="280" width="200" height="160" rx="12" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="60" y="280" width="200" height="160" rx="12" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="60" y="280" width="200" height="30" rx="12" fill="#475569"/>
     <rect x="60" y="298" width="200" height="12" fill="#475569"/>
     <text x="160" y="301" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="white" text-anchor="middle">Image Search Results</text>
@@ -89,8 +87,8 @@
   <line x1="260" y1="340" x2="340" y2="150" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,3"/>
 
   <!-- RRF Strategy -->
-  <g filter="url(#shadowFS)">
-    <rect x="350" y="90" width="240" height="140" rx="12" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="350" y="90" width="240" height="140" rx="12" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="350" y="90" width="240" height="30" rx="12" fill="url(#rrfGrad)"/>
     <rect x="350" y="108" width="240" height="12" fill="url(#rrfGrad)"/>
     <text x="470" y="111" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="white" text-anchor="middle">RRF (Default)</text>
@@ -102,8 +100,8 @@
   </g>
 
   <!-- Weighted Strategy -->
-  <g filter="url(#shadowFS)">
-    <rect x="350" y="250" width="240" height="140" rx="12" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="350" y="250" width="240" height="140" rx="12" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="350" y="250" width="240" height="30" rx="12" fill="url(#weightedGrad)"/>
     <rect x="350" y="268" width="240" height="12" fill="url(#weightedGrad)"/>
     <text x="470" y="271" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="white" text-anchor="middle">Weighted</text>
@@ -115,8 +113,8 @@
   </g>
 
   <!-- Learned Strategy -->
-  <g filter="url(#shadowFS)">
-    <rect x="350" y="410" width="240" height="90" rx="12" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="350" y="410" width="240" height="90" rx="12" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="350" y="410" width="240" height="30" rx="12" fill="url(#learnedGrad)"/>
     <rect x="350" y="428" width="240" height="12" fill="url(#learnedGrad)"/>
     <text x="470" y="431" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="white" text-anchor="middle">Learned</text>
@@ -130,10 +128,10 @@
   <line x1="590" y1="455" x2="680" y2="300" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowFS)"/>
 
   <!-- Output: Fused list -->
-  <g filter="url(#shadowFS)">
-    <rect x="690" y="170" width="220" height="180" rx="12" fill="white" stroke="#e2e8f0" stroke-width="2"/>
-    <rect x="690" y="170" width="220" height="30" rx="12" fill="#0f172a"/>
-    <rect x="690" y="188" width="220" height="12" fill="#0f172a"/>
+  <g>
+    <rect x="690" y="170" width="220" height="180" rx="12" fill="white" stroke="#334155" stroke-width="2"/>
+    <rect x="690" y="170" width="220" height="30" rx="12" fill="#f1f5f9"/>
+    <rect x="690" y="188" width="220" height="12" fill="#f1f5f9"/>
     <text x="800" y="191" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="white" text-anchor="middle">Fused Results</text>
     <g transform="translate(702, 212)">
       <rect x="0" y="0" width="196" height="24" rx="4" fill="#ecfdf5"/>
@@ -160,9 +158,9 @@
 
   <!-- Strategy labels on the right -->
   <g transform="translate(940, 170)">
-    <rect x="0" y="0" width="220" height="180" rx="12" fill="white" stroke="#e2e8f0" stroke-width="2" filter="url(#shadowFS)"/>
-    <text x="110" y="24" font-family="system-ui, sans-serif" font-size="13" font-weight="600" fill="#0f172a" text-anchor="middle">Choose Based On</text>
-    <line x1="16" y1="36" x2="204" y2="36" stroke="#e2e8f0" stroke-width="1"/>
+    <rect x="0" y="0" width="220" height="180" rx="12" fill="white" stroke="#334155" stroke-width="2"/>
+    <text x="110" y="24" font-family="system-ui, sans-serif" font-size="13" font-weight="600" fill="#f1f5f9" text-anchor="middle">Choose Based On</text>
+    <line x1="16" y1="36" x2="204" y2="36" stroke="#334155" stroke-width="1"/>
     <rect x="16" y="48" width="10" height="10" rx="2" fill="url(#rrfGrad)"/>
     <text x="34" y="58" font-family="system-ui, sans-serif" font-size="11" fill="#475569">RRF: no configuration</text>
     <text x="34" y="73" font-family="system-ui, sans-serif" font-size="10" fill="#94a3b8">Best default choice</text>

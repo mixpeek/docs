@@ -16,22 +16,20 @@
       <stop offset="0%" style="stop-color:#14b8a6;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#0d9488;stop-opacity:1" />
     </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.15"/>
-    </filter>
+    
     <marker id="arrowGray" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
       <polygon points="0 0, 8 3, 0 6" fill="#94a3b8"/>
     </marker>
   </defs>
 
-  <rect width="1000" height="400" fill="#f8fafc"/>
+  <rect width="1000" height="400" fill="none"/>
 
-  <text x="500" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#0f172a" text-anchor="middle">Semantic Search Stage: Vector Similarity Search</text>
-  <text x="500" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#64748b" text-anchor="middle">Find documents by meaning using dense vector embeddings and cosine similarity</text>
+  <text x="500" y="30" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="600" fill="#f1f5f9" text-anchor="middle">Semantic Search Stage: Vector Similarity Search</text>
+  <text x="500" y="50" font-family="system-ui, sans-serif" font-size="11" fill="#94a3b8" text-anchor="middle">Find documents by meaning using dense vector embeddings and cosine similarity</text>
 
   <!-- Query Input -->
-  <g filter="url(#shadow)">
-    <rect x="30" y="80" width="180" height="130" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="30" y="80" width="180" height="130" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="30" y="80" width="180" height="28" rx="10" fill="url(#queryGrad)"/>
     <rect x="30" y="98" width="180" height="10" fill="url(#queryGrad)"/>
     <text x="120" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Query Input</text>
@@ -41,14 +39,14 @@
     <text x="80" y="18" font-family="monospace" font-size="8" fill="#4338ca" text-anchor="middle">query: "{{INPUT.query}}"</text>
     <text x="80" y="38" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">"wireless headphones</text>
     <text x="80" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">with noise cancellation"</text>
-    <text x="80" y="70" font-family="monospace" font-size="8" fill="#64748b" text-anchor="middle">top_k: 100</text>
+    <text x="80" y="70" font-family="monospace" font-size="8" fill="#94a3b8" text-anchor="middle">top_k: 100</text>
   </g>
 
   <path d="M 210 145 L 250 145" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Vector Embedding -->
-  <g filter="url(#shadow)">
-    <rect x="260" y="70" width="180" height="190" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="260" y="70" width="180" height="190" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="260" y="70" width="180" height="28" rx="10" fill="url(#vectorGrad)"/>
     <rect x="260" y="88" width="180" height="10" fill="url(#vectorGrad)"/>
     <text x="350" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Query Embedding</text>
@@ -60,7 +58,7 @@
     <text x="80" y="52" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">"text_extractor_v1_embedding"</text>
 
     <text x="80" y="76" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Query -> [0.02, -0.04, ...]</text>
-    <text x="80" y="92" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">1024 dimensions</text>
+    <text x="80" y="92" font-family="monospace" font-size="7" fill="#94a3b8" text-anchor="middle">1024 dimensions</text>
 
     <rect x="10" y="105" width="140" height="28" rx="3" fill="#ddd6fe"/>
     <text x="80" y="118" font-family="system-ui, sans-serif" font-size="8" fill="#7c3aed" text-anchor="middle">Same model used for</text>
@@ -70,8 +68,8 @@
   <path d="M 440 145 L 480 145" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Vector Database -->
-  <g filter="url(#shadow)">
-    <rect x="490" y="70" width="200" height="190" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="490" y="70" width="200" height="190" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="490" y="70" width="200" height="28" rx="10" fill="url(#searchGrad)"/>
     <rect x="490" y="88" width="200" height="10" fill="url(#searchGrad)"/>
     <text x="590" y="90" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Vector Database</text>
@@ -85,17 +83,17 @@
     <rect x="10" y="50" width="160" height="50" rx="3" fill="#dbeafe"/>
     <text x="90" y="68" font-family="system-ui, sans-serif" font-size="8" fill="#2563eb" text-anchor="middle">Cosine Similarity</text>
     <text x="90" y="84" font-family="monospace" font-size="7" fill="#475569" text-anchor="middle">score = cos(query, doc)</text>
-    <text x="90" y="96" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">Range: 0.0 - 1.0</text>
+    <text x="90" y="96" font-family="monospace" font-size="7" fill="#94a3b8" text-anchor="middle">Range: 0.0 - 1.0</text>
 
     <text x="90" y="118" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Sub-10ms for 1M+ vectors</text>
-    <text x="90" y="134" font-family="monospace" font-size="7" fill="#64748b" text-anchor="middle">Returns top_k candidates</text>
+    <text x="90" y="134" font-family="monospace" font-size="7" fill="#94a3b8" text-anchor="middle">Returns top_k candidates</text>
   </g>
 
   <path d="M 690 145 L 730 145" stroke="#94a3b8" stroke-width="2" fill="none" marker-end="url(#arrowGray)"/>
 
   <!-- Output Results -->
-  <g filter="url(#shadow)">
-    <rect x="740" y="80" width="200" height="180" rx="10" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+  <g>
+    <rect x="740" y="80" width="200" height="180" rx="10" fill="white" stroke="#334155" stroke-width="2"/>
     <rect x="740" y="80" width="200" height="28" rx="10" fill="url(#outputGrad)"/>
     <rect x="740" y="98" width="200" height="10" fill="url(#outputGrad)"/>
     <text x="840" y="100" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="white" text-anchor="middle">Ranked Results</text>
@@ -113,7 +111,7 @@
     <rect x="10" y="88" width="160" height="24" rx="3" fill="#dcfce7"/>
     <text x="90" y="104" font-family="monospace" font-size="8" fill="#22c55e" text-anchor="middle">[3] score: 0.84</text>
 
-    <text x="90" y="124" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">Sorted by similarity score</text>
+    <text x="90" y="124" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">Sorted by similarity score</text>
   </g>
 
   <!-- Features -->
@@ -123,21 +121,21 @@
     <rect x="0" y="15" width="200" height="60" rx="4" fill="#f3e8ff"/>
     <text x="100" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#7c3aed" text-anchor="middle">Semantic Matching</text>
     <text x="100" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Understands meaning,</text>
-    <text x="100" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">not just keywords</text>
+    <text x="100" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">not just keywords</text>
 
     <rect x="220" y="15" width="200" height="60" rx="4" fill="#eff6ff"/>
     <text x="320" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#2563eb" text-anchor="middle">Multi-Modal</text>
     <text x="320" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Text, image, video,</text>
-    <text x="320" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">audio embeddings</text>
+    <text x="320" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">audio embeddings</text>
 
     <rect x="440" y="15" width="200" height="60" rx="4" fill="#dcfce7"/>
     <text x="540" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#16a34a" text-anchor="middle">Fast at Scale</text>
     <text x="540" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Under 10ms for millions</text>
-    <text x="540" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">of documents</text>
+    <text x="540" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">of documents</text>
 
     <rect x="660" y="15" width="200" height="60" rx="4" fill="#fef3c7"/>
     <text x="760" y="35" font-family="system-ui, sans-serif" font-size="9" font-weight="500" fill="#d97706" text-anchor="middle">Pre-Filter Support</text>
     <text x="760" y="52" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Combine with metadata</text>
-    <text x="760" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#64748b" text-anchor="middle">filters for precision</text>
+    <text x="760" y="66" font-family="system-ui, sans-serif" font-size="7" fill="#94a3b8" text-anchor="middle">filters for precision</text>
   </g>
 </svg>
