@@ -316,23 +316,47 @@ Your plugin's `__call__(batch: pd.DataFrame)` receives a DataFrame with the foll
 
 ### Loading Assets from S3 URLs
 
-The `data` column contains `s3://` URLs, not raw bytes. Use the stable **Plugin SDK** to resolve them to local paths:
+The `data` column contains `s3://` URLs, not raw bytes. Use the stable **Plugin SDK** to resolve them to local paths.
+
+Download all assets in parallel, then batch-process:
 
 ```python
-from shared.plugins import open_asset  # stable public import
+from shared.plugins import open_asset, download_asset
+from shared.plugins.sdk import parallel_io
 
-class MyProcessor:
+class MyImageProcessor:
     def __call__(self, batch: pd.DataFrame) -> pd.DataFrame:
-        for idx, row in batch.iterrows():
-            s3_url = row["data"]  # e.g. "s3://mixpeek-server-dev/org_.../file.jpg"
+        # Step 1: Download ALL images in parallel (I/O-bound)
+        def load_image(url):
+            from PIL import Image
+            path, is_temp = download_asset(url, suffix=".jpg")
+            img = Image.open(path).convert("RGB")
+            if is_temp:
+                import os
+                os.unlink(path)
+            return img
 
-            # open_asset downloads and auto-cleans temp files
-            with open_asset(s3_url, suffix=".jpg") as local_path:
-                from PIL import Image
-                img = Image.open(local_path).convert("RGB")
-                # ... process img ...
+        images = parallel_io(
+            items=batch["data"].tolist(),
+            process_fn=load_image,
+            max_workers=8,
+        )
+
+        # Step 2: Batch-process all images at once (GPU-bound)
+        tensors = [self._preprocess(images[i]) for i in sorted(images)]
+        embeddings = self._model(torch.stack(tensors))  # Single GPU call
+        batch["embedding"] = embeddings.tolist()
 
         return batch
+```
+
+For a single asset (e.g., in a context manager), use `open_asset`:
+
+```python
+from shared.plugins import open_asset
+
+with open_asset(url, suffix=".jpg") as local_path:
+    img = Image.open(local_path)
 ```
 
 For text blobs, the `data` column contains the raw string — no download needed:
@@ -615,6 +639,210 @@ pipeline = PipelineDefinition(
 
 ---
 
+## Batch Processing Optimization
+
+Your plugin's `__call__(batch)` method is called by Ray Data's `map_batches()` with a DataFrame of **64 rows by default**. How you process those rows determines whether your plugin runs 10x-100x faster or falls back to sequential processing.
+
+<Warning>
+Several examples in this guide use sequential patterns for simplicity. In production, always use the batched patterns described in this section. The performance difference is dramatic — a 64-row batch of API calls drops from ~64 seconds (sequential) to ~7 seconds (10-concurrent).
+</Warning>
+
+### The Core Rule
+
+**Collect all items first, then process them together.** Never call a model, API, or I/O operation inside a `for` loop over rows.
+
+```python
+# WRONG — sequential GPU call per row (64 rows = 64 GPU calls)
+def __call__(self, batch):
+    for idx, row in batch.iterrows():
+        embedding = self._model.encode(row["text"])  # One at a time!
+        batch.at[idx, "embedding"] = embedding
+    return batch
+
+# CORRECT — single batched GPU call (64 rows = 1 GPU call)
+def __call__(self, batch):
+    texts = batch["text"].fillna("").tolist()          # Collect all
+    embeddings = self._model.encode(texts)              # Batch process
+    batch["embedding"] = [e.tolist() for e in embeddings]
+    return batch
+```
+
+### Pattern 1: GPU/Model Operations
+
+Pass all inputs to the model at once. Most ML frameworks (PyTorch, SentenceTransformers, HuggingFace) support batched input natively.
+
+```python
+class EmbeddingProcessor:
+    def __call__(self, batch):
+        self._ensure_model_loaded()
+
+        # Collect all text from the batch
+        texts = batch["data"].fillna("").tolist()
+
+        # Single batched model call
+        embeddings = self._model.encode(texts, batch_size=32)
+
+        batch["embedding"] = embeddings.tolist()
+        return batch
+```
+
+For image/video models, preprocess all tensors then stack:
+
+```python
+import torch
+
+class ImageProcessor:
+    def __call__(self, batch):
+        self._ensure_model_loaded()
+
+        # Preprocess all images into tensors
+        tensors = []
+        for _, row in batch.iterrows():
+            img = load_image(row["data"])
+            tensors.append(self._preprocess(img))
+
+        # Single batched GPU forward pass
+        stacked = torch.stack(tensors)
+        with torch.no_grad():
+            outputs = self._model(stacked)
+
+        batch["embedding"] = outputs.cpu().tolist()
+        return batch
+```
+
+### Pattern 2: I/O Operations (File Downloads, FFmpeg)
+
+Use `parallel_io` from the Plugin SDK to download/process files in parallel threads:
+
+```python
+from shared.plugins.sdk import parallel_io, download_asset
+
+class VideoFrameProcessor:
+    def __call__(self, batch):
+        # Download ALL videos in parallel (8 concurrent threads)
+        def extract_frames(url):
+            path, is_temp = download_asset(url, suffix=".mp4")
+            frames = ffmpeg_extract_frames(path)
+            if is_temp:
+                import os
+                os.unlink(path)
+            return frames
+
+        frame_results = parallel_io(
+            items=batch["data"].tolist(),
+            process_fn=extract_frames,
+            max_workers=8,
+        )
+
+        # Now batch-process all frames on GPU
+        all_frames = []
+        frame_map = []
+        for i in sorted(frame_results):
+            for frame in frame_results[i]:
+                all_frames.append(self._preprocess(frame))
+                frame_map.append(i)
+
+        if all_frames:
+            embeddings = self._model(torch.stack(all_frames))
+            # Map embeddings back to rows...
+
+        return batch
+```
+
+### Pattern 3: API Calls (LLM, External Services)
+
+Use `concurrent_api_calls` to make async calls with a concurrency semaphore:
+
+```python
+from shared.plugins.sdk import concurrent_api_calls
+
+class LLMEnrichmentProcessor:
+    def __init__(self, config, **kwargs):
+        self._llm = config.get("llm_service")
+
+    def __call__(self, batch):
+        texts = batch["data"].fillna("").tolist()
+
+        # Define async function for one API call
+        async def enrich(text):
+            return await self._llm.generate(
+                instruction="Extract key entities from this text",
+                text=text,
+                provider="google",
+                model="gemini-2.5-flash",
+            )
+
+        # Call ALL rows concurrently (up to 10 at a time)
+        results = concurrent_api_calls(
+            items=texts,
+            async_fn=enrich,
+            max_concurrent=10,
+        )
+
+        batch["entities"] = [r.data if r else {} for r in results]
+        return batch
+```
+
+### Anti-Patterns to Avoid
+
+| Anti-Pattern | Problem | Fix |
+|-------------|---------|-----|
+| `for row in batch.iterrows(): model.encode(row["text"])` | Sequential GPU calls | Collect texts, call `model.encode(all_texts)` |
+| `for row in batch.iterrows(): requests.get(row["url"])` | Sequential downloads | Use `parallel_io(urls, download_fn)` |
+| `for row in batch.iterrows(): await llm.generate(row["text"])` | Sequential API calls | Use `concurrent_api_calls(texts, llm_fn)` |
+| `asyncio.new_event_loop()` + `run_until_complete` in loop | Creates event loop per row | Use `concurrent_api_calls` (handles event loop) |
+| Processing only `batch.iloc[0]` | Silently drops all other rows | Process all rows, return DataFrame with same row count |
+
+### Compute Profile in Manifest
+
+Declare resource requirements in your `manifest.py` to control batch size, concurrency, and resource allocation:
+
+```python
+# manifest.py
+compute_profile = {
+    "resource_type": "gpu",      # "cpu", "gpu", or "api"
+    "batch_size": 32,            # Rows per batch (default: 64)
+    "max_concurrency": 4,        # Parallel Ray actors (default: 2)
+}
+```
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `resource_type` | `"cpu"` | Worker type: `"cpu"` (CPU-only), `"gpu"` (GPU-allocated), `"api"` (I/O-bound) |
+| `batch_size` | `64` | Number of rows per `__call__` invocation |
+| `max_concurrency` | `2` | Number of parallel Ray actors processing batches |
+
+**Tuning guidance:**
+- GPU models: `batch_size=16-32` (limited by VRAM), `max_concurrency=1-2`
+- Text embeddings (CPU): `batch_size=64-128`, `max_concurrency=2-4`
+- API calls: `batch_size=32-64`, `max_concurrency=2-4` (concurrency is within each batch via `concurrent_api_calls`)
+
+### Validating Your Plugin
+
+Run the batch processor linter to detect sequential processing anti-patterns before deploying:
+
+```bash
+python scripts/engine/lint_batch_processors.py my_plugin/
+```
+
+This checks for:
+- `iterrows()` loops with model/API calls inside (`SEQ002`)
+- Sequential row iteration without parallelization (`SEQ001`)
+- Per-item tokenization inside loops (`SEQ003`)
+
+### Plugin SDK Helpers Reference
+
+Import from `shared.plugins.sdk` or `shared.plugins`:
+
+| Function | Use Case | Import |
+|----------|----------|--------|
+| `parallel_io(items, fn, max_workers)` | Parallel file downloads, FFmpeg, I/O | `from shared.plugins.sdk import parallel_io` |
+| `concurrent_api_calls(items, async_fn, max_concurrent)` | Concurrent LLM/API calls | `from shared.plugins.sdk import concurrent_api_calls` |
+| `open_asset(url, suffix)` | Context manager for S3 downloads | `from shared.plugins import open_asset` |
+| `download_asset(url, suffix)` | Manual S3 download with cleanup flag | `from shared.plugins import download_asset` |
+
+---
+
 ## Builtin Plugin Development
 
 <Note>
@@ -849,7 +1077,7 @@ def build_steps(extractor_request, container=None, **kwargs):
 
 ```python
 # processors/compliance.py
-import asyncio
+from shared.plugins.sdk import concurrent_api_calls
 
 class BrandComplianceProcessor:
     def __init__(self, config, **kwargs):
@@ -857,25 +1085,33 @@ class BrandComplianceProcessor:
         self.threshold = config.get("threshold", 0.8)
 
     def __call__(self, batch):
-        loop = asyncio.new_event_loop()
-        for idx, row in batch.iterrows():
-            result = loop.run_until_complete(
-                self._llm.generate(
-                    instruction="Evaluate this image for brand compliance",
-                    images=[row["image_url"]],
-                    provider="google",
-                    model="gemini-2.5-flash",
-                    schema={
-                        "type": "object",
-                        "properties": {
-                            "compliant": {"type": "boolean"},
-                            "violations": {"type": "array", "items": {"type": "string"}},
-                            "score": {"type": "number"}
-                        }
+        image_urls = batch["image_url"].tolist()
+
+        # Define async function for a single API call
+        async def evaluate_image(url):
+            return await self._llm.generate(
+                instruction="Evaluate this image for brand compliance",
+                images=[url],
+                provider="google",
+                model="gemini-2.5-flash",
+                schema={
+                    "type": "object",
+                    "properties": {
+                        "compliant": {"type": "boolean"},
+                        "violations": {"type": "array", "items": {"type": "string"}},
+                        "score": {"type": "number"}
                     }
-                )
+                }
             )
-            batch.at[idx, "compliance_result"] = result.data
+
+        # Call ALL images concurrently (up to 10 at a time)
+        results = concurrent_api_calls(
+            items=image_urls,
+            async_fn=evaluate_image,
+            max_concurrent=10,
+        )
+
+        batch["compliance_result"] = [r.data if r else {} for r in results]
         return batch
 ```
 
@@ -1113,7 +1349,7 @@ output_schema = {
 # processors/classifier.py
 import io
 import pandas as pd
-import requests
+from shared.plugins.sdk import parallel_io
 
 class ImageClassifierProcessor:
     def __init__(self, config=None, **kwargs):
@@ -1143,27 +1379,40 @@ class ImageClassifierProcessor:
         import torch
         from PIL import Image
 
-        embeddings = []
-        labels_list = []
+        urls = [
+            row.get("source_url") or row.get("image_url", "")
+            for _, row in batch.iterrows()
+        ]
 
-        for _, row in batch.iterrows():
-            image_url = row.get("source_url") or row.get("image_url", "")
-            try:
-                resp = requests.get(image_url, timeout=30)
-                img = Image.open(io.BytesIO(resp.content)).convert("RGB")
-                tensor = self._preprocess(img).unsqueeze(0)
+        # Step 1: Download ALL images in parallel (I/O-bound)
+        def download_image(url):
+            import requests
+            resp = requests.get(url, timeout=30)
+            return Image.open(io.BytesIO(resp.content)).convert("RGB")
 
-                with torch.no_grad():
-                    output = self._model(tensor)
-                    # Use penultimate layer as embedding
-                    embedding = output.squeeze().tolist()[:512]
-                    top_classes = torch.topk(output, 5).indices[0].tolist()
+        downloaded = parallel_io(urls, download_image, max_workers=8)
 
-                embeddings.append(embedding)
-                labels_list.append([str(c) for c in top_classes])
-            except Exception:
-                embeddings.append([0.0] * 512)
-                labels_list.append([])
+        # Step 2: Preprocess into tensor batch
+        tensors = []
+        valid_indices = []
+        for i in range(len(urls)):
+            if i in downloaded:
+                tensors.append(self._preprocess(downloaded[i]))
+                valid_indices.append(i)
+
+        # Step 3: Single batched GPU inference
+        embeddings = [[0.0] * 512] * len(urls)
+        labels_list = [[]] * len(urls)
+
+        if tensors:
+            stacked = torch.stack(tensors)
+            with torch.no_grad():
+                outputs = self._model(stacked)
+                for j, orig_idx in enumerate(valid_indices):
+                    embeddings[orig_idx] = outputs[j].tolist()[:512]
+                    labels_list[orig_idx] = [
+                        str(c) for c in torch.topk(outputs[j:j+1], 5).indices[0].tolist()
+                    ]
 
         batch["image_embedding"] = embeddings
         batch["labels"] = labels_list
@@ -1228,9 +1477,9 @@ output_schema = {
 
 ```python
 # processors/analyzer.py
-import asyncio
 import hashlib
 import pandas as pd
+from shared.plugins.sdk import concurrent_api_calls
 
 class VLMAnalyzerProcessor:
     def __init__(self, config=None, **kwargs):
@@ -1247,43 +1496,38 @@ class VLMAnalyzerProcessor:
         return [((b % 200) - 100) / 100.0 for b in (h * (dim // 32 + 1))[:dim]]
 
     def __call__(self, batch: pd.DataFrame) -> pd.DataFrame:
-        loop = asyncio.new_event_loop()
-        embeddings = []
-        analyses = []
-        tags_list = []
+        image_urls = batch.get("source_url", pd.Series([""] * len(batch))).tolist()
 
-        for _, row in batch.iterrows():
-            image_url = row.get("source_url", "")
-            try:
-                result = loop.run_until_complete(
-                    self._llm.generate(
-                        instruction=self.analysis_prompt,
-                        images=[image_url],
-                        provider="google",
-                        model="gemini-2.5-flash",
-                        schema={
-                            "type": "object",
-                            "properties": {
-                                "description": {"type": "string"},
-                                "tags": {"type": "array", "items": {"type": "string"}},
-                            }
-                        }
-                    )
-                )
-                analysis = result.data
-                analyses.append(analysis)
-                tags_list.append(analysis.get("tags", []))
-                embeddings.append(
-                    self._text_to_embedding(analysis.get("description", ""))
-                )
-            except Exception:
-                analyses.append({})
-                tags_list.append([])
-                embeddings.append([0.0] * 384)
+        # Call Gemini concurrently for ALL rows (up to 10 at a time)
+        async def analyze_image(url):
+            return await self._llm.generate(
+                instruction=self.analysis_prompt,
+                images=[url],
+                provider="google",
+                model="gemini-2.5-flash",
+                schema={
+                    "type": "object",
+                    "properties": {
+                        "description": {"type": "string"},
+                        "tags": {"type": "array", "items": {"type": "string"}},
+                    }
+                }
+            )
 
-        batch["vlm_embedding"] = embeddings
+        results = concurrent_api_calls(
+            items=image_urls,
+            async_fn=analyze_image,
+            max_concurrent=10,
+        )
+
+        # Map results back to DataFrame columns
+        analyses = [r.data if r else {} for r in results]
+        batch["vlm_embedding"] = [
+            self._text_to_embedding(a.get("description", "")) if a else [0.0] * 384
+            for a in analyses
+        ]
         batch["analysis"] = analyses
-        batch["tags"] = tags_list
+        batch["tags"] = [a.get("tags", []) if a else [] for a in analyses]
         return batch
 ```
 
@@ -1568,7 +1812,9 @@ The upload limit is 500 MB. For plugins with large models:
 1. Ensure `__call__()` returns a DataFrame with the same number of rows
 2. Reset DataFrame index: `batch = batch.reset_index(drop=True)`
 3. Handle None/empty values: `batch["col"].fillna("")`
-4. Wrap async LLM calls with `asyncio.new_event_loop().run_until_complete()`
+4. Use `concurrent_api_calls()` for async LLM calls (not manual event loop creation)
+5. Run the linter to detect sequential processing anti-patterns: `python scripts/engine/lint_batch_processors.py my_plugin/`
+6. See [Batch Processing Optimization](#batch-processing-optimization) for correct patterns
 
 ### Real-time endpoint not responding
 
