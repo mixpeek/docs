@@ -133,8 +133,11 @@ class MyProcessor:
         """Process a batch of rows."""
         self._ensure_model_loaded()
 
-        # Get text from batch
-        texts = batch["text"].fillna("").tolist()
+        # IMPORTANT: Custom plugins always read from the 'data' column,
+        # NOT a column named after the blob property.
+        # For text blobs, 'data' contains the raw string.
+        # For binary blobs, 'data' contains an S3 URL.
+        texts = batch["data"].fillna("").tolist()
 
         # Generate embeddings
         embeddings = self._model.encode(texts).tolist()
@@ -235,10 +238,22 @@ curl -X PUT "$PRESIGNED_URL" --data-binary @my_extractor.zip
 curl -X POST "https://api.mixpeek.com/v1/namespaces/$NS_ID/plugins/uploads/$UPLOAD_ID/confirm" \
   -H "Authorization: Bearer $API_KEY"
 
-# Deploy real-time endpoint (Enterprise)
+# Deploy for batch processing only (all tiers)
+curl -X POST "https://api.mixpeek.com/v1/namespaces/$NS_ID/plugins/$PLUGIN_ID/deploy?deployment_type=batch_only" \
+  -H "Authorization: Bearer $API_KEY"
+
+# Deploy with real-time endpoint (Enterprise only)
 curl -X POST "https://api.mixpeek.com/v1/namespaces/$NS_ID/plugins/$PLUGIN_ID/deploy" \
   -H "Authorization: Bearer $API_KEY"
 ```
+
+<Note>
+**Batch vs Realtime deployment:** All account tiers can deploy plugins for batch processing using `?deployment_type=batch_only`. Realtime inference endpoints require Enterprise tier with dedicated infrastructure. If you get a 403 error, add `?deployment_type=batch_only` to the deploy URL.
+</Note>
+
+<Warning>
+**`feature_uri` and `realtime.py`:** If your manifest includes a `feature_uri` (e.g., `mixpeek://my_plugin@1.0.0/my_embedding`), the system expects a corresponding `realtime.py` for query-time inference. If you only need batch processing, you can omit both `feature_uri` and `realtime.py`. If you include `feature_uri` without `realtime.py`, retriever feature_search queries against that URI will fail.
+</Warning>
 
 ---
 
@@ -1313,6 +1328,62 @@ It does **not** receive retrieval context or search results. If your pipeline ne
 For retrieval-dependent analysis (like brand compliance with reference comparison), the VLM evaluation belongs in a retriever stage, not in the plugin's `realtime.py`.
 </Note>
 
+### Realtime Response Contract
+
+Your `run_inference()` method **must** return a dictionary. The retriever's `feature_search` stage uses the `"embedding"` key as the primary vector for Qdrant search.
+
+```python
+# Single embedding (most common) — return "embedding" key
+async def run_inference(self, inputs: dict, parameters: dict) -> dict:
+    text = inputs.get("text", "")
+    vector = self._model.encode([text])[0].tolist()
+    return {"embedding": vector}  # ← "embedding" is the primary key
+```
+
+<Warning>
+The key must be `"embedding"` (singular) for the primary vector. This is what `feature_search` extracts to query Qdrant.
+</Warning>
+
+**Multi-vector plugins** that produce multiple embeddings (e.g., text + image):
+
+```python
+async def run_inference(self, inputs: dict, parameters: dict) -> dict:
+    text_vec = self._text_model.encode([inputs["text"]])[0].tolist()
+    image_vec = self._image_model.encode(inputs["image"]).tolist()
+    return {
+        "embedding": text_vec,         # Primary vector (used by feature_search)
+        "image_embedding": image_vec,  # Additional vectors accessible by name
+    }
+```
+
+The `feature_search` stage extracts the vector matching the `vector_index` name from the manifest features. If no match is found, it falls back to `"embedding"`.
+
+### Compute Profile
+
+Control resource allocation for your plugin by adding a `compute_profile` dict in `manifest.py`:
+
+```python
+# manifest.py
+compute_profile = {
+    "resource_type": "cpu",      # "cpu", "gpu", or "api"
+    "batch_size": 32,            # Rows per batch
+    "max_concurrency": 4,        # Max parallel actors
+    "actor_memory_gb": 2.0,      # RAM per actor (GB)
+}
+```
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `resource_type` | `"cpu"` | Primary resource type. `"cpu"` skips GPU worker allocation. `"gpu"` requests GPU nodes. `"api"` for external API-based plugins. |
+| `batch_size` | `64` | Rows per batch. Smaller = more overhead, larger = more memory. |
+| `max_concurrency` | `2` | Max parallel Ray actors. |
+| `actor_memory_gb` | `2.0` | System RAM per actor in GB. |
+| `gpu_memory_gb` | `None` | GPU VRAM per actor (only for `resource_type: "gpu"`). |
+
+<Tip>
+For hash-based or API-based plugins that don't need GPU, set `resource_type: "cpu"` to avoid allocating expensive GPU nodes. This reduces batch startup time by 3+ minutes and costs ~6x less.
+</Tip>
+
 ---
 
 ## Example: Image Classification Plugin
@@ -1807,14 +1878,54 @@ The upload limit is 500 MB. For plugins with large models:
 - Download from HuggingFace Hub at init time using lazy loading
 - Use `load_namespace_model()` for custom weights uploaded via the Models API
 
+### Batch produces 0 documents
+
+The most common cause: your plugin reads from the wrong column.
+
+<Warning>
+Custom plugins **always** receive data in the `data` column — NOT a column named after your blob property. If your bucket has a `text` property, the content is still in `batch["data"]`, not `batch["text"]`.
+</Warning>
+
+Check Ray job logs for `[FailureAggregator]` entries:
+- `embed=N` means N rows had null embedding columns (your plugin returned None)
+- `Coverage 0.0%` means all rows were filtered — likely wrong column name
+
 ### Batch processing fails
 
-1. Ensure `__call__()` returns a DataFrame with the same number of rows
-2. Reset DataFrame index: `batch = batch.reset_index(drop=True)`
-3. Handle None/empty values: `batch["col"].fillna("")`
-4. Use `concurrent_api_calls()` for async LLM calls (not manual event loop creation)
-5. Run the linter to detect sequential processing anti-patterns: `python scripts/engine/lint_batch_processors.py my_plugin/`
-6. See [Batch Processing Optimization](#batch-processing-optimization) for correct patterns
+1. **Read from `batch["data"]`** — not `batch["text"]` or other column names
+2. Ensure `__call__()` returns a DataFrame with the same number of rows
+3. Reset DataFrame index: `batch = batch.reset_index(drop=True)`
+4. Handle None/empty values: `batch["data"].fillna("")`
+5. Use `concurrent_api_calls()` for async LLM calls (not manual event loop creation)
+6. Run the linter to detect sequential processing anti-patterns: `python scripts/engine/lint_batch_processors.py my_plugin/`
+7. See [Batch Processing Optimization](#batch-processing-optimization) for correct patterns
+
+### Python API client blocked by Cloudflare
+
+If your Python scripts get Cloudflare error 1010 ("banned based on browser signature"), use the `requests` library with a proper User-Agent header instead of `urllib`:
+
+```python
+import requests
+
+headers = {
+    "Authorization": f"Bearer {api_key}",
+    "Content-Type": "application/json",
+    "User-Agent": "MyApp/1.0",
+}
+response = requests.post(url, json=payload, headers=headers)
+```
+
+<Note>
+`curl` works fine. The issue only affects Python's built-in `urllib` which sends a user-agent that Cloudflare blocks.
+</Note>
+
+### Version format rejected
+
+Plugin versions must be semantic versioning format (`X.Y.Z`). Common formats are normalized automatically:
+- `v1` → `1.0.0`
+- `1.0` → `1.0.0`
+- `v2.1` → `2.1.0`
+- `1.0.0` → `1.0.0` (already valid)
 
 ### Real-time endpoint not responding
 

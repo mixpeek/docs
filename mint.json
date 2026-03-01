@@ -208,6 +208,12 @@
       ]
     },
     {
+      "group": "Pages",
+      "pages": [
+        "pages/pages"
+      ]
+    },
+    {
       "group": "Relevance & Personalization",
       "pages": [
         "relevance/overview",
@@ -520,6 +526,24 @@
       ]
     },
     {
+      "group": "Pages",
+      "pages": [
+        "api-reference/pages/create-page",
+        "api-reference/pages/list-pages",
+        "api-reference/pages/get-page",
+        "api-reference/pages/update-page",
+        "api-reference/pages/delete-page",
+        {
+          "group": "Public",
+          "pages": [
+            "api-reference/public-pages-api/get-public-page-config",
+            "api-reference/public-pages-api/execute-a-page-tab-search",
+            "api-reference/public-pages-api/get-page-featured-gallery"
+          ]
+        }
+      ]
+    },
+    {
       "group": "Taxonomies",
       "pages": [
         "api-reference/taxonomies/create-taxonomy",
@@ -677,6 +701,17 @@
         "api-reference/alerts/delete-alert",
         "api-reference/alerts/list-alert-executions",
         "api-reference/alerts/list-all-executions"
+      ]
+    },
+    {
+      "group": "Tutorials",
+      "pages": [
+        "tutorials/semantic-search",
+        "tutorials/reverse-search",
+        "tutorials/video-understanding",
+        "tutorials/document-intelligence",
+        "tutorials/bootstrap-labeled-dataset",
+        "tutorials/custom-plugin-quickstart"
       ]
     }
   ],
