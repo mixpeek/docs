@@ -199,8 +199,8 @@
 
     <rect x="200" y="0" width="180" height="80" rx="6" fill="#dbeafe"/>
     <text x="90" y="18" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#1d4ed8" text-anchor="middle">Cost</text>
-    <text x="90" y="36" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">30 credits base/image</text>
-    <text x="90" y="50" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">+30 credits per face</text>
+    <text x="90" y="36" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">5 credits base/image</text>
+    <text x="90" y="50" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">+5 credits per face</text>
     <text x="90" y="64" font-family="system-ui, sans-serif" font-size="8" fill="#475569" text-anchor="middle">Video: 90-95% dedup</text>
   </g>
 </svg>
